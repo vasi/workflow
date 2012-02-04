@@ -22,7 +22,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
         $states = array('' => t('No state'));
         foreach ($workflows as $wid => $name) {
           foreach (workflow_get_workflow_states_by_wid($wid, $options) as $state) {
-            $states[$name][$state->sid] = check_plain($state->state);
+            $states[$state->sid] = check_plain($name . ': ' . $state->state);
           }
         }
       }
