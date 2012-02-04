@@ -787,7 +787,9 @@ function workflow_node_previous_state($node) {
     $sids = array();
     $sid = -1;
     $last_history = workflow_get_workflow_node_history_by_nid($node->nid, 1);
-    $sid = $last_history->sid;
+    if (isset($last_history)) {
+      $sid = $last_history->sid;
+    }
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
