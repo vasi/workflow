@@ -1,5 +1,5 @@
 <?php
-// $Id$
+
 /**
  * @file
  * Provide user interface for changing workflow state.

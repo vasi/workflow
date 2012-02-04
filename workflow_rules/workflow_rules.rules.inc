@@ -1,5 +1,5 @@
 <?php
-// $Id$
+
 /**
  * @file
  * Rules integration for the Workflow module

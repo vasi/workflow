@@ -1,5 +1,5 @@
 <?php
-// $Id$
+
 /**
  * @file
  * Provide views filter handler for workflow.module.
