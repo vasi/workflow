@@ -17,6 +17,9 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       foreach (workflow_get_workflows() as $data) {
         $workflows[$data->wid] = check_plain(t($data->name));
       }
+      if (empty($workflows)) {
+        return array();
+      }
       $options = array('status' => 1);
       if (count($workflows) > 1) {
         $states = array('' => t('No state'));
