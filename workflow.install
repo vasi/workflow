@@ -186,7 +186,7 @@ function workflow_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',,
+        'disp-width' => '10',
       ),
       'sid' => array(
         'description' => 'The {workflow_states}.sid this state transitions to.',
@@ -194,7 +194,7 @@ function workflow_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',,
+        'disp-width' => '10',
       ),
       'scheduled' => array(
         'description' => 'The date this transition is scheduled for.',
