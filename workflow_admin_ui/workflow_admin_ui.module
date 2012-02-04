@@ -546,6 +546,7 @@ function workflow_admin_ui_state_add_form($form, &$form_state, $wid, $sid = NULL
   }
   // If we don't have a state or db_fetch_array() returned FALSE, load defaults.
   if (!$state || $state === FALSE) {
+    $state = new stdClass();
     $state->state = '';
     $state->weight = 0;
     if ($workflow = workflow_get_workflows_by_wid($wid)) {
