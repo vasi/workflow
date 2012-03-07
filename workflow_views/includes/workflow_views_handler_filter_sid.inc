@@ -14,11 +14,13 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
   function get_value_options() {
     if (!isset($this->value_options)) {
       $this->value_title = t('Workflow state');
+      $workflows = array();
       foreach (workflow_get_workflows() as $data) {
         $workflows[$data->wid] = check_plain(t($data->name));
       }
-      if (empty($workflows)) {
-        return array();
+      if (!isset($workflows) || empty($workflows)) {
+        $this->value_options = array();
+        return;
       }
       $options = array('status' => 1);
       if (count($workflows) > 1) {
