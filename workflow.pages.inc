@@ -23,7 +23,8 @@ function workflow_tab_page($node = NULL) {
   // theme_workflow_current_state() must run state through check_plain().
   $current_state = theme('workflow_current_state', array('state_name' => $states[$current]));
   $output = t('Current state: !state', array('!state' => $current_state));
-  $output .= drupal_render(drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current));
+  $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+  $output .= drupal_render($form);
   $rows = array();
   foreach (workflow_get_workflow_node_history_by_nid($node->nid) as $history) {
     if ($history->sid == $current && !isset($deleted_states[$history->sid]) && !isset($current_themed)) {

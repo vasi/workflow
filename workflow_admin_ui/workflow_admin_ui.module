@@ -754,7 +754,8 @@ function workflow_admin_ui_overview() {
   }
   if ($row) {
     $output = theme('table', array('header' => array(t('Workflow'), t('Operations')), 'rows' => $row));
-    $output .= drupal_render(drupal_get_form('workflow_admin_ui_types_form'));
+    $form = drupal_get_form('workflow_admin_ui_types_form');
+    $output .= drupal_render($form);
   }
   else {
     $output = '<p>' . t('No workflows have been added. Would you like to <a href="@link">add a workflow</a>?', array('@link' => url('admin/config/workflow/workflow/add'))) . '</p>';
