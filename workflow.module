@@ -437,17 +437,8 @@ function workflow_transition($node, $sid) {
       if (!isset($node->workflow_scheduled_hour)) {
         $node->workflow_scheduled_hour = '00:00';
       }
-      $scheduled = $node->workflow_scheduled_date['year'] . $node->workflow_scheduled_date['month'] . $node->workflow_scheduled_date['day'] . ' ' . $node->workflow_scheduled_hour . 'Z';
+      $scheduled = $node->workflow_scheduled_date['year'] . $node->workflow_scheduled_date['month'] . $node->workflow_scheduled_date['day'] . ' ' . $node->workflow_scheduled_hour;
       if ($scheduled = strtotime($scheduled)) {
-        // Adjust for user and site timezone settings.
-        global $user;
-        if (variable_get('configurable_timezones', 1) && $user->uid && drupal_strlen($user->timezone)) {
-          $timezone = $user->timezone;
-        }
-        else {
-          $timezone = variable_get('date_default_timezone', 0);
-        }
-        $scheduled = $scheduled - $timezone;
         // Clear previous entries and insert.
         $data = array(
           'nid' => $node->nid,
