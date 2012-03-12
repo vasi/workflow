@@ -183,8 +183,10 @@ function workflow_tab_form_submit($form, &$form_state) {
       $node->workflow_scheduled_hour = $form_state['values']['workflow_scheduled_hour'];
     }
   }
-  // Call node_save() to make sure any handlers that use the
-  // new workflow values will see them.
-  node_save($node);
+  // ALERT: Rules that use node_save to check the node transition are going to be missed if
+  // the tab form is used to check for the change. It is *always* better practice to use
+  // the transition change itself as your value to check for changes with Rules and other
+  // behaviors. Do NOT rely on node_save() to drive transition changes.
+  workflow_transition($node, $node->workflow);
   $form_state['redirect'] = 'node/' . $node->nid;
 }
