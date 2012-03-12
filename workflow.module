@@ -397,7 +397,7 @@ function workflow_features_api() {
     'workflow' => array(
       'name' => t('Workflow'),
       'file' => drupal_get_path('module', 'workflow') . '/workflow.features.inc',
-      'default_hook' => 'workflow_features_default_workflow',
+      'default_hook' => 'workflow_default_workflows',
       'feature_source' => TRUE,
     ),
   );
