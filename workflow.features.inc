@@ -66,6 +66,8 @@ function workflow_features_export_options() {
  * Implements hook_features_revert().
  */
 function workflow_features_revert($module) {
+  // Including the features inc to make sure this func is available during install of a Features module.
+  module_load_include('inc', 'features', 'features.export');
   foreach (features_get_default('workflow', $module) as $key => $workflow) {
     workflow_update_workflows_full_object($workflow);
   }
