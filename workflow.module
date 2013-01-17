@@ -125,22 +125,6 @@ function workflow_cron() {
 }
 
 /**
- * Implements hook_field_extra_fields_alter().
- */
-function workflow_field_extra_fields_alter(&$info) {
-  foreach (node_type_get_types() as $bundle) {
-    if (in_array('node', variable_get('workflow_' . $bundle->type, array('node')))) {
-      $info['node'][$bundle->type]['form']['workflow'] = array(
-        'label' => t('Workflow'),
-        'description' => t('Workflow module form'),
-        'weight' => 10,
-      );
-    }
-  }
-  return $info;
-}
-
-/**
  * Implements hook_user_delete().
  */
 function workflow_user_delete($account) {
@@ -163,8 +147,8 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         // @todo If we ever move Workflow to allow M:M content types to workflows, this will need updating.
         if ($workflow = workflow_get_workflows_by_wid($workflow->wid)) {
           $wid = $workflow->wid;
-          $values['workflow-name'] = $workflow->name;
           $last_history = workflow_get_workflow_node_history_by_nid($node->nid, 1);
+
           if (isset($node->workflow) && !isset($node->workflow_stamp)) {
             // The node is being submitted but the form data has not been saved to the database yet,
             // so we set the token values from the workflow form fields.
@@ -175,6 +159,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $date = REQUEST_TIME;
             $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
             $uid = $node->uid;
+            $account = user_load($node->uid);
             $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
             $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
           }
@@ -191,6 +176,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $date = REQUEST_TIME;
             $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
             $uid = $node->uid;
+            $account = user_load($node->uid);
             $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
             $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
           }
@@ -207,15 +193,28 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $mail = $account->uid ? $account->mail : '';
             $comment = $last_history->comment;
           }
+          $values['workflow-name']                              = $workflow->name;
           $values['workflow-current-state-name']                = $sid->state;
           $values['workflow-old-state-name']                    = $old_sid->state;
-          $values['workflow-current-state-date-iso']            = date('Ymdhis', $date);
-          $values['workflow-current-state-date-tstamp']         = $date;
-          $values['workflow-current-state-date-formatted']      = date('M d, Y h:i:s', $date);
-          $values['workflow-current-state-updating-user-name']  = check_plain($user_name);
+
+          $values['workflow-current-state-updating-user-name']  = check_plain(format_username($account));
+          $values['workflow-current-state-updating-user-link']  = theme('username', array('account' => $account));
           $values['workflow-current-state-updating-user-uid']   = $uid;
-          $values['workflow-current-state-updating-user-mail']  = check_plain($mail);
-          $values['workflow-current-state-log-entry']           = filter_xss($comment, array('a', 'em', 'strong'));
+          $values['workflow-current-state-updating-user-mail']  = check_plain($account->mail);
+          $values['workflow-current-state-updating-user-mailto'] = '<a href="mailto:' . $account->mail . '">' . check_plain($user_name) . '</a>';
+
+          $values['workflow-current-state-log-entry']           = check_markup($comment, filter_default_format());
+
+          $values['workflow-current-state-date-iso']            = format_date($date, 'custom', 'c');
+          $values['workflow-current-state-date-tstamp']         = $date;
+          $values['workflow-current-state-date-formatted']      = format_date($date);  // Use site default.
+
+          // Add support for custom date formats. (see token.tokens.inc)
+          // @todo Remove when http://drupal.org/node/1173706 is fixed.
+          $date_format_types = system_get_date_types();
+          foreach ($date_format_types as $date_type => $date_info) {
+            $values['workflow-current-state-date-' . $date_type] = format_date($date, $date_type);
+          }
         }
       }
     break;
@@ -228,50 +227,70 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
  */
 function workflow_token_info() {
   $type = array(
-    'name' => t('Workflows'),
+    'name' => t('Workflow'),
     'description' => t('Tokens related to workflows.'),
     'needs-data' => 'node',
   );
-  $tokens['workflow-name'] = array(
+  $tokens['workflow']['workflow-name'] = array(
     'name' => t('Workflow name'),
     'description' => t('Name of workflow appied to this node'),
   );
-  $tokens['workflow-current-state-name'] = array(
+  $tokens['workflow']['workflow-current-state-name'] = array(
     'name' => t('Current state name'),
     'description' => t('Current state of content'),
   );
-  $tokens['workflow-old-state-name'] = array(
+  $tokens['workflow']['workflow-old-state-name'] = array(
     'name' => t('Old state name'),
     'description' => t('Old state of content'),
   );
-  $tokens['workflow-current-state-date-iso'] = array(
-    'name' => t('Current state date (ISO)'),
-    'description' => t('Date of last state change (ISO)'),
-  );
-  $tokens['workflow-current-state-date-tstamp'] = array(
-    'name' => t('Current state date (timestamp)'),
-    'description' => t('Date of last state change (timestamp)'),
-  );
-  $tokens['workflow-current-state-date-formatted'] = array(
-    'name' => t('Current state date (formated - M d, Y h:i:s)'),
-    'description' => t('Date of last state change (formated - M d, Y h:i:s)'),
-  );
-  $tokens['workflow-current-state-updating-user-name'] = array(
+  $tokens['workflow']['workflow-current-state-updating-user-name'] = array(
     'name' => t('Username of last state changer'),
     'description' => t('Username of last state changer'),
   );
-  $tokens['workflow-current-state-updating-user-uid'] = array(
+  $tokens['workflow']['workflow-current-state-updating-user-link'] = array(
+    'name' => t('Username link of last state changer'),
+    'description' => t('Themed Username of last state changer'),
+    );
+  $tokens['workflow']['workflow-current-state-updating-user-uid'] = array(
     'name' => t('Uid of last state changer'),
     'description' => t('uid of last state changer'),
   );
-  $tokens['workflow-current-state-updating-user-mail'] = array(
+  $tokens['workflow']['workflow-current-state-updating-user-mail'] = array(
     'name' => t('Email of last state changer'),
     'description' => t('email of last state changer'),
   );
-  $tokens['workflow-current-state-log-entry'] =array(
+  $tokens['workflow']['workflow-current-state-updating-user-mail'] = array(
+    'name' => t('Email link of last state changer'),
+    'description' => t('email link of last state changer'),
+    );
+  $tokens['workflow']['workflow-current-state-log-entry'] =array(
     'name' => t('Last workflow comment log'),
     'description' => t('Last workflow comment log'),
   );
+  $tokens['workflow']['workflow-current-state-date-iso'] = array(
+    'name' => t('Current state date (ISO)'),
+    'description' => t('Date of last state change (ISO)'),
+  );
+  $tokens['workflow']['workflow-current-state-date-tstamp'] = array(
+    'name' => t('Current state date (timestamp)'),
+    'description' => t('Date of last state change (timestamp)'),
+  );
+  $tokens['workflow']['workflow-current-state-date-formatted'] = array(
+    'name' => t('Current state date (formatted by site default)'),
+    'description' => t('Date of last state change (formatted by site default)'),
+  );
+
+  // Add support for custom date formats. (see token.tokens.inc)
+  // @todo Remove when http://drupal.org/node/1173706 is fixed.
+  $date_format_types = system_get_date_types();
+  foreach ($date_format_types as $date_type => $date_info) {
+    $tokens['workflow']['workflow-current-state-date-' . $date_type] = array(
+      'name' => t('Current state date (using @format format)', array('@format' => $date_info['title'])),
+      'description' => t("A date in '@type' format. (%date)", array('@type' => $date_type, '%date' => format_date(REQUEST_TIME, $date_type))),
+      'module' => 'workflow',
+      );
+  }
+
   return array(
     'types' => array('workflow' => $type),
     'tokens' => array('workflow' => $tokens),
@@ -462,6 +481,95 @@ function workflow_transition($node, $sid) {
 }
 
 /**
+ * Implements hook_node_view().
+ *
+ * @param object $node.
+ * @param string $view_mode.
+ * @param string $langcode.
+ *
+ * @return renderable content in $node->content array.
+ */
+function workflow_node_view($node, $view_mode, $langcode) {
+  if ($view_mode != 'full') {
+    return;
+  }
+
+  $workflow = workflow_get_workflow_type_map_by_type($node->type);
+  $states = array();
+  foreach (workflow_get_workflow_states() as $data) {
+    $states[$data->sid] = check_plain(t($data->state));
+  }
+
+  $current = workflow_node_current_state($node);
+
+  // Pull in tab form.
+  module_load_include('inc', 'workflow', 'workflow.pages');
+
+  // Show current state at the top of the node display.
+  $markup = '<div class="workflow-current-state">'
+    . t('Current state: @state', array('@state' => $states[$current]))
+    . '</div>';
+
+  $node->content['workflow_current_state'] = array(
+    '#markup' => $markup,
+    '#weight' => -99,
+    );
+
+  // Show state change form at the bottom of the node display.
+  $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+  $form['#weight'] = 99;
+
+  $node->content['workflow'] = $form;
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ */
+function workflow_field_extra_fields() {
+  $extra = array();
+
+  // Get all workflows by content types.
+  $workflow_types = workflow_get_workflow_type_map();
+
+  $types = array();
+  foreach ($workflow_types as $key => $type) {
+    // If it has a wid (workflow ID), then there is a workflow defined for it.
+    if ($type->wid) {
+      $types[] = $type->type;
+    }
+  }
+  // Make sure there are no duplicates.
+  $types = array_unique($types);
+
+  // Add the extra fields to each content type that has a workflow.
+  foreach ($types as $type) {
+    $extra['node']['service'] = array(
+      'form' => array(
+        'workflow' => array(
+          'label' => t('Workflow'),
+          'description' => t('Workflow module form'),
+          'weight' => 99,
+          ),
+        ),
+      'display' => array(
+        'workflow_current_state' => array(
+          'label' => t('Workflow: Current State'),
+          'description' => t('Current workflow state'),
+          'weight' => -99,   // Default to top.
+          ),
+        'workflow' => array(
+          'label' => t('Workflow: State Change Form'),
+          'description' => t('The form for controlling workflow state changes.'),
+          'weight' => 99,    // Default to bottom.
+          ),
+        ),
+      );
+  }
+
+  return $extra;
+}
+
+/**
  * Form builder. Add form widgets for workflow change to $form.
  *
  * This builder is factored out of workflow_form_alter() because
@@ -491,7 +599,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
       '#options' => $choices,
       '#name' => $name,
       '#parents' => array('workflow'),
-      '#default_value' => $current
+      '#default_value' => $current,
     );
     // Display scheduling form only if a node is being edited and user has
     // permission. State change cannot be scheduled at node creation because
@@ -547,8 +655,8 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
   // Ignore all forms except comment forms and node editing forms.
-  if ((isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
-    || (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
+  if (/*(isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
+    ||*/ (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
     // Skip if there are no workflows.
     if (isset($form['#node'])) {
       $node = $form['#node'];
@@ -576,13 +684,14 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       $min = 2; // Our current status, and our new status.
       foreach ($states as $state) {
         if ($state->sid == $current) {
-          $min = $state->status == t('(creation)') ? 1 : 2;
+          $min = $state->sysid == WORKFLOW_CREATION ? 1 : 2;
         }
       }
       // Stop if user has no new target state(s) to choose.
       if (count($choices) < $min) {
         return;
       }
+
       $form['#wf'] = $workflow;
       $name = check_plain($workflow->name);
       // If the current node state is not one of the choices, pick first choice.
@@ -613,7 +722,7 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form_state['values']['workflow_comment'])) {
         $comment = $form_state['values']['workflow_comment'];
       }
-      workflow_node_form($form, $form_state, $name, $name, $current, $choices, $timestamp, $comment);
+      workflow_node_form($form, $form_state, t('Change @name state', array('@name' => $name)), $name, $current, $choices, $timestamp, $comment);
     }
   }
 }
@@ -736,7 +845,7 @@ function workflow_field_choices($node) {
     $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
     // Include current state if it is not the (creation) state.
     foreach ($transitions as $transition) {
-      if ($transition->state_name != t('(creation)')) {
+      if ($transition->sysid != WORKFLOW_CREATION) {
         $choices[$transition->state_id] = check_plain(t($transition->state_name));
       }
     }
@@ -778,7 +887,7 @@ function workflow_node_previous_state($node) {
     $sids = array();
     $sid = -1;
     $last_history = workflow_get_workflow_node_history_by_nid($node->nid, 1);
-    $sid = !$last_history ? false : $last_history->sid;
+    $sid = !$last_history ? FALSE : $last_history->sid;
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
@@ -1287,13 +1396,13 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
   // Yes. This is a monster. This should, in all absolute seriousness, be cut down to size.
   // I also REALLY do not like the insecure field pieces in here.
   $results = db_query(''
-      . '(SELECT t.tid, t.' . $field . ' as state_id, s.state AS state_name, s.weight AS state_weight '
+      . '(SELECT t.tid, t.' . $field . ' as state_id, s.state AS state_name, s.weight AS state_weight, s.sysid as sysid '
         . 'FROM {workflow_transitions} t '
         . 'INNER JOIN {workflow_states} s ON s.sid = t.' . $field . ' '
         . 'WHERE t.' . $field_where . ' = :sid AND s.status = 1 '
         . 'ORDER BY state_weight) '
     . 'UNION '
-      . '(SELECT s.sid as tid, s.sid as state_id, s.state as state_name, s.weight as state_weight '
+      . '(SELECT s.sid as tid, s.sid as state_id, s.state as state_name, s.weight as state_weight, s.sysid as sysid '
         . 'FROM {workflow_states} s '
         . 'WHERE s.sid = :sid AND s.status = 1) '
     . 'ORDER BY state_weight, state_id',
