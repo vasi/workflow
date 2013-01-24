@@ -856,41 +856,49 @@ function workflow_admin_ui_types_form($form) {
   foreach (workflow_get_workflows() as $data) {
     $these_workflows[$data->wid] = check_plain(t($data->name));
   }
+
   $workflows = array(t('None')) + $these_workflows;
   if (count($workflows) == 0) {
     return $form;
   }
+
   $type_map = array();
   foreach (workflow_get_workflow_type_map() as $data) {
     $type_map[$data->type] = $data->wid;
   }
+
   $form['#theme'] = 'workflow_admin_ui_types_form';
   $form['#tree'] = TRUE;
   $form['help'] = array(
     '#type' => 'item',
-    '#value' => t('Each content type may have a separate workflow. The form for changing workflow state can be displayed when editing ' .
-      'a node, editing a comment for a node, or both.'),
-  );
+    '#title' => '<h3>' . t('Content Type Mapping') . '</h3>',
+    '#markup' => t('Each content type may have a separate workflow. The form for changing workflow state can be '
+      . 'displayed when editing a node, editing a comment for a node, or both.'),
+    );
+
   foreach (node_type_get_names() as $type => $name) {
     $form[$type]['workflow'] = array(
       '#type' => 'select',
       '#title' => check_plain($name),
       '#options' => $workflows,
       '#default_value' => isset($type_map[$type]) ? $type_map[$type] : 0,
-    );
+      );
+
     $form[$type]['placement'] = array(
       '#type' => 'checkboxes',
       '#options' => array(
         'node' => t('Post'),
         'comment' => t('Comment'),
-      ),
+        ),
       '#default_value' => variable_get('workflow_' . $type, array('node')),
-    );
+      );
   }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save workflow mapping'),
-  );
+    );
+
   return $form;
 }
 
@@ -898,16 +906,21 @@ function workflow_admin_ui_types_form($form) {
  * Theme the workflow type mapping form.
  */
 function theme_workflow_admin_ui_types_form($variables) {
+  $output = '';
   $form = $variables['form'];
+
   $header = array(t('Content Type'), t('Workflow'), t('Display Workflow Form for:'));
   $rows = array();
+
   foreach (node_type_get_names() as $type => $name) {
     $name = $form[$type]['workflow']['#title'];
     unset($form[$type]['workflow']['#title']);
     $rows[] = array($name, drupal_render($form[$type]['workflow']), drupal_render($form[$type]['placement']));
   }
-  $output = drupal_render($form['help']);
+
+  $output .= drupal_render($form['help']);
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
+
   return $output . drupal_render_children($form);
 }
 
