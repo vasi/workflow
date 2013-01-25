@@ -55,8 +55,12 @@ function workflow_tab_page($node = NULL) {
     }
     $rows[] = theme('workflow_history_table_row', array( 'history' => $history, 'old_state_name' => $old_state_name, 'state_name' => $state_name ));
   }
-  $output .= theme('workflow_history_table', array('rows' => $rows, 'footer' => !empty($footer_needed)));
-  $output .= theme('pager', array('tags' => variable_get('workflow_states_per_page', 20)));
+  
+  // Only display the table if there's anything in it.
+  if ($rows) {
+    $output .= theme('workflow_history_table', array('rows' => $rows, 'footer' => !empty($footer_needed)));
+    $output .= theme('pager', array('tags' => variable_get('workflow_states_per_page', 20)));
+  }
   return $output;
 }
 
@@ -147,17 +151,20 @@ function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current
       $timestamp = $node->workflow_scheduled_timestamp;
       $comment = $node->workflow_scheduled_comment;
     }
+
     // Include the same form elements here that are included on a
     // regular node editing page. $form is modified by reference.
     workflow_node_form($form, $form_state, t('Change @name state', array('@name' => $name)), $name, $current, $choices, $timestamp, $comment);
+
     $form['node'] = array(
       '#type' => 'value',
       '#value' => $node,
-    );
+      );
+
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Update workflow'),
-    );
+      );
   }
   return $form;
 }
@@ -172,7 +179,7 @@ function workflow_tab_form_submit($form, &$form_state) {
   $node = $form_state['values']['node'];
   if (isset($form_state['values']['workflow'])) {
     $node->workflow = $form_state['values']['workflow'];
-    $node->workflow_comment = $form_state['values']['workflow_comment'];
+    $node->workflow_comment = isset($form_state['values']['workflow_comment']) ? $form_state['values']['workflow_comment'] : '';
     if (!empty($form_state['values']['workflow_scheduled'])) {
       $node->workflow_scheduled = $form_state['values']['workflow_scheduled'];
     }

@@ -131,12 +131,14 @@ function _workflow_rules_action_select() {
 function workflow_check_transition($node, $old_states, $new_states) {
   $node_current_state = workflow_node_current_state($node);
   $node_old_state = workflow_node_previous_state($node);
+
   if (in_array('ANY', $old_states)) {
     if (in_array('ANY', $new_states)) {
       return TRUE;
     }
     return in_array($node_current_state, $new_states);
   }
+
   if (in_array('ANY', $new_states)) {
     return in_array($node_old_state, $old_states);
   }
@@ -151,6 +153,7 @@ function workflow_check_state($node, $states) {
   if (in_array('ANY', $states)) {
     return TRUE;
   }
+
   if (in_array($node_state, $states)) {
     return TRUE;
   }
