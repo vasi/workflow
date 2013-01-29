@@ -108,6 +108,30 @@ function workflow_views_views_data() {
     ),
   );
 
+  $data['workflow_node_current']['table']['group']  = t('Workflow');
+  // Explain how this table joins to others.
+  $data['workflow_node_current']['table']['join'] = array(
+    'node' => array(
+      'table' => 'workflow_node_history',
+      'field' => 'nid',
+      'left_table' => 'node',
+      'left_field' => 'nid',
+      'extra' => 'workflow_node.stamp = workflow_node_current.stamp AND workflow_node.nid = workflow_node_current.nid',
+    ),
+  );
+  // Workflow node current comment.
+  $data['workflow_node_current']['comment'] = array(
+    'title' => t('Current comment'),
+    'help' => t('The comment describing why the node was moved from the last state to the current state.'),
+    'field' => array(
+      'handler' => 'views_handler_field_xss',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+      'numeric' => TRUE,
+    ),
+  );
   // Workflow scheduled transition.
   $data['workflow_scheduled_transition']['table']['group']  = t('Workflow');
   $data['workflow_scheduled_transition']['table']['join'] = array(
