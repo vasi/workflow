@@ -86,7 +86,7 @@ function workflow_rules_rules_action_info() {
           'type' => 'node',
           'label' => t('Node'),
           'description' => t('The node to set the current workflow state of.'),
-          'save' => TRUE,
+//          'save' => TRUE,
         ),
         'workflow_state' => array(
           'type' => 'list<integer>',
