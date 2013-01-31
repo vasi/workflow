@@ -150,7 +150,14 @@ function workflow_node_load($nodes, $types) {
     // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
     // have been standardized to workflow_x, dropping the initial underscore.
     // Module maintainers integrating with workflow should keep that in mind.
-    $node->workflow = workflow_node_current_state($node);
+//    $node->workflow = workflow_node_current_state($node);
+    $last_history = workflow_get_recent_node_history($node->nid);
+    if ($last_history === FALSE) {
+      return;
+    }
+    $node->workflow = $last_history->sid;
+    $node->workflow_stamp = $last_history->stamp;
+    $node->workflow_state_name = $last_history->state_name;
 
     if ($workflow_map = workflow_get_workflow_type_map_by_type($node->type)) {
       $node->workflow_wid = $workflow_map->wid;
@@ -336,20 +343,21 @@ function workflow_transition($node, $sid) {
  * @return renderable content in $node->content array.
  */
 function workflow_node_view($node, $view_mode, $langcode) {
-  if ($view_mode != 'full' || !workflow_field_choices($node) || !user_access('show workflow state form')) {
+  if ($view_mode != 'full' || !user_access('show workflow state form')) {
     return;
   }
 
   $workflow = workflow_get_workflow_type_map_by_type($node->type);
+  if (!$workflow) {
+    return;
+  }
+
   $states = array();
   foreach (workflow_get_workflow_states() as $data) {
     $states[$data->sid] = check_plain(t($data->state));
   }
 
   $current = workflow_node_current_state($node);
-
-  // Pull in tab form.
-  module_load_include('inc', 'workflow', 'workflow.pages');
 
   // Show current state at the top of the node display.
   $markup = '<div class="workflow-current-state ' . drupal_html_class($states[$current]) . '">'
@@ -361,7 +369,16 @@ function workflow_node_view($node, $view_mode, $langcode) {
     '#weight' => -99,
     );
 
+  // If we are at the terminal state, then don't show the change form.
+  $choices = workflow_field_choices($node);
+  if (count($choices) == 1) {
+    if ($current == key($choices)) {
+      return;
+    }
+  }
+
   // Show state change form at the bottom of the node display.
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'workflow') . '/workflow.pages.inc';
   $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
   $form['#weight'] = 99;
 
@@ -431,15 +448,6 @@ function workflow_field_extra_fields() {
  *   An array of possible target states.
  */
 function workflow_node_form(&$form, $form_state, $title, $name, $current, $choices, $timestamp = NULL, $comment = NULL) {
-  // No sense displaying choices if there is only one choice.
-  // Yeah, except it gets funky...
-//  if (count($choices) == 1) {
-//    $form['workflow'][$name] = array(
-//      '#type' => 'hidden',
-//      '#value' => $current
-//    );
-//  }
-//  else {
     $form['workflow'][$name] = array(
       '#type' => 'radios',
       '#title' => !empty($form['#wf']->options['name_as_title']) ? check_plain($title) : '',
@@ -447,7 +455,8 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
       '#name' => $name,
       '#parents' => array('workflow'),
       '#default_value' => $current,
-    );
+      );
+
     // Display scheduling form only if a node is being edited and user has
     // permission. State change cannot be scheduled at node creation because
     // that leaves the node in the (creation) state.
@@ -460,38 +469,36 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
         '#options' => array(
           t('Immediately'),
           t('Schedule for state change at:'),
-        ),
+          ),
         '#default_value' => isset($form_state['values']['workflow_scheduled']) ? $form_state['values']['workflow_scheduled'] : $scheduled,
-      );
+        );
+
       $form['workflow']['workflow_scheduled_date'] = array(
         '#type' => 'date',
         '#default_value' => array(
           'day'   => isset($form_state['values']['workflow_scheduled_date']['day']) ? $form_state['values']['workflow_scheduled_date']['day'] : format_date($timestamp, 'custom', 'j'),
           'month' => isset($form_state['values']['workflow_scheduled_date']['month']) ? $form_state['values']['workflow_scheduled_date']['month'] :format_date($timestamp, 'custom', 'n'),
           'year'  => isset($form_state['values']['workflow_scheduled_date']['year']) ? $form_state['values']['workflow_scheduled_date']['year'] : format_date($timestamp, 'custom', 'Y')
-        ),
-      );
+          ),
+        );
+
       $hours = format_date($timestamp, 'custom', 'H:i');
       $form['workflow']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
         '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format. If no time is included, the default will be midnight on the specified date. The current time is: ') . format_date(REQUEST_TIME),
         '#default_value' => $scheduled ? (isset($form_state['values']['workflow_scheduled_hour']) ? $form_state['values']['workflow_scheduled_hour'] : $hours) : NULL,
-      );
+        );
     }
-    if (isset($form['#tab'])) {
-      $determiner = 'comment_log_tab';
-    }
-    else {
-      $determiner = 'comment_log_node';
-    }
+
+    $determiner = isset($form['#tab']) ? 'comment_log_tab' : 'comment_log_node';
+
     $form['workflow']['workflow_comment'] = array(
       '#type' => $form['#wf']->options[$determiner] ? 'textarea': 'hidden',
-      '#title' => t('Comment'),
+      '#title' => t('Workflow comment'),
       '#description' => t('A comment to put in the workflow log.'),
       '#default_value' => $comment,
       '#rows' => 2,
-    );
-//  }
+      );
 }
 
 /**
@@ -527,7 +534,8 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
-      $current = isset($form_state['values']['workflow']) ? $form_state['values']['workflow'] : workflow_node_current_state($node);
+      $current = isset($form_state['values']['workflow']) ?
+        $form_state['values']['workflow'] : workflow_node_current_state($node);
       $min = 2; // Our current status, and our new status.
       foreach ($states as $state) {
         if ($state->sid == $current) {
@@ -725,9 +733,7 @@ function workflow_node_current_state($node) {
   }
   if (!$state && !empty($node->type)) {
     // No current state. Use creation state.
-    if ( $workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-      $sid = workflow_get_creation_state_by_wid($workflow->wid);
-    }
+    $sid = workflow_get_creation_state_by_type($node->type);
   }
 
   return $sid;
@@ -739,15 +745,16 @@ function workflow_node_previous_state($node) {
   if (!empty($node->nid)) {
     $sids = array();
     $sid = -1;
-    $last_history = workflow_get_workflow_node_history_by_nid($node->nid, 1);
+    $last_history = workflow_get_recent_node_history($node->nid);
     $sid = !$last_history ? FALSE : $last_history->old_sid;
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
     $sid = FALSE;
-    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-      $sid = workflow_get_creation_state_by_wid($workflow->wid);
-    }
+//    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+//      $sid = workflow_get_creation_state_by_wid($workflow->wid);
+      $sid = workflow_get_creation_state_by_type($node->type);
+//    }
   }
   return $sid;
 }
@@ -786,6 +793,24 @@ function workflow_get_creation_state_by_wid($wid) {
 }
 
 /**
+ * Return the ID of the creation state given a content type.
+ *
+ * @param $type
+ *   The type of the content.
+ */
+function workflow_get_creation_state_by_type($type) {
+  static $sids = array();
+  if (!isset($sids[$type])) {
+    $options = array(':sysid' => WORKFLOW_CREATION, ':type' => $type);
+    $result = db_query("SELECT s.sid FROM {workflow_type_map} m INNER JOIN {workflow_states} s
+      WHERE m.type = :type AND s.sysid = :sysid", $options);
+    $sids[$type] = $result->fetchField();
+  }
+
+  return $sids[$type];
+}
+
+/**
  * DB functions. All SQL in workflow.module should be put into its own function and placed here.
  * This encourages good separation of code and reuse of SQL statements. It *also* makes it easy to
  * make schema updates and changes without rummaging through every single inch of code looking for SQL.
@@ -813,15 +838,16 @@ function workflow_get_workflows() {
 /**
  * Get a specific workflow, wid is a unique ID.
  */
-function workflow_get_workflows_by_wid($wid, $unserialize_options = TRUE) {
-  $results = db_query('SELECT * FROM {workflows} WHERE wid = :wid', array(':wid' => $wid));
-  if ($workflow = $results->fetchObject()) {
-    if ($unserialize_options) {
+function workflow_get_workflows_by_wid($wid) {
+  static $wids = array();
+  if (!isset($wids[$wid])) {
+    $results = db_query('SELECT * FROM {workflows} WHERE wid = :wid', array(':wid' => $wid));
+    if ($workflow = $results->fetchObject()) {
       $workflow->options = unserialize($workflow->options);
     }
-    return $workflow;
+    $wids[$wid] = $workflow;
   }
-  return FALSE;
+  return $wids[$wid];
 }
 
 /**
@@ -1125,8 +1151,12 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
  * Given a sid, return a state. Sids are a unique id.
  */
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
-  $results = db_query('SELECT * FROM {workflow_states} WHERE sid = :sid', array(':sid' => $sid));
-  return $results->fetchObject();
+  static $sids = array();
+  if (!isset($sids[$sid])) {
+    $results = db_query('SELECT * FROM {workflow_states} WHERE sid = :sid', array(':sid' => $sid));
+    $sids[$sid] = $results->fetchObject();
+  }
+  return $sids[$sid];
 }
 
 /**
@@ -1306,6 +1336,20 @@ function workflow_insert_workflow_scheduled_transition($data) {
 /**
  * Functions related to table workflow_node_history.
  */
+
+/**
+ * Get most recent history for a node.
+ */
+function workflow_get_recent_node_history($nid) {
+  static $hist = array();
+  if (!isset($hist[$nid])) {
+    $results = db_query_range('SELECT h.*, s.state AS state_name FROM {workflow_node_history} h ' .
+      'INNER JOIN {workflow_states} s ON s.sid = h.sid ' .
+      'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
+    $hist[$nid] = $results->fetchObject();
+  }
+  return $hist[$nid];
+}
 
 /**
  * Get all recored history for a node id.

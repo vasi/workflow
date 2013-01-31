@@ -19,7 +19,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       // @todo If we ever move Workflow to allow M:M content types to workflows, this will need updating.
       if ($workflow = workflow_get_workflows_by_wid($workflow->wid)) {
         $wid = $workflow->wid;
-        $last_history = workflow_get_workflow_node_history_by_nid($node->nid, 1);
+        $last_history = workflow_get_recent_node_history($node->nid);
 
         if (isset($node->workflow) && !isset($node->workflow_stamp)) {
           // The node is being submitted but the form data has not been saved to the database yet,

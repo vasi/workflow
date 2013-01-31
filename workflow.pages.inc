@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Provide user interface for changing workflow state.
@@ -20,11 +19,20 @@ function workflow_tab_page($node = NULL) {
     $deleted_states[$data->sid] = check_plain(t($data->state));
   }
   $current = workflow_node_current_state($node);
+
   // theme_workflow_current_state() must run state through check_plain().
   $current_state = theme('workflow_current_state', array('state_name' => $states[$current]));
+
   $output = t('Current state: !state', array('!state' => $current_state));
-  $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
-  $output .= drupal_render($form);
+
+  // Show the form to allow state changing.
+  // But only if we are not at the terminal state.
+  $choices = workflow_field_choices($node);
+  if (count($choices) != 1 || $current != key($choices)) { 
+    $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+    $output .= drupal_render($form);
+  }
+
   $rows = array();
   foreach (workflow_get_workflow_node_history_by_nid($node->nid) as $history) {
     if ($history->sid == $current && !isset($deleted_states[$history->sid]) && !isset($current_themed)) {
@@ -55,7 +63,7 @@ function workflow_tab_page($node = NULL) {
     }
     $rows[] = theme('workflow_history_table_row', array( 'history' => $history, 'old_state_name' => $old_state_name, 'state_name' => $state_name ));
   }
-  
+
   // Only display the table if there's anything in it.
   if ($rows) {
     $output .= theme('workflow_history_table', array('rows' => $rows, 'footer' => !empty($footer_needed)));
@@ -79,7 +87,8 @@ function theme_workflow_history_table_row($variables) {
     $old_state_name,
     $state_name,
     theme('username', array('account' => $history)),
-    filter_xss($history->comment, array('a', 'em', 'strong')),
+//    filter_xss($history->comment, array('a', 'em', 'strong')),
+    check_markup($history->comment, filter_default_format()),
   );
 }
 
@@ -129,14 +138,18 @@ function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current
   $form['#tab'] = TRUE;
   $choices = workflow_field_choices($node);
   $min = $states[$current] == t('(creation)') ? 1 : 2;
+
   // Only build form if user has possible target state(s).
   if (count($choices) >= $min) {
     $workflow = workflow_get_workflow_type_map_by_type($node->type);
     $workflow = workflow_get_workflows_by_wid($workflow->wid);
+
     $form['#wf'] = $workflow;
+
     $name = check_plain((t($workflow->name)));
     $timestamp = '';
     $comment = '';
+
     // See if scheduling information is present.
     if (!empty($node->workflow_scheduled_timestamp) && !empty($node->workflow_scheduled_sid)) {
       global $user;
@@ -177,9 +190,12 @@ function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current
 function workflow_tab_form_submit($form, &$form_state) {
   // The entire node object was stashed in the form.
   $node = $form_state['values']['node'];
+
   if (isset($form_state['values']['workflow'])) {
     $node->workflow = $form_state['values']['workflow'];
-    $node->workflow_comment = isset($form_state['values']['workflow_comment']) ? $form_state['values']['workflow_comment'] : '';
+    $node->workflow_comment = isset($form_state['values']['workflow_comment']) ?
+      $form_state['values']['workflow_comment'] : '';
+
     if (!empty($form_state['values']['workflow_scheduled'])) {
       $node->workflow_scheduled = $form_state['values']['workflow_scheduled'];
     }
