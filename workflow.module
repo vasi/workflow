@@ -469,12 +469,23 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
         '#title' => t('Schedule'),
         '#options' => array(
           t('Immediately'),
-          t('Schedule for state change at:'),
+          t('Schedule for state change'),
           ),
         '#default_value' => isset($form_state['values']['workflow_scheduled']) ? $form_state['values']['workflow_scheduled'] : $scheduled,
         );
 
-      $form['workflow']['workflow_scheduled_date'] = array(
+      $form['workflow']['workflow_scheduled_date_time'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('At'),
+        '#prefix' => '<div style="margin-left: 1em;">',
+        '#suffix' => '</div>',
+        '#states' => array(
+          'visible' => array(':input[name="workflow_scheduled"]' => array('value' => 1)),
+          'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => 0)),
+          ),
+        );
+
+      $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_date'] = array(
         '#type' => 'date',
         '#default_value' => array(
           'day'   => isset($form_state['values']['workflow_scheduled_date']['day']) ? $form_state['values']['workflow_scheduled_date']['day'] : format_date($timestamp, 'custom', 'j'),
@@ -484,10 +495,17 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
         );
 
       $hours = format_date($timestamp, 'custom', 'H:i');
-      $form['workflow']['workflow_scheduled_hour'] = array(
+      $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format. If no time is included, the default will be midnight on the specified date. The current time is: ') . format_date(REQUEST_TIME),
-        '#default_value' => $scheduled ? (isset($form_state['values']['workflow_scheduled_hour']) ? $form_state['values']['workflow_scheduled_hour'] : $hours) : NULL,
+        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format. 
+          If no time is included, the default will be midnight on the specified date.
+          The current time is: @time', array('@time' => $hours)),
+        '#default_value' => $scheduled ? 
+          (isset($form_state['values']['workflow_scheduled_hour']) ?
+            $form_state['values']['workflow_scheduled_hour'] : $hours) 
+//          : NULL,
+//          : '00:00',
+          : '24:00',
         );
     }
 
