@@ -1,0 +1,153 @@
+diff --git a/workflow.module b/workflow.module
+index c837d42..19a4deb 100644
+--- a/workflow.module
++++ b/workflow.module
+@@ -378,7 +378,8 @@ function workflow_node_view($node, $view_mode, $langcode) {
+   }
+ 
+   // Show state change form at the bottom of the node display.
+-  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'workflow') . '/workflow.pages.inc';
++  $form_state = array('cache' => TRUE);
++  form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
+   $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+   $form['#weight'] = 99;
+ 
+@@ -959,6 +960,7 @@ function workflow_get_workflow_type_map_by_wid($wid) {
+ 
+ /**
+  * Delete all type maps.
++ * @TODO: why is this here instead of the admin_ui?
+  */
+ function workflow_delete_workflow_type_map_all() {
+   return db_delete('workflow_type_map')->execute();
+@@ -980,6 +982,7 @@ function workflow_delete_workflow_type_map_by_type($type) {
+ 
+ /**
+  * Given information, insert a new workflow_type_map. Returns data by ref. (like node_save).
++ * @TODO: why is this here instead of the admin_ui?
+  */
+ function workflow_insert_workflow_type_map(&$data) {
+   $data = (object) $data;
+@@ -1306,12 +1309,14 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
+         . 'FROM {workflow_transitions} t '
+         . 'INNER JOIN {workflow_states} s ON s.sid = t.' . $field . ' '
+         . 'WHERE t.' . $field_where . ' = :sid AND s.status = 1 '
+-        . 'ORDER BY state_weight) '
++        // I don't think this actually does anything.
++//        . 'ORDER BY state_weight '
++          . ') '
+     . 'UNION '
+       . '(SELECT s.sid as tid, s.sid as state_id, s.state as state_name, s.weight as state_weight, s.sysid as sysid '
+         . 'FROM {workflow_states} s '
+         . 'WHERE s.sid = :sid AND s.status = 1) '
+-    . 'ORDER BY state_weight, state_id',
++        . 'ORDER BY state_weight, state_id',
+     array(':sid' => $sid));
+   foreach ($results as $transition) {
+     if ($roles == 'ALL'  // Superuser.
+diff --git a/workflow.tokens.inc b/workflow.tokens.inc
+index 8175de8..a3ecc15 100644
+--- a/workflow.tokens.inc
++++ b/workflow.tokens.inc
+@@ -11,6 +11,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
+   $replacements = array();
+   $sanitize = !empty($options['sanitize']);
+   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
++  $date = REQUEST_TIME;
+ 
+   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])) {
+     $node = $data['node'];
+@@ -28,24 +29,6 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
+           $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : workflow_get_creation_state_by_wid($workflow->wid);
+           $sid = workflow_get_workflow_states_by_sid($sid);
+           $old_sid = workflow_get_workflow_states_by_sid($old_sid);
+-          $date = REQUEST_TIME;
+-          $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
+-          $uid = $node->uid;
+-          $account = user_load($node->uid);
+-          $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
+-          $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
+-        }
+-        elseif (!isset($node->workflow) && empty($last_history->sid)) {
+-          // If the state is not specified and the node has no workflow history,
+-          // the node is being inserted and will soon be transitioned to the first valid state.
+-          // We find this state using the same logic as workflow_nodeapi().
+-          $choices = workflow_field_choices($node);
+-          $keys = array_keys($choices);
+-          $sid = array_shift($keys);
+-          $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
+-          $sid = workflow_get_workflow_states_by_sid($sid);
+-          $old_sid = workflow_get_workflow_states_by_sid($old_sid);
+-          $date = REQUEST_TIME;
+           $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
+           $uid = $node->uid;
+           $account = user_load($node->uid);
+@@ -53,17 +36,45 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
+           $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
+         }
+         else {
+-          // Default to the most recent transition data in the workflow history table.
+-          $account = user_load($last_history->uid);
+-          $sid = $last_history->sid;
+-          $old_sid = $last_history->old_sid;
+-          $sid = workflow_get_workflow_states_by_sid($sid);
+-          $old_sid = workflow_get_workflow_states_by_sid($old_sid);
+-          $date = $last_history->stamp;
+-          $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
+-          $uid = $account->uid;
+-          $mail = $account->uid ? $account->mail : '';
+-          $comment = $last_history->comment;
++          if (!isset($node->workflow) && empty($last_history->sid)) {
++            // If the state is not specified and the node has no workflow history,
++            // the node is being inserted and will soon be transitioned to the first valid state.
++            // We find this state using the same logic as workflow_nodeapi().
++            $choices = workflow_field_choices($node);
++            $keys = array_keys($choices);
++            $sid = array_shift($keys);
++            $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
++            $sid = workflow_get_workflow_states_by_sid($sid);
++            $old_sid = workflow_get_workflow_states_by_sid($old_sid);
++            $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
++            $uid = $node->uid;
++            $account = user_load($node->uid);
++            $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
++            $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
++          }
++          else {
++            // Is a transition in progress?
++            if ($node->workflow != $last_history->sid) {
++              $sid = $node->workflow;
++              $old_sid = $last_history->sid;
++              $date = $node->workflow_stamp;
++              $uid = $node->uid;
++              $account = user_load($node->uid);
++            }
++            else {
++              $sid = $last_history->sid;
++              $old_sid = $last_history->old_sid;
++              $date = $last_history->stamp;
++              $uid = $last_history->uid;
++              $account = user_load($last_history->uid);
++            }
++            // Default to the most recent transition data in the workflow history table.
++            $sid = workflow_get_workflow_states_by_sid($sid);
++            $old_sid = workflow_get_workflow_states_by_sid($old_sid);
++            $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
++            $mail = $account->uid ? $account->mail : '';
++            $comment = $last_history->comment;
++          }
+         }
+ 
+         foreach ($tokens as $name => $original) {
+diff --git a/workflow_admin_ui/workflow_admin_ui.module b/workflow_admin_ui/workflow_admin_ui.module
+index 9c0c95d..92227ba 100644
+--- a/workflow_admin_ui/workflow_admin_ui.module
++++ b/workflow_admin_ui/workflow_admin_ui.module
+@@ -959,6 +959,7 @@ function workflow_admin_ui_get_roles() {
+  * @param $form_state['values']
+  */
+ function workflow_types_save($form_values) {
++  // @TODO: Is this needed? workflow_insert_workflow_type_map() will delete the type.
+   workflow_delete_workflow_type_map_all();
+   $node_types = node_type_get_types();
+   foreach ($node_types as $type => $name) {

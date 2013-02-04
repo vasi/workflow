@@ -959,6 +959,7 @@ function workflow_admin_ui_get_roles() {
  * @param $form_state['values']
  */
 function workflow_types_save($form_values) {
+  // @TODO: Is this needed? workflow_insert_workflow_type_map() will delete the type.
   workflow_delete_workflow_type_map_all();
   $node_types = node_type_get_types();
   foreach ($node_types as $type => $name) {
