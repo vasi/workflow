@@ -1,0 +1,80 @@
+diff --git a/workflow.module b/workflow.module
+index 8081152..bfc161b 100644
+--- a/workflow.module
++++ b/workflow.module
+@@ -497,12 +497,12 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
+       $hours = format_date($timestamp, 'custom', 'H:i');
+       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
+         '#type' => 'textfield',
+-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format. 
++        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
+           If no time is included, the default will be midnight on the specified date.
+           The current time is: @time', array('@time' => $hours)),
+-        '#default_value' => $scheduled ? 
++        '#default_value' => $scheduled ?
+           (isset($form_state['values']['workflow_scheduled_hour']) ?
+-            $form_state['values']['workflow_scheduled_hour'] : $hours) 
++            $form_state['values']['workflow_scheduled_hour'] : $hours)
+ //          : NULL,
+ //          : '00:00',
+           : '24:00',
+@@ -1382,9 +1382,12 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
+   if (empty($limit)) {
+     $limit = variable_get('workflow_states_per_page', 20);
+   }
+-  $results = db_query('SELECT * FROM {workflow_node_history} h ' .
+-    'LEFT JOIN {users} u ON h.uid = u.uid ' .
+-    'WHERE nid = :nid ORDER BY h.hid DESC', array(':nid' => $nid));
++  $results = db_query('SELECT * FROM {workflow_node_history} h '
++    . 'LEFT JOIN {users} u ON h.uid = u.uid '
++    . 'WHERE nid = :nid '
++//    . 'ORDER BY h.hid DESC ', 
++    . 'ORDER BY h.stamp DESC ', 
++    array(':nid' => $nid));
+   if ($limit == 1) {
+     return $results->fetchObject();
+   }
+@@ -1406,6 +1409,15 @@ function workflow_insert_workflow_node_history($data) {
+   if (isset($data->hid)) {
+     unset($data->hid);
+   }
++  
++  // Check for no transition.
++  if ($data->old_sid == $data->sid) {
++    // Make sure we haven't already inserted history for this update.
++    $last_history = workflow_get_workflow_node_history_by_nid($data->nid, 1);
++    if (isset($last_history) && $last_history->stamp == REQUEST_TIME) {
++      return;
++    }
++  }
+   drupal_write_record('workflow_node_history', $data);
+ }
+ 
+diff --git a/workflow.pages.inc b/workflow.pages.inc
+index 3e68987..84122bf 100644
+--- a/workflow.pages.inc
++++ b/workflow.pages.inc
+@@ -28,7 +28,7 @@ function workflow_tab_page($node = NULL) {
+   // Show the form to allow state changing.
+   // But only if we are not at the terminal state.
+   $choices = workflow_field_choices($node);
+-  if (count($choices) != 1 || $current != key($choices)) { 
++  if (count($choices) != 1 || $current != key($choices)) {
+     $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+     $output .= drupal_render($form);
+   }
+diff --git a/workflow.tokens.inc b/workflow.tokens.inc
+index a3ecc15..9daecb1 100644
+--- a/workflow.tokens.inc
++++ b/workflow.tokens.inc
+@@ -53,6 +53,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
+             $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
+           }
+           else {
++            // Sometimes there is no workflow set (edit?).
++            if (!isset($node->workflow)) {
++              $node->workflow = $last_history->sid;
++            }
+             // Is a transition in progress?
+             if ($node->workflow != $last_history->sid) {
+               $sid = $node->workflow;

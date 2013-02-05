@@ -28,7 +28,7 @@ function workflow_tab_page($node = NULL) {
   // Show the form to allow state changing.
   // But only if we are not at the terminal state.
   $choices = workflow_field_choices($node);
-  if (count($choices) != 1 || $current != key($choices)) { 
+  if (count($choices) != 1 || $current != key($choices)) {
     $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
     $output .= drupal_render($form);
   }

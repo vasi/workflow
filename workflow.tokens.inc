@@ -53,6 +53,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
           }
           else {
+            // Sometimes there is no workflow set (edit?).
+            if (!isset($node->workflow)) {
+              $node->workflow = $last_history->sid;
+            }
             // Is a transition in progress?
             if ($node->workflow != $last_history->sid) {
               $sid = $node->workflow;

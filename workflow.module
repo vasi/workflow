@@ -497,12 +497,12 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
       $hours = format_date($timestamp, 'custom', 'H:i');
       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format. 
+        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
           If no time is included, the default will be midnight on the specified date.
           The current time is: @time', array('@time' => $hours)),
-        '#default_value' => $scheduled ? 
+        '#default_value' => $scheduled ?
           (isset($form_state['values']['workflow_scheduled_hour']) ?
-            $form_state['values']['workflow_scheduled_hour'] : $hours) 
+            $form_state['values']['workflow_scheduled_hour'] : $hours)
 //          : NULL,
 //          : '00:00',
           : '24:00',
@@ -1382,9 +1382,12 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
   if (empty($limit)) {
     $limit = variable_get('workflow_states_per_page', 20);
   }
-  $results = db_query('SELECT * FROM {workflow_node_history} h ' .
-    'LEFT JOIN {users} u ON h.uid = u.uid ' .
-    'WHERE nid = :nid ORDER BY h.hid DESC', array(':nid' => $nid));
+  $results = db_query('SELECT * FROM {workflow_node_history} h '
+    . 'LEFT JOIN {users} u ON h.uid = u.uid '
+    . 'WHERE nid = :nid '
+//    . 'ORDER BY h.hid DESC ', 
+    . 'ORDER BY h.stamp DESC ', 
+    array(':nid' => $nid));
   if ($limit == 1) {
     return $results->fetchObject();
   }
@@ -1405,6 +1408,15 @@ function workflow_insert_workflow_node_history($data) {
   $data = (object) $data;
   if (isset($data->hid)) {
     unset($data->hid);
+  }
+  
+  // Check for no transition.
+  if ($data->old_sid == $data->sid) {
+    // Make sure we haven't already inserted history for this update.
+    $last_history = workflow_get_workflow_node_history_by_nid($data->nid, 1);
+    if (isset($last_history) && $last_history->stamp == REQUEST_TIME) {
+      return;
+    }
   }
   drupal_write_record('workflow_node_history', $data);
 }
