@@ -143,7 +143,8 @@ function workflow_user_delete($account) {
  */
 
 /**
- * Implements hook_node_load(). Consider replacing with hook_entity_load().
+ * Implements hook_node_load().
+ * @TODO: Consider replacing with hook_entity_load().
  */
 function workflow_node_load($nodes, $types) {
   foreach ($nodes as $node) {
@@ -152,12 +153,18 @@ function workflow_node_load($nodes, $types) {
     // Module maintainers integrating with workflow should keep that in mind.
 //    $node->workflow = workflow_node_current_state($node);
     $last_history = workflow_get_recent_node_history($node->nid);
+
+    // Nodes that existed before the workflow don't have any history.
     if ($last_history === FALSE) {
+      $node->workflow = workflow_get_creation_state_by_type($node->type);
+      $node->workflow_stamp = $node->created;
       return;
     }
-    $node->workflow = $last_history->sid;
-    $node->workflow_stamp = $last_history->stamp;
-    $node->workflow_state_name = $last_history->state_name;
+    else {
+      $node->workflow = $last_history->sid;
+      $node->workflow_stamp = $last_history->stamp;
+      $node->workflow_state_name = $last_history->state_name;
+    }
 
     if ($workflow_map = workflow_get_workflow_type_map_by_type($node->type)) {
       $node->workflow_wid = $workflow_map->wid;
@@ -702,10 +709,12 @@ function workflow_field_choices($node) {
   global $user;
   static $choices = array();
   if (!isset($choices[$node->type])) {
+//    $choices[$node->type] = FALSE;
     $choices[$node->type] = FALSE;
     if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
       $roles = array_keys($user->roles);
       $current_sid = workflow_node_current_state($node);
+
       // If user is node author or this is a new page, give the authorship role.
       if (($user->uid == $node->uid && $node->uid > 0) || (arg(0) == 'node' && arg(1) == 'add')) {
         $roles += array('author' => 'author');
@@ -714,7 +723,10 @@ function workflow_field_choices($node) {
         // Superuser is special.
         $roles = 'ALL';
       }
-      $current_sid == workflow_get_creation_state_by_wid($workflow->wid);
+      if ($current_sid == workflow_get_creation_state_by_wid($workflow->wid) && (arg(0) == 'node' && arg(1) == 'add')) {
+        $choices[$node->type][$current_sid] = WORKFLOW_CREATION;
+      }
+
       // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
       // Instead it returns just the allowable data as:
       // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
@@ -860,8 +872,13 @@ function workflow_get_workflows() {
 function workflow_get_workflows_by_wid($wid) {
   static $wids = array();
   if (!isset($wids[$wid])) {
-    $results = db_query('SELECT * FROM {workflows} WHERE wid = :wid', array(':wid' => $wid));
-    if ($workflow = $results->fetchObject()) {
+    $query = "SELECT w.wid, w.name, w.tab_roles, w.options, s.sid AS creation_state "
+      . "FROM {workflows} w "
+      . "INNER JOIN {workflow_states} s ON s.wid = w.wid "
+      . "WHERE w.wid = :wid AND s.sysid = :sysid";
+    $workflow = db_query($query, array(':wid' => $wid, ':sysid' => WORKFLOW_CREATION))->fetchObject();
+//    if ($workflow = $results->fetchObject()) {
+    if ($workflow) {
       $workflow->options = unserialize($workflow->options);
     }
     $wids[$wid] = $workflow;
@@ -1114,6 +1131,27 @@ function workflow_update_workflow_transitions_roles($tid, $roles) {
 /**
  * Functions related to table workflow_states.
  */
+
+/**
+ * Get all states in the system.
+ */
+function workflow_get_workflow_states_all() {
+  static $states = array();
+  if (empty($states)) {
+    $query = "SELECT sid, state "
+      . "FROM {workflow_states} "
+      . "WHERE status = 1 "
+      . "ORDER BY sid "
+      ;
+    $results = db_query($query);
+  
+    foreach ($results as $row) {
+      $states[$row->sid] = $row->state;
+    }
+  }
+  
+  return $states;
+}
 
 /**
  * Get all states in the system by content type.
@@ -1385,8 +1423,8 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
   $results = db_query('SELECT * FROM {workflow_node_history} h '
     . 'LEFT JOIN {users} u ON h.uid = u.uid '
     . 'WHERE nid = :nid '
-//    . 'ORDER BY h.hid DESC ', 
-    . 'ORDER BY h.stamp DESC ', 
+//    . 'ORDER BY h.hid DESC ',
+    . 'ORDER BY h.stamp DESC ',
     array(':nid' => $nid));
   if ($limit == 1) {
     return $results->fetchObject();
@@ -1409,7 +1447,7 @@ function workflow_insert_workflow_node_history($data) {
   if (isset($data->hid)) {
     unset($data->hid);
   }
-  
+
   // Check for no transition.
   if ($data->old_sid == $data->sid) {
     // Make sure we haven't already inserted history for this update.
