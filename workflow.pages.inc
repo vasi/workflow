@@ -139,6 +139,22 @@ function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current
   $choices = workflow_field_choices($node);
   $min = $states[$current] == t('(creation)') ? 1 : 2;
 
+  // Invoke a callback indicating a transition is about to occur. Modules
+  // may veto the transition by returning FALSE.
+  // In this case, the transition is not about to occur, but we want to
+  // know if it should be dropped from the list of choices.
+  foreach ($choices as $sid => $name) {
+    if ($current == $sid) {
+      continue;
+    }
+    $result = module_invoke_all('workflow', 'transition pre', $current, $sid, $node);
+    // Stop if a module says so.
+    if (in_array(FALSE, $result)) {
+      // if vetoed, remove from list.
+      unset($choices[$sid]);
+    }
+  }
+
   // Only build form if user has possible target state(s).
   if (count($choices) >= $min) {
     $workflow = workflow_get_workflow_type_map_by_type($node->type);
