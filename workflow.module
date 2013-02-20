@@ -833,8 +833,11 @@ function workflow_get_creation_state_by_type($type) {
   static $sids = array();
   if (!isset($sids[$type])) {
     $options = array(':sysid' => WORKFLOW_CREATION, ':type' => $type);
-    $result = db_query("SELECT s.sid FROM {workflow_type_map} m INNER JOIN {workflow_states} s
-      WHERE m.type = :type AND s.sysid = :sysid", $options);
+    $query = "SELECT s.sid "
+      . "FROM {workflow_type_map} m "
+      . "INNER JOIN {workflow_states} s ON s.wid = m.wid "
+      . "WHERE m.type = :type AND s.sysid = :sysid ";
+    $result = db_query($query, $options);
     $sids[$type] = $result->fetchField();
   }
 
@@ -1144,12 +1147,12 @@ function workflow_get_workflow_states_all() {
       . "ORDER BY sid "
       ;
     $results = db_query($query);
-  
+
     foreach ($results as $row) {
       $states[$row->sid] = $row->state;
     }
   }
-  
+
   return $states;
 }
 
