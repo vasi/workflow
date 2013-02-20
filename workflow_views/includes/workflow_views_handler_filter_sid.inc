@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Provide views filter handler for workflow.module.
@@ -41,19 +40,27 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
   }
 
   function query() {
-    if (empty($this->value)) {
+    $value = $this->is_a_group() && !$this->options['expose']['multiple'] ? drupal_array_merge_deep_array($this->value) : $this->value;
+    if (empty($value)) {
       return;
     }
     $this->ensure_my_table();
     $placeholder = !empty($this->definition['numeric']) ? '%d' : "'%s'";
-    if (count($this->value) == 1) {
+    if (count($value) == 1) {
       $this->operator = ($this->operator == 'in') ? '= ' : '!= ';
       $in = !empty($this->definition['numeric']) ? '%d' : "'%s'";
     }
-    else {
-      $replace = array_fill(0, sizeof($this->value), $placeholder);
-      $in = ' (' . implode(", ", $replace) . ')';
+
+    if ($this->operator == 'empty' || $this->operator == 'not empty') {
+      $value = NULL;
+      if ($this->operator == 'empty') {
+        $this->operator = "IS NULL";
+      }
+      else {
+        $this->operator = "IS NOT NULL";
+      }
     }
-    $this->query->add_where($this->options['group'], $this->table_alias . '.' . $this->real_field, $this->value,  $this->operator);
+
+    $this->query->add_where($this->options['group'], $this->table_alias . '.' . $this->real_field, $value,  $this->operator);
   }
 }
