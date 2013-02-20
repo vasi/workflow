@@ -94,6 +94,12 @@ function workflow_rules_rules_action_info() {
           'options list' => '_workflow_rules_action_select',
           'description' => t('The workflow state to set (select only one).'),
         ),
+        'workflow_comment' => array(
+          'type' => 'text',
+          'label' => t('Workflow Comment'),
+          'description' => t('The workflow comment to set.'),
+          'optional' => TRUE,
+        ),
       ),
     ),
   );
@@ -165,5 +171,9 @@ function workflow_check_state($node, $states) {
  */
 function workflow_rules_set_state($node, $states) {
   $sid = array_pop($states); // Select the last state on the list.
+  if ($comment) {
+    $node->workflow_comment = $comment;
+  }
   workflow_transition($node, $sid);
+  unset($node->workflow_comment);
 }
