@@ -16,8 +16,11 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])) {
     $node = $data['node'];
 
+    // Get a list of all possible states for returning state names.
+    $states = workflow_get_workflow_states_all();
+
     if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-      // @todo If we ever move Workflow to allow M:M content types to workflows, this will need updating.
+      // @TODO: If we ever move Workflow to allow M:M content types to workflows, this will need updating.
       if ($workflow = workflow_get_workflows_by_wid($workflow->wid)) {
         $wid = $workflow->wid;
         $last_history = workflow_get_recent_node_history($node->nid);
@@ -41,6 +44,8 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             // the node is being inserted and will soon be transitioned to the first valid state.
             // We find this state using the same logic as workflow_nodeapi().
             $choices = workflow_field_choices($node);
+            // @TODO: Some users, like anonymous, may not be allowed
+            // to cause transitions, so there will be no choices.
             $keys = array_keys($choices);
             $sid = array_shift($keys);
             $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
@@ -66,15 +71,15 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
               $account = user_load($node->uid);
             }
             else {
+              // Not a transition.
               $sid = $last_history->sid;
               $old_sid = $last_history->old_sid;
               $date = $last_history->stamp;
               $uid = $last_history->uid;
               $account = user_load($last_history->uid);
             }
+
             // Default to the most recent transition data in the workflow history table.
-            $sid = workflow_get_workflow_states_by_sid($sid);
-            $old_sid = workflow_get_workflow_states_by_sid($old_sid);
             $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
             $mail = $account->uid ? $account->mail : '';
             $comment = $last_history->comment;
@@ -87,10 +92,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
               $replacements[$original] = $sanitize ? check_plain($workflow->name) : $workflow->name;
               break;
             case 'workflow-current-state-name':
-              $replacements[$original] = $sanitize ? check_plain($sid->state) : $sid->state;
+              $replacements[$original] = $sanitize ? check_plain($states[$sid]) : $states[$sid];
               break;
             case 'workflow-old-state-name':
-              $replacements[$original] = $sanitize ? check_plain($old_sid->state) : $old_sid->state;
+              $replacements[$original] = $sanitize ? check_plain($states[$old_sid]) : $states[$old_sid];
               break;
             case 'workflow-current-state-updating-user-name':
               $name = format_username($account);
