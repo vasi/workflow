@@ -5,7 +5,7 @@
  */
 
 /**
- * Implements hook_workflow_operations().
+ * Implements hook_workflow().
  *
  * @param $op
  *   The current workflow operation: 'transition pre' or 'transition post'.
