@@ -250,10 +250,10 @@ function workflow_actions_workflow($op, $old_state, $new_state, $node) {
  * Implements hook_workflow_operations().
  * Called in workflow.admin.inc to add actions for states.
  */
-function workflow_actions_workflow_operations($level, $wid) {
+function workflow_actions_workflow_operations($level, $workflow, $state = NULL) {
   return array('workflow_overview_actions' => array(
     'title' => t('Actions'),
-    'href' => 'admin/structure/trigger/workflow/' . $wid),
+    'href' => 'admin/structure/trigger/workflow/' . $workflow->wid),
   );
 }
 
