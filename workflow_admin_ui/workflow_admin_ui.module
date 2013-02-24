@@ -218,7 +218,7 @@ function workflow_admin_ui_add_form_submit($form, &$form_state) {
  */
 function workflow_admin_ui_delete_form($form, &$form_state, $wid, $sid = NULL) {
   if (isset($sid)) {
-    return workflow_admin_ui_state_delete_form($form, &$form_state, $wid, $sid);
+    return workflow_admin_ui_state_delete_form($form, $form_state, $wid, $sid);
   }
 
   // If we don't have a workflow that goes with this, return to the admin pg.
