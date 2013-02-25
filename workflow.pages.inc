@@ -28,7 +28,7 @@ function workflow_tab_page($node = NULL) {
   // Show the form to allow state changing.
   // But only if we are not at the terminal state.
   $choices = workflow_field_choices($node);
-  if (count($choices) != 1 || $current != key($choices)) {
+  if (count($choices) != 0 || count($choices) != 1 || $current != key($choices)) {
     $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
     $output .= drupal_render($form);
   }
@@ -143,6 +143,9 @@ function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current
   // may veto the transition by returning FALSE.
   // In this case, the transition is not about to occur, but we want to
   // know if it should be dropped from the list of choices.
+  if (empty($choices)) {
+    return;
+  };
   foreach ($choices as $sid => $name) {
     if ($current == $sid) {
       continue;
