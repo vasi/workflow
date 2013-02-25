@@ -229,6 +229,28 @@ function workflow_views_views_data() {
       'numeric' => TRUE,
     ),
   );
+  $data['workflow_node_history']['uid'] = array(
+    'title' => t('Previous comment author'),
+    'help' => t('The author of a comment describing why the node was moved from one state to another in the past.'),
+    'field' => array(
+      'handler' => 'workflow_views_handler_field_username',
+      'click sortable' => TRUE,
+    ),
+    'relationship' => array(
+      'title' => t('Author'),
+      'help' => t("The User ID of the comment's author."),
+      'base' => 'users',
+      'base field' => 'uid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('author'),
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_user_name',
+    ),
+  );
   return $data;
 }
 

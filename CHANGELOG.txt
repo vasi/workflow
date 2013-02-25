@@ -64,3 +64,4 @@ Issue #1924182 by NancyDru: Correct initial state name in edit form.
 Issue #1926746 by shenzhuxi: Fix some php warnings.
 Issue #1781308 by NancyDru: Change node form to vertical tab.
 Issue #1926556 by NancyDru: Back to transition on node creation.
+Issue #1550992 by chadhester: Add Previous Comment Author for Views

@@ -787,11 +787,7 @@ function workflow_node_previous_state($node) {
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
-    $sid = FALSE;
-//    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-//      $sid = workflow_get_creation_state_by_wid($workflow->wid);
-      $sid = workflow_get_creation_state_by_type($node->type);
-//    }
+    $sid = workflow_get_creation_state_by_type($node->type);
   }
   return $sid;
 }
@@ -1155,7 +1151,7 @@ function workflow_get_workflow_states_all() {
     $results = db_query($query);
 
     foreach ($results as $row) {
-      $states[$row->sid] = $row->state;
+      $states[$row->sid] = t($row->state);
     }
   }
 
@@ -1184,14 +1180,17 @@ function workflow_get_workflow_states($options = array()) {
   $query = 'SELECT * FROM {workflow_states} ws ' .
     'LEFT JOIN {workflows} w ON ws.wid = w.wid WHERE 1=1 ';
   $query_array = array();
+
   if (isset($options['sysid'])) {
     $query_array[':sysid'] = $options['sysid'];
     $query .= 'AND ws.sysid = :sysid ';
   }
+
   if (isset($options['status'])) {
     $query_array[':status'] = $options['status'];
     $query .= 'AND ws.status = :status ';
   }
+
   $query .= 'ORDER BY ws.wid, ws.weight';
   $results = db_query($query, $query_array);
   return $results->fetchAll();
@@ -1200,16 +1199,20 @@ function workflow_get_workflow_states($options = array()) {
 function workflow_get_workflow_states_by_wid($wid, $options = array()) {
   $query = 'SELECT * FROM {workflow_states} WHERE 1=1 ';
   $query_array = array();
+
   if (isset($options['sysid'])) {
     $query_array[':sysid'] = $options['sysid'];
     $query .= 'AND sysid = :sysid ';
   }
+
   if (isset($options['status'])) {
     $query_array[':status'] = $options['status'];
     $query .= 'AND status = :status ';
   }
+
   $query_array[':wid'] = $wid;
   $query .= 'AND wid = :wid ORDER BY wid, weight';
+
   $results = db_query($query, $query_array);
   return $results->fetchAll();
   // @todo consider merging this with workflow_get_workflow_states() and pass wid as option.
