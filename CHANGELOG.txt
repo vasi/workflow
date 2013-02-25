@@ -61,3 +61,5 @@ Fix typo in api; Add hook_requirements to show that worflows are active.
 Issue #1924174 by NancyDru: Fix menu error on state delete.
 Issue 1925162 by fgm: Call time reference error.
 Issue #1924182 by NancyDru: Correct initial state name in edit form.
+Issue #1926746 by shenzhuxi: Fix some php warnings.
+Issue #1781308 by NancyDru: Change node form to vertical tab.

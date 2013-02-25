@@ -456,6 +456,14 @@ function workflow_field_extra_fields() {
  *   An array of possible target states.
  */
 function workflow_node_form(&$form, $form_state, $title, $name, $current, $choices, $timestamp = NULL, $comment = NULL) {
+  $form['workflow'] = array(
+    '#type' => 'fieldset',
+    '#title' => check_plain(t($name)),
+    '#group' => 'additional_settings',
+    // Attach the javascript for vertical tabs.
+    '#attached' => array('js' => array('vertical-tabs' => drupal_get_path('module', 'workflow') . '/workflow.js')),
+    );
+
   $form['workflow'][$name] = array(
     '#type' => 'radios',
     '#title' => !empty($form['#wf']->options['name_as_title']) ? check_plain($title) : '',
@@ -465,32 +473,32 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
     '#default_value' => $current,
     );
 
-    // Display scheduling form only if a node is being edited and user has
-    // permission. State change cannot be scheduled at node creation because
-    // that leaves the node in the (creation) state.
-    if (!(arg(0) == 'node' && arg(1) == 'add') && user_access('schedule workflow transitions')) {
-      $scheduled = $timestamp ? 1 : 0;
-      $timestamp = $scheduled ? $timestamp : REQUEST_TIME;
-      $form['workflow']['workflow_scheduled'] = array(
-        '#type' => 'radios',
-        '#title' => t('Schedule'),
-        '#options' => array(
-          t('Immediately'),
-          t('Schedule for state change'),
-          ),
-        '#default_value' => isset($form_state['values']['workflow_scheduled']) ? $form_state['values']['workflow_scheduled'] : $scheduled,
-        );
+  // Display scheduling form only if a node is being edited and user has
+  // permission. State change cannot be scheduled at node creation because
+  // that leaves the node in the (creation) state.
+  if (!(arg(0) == 'node' && arg(1) == 'add') && user_access('schedule workflow transitions')) {
+    $scheduled = $timestamp ? 1 : 0;
+    $timestamp = $scheduled ? $timestamp : REQUEST_TIME;
+    $form['workflow']['workflow_scheduled'] = array(
+      '#type' => 'radios',
+      '#title' => t('Schedule'),
+      '#options' => array(
+        t('Immediately'),
+        t('Schedule for state change'),
+        ),
+      '#default_value' => isset($form_state['values']['workflow_scheduled']) ? $form_state['values']['workflow_scheduled'] : $scheduled,
+      );
 
-      $form['workflow']['workflow_scheduled_date_time'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('At'),
-        '#prefix' => '<div style="margin-left: 1em;">',
-        '#suffix' => '</div>',
-        '#states' => array(
-          'visible' => array(':input[name="workflow_scheduled"]' => array('value' => 1)),
-          'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => 0)),
-          ),
-        );
+    $form['workflow']['workflow_scheduled_date_time'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('At'),
+      '#prefix' => '<div style="margin-left: 1em;">',
+      '#suffix' => '</div>',
+      '#states' => array(
+        'visible' => array(':input[name="workflow_scheduled"]' => array('value' => 1)),
+        'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => 0)),
+        ),
+      );
 
       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_date'] = array(
         '#type' => 'date',
