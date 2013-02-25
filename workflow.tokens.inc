@@ -13,7 +13,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
   $date = REQUEST_TIME;
 
-  if (($type == 'node' || $type == 'workflow') && !empty($data['node'])) {
+  if (($type == 'node' || $type == 'workflow') && !empty($data['node'])  && !empty($data['node']->nid)) {
     $node = $data['node'];
 
     // Get a list of all possible states for returning state names.
@@ -39,8 +39,8 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
         }
         else {
-          if (!isset($node->workflow) && empty($last_history->sid)) {
-            // If the state is not specified and the node has no workflow history,
+          if (empty($last_history)) {
+            // If the node has no workflow history,
             // the node is being inserted and will soon be transitioned to the first valid state.
             // We find this state using the same logic as workflow_nodeapi().
             $choices = workflow_field_choices($node);
@@ -49,8 +49,8 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $keys = array_keys($choices);
             $sid = array_shift($keys);
             $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
-            $sid = workflow_get_workflow_states_by_sid($sid);
-            $old_sid = workflow_get_workflow_states_by_sid($old_sid);
+            $sid = workflow_get_workflow_states_by_sid($sid)->sid;
+            $old_sid = workflow_get_workflow_states_by_sid($old_sid)->sid;
             $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
             $uid = $node->uid;
             $account = user_load($node->uid);

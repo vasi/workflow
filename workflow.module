@@ -456,14 +456,14 @@ function workflow_field_extra_fields() {
  *   An array of possible target states.
  */
 function workflow_node_form(&$form, $form_state, $title, $name, $current, $choices, $timestamp = NULL, $comment = NULL) {
-    $form['workflow'][$name] = array(
-      '#type' => 'radios',
-      '#title' => !empty($form['#wf']->options['name_as_title']) ? check_plain($title) : '',
-      '#options' => $choices,
-      '#name' => $name,
-      '#parents' => array('workflow'),
-      '#default_value' => $current,
-      );
+  $form['workflow'][$name] = array(
+    '#type' => 'radios',
+    '#title' => !empty($form['#wf']->options['name_as_title']) ? check_plain($title) : '',
+    '#options' => $choices,
+    '#name' => $name,
+    '#parents' => array('workflow'),
+    '#default_value' => $current,
+    );
 
     // Display scheduling form only if a node is being edited and user has
     // permission. State change cannot be scheduled at node creation because
@@ -709,7 +709,6 @@ function workflow_field_choices($node) {
   global $user;
   static $choices = array();
   if (!isset($choices[$node->type])) {
-//    $choices[$node->type] = FALSE;
     $choices[$node->type] = FALSE;
     if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
       $roles = array_keys($user->roles);
@@ -724,7 +723,7 @@ function workflow_field_choices($node) {
         $roles = 'ALL';
       }
       if ($current_sid == workflow_get_creation_state_by_wid($workflow->wid) && (arg(0) == 'node' && arg(1) == 'add')) {
-        $choices[$node->type][$current_sid] = WORKFLOW_CREATION;
+        $choices[$node->type][$current_sid] = workflow_get_workflow_states_by_sid(WORKFLOW_CREATION)->state;
       }
 
       // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
