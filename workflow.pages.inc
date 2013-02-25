@@ -229,7 +229,5 @@ function workflow_tab_form_submit($form, &$form_state) {
   // the tab form is used to check for the change. It is *always* better practice to use
   // the transition change itself as your value to check for changes with Rules and other
   // behaviors. Do NOT rely on node_save() to drive transition changes.
-  if (isset($node->workflow)) {
-    workflow_transition($node, $node->workflow);
-  }
+  workflow_transition($node, $node->workflow);
 }

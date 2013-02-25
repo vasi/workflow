@@ -30,8 +30,6 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           // so we set the token values from the workflow form fields.
           $sid = $node->workflow;
           $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : workflow_get_creation_state_by_wid($workflow->wid);
-          $sid = workflow_get_workflow_states_by_sid($sid);
-          $old_sid = workflow_get_workflow_states_by_sid($old_sid);
           $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
           $uid = $node->uid;
           $account = user_load($node->uid);

@@ -517,10 +517,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
           The current time is: @time', array('@time' => $hours)),
         '#default_value' => $scheduled ?
           (isset($form_state['values']['workflow_scheduled_hour']) ?
-            $form_state['values']['workflow_scheduled_hour'] : $hours)
-//          : NULL,
-//          : '00:00',
-          : '24:00',
+            $form_state['values']['workflow_scheduled_hour'] : $hours) : '24:00',
         );
     }
 
@@ -543,8 +540,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
   // Ignore all forms except comment forms and node editing forms.
-  if (/*(isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
-    ||*/ (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
+  if (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id) {
     // Skip if there are no workflows.
     if (isset($form['#node'])) {
       $node = $form['#node'];
@@ -631,6 +627,12 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
  *   ID of new state.
  */
 function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALSE) {
+  // I think this happens because of Workflow Extensions;
+  // it seems to be okay to ignore it.
+  if (empty($node->nid)) {
+    return;
+  }
+
   global $user;
   $old_sid = workflow_node_current_state($node);
   if ($old_sid == $sid) {
@@ -729,9 +731,6 @@ function workflow_field_choices($node) {
       if ($user->uid == 1) {
         // Superuser is special.
         $roles = 'ALL';
-      }
-      if ($current_sid == workflow_get_creation_state_by_wid($workflow->wid) && (arg(0) == 'node' && arg(1) == 'add')) {
-        $choices[$node->type][$current_sid] = workflow_get_workflow_states_by_sid(WORKFLOW_CREATION)->state;
       }
 
       // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
@@ -1570,7 +1569,7 @@ function workflow_requirements($phase) {
       $requirements['workflow'] = array(
         'title' => t('Workflow'),
         'value' => t('Workflow is active on the @types content types.', array('@types' => $type_list)),
-        'severity' => REQUIREMENT_INFO,
+        'severity' => REQUIREMENT_OK,
         );
 
     return $requirements;
