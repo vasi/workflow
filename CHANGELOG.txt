@@ -58,4 +58,6 @@ Issue [#1405688] by wonder95: Path length correction for trigger path
 Issue [#1405688] by hefox: Coder standards
 Issue #1924004 by evaldas.uzkuras: Fix bad variable.
 Fix typo in api; Add hook_requirements to show that worflows are active.
-
+Issue #1924174 by NancyDru: Fix menu error on state delete.
+Issue 1925162 by fgm: Call time reference error.
+Issue #1924182 by NancyDru: Correct initial state name in edit form.
