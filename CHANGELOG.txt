@@ -54,8 +54,8 @@ Something got wierd betwen the push/pull for this commit so trying that again.
 Issue [#1386430] by dylanhuang (patch] by dozymoe) - Views filter shows unknown when state selected in multi-workflow environment.
 Issue [#1386430] by dylanhuang (patch] by dozymoe) - Views filter shows unknown when state selected in multi-workflow environment.
 Correcting for doubled ,, in install schema.
-Issue [#1405688] by wonder95: Path length correction for trigger path
-Issue [#1405688] by hefox: Coder standards
+Issue [#1405688] by wonder95: Path length correction for trigger path.
+Issue [#1405688] by hefox: Coder standards.
 Issue #1924004 by evaldas.uzkuras: Fix bad variable.
 Fix typo in api; Add hook_requirements to show that worflows are active.
 Issue #1924174 by NancyDru: Fix menu error on state delete.
@@ -64,4 +64,6 @@ Issue #1924182 by NancyDru: Correct initial state name in edit form.
 Issue #1926746 by shenzhuxi: Fix some php warnings.
 Issue #1781308 by NancyDru: Change node form to vertical tab.
 Issue #1926556 by NancyDru: Back to transition on node creation.
-Issue #1550992 by chadhester: Add Previous Comment Author for Views
+Issue #1550992 by chadhester: Add Previous Comment Author for Views.
+Issue #1926800 by NancyDru: Fix operations links.
+Issue #1865754 by NancyDru for leelooch: Add reminder to state add form.

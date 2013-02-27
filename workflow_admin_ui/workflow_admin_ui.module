@@ -602,6 +602,15 @@ function workflow_admin_ui_state_add_form($form, &$form_state, $wid, $sid = NULL
     '#description' => t('In listings, the heavier states will sink and the lighter states will be positioned nearer the top.'),
     );
 
+  $form['warning'] = array(
+    '#type' => 'markup',
+    '#markup' => '<p><strong>'
+      . t('NOTE:')
+      . '</strong> '
+      . t('After adding a state, you must still define transitions for it.')
+      . '</p>',
+    );
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save state'),
