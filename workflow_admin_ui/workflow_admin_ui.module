@@ -78,23 +78,23 @@ function workflow_admin_ui_menu() {
       );
   }
 
-  $items["admin/config/workflow/workflow/%/state"] = array(
-    'title' => 'Add state',
-    'access arguments' => array('administer workflow'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_state_add_form', 4),
-    'type' => MENU_CALLBACK,
-    );
-
-  $items["admin/config/workflow/workflow/%/edit"] = array(
+  $items["admin/config/workflow/workflow/edit"] = array(
     'title' => 'Edit',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_edit_form', 4),
+    'page arguments' => array('workflow_admin_ui_edit_form'),
     'type' => MENU_CALLBACK,
     );
 
-  $items["admin/config/workflow/workflow/state/delete"] = array(
+  $items["admin/config/workflow/workflow/state"] = array(
+    'title' => 'Add state',
+    'access arguments' => array('administer workflow'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('workflow_admin_ui_state_add_form'),
+    'type' => MENU_CALLBACK,
+    );
+
+  $items["admin/config/workflow/workflow/delete"] = array(
     'title' => 'Delete',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
@@ -231,7 +231,7 @@ function workflow_admin_ui_delete_form($form, &$form_state, $wid, $sid = NULL) {
         'have those workflow states removed.', array('%title' => $workflow->name)),
       !empty($_GET['destination']) ? $_GET['destination'] : 'admin/config/workflow/workflow',
       t('This action cannot be undone.'),
-      t('Delete'),
+      t('Delete '. check_plain($workflow->name)),
       t('Cancel')
       );
   }
@@ -742,15 +742,15 @@ function workflow_admin_ui_workflow_operations($op, $workflow, $state = NULL) {
       $actions = array(
         'workflow_overview_add_state' => array(
           'title' => t('Add state'),
-          'href' => "admin/config/workflow/workflow/$workflow->wid/state",
+          'href' => "admin/config/workflow/workflow/state/$workflow->wid",
           ),
         'workflow_overview_edit' => array(
           'title' => t('Edit'),
-          'href' => "admin/config/workflow/workflow/$workflow->wid/edit",
+          'href' => "admin/config/workflow/workflow/edit/$workflow->wid",
           ),
         'workflow_overview_delete' => array(
           'title' => t('Delete'),
-          'href' => "admin/config/workflow/workflow/$workflow->wid/delete",
+          'href' => "admin/config/workflow/workflow/delete/$workflow->wid",
           ),
         );
       return $actions;
@@ -760,11 +760,11 @@ function workflow_admin_ui_workflow_operations($op, $workflow, $state = NULL) {
         $ops = array(
           'workflow_overview_edit_state' => array(
             'title' => t('Edit'),
-            'href' => 'admin/config/workflow/workflow/state/' . $workflow->wid . '/' . $state->sid,
+            'href' => "admin/config/workflow/workflow/state/$workflow->wid/$state->sid",
           ),
           'workflow_overview_delete_state' => array(
             'title' => t('Delete'),
-            'href' => 'admin/config/workflow/workflow/state/delete/' . $workflow->wid . '/' . $state->sid,
+            'href' => "admin/config/workflow/workflow/delete/$workflow->wid/$state->sid",
           ),
         );
         return $ops;   /* */
@@ -1058,7 +1058,7 @@ function workflow_initialize_nodes($type, $name) {
   $query->condition('n.type', $type);
   $query->condition('n.status', 1);
   $query->isNull('wn.sid');
-  
+
   $nids = $query->execute()->fetchCol();
   $how_many = count($nids);
   if ($how_many == 0) {
@@ -1074,7 +1074,7 @@ function workflow_initialize_nodes($type, $name) {
     . "ORDER BY s.weight ASC ",
     array(':type' => $type, ':creation' => WORKFLOW_CREATION)
     )->fetchField(0);
-  
+
   // Load them all up.
   $nodes = node_load_multiple($nids);
   foreach ($nodes as $node) {
