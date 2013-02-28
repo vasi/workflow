@@ -67,3 +67,4 @@ Issue #1926556 by NancyDru: Back to transition on node creation.
 Issue #1550992 by chadhester: Add Previous Comment Author for Views.
 Issue #1926800 by NancyDru: Fix operations links.
 Issue #1865754 by NancyDru for leelooch: Add reminder to state add form.
+Issue #1540412 by NancyDru: Allow timezones for transition scheduling.

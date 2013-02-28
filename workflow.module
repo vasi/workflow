@@ -316,7 +316,16 @@ function workflow_transition($node, $sid) {
       if (!isset($node->workflow_scheduled_hour)) {
         $node->workflow_scheduled_hour = '00:00';
       }
-      $scheduled = $node->workflow_scheduled_date['year'] . $node->workflow_scheduled_date['month'] . $node->workflow_scheduled_date['day'] . ' ' . $node->workflow_scheduled_hour;
+
+      $scheduled = $node->workflow_scheduled_date['year']
+        . $node->workflow_scheduled_date['month']
+        . $node->workflow_scheduled_date['day']
+        . ' '
+        . $node->workflow_scheduled_hour
+        . ' '
+        . $node->workflow_scheduled_timezone
+        ;
+
       if ($scheduled = strtotime($scheduled)) {
         // Clear previous entries and insert.
         $data = array(
@@ -325,7 +334,8 @@ function workflow_transition($node, $sid) {
           'sid' => $sid,
           'scheduled' => $scheduled,
           'comment' => $node->workflow_comment,
-        );
+          );
+
         workflow_insert_workflow_scheduled_transition($data);
         // Get name of state.
         if ($state = workflow_get_workflow_states_by_sid($sid)) {
@@ -518,6 +528,23 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
         '#default_value' => $scheduled ?
           (isset($form_state['values']['workflow_scheduled_hour']) ?
             $form_state['values']['workflow_scheduled_hour'] : $hours) : '24:00',
+        );
+
+      global $user;
+      if (variable_get('configurable_timezones', 1) && $user->uid && drupal_strlen($user->timezone)) {
+        $timezone = $user->timezone;
+      }
+      else {
+        $timezone = variable_get('date_default_timezone', 0);
+      }
+
+      $timezones = drupal_map_assoc(timezone_identifiers_list());
+
+      $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
+        '#type' => 'select',
+        '#options' => $timezones,
+        '#title' => t('Time zone'),
+        '#default_value' => array($timezone => $timezone),
         );
     }
 

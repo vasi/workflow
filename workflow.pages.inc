@@ -224,6 +224,9 @@ function workflow_tab_form_submit($form, &$form_state) {
     if (!empty($form_state['values']['workflow_scheduled_hour'])) {
       $node->workflow_scheduled_hour = $form_state['values']['workflow_scheduled_hour'];
     }
+    if (!empty($form_state['values']['workflow_scheduled_timezone'])) {
+      $node->workflow_scheduled_timezone = $form_state['values']['workflow_scheduled_timezone'];
+    }
   }
   // ALERT: Rules that use node_save to check the node transition are going to be missed if
   // the tab form is used to check for the change. It is *always* better practice to use
