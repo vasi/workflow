@@ -1441,14 +1441,10 @@ function workflow_insert_workflow_scheduled_transition($data) {
  * Get most recent history for a node.
  */
 function workflow_get_recent_node_history($nid) {
-  static $hist = array();
-  if (!isset($hist[$nid])) {
-    $results = db_query_range('SELECT h.*, s.state AS state_name FROM {workflow_node_history} h ' .
-      'INNER JOIN {workflow_states} s ON s.sid = h.sid ' .
-      'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
-    $hist[$nid] = $results->fetchObject();
-  }
-  return $hist[$nid];
+  $results = db_query_range('SELECT h.*, s.state AS state_name FROM {workflow_node_history} h ' .
+    'INNER JOIN {workflow_states} s ON s.sid = h.sid ' .
+    'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
+  return $results->fetchObject();
 }
 
 /**
