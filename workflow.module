@@ -901,20 +901,24 @@ function workflow_get_workflows() {
 /**
  * Get a specific workflow, wid is a unique ID.
  */
-function workflow_get_workflows_by_wid($wid) {
+function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
   static $wids = array();
+  if ($reset) {
+    $wids = array();
+  }
+
   if (!isset($wids[$wid])) {
     $query = "SELECT w.wid, w.name, w.tab_roles, w.options, s.sid AS creation_state "
       . "FROM {workflows} w "
       . "INNER JOIN {workflow_states} s ON s.wid = w.wid "
       . "WHERE w.wid = :wid AND s.sysid = :sysid";
     $workflow = db_query($query, array(':wid' => $wid, ':sysid' => WORKFLOW_CREATION))->fetchObject();
-//    if ($workflow = $results->fetchObject()) {
     if ($workflow) {
       $workflow->options = unserialize($workflow->options);
     }
     $wids[$wid] = $workflow;
   }
+
   return $wids[$wid];
 }
 
