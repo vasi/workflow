@@ -171,7 +171,7 @@ function workflow_check_state($node, $states) {
  */
 function workflow_rules_set_state($node, $states) {
   $sid = array_pop($states); // Select the last state on the list.
-  if ($comment) {
+  if (!empty($comment)) {
     $node->workflow_comment = $comment;
   }
   workflow_transition($node, $sid);

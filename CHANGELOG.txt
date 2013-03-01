@@ -4,60 +4,60 @@ Major restructure of admin UI.
 Workflow form detached from comment form.
 Workflow status and form are fields that can be controlled under "Manage display."
 
-Issue [#1783854] by antojose: Allow setting comment in Rules.
-Issue [#1891446] by interX: Allow grouped filters.
-Issue [#1922262] by NancyDru, hwold: Fix join; misc. improvements.
-Issue [#1540824] by NancyDru: Improve Admin UI; Issue [#1908520] by NancyDru: Set state of pre-existing nodes.
-Issue [#1922422] by NancyDru: Correct state name creation in Tokens.
-Issue [#155547] by NancyDru: Tab form should call hook_workflow().
-Issue [#1818424] by NancyDru: Add doc for hook_workflow_operations.
-Issue [#1918424] by NancyDru: More complete api doc.
+Issue #1783854 by antojose: Allow setting comment in Rules.
+Issue #1891446 by interX: Allow grouped filters.
+Issue #1922262 by NancyDru, hwold: Fix join. misc. improvements.
+Issue #1540824 by NancyDru: Improve Admin UI. Issue #1908520 by NancyDru: Set state of pre-existing nodes.
+Issue #1922422 by NancyDru: Correct state name creation in Tokens.
+Issue #155547 by NancyDru: Tab form should call hook_workflow().
+Issue #1818424 by NancyDru: Add doc for hook_workflow_operations.
+Issue #1918424 by NancyDru: More complete api doc.
 Get rid of temp.patch.
-Issue [#385038] by flyingkiki, NancyDru: Fix double history; Minor corrections.
-Issue [#1802216] by NancyDru: Improve scheduling time form section.
-Issue [#1418622] by NancyDru: Fix tokens during transition.
-Issue [#1784092] by wamilton: stop double saving nodes.
+Issue #385038 by flyingkiki, NancyDru: Fix double history. Minor corrections.
+Issue #1802216 by NancyDru: Improve scheduling time form section.
+Issue #1418622 by NancyDru: Fix tokens during transition.
+Issue #1784092 by wamilton: stop double saving nodes.
 remove accidental file
-Issue [#1900488] by NancyDru: load comment in node_load; #1904740] by NancyDru: suppress form at terminal state; Performance improvements.
-Issue [#1532646] by wonder95: Add search api module.
-Issue [#1493012] by kid_icarus: Better views.
-Issue [#1900480] by NancyDru for Dave Reid: Move tokens stuff to separate file.
-Issue [#1418622] by Dave Reid: Fix tokens.
-Issue [#1427006] by NancyDru: Fix transition rule;
-Issue [#1893542] by NancyDru: Transition form] by perms;
-Issue [#1893724] by NancyDru: transition form] by perms;
-Issue [#1895712] by NancyDru: Fix form when only one state;
-Issue [#1896422] by NancyDru: Fix token message.
+Issue #1900488 by NancyDru: load comment in node_load. #1904740 by NancyDru: suppress form at terminal state. Performance improvements.
+Issue #1532646 by wonder95: Add search api module.
+Issue #1493012 by kid_icarus: Better views.
+Issue #1900480 by NancyDru for Dave Reid: Move tokens stuff to separate file.
+Issue #1418622 by Dave Reid: Fix tokens.
+Issue #1427006 by NancyDru: Fix transition rule.
+Issue #1893542 by NancyDru: Transition form by perms.
+Issue #1893724 by NancyDru: transition form by perms.
+Issue #1895712 by NancyDru: Fix form when only one state.
+Issue #1896422 by NancyDru: Fix token message.
 Correct theming in form.
 Minor corrections to README
-Issue [#1856180] by NancyDru: Correct update to not fail.
-Issue [#1475930] by Bastlynn;
-Issue [#1874400] by Nancydru;
-Issue [#1884630] by NancyDru;
-Issue [#1891374] by NancyDru.
+Issue #1856180 by NancyDru: Correct update to not fail.
+Issue #1475930 by Bastlynn.
+Issue #1874400 by Nancydru.
+Issue #1884630 by NancyDru.
+Issue #1891374 by NancyDru.
 Coder finds.
-Issue [#1550274] by dynamicdan, gofs: egregious typo
+Issue #1550274 by dynamicdan, gofs: egregious typo
 Adding features include on revert so it's avail during install / enable.
 UI improvement in Rules interface when there are more than one Workflows available.
-Issue [#1471014] by Bastlynn - removing node_save from workflow tab.
-Issue [#558378] by hefox - Features round 2 cleanup.
-Issue [#1426844] by onegenius - Correcting for missing history information errs.
-Issue [#1424008] by Bastlynn -  handling no workflows setup w/ Workflow Views turned on.
-Issue [#1421518] by DuaelFr -  Workflow access warnings on new nodes
-Issue [#1468810] by firewolf, Morten Najbjerg, sbrege Strict warnings re: render and form
-Issue [#1469798] by Bastlynn - errs thrown on rules change when old state = new state.
-Issue [#1468810] Timezones in scheduler
-Issue [#1426844] by Bastlynn: Adding catch re: propery of last_history object being empty when node is not a workflow content type.
-Issue [#1424008] by Bastlynn: Accounting for trying to go to views pg with workflow_views active, but no workflows in system.
-Issue [#1400352] by Bastlynn: Fixing an error appearing udner E_STRICT in admin UI re: creating a default object.
+Issue #1471014 by Bastlynn: removing node_save from workflow tab.
+Issue #558378 by hefox: Features round 2 cleanup.
+Issue #1426844 by onegenius: Correcting for missing history information errs.
+Issue #1424008 by Bastlynn: handling no workflows setup w/ Workflow Views turned on.
+Issue #1421518 by DuaelFr: Workflow access warnings on new nodes
+Issue #1468810 by firewolf, Morten Najbjerg, sbrege Strict warnings re: render and form
+Issue #1469798 by Bastlynn: errs thrown on rules change when old state = new state.
+Issue #1468810 Timezones in scheduler
+Issue #1426844 by Bastlynn: Adding catch re: propery of last_history object being empty when node is not a workflow content type.
+Issue #1424008 by Bastlynn: Accounting for trying to go to views pg with workflow_views active, but no workflows in system.
+Issue #1400352 by Bastlynn: Fixing an error appearing udner E_STRICT in admin UI re: creating a default object.
 Something got wierd betwen the push/pull for this commit so trying that again.
-Issue [#1386430] by dylanhuang (patch] by dozymoe) - Views filter shows unknown when state selected in multi-workflow environment.
-Issue [#1386430] by dylanhuang (patch] by dozymoe) - Views filter shows unknown when state selected in multi-workflow environment.
+Issue #1386430 by dylanhuang (patch by dozymoe): Views filter shows unknown when state selected in multi-workflow environment.
+Issue #1386430 by dylanhuang (patch by dozymoe): Views filter shows unknown when state selected in multi-workflow environment.
 Correcting for doubled ,, in install schema.
-Issue [#1405688] by wonder95: Path length correction for trigger path.
-Issue [#1405688] by hefox: Coder standards.
+Issue #1405688 by wonder95: Path length correction for trigger path.
+Issue #1405688 by hefox: Coder standards.
 Issue #1924004 by evaldas.uzkuras: Fix bad variable.
-Fix typo in api; Add hook_requirements to show that worflows are active.
+Fix typo in api. Add hook_requirements to show that worflows are active.
 Issue #1924174 by NancyDru: Fix menu error on state delete.
 Issue 1925162 by fgm: Call time reference error.
 Issue #1924182 by NancyDru: Correct initial state name in edit form.
@@ -68,3 +68,4 @@ Issue #1550992 by chadhester: Add Previous Comment Author for Views.
 Issue #1926800 by NancyDru: Fix operations links.
 Issue #1865754 by NancyDru for leelooch: Add reminder to state add form.
 Issue #1540412 by NancyDru: Allow timezones for transition scheduling.
+Issue #1930638 by NancyDru, shenzhuxi: Undefined variable.
