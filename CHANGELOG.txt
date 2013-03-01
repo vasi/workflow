@@ -7,7 +7,8 @@ Workflow status and form are fields that can be controlled under "Manage display
 Issue #1783854 by antojose: Allow setting comment in Rules.
 Issue #1891446 by interX: Allow grouped filters.
 Issue #1922262 by NancyDru, hwold: Fix join. misc. improvements.
-Issue #1540824 by NancyDru: Improve Admin UI. Issue #1908520 by NancyDru: Set state of pre-existing nodes.
+Issue #1540824 by NancyDru: Improve Admin UI.
+Issue #1908520 by NancyDru: Set state of pre-existing nodes.
 Issue #1922422 by NancyDru: Correct state name creation in Tokens.
 Issue #155547 by NancyDru: Tab form should call hook_workflow().
 Issue #1818424 by NancyDru: Add doc for hook_workflow_operations.
@@ -69,3 +70,4 @@ Issue #1926800 by NancyDru: Fix operations links.
 Issue #1865754 by NancyDru for leelooch: Add reminder to state add form.
 Issue #1540412 by NancyDru: Allow timezones for transition scheduling.
 Issue #1930638 by NancyDru, shenzhuxi: Undefined variable.
+Issue #1540824 by NancyDru: Improve Admin UI.
