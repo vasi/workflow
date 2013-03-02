@@ -4,3 +4,4 @@ package = Workflow
 dependencies[] = workflow
 core = 7.x
 configure = admin/config/workflow/workflow
+stylesheets[all][] = workflow_admin_ui.css

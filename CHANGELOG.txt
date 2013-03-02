@@ -73,3 +73,4 @@ Issue #1930638 by NancyDru, shenzhuxi: Undefined variable.
 Issue #1540824 by NancyDru: Improve Admin UI.
 Issue #1931032 by NancyDru: Add missing js file.
 Issue #1931778 by NancyDru: Add breadcrumbs to access page.
+Add admin ui css.
