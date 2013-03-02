@@ -71,3 +71,4 @@ Issue #1865754 by NancyDru for leelooch: Add reminder to state add form.
 Issue #1540412 by NancyDru: Allow timezones for transition scheduling.
 Issue #1930638 by NancyDru, shenzhuxi: Undefined variable.
 Issue #1540824 by NancyDru: Improve Admin UI.
+Issue #1931032 by NancyDru: Add missing js file.
