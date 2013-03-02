@@ -107,8 +107,16 @@ function workflow_access_form($form, $form_state, $wid = 0) {
     drupal_goto('admin/config/workflow/workflow');
   }
 
+  $bc = array(l(t('Home'), '<front>'));
+  $bc[] = l(t('Configuration'), 'admin/config');
+  $bc[] = l(t('Workflow'), 'admin/config/workflow');
+  $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
+  $bc[] = l(t($workflow->name), "admin/config/workflow/workflow/$workflow->wid");
+//  $bc[] = l(t('Access'), "admin/config/workflow/access/$workflow->wid");
+  drupal_set_breadcrumb($bc);
+
   $form = array('#tree' => TRUE);
-  
+
   $form['#wid'] = $wid;
 
   // A list of roles available on the site and our
@@ -217,7 +225,7 @@ function workflow_access_form_submit($form, $form_state) {
   }
 
   drupal_set_message(t('Workflow access permissions updated.'));
-  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $form['#wid'];
+  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $form_state['values']['wid'];
 }
 
 /**
