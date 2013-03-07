@@ -98,7 +98,7 @@ function workflow_select_given_state_action_form($context) {
   $options = array();
   // Get all states, only where active.
   foreach (workflow_get_workflow_states(array('status' => 1)) as $data) {
-    $options[$data->state][$data->sid] = check_plain($data->state);
+    $options[$data->name][$data->sid] = check_plain($data->state);
   }
   $form['target_sid'] = array(
     '#type' => 'select',
