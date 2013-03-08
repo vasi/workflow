@@ -76,3 +76,5 @@ Issue #1931778 by NancyDru: Add breadcrumbs to access page.
 Add admin ui css.
 Issue #1350900 by loze: list states grouped by workflow.
 Issue #1540824 by NancyDru: More Admin UI improvements.
+Issue #1931948 by NancyDru: Use menu loaders to simplify menu.
+Issue #1347116 by NancyDru: New Workflow_Cleanup module.
