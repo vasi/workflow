@@ -10,11 +10,11 @@
 function workflow_access_menu() {
   $items = array();
 
-  $items["admin/config/workflow/access"] = array(
+  $items["admin/config/workflow/access/%workflow"] = array(
     'title' => 'Access',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_access_form'),
+    'page arguments' => array('workflow_access_form', 4),
     'type' => MENU_CALLBACK,
     );
 
@@ -81,10 +81,12 @@ function workflow_access_node_access_explain($row) {
 function workflow_access_workflow_operations($op, $workflow = NULL, $state = NULL) {
   switch ($op) {
     case 'workflow':
+      $alt = t('Control content access for @wf', array('@wf' => $workflow->name));
       $actions = array(
         'workflow_access_form' => array(
           'title' => t('Access'),
           'href' => "admin/config/workflow/access/$workflow->wid",
+          'attributes' => array('alt' => $alt, 'title' => $alt),
           ),
         );
 
@@ -98,8 +100,8 @@ function workflow_access_workflow_operations($op, $workflow = NULL, $state = NUL
  * Add a "three dimensional" (state, role, permission type) configuration
  * interface to the workflow edit form.
  */
-function workflow_access_form($form, $form_state, $wid = 0) {
-  if ($workflow = workflow_get_workflows_by_wid($wid)) {
+function workflow_access_form($form, $form_state, $workflow) {
+  if ($workflow) {
     drupal_set_title(t('@name Access', array('@name' => $workflow->name)));
   }
   else {
@@ -117,7 +119,7 @@ function workflow_access_form($form, $form_state, $wid = 0) {
 
   $form = array('#tree' => TRUE);
 
-  $form['#wid'] = $wid;
+  $form['#wid'] = $workflow->wid;
 
   // A list of roles available on the site and our
   // special -1 role used to represent the node author.
@@ -127,7 +129,7 @@ function workflow_access_form($form, $form_state, $wid = 0) {
 
   // Add a table for every workflow state.
   $options = array('status' => 1);
-  foreach (workflow_get_workflow_states_by_wid($wid, $options) as $state) {
+  foreach (workflow_get_workflow_states_by_wid($workflow->wid, $options) as $state) {
     if ($state->state == t('(creation)')) {
       // No need to set perms on creation.
       continue;
@@ -225,7 +227,7 @@ function workflow_access_form_submit($form, $form_state) {
   }
 
   drupal_set_message(t('Workflow access permissions updated.'));
-  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $form_state['values']['wid'];
+  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $form['#wid'];
 }
 
 /**

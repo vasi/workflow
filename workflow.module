@@ -43,6 +43,14 @@ function workflow_menu() {
 }
 
 /**
+ * Menu wild card loader: %workflow.
+ * May be used by add on modules, such as workflow_admin_ui.
+ */
+function workflow_load($wid) {
+  return workflow_get_workflows_by_wid($wid);
+}
+
+/**
  * Menu access control callback. Determine access to Workflow tab.
  */
 function workflow_node_tab_access($node = NULL) {
@@ -75,25 +83,30 @@ function workflow_theme() {
         'history' => NULL,
         'old_state_name' => NULL,
         'state_name' => NULL
+        ),
       ),
-    ),
     'workflow_history_table' => array(
       'variables' => array(
         'rows' => array(),
         'footer' => NULL,
+        ),
       ),
-    ),
-    'workflow_current_state' => array(
+    'workflow_history_current_state' => array(
       'variables' => array(
         'state_name' => NULL,
+        ),
       ),
-    ),
+    'workflow_current_state' => array(
+      'variables' => array(
+        'state' => NULL,
+        ),
+      ),
     'workflow_deleted_state' => array(
       'variables' => array(
         'state_name' => NULL,
+        ),
       ),
-    ),
-  );
+    );
 }
 
 /**
@@ -192,8 +205,15 @@ function workflow_node_insert($node) {
     // initial state.
     if (empty($node->workflow)) {
       $choices = workflow_field_choices($node);
-      $keys = array_keys($choices);
-      $sid = array_shift($keys);
+      if ($choices) {
+        $keys = array_keys($choices);
+        $sid = array_shift($keys);
+      }
+      else {
+        // This should never happen, but it did during testing.
+        drupal_set_message(t('There are no workflow states available. Please notify your site administrator.'), 'error');
+        return;
+      }
     }
     if (!isset($sid)) {
       $sid = $node->workflow;
@@ -351,6 +371,18 @@ function workflow_transition($node, $sid) {
 }
 
 /**
+ * Theme the current workflow state.
+ */
+function theme_workflow_current_state($variables) {
+  $state = $variables['state'];
+  return '<div class="workflow-current-state '
+    . drupal_html_class($state)
+    . '">'
+    . t('Current state: <span class="state">@state</span>', array('@state' => $state))
+    . '</div>';
+}
+
+/**
  * Implements hook_node_view().
  *
  * @param object $node.
@@ -377,9 +409,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   $current = workflow_node_current_state($node);
 
   // Show current state at the top of the node display.
-  $markup = '<div class="workflow-current-state ' . drupal_html_class($states[$current]) . '">'
-    . t('Current state: @state', array('@state' => $states[$current]))
-    . '</div>';
+  $markup = theme('workflow_current_state', array('state' => $states[$current]));;
 
   $node->content['workflow_current_state'] = array(
     '#markup' => $markup,
@@ -890,7 +920,12 @@ function workflow_get_creation_state_by_type($type) {
  * Get all workflows.
  */
 function workflow_get_workflows() {
-  $results = db_query('SELECT * FROM {workflows}');
+  $query = "SELECT w.wid, w.name, w.tab_roles, w.options, s.sid AS creation_state "
+    . "FROM {workflows} w "
+    . "INNER JOIN {workflow_states} s ON s.wid = w.wid "
+    . "WHERE s.sysid = :sysid";
+    ;
+  $results = db_query($query, array(':sysid' => WORKFLOW_CREATION));
   $workflows = $results->fetchAll();
   foreach ($workflows as $index => $workflow) {
     $workflows[$index]->options = unserialize($workflows[$index]->options);
@@ -903,6 +938,10 @@ function workflow_get_workflows() {
  */
 function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
   static $wids = array();
+  if (empty($wid)) {
+    return FALSE;
+  }
+
   if ($reset) {
     $wids = array();
   }
@@ -941,31 +980,36 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
 
 /**
  * Given a wid, delete the workflow and its stuff.
+ *
+ * @TODO: This should probably move to workflow_admin_ui.
  */
 function workflow_delete_workflows_by_wid($wid) {
   // Notify any interested modules before we delete, in case there's data needed.
   module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL);
+
   // Delete associated state (also deletes any associated transitions).
   foreach (workflow_get_workflow_states_by_wid($wid) as $data) {
     workflow_delete_workflow_states_by_sid($data->sid);
   }
+
   // Delete type map.
   workflow_delete_workflow_type_map_by_wid($wid);
+
   // Delete the workflow.
   db_delete('workflows')->condition('wid', $wid)->execute();
-  // Workflow deletion affects tabs (local tasks), so force menu rebuild.
-  cache_clear_all('*', 'cache_menu', TRUE);
-  menu_rebuild();
 }
 
 /**
  * Given information, update or insert a new workflow. Returns data by ref. (like node_save).
+ *
+ * @TODO: This should probably move to workflow_admin_ui.
  */
 function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
   $data = (object) $data;
   if (isset($data->tab_roles) && is_array($data->tab_roles)) {
     $data->tab_roles = implode(',', $data->tab_roles);
   }
+
   if (isset($data->wid) && count(workflow_get_workflows_by_wid($data->wid)) > 0) {
     drupal_write_record('workflows', $data, 'wid');
   }
@@ -978,14 +1022,13 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
         'sysid' => WORKFLOW_CREATION,
         'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
         );
+
       workflow_update_workflow_states($state_data);
-      // @todo consider adding state data to return here as part of workflow data structure.
-      // That way we could past sructs and transitions around as a data boject as a whole.
+      // @TODO consider adding state data to return here as part of workflow data structure.
+      // That way we could past sructs and transitions around as a data object as a whole.
       // Might make clone easier, but it might be a little hefty for our needs?
     }
   }
-  // Workflow name change affects tabs (local tasks), so force menu rebuild.
-  menu_rebuild();
 }
 
 /**
@@ -1276,11 +1319,12 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
 function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_delete = FALSE) {
   // Notify interested modules. We notify first to allow access to data before we zap it.
   module_invoke_all('workflow', 'state delete', $sid, NULL, NULL);
+
   // Re-parent any nodes that we don't want to orphan.
   if ($new_sid) {
     global $user;
     // A candidate for the batch API.
-    // Future updates should seriously consider setting this with batch.
+    // @TODO: Future updates should seriously consider setting this with batch.
     $node = new stdClass();
     $node->workflow_stamp = REQUEST_TIME;
     foreach (workflow_get_workflow_node_by_sid($sid) as $data) {
@@ -1295,11 +1339,13 @@ function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_de
       workflow_update_workflow_node($data, $sid, t('Previous state deleted'));
     }
   }
+
   // Find out which transitions this state is involved in.
   $preexisting = array();
   foreach (workflow_get_workflow_transitions_by_sid_involved($sid) as $data) {
     $preexisting[$data->sid][$data->target_sid] = TRUE;
   }
+
   // Delete the transitions.
   foreach ($preexisting as $from => $array) {
     foreach (array_keys($array) as $target_id) {
@@ -1308,8 +1354,10 @@ function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_de
       }
     }
   }
+
   // Delete any lingering node to state values.
   workflow_delete_workflow_node_by_sid($sid);
+
   // Delete the state. -- We don't actually delete, just deactivate.
   // This is a matter up for some debate, to delete or not to delete, since this
   // causes name conflicts for states. In the meantime, we just stick with what we know.

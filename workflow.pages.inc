@@ -20,10 +20,10 @@ function workflow_tab_page($node = NULL) {
   }
   $current = workflow_node_current_state($node);
 
-  // theme_workflow_current_state() must run state through check_plain().
-  $current_state = theme('workflow_current_state', array('state_name' => $states[$current]));
+  // theme_workflow_history_current_state() must run state through check_plain().
+  $current_state = theme('workflow_history_current_state', array('state_name' => $states[$current]));
 
-  $output = t('Current state: !state', array('!state' => $current_state));
+  $output = theme('workflow_current_state', array('state' => $states[$current]));
 
   // Show the form to allow state changing.
   // But only if we are not at the terminal state.
@@ -37,7 +37,7 @@ function workflow_tab_page($node = NULL) {
   foreach (workflow_get_workflow_node_history_by_nid($node->nid) as $history) {
     if ($history->sid == $current && !isset($deleted_states[$history->sid]) && !isset($current_themed)) {
       // Theme the current state differently so it stands out.
-      $state_name = theme('workflow_current_state',  array('state_name' => $states[$history->sid]));
+      $state_name = theme('workflow_history_current_state',  array('state_name' => $states[$history->sid]));
       // Make a note that we have themed the current state; other times in the history
       // of this node where the node was in this state do not need to be specially themed.
       $current_themed = TRUE;
@@ -109,7 +109,7 @@ function theme_workflow_history_table($variables) {
 /**
  * Theme the current state in the workflow history table.
  */
-function theme_workflow_current_state($variables) {
+function theme_workflow_history_current_state($variables) {
   return '<strong>' . check_plain(t($variables['state_name'])) . '</strong>';
 }
 
