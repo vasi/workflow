@@ -291,3 +291,20 @@ function workflow_access_insert_workflow_access_by_sid(&$data) {
   workflow_access_delete_workflow_access_by_sid_rid($data->sid, $data->rid);
   drupal_write_record('workflow_access', $data);
 }
+
+/**
+ * Implements hook_features_api().
+ *
+ * Tell the Features module that we intend to provide one exportable component.
+ */
+function workflow_access_features_api() {
+  return array(
+    'workflow_access' => array(
+      'name' => t('Workflow access'),
+      'file' => drupal_get_path('module', 'workflow_access') . '/workflow_access.features.inc',
+      'default_hook' => 'workflow_access_features_default_settings',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE,
+    ),
+  );
+}
