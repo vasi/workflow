@@ -173,10 +173,17 @@ function workflow_actions_trigger_info() {
     'WHERE ws.status = 1 AND wt.target_sid IS NOT NULL ' .
     'ORDER BY tm.type, ws.weight');
   }
+  $creation_state = t('(creation)');
   foreach ($result as $data) {
+    $creation_flag = FALSE;
+    if ($states[$data->sid] == $creation_state) {
+      $creation_flag = TRUE;
+    }
     $pseudohooks['workflow-' . $data->type . '-' . $data->tid] =
       array('label' => t('When %type moves from %state to %target_state',
-        array('%type' => $data->type, '%state' => $states[$data->sid], '%target_state' => $states[$data->target_sid])));
+        array('%type' => $data->type, '%state' => $states[$data->sid], '%target_state' => $states[$data->target_sid])),
+        'workflow_creation_state' => $creation_flag,
+      );
   }
   // $pseudohooks will not be set if no workflows have been assigned
   // to node types.
@@ -341,4 +348,22 @@ function workflow_actions_get_actions_by_tid($tid) {
     }
   }
   return $aids;
+}
+
+/**
+ * Implementation of hook_drupal_alter().
+ */
+function workflow_actions_action_info_alter(&$info) {
+  $transitions = workflow_actions_trigger_info();
+  foreach ((array)$transitions['workflow'] as $transition => $data) {
+    // Loop through all available node actions and add them as triggers.
+    // But not if this has been flagged as a creation state.
+    if ($data['workflow_creation_state'] != TRUE) {
+      foreach (node_action_info() as $action => $data) {
+        $info[$action]['triggers'][] = $transition;
+      }
+    }
+    // Either way, unset the creation flag so we don't confuse anyone later.
+    unset($transitions['workflow'][$transition]['workflow_creation_state']);
+  }
 }
