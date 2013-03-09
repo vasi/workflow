@@ -59,6 +59,7 @@ function workflow_access_node_access_records($node) {
 
 /**
  * Implements hook_node_access_explain().
+ * This is a Devel Node Access hook.
  */
 function workflow_access_node_access_explain($row) {
   static $interpretations = array();

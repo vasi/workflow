@@ -80,4 +80,5 @@ Issue #1931948 by NancyDru: Use menu loaders to simplify menu.
 Issue #1347116 by NancyDru: New Workflow_Cleanup module.
 Issue #1509568 by fgm: Access control export.
 Issue #1933466 by fgm: Remove Admin UI warning, repair redirection on workflow_access admin submit.
+Issue #1768350 by NancyDru: Correct test and message for type page.
 

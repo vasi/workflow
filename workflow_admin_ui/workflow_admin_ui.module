@@ -1105,7 +1105,8 @@ function workflow_admin_ui_types_form($form) {
   }
 
   $workflows = array(t('None')) + $these_workflows;
-  if (count($workflows) == 0) {
+  if (count($workflows) == 1) {
+    drupal_set_message(t('You must create at least one workflow before content can be assigned to a workflow.'));
     return $form;
   }
 
