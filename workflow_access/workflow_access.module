@@ -188,6 +188,15 @@ function workflow_access_form($form, $form_state, $workflow) {
       '#suffix' => "</td></tr></tbody></table>",
     );
   }
+  
+  $form['warning'] = array(
+    '#type' => 'markup',
+    '#markup' => '<p><strong>'
+      . t('WARNING:')
+      . '</strong> '
+      . t('Use of the "Edit any" and/or "Edit own" permissions for the content type may override these access settings.')
+      . '</p>',
+      );
 
   $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
