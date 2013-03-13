@@ -86,7 +86,7 @@ function workflow_cleanup_form($form, $form_state) {
   
   // Deal with no inactive states.
   if (!$inactive) {
-    $inactive[0] = t('None');
+    $inactive[0] = $states[0] = t('None');
   }
   
   $form['#states'] = $states;
