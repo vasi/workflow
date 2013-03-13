@@ -760,6 +760,12 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
  * Replaced by http://drupal.org/node/1367530.
  */
 function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
+  $bc = array(l(t('Home'), '<front>'));
+  $bc[] = l(t('Configuration'), 'admin/config');
+  $bc[] = l(t('Workflow'), 'admin/config/workflow');
+  $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
+  drupal_set_breadcrumb($bc);
+
   $form = array('#tree' => TRUE);
 
   $form['wid'] = array('#type' => 'value', '#value' => $workflow->wid);
