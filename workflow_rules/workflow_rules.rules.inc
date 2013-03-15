@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Rules integration for the Workflow module
@@ -8,7 +7,6 @@
 /**
  * Implements hook_rules_event_info().
  */
-
 function workflow_rules_rules_event_info() {
   $events = array(
     'workflow_state_changed' => array(
@@ -167,13 +165,13 @@ function workflow_check_state($node, $states) {
 }
 
 /**
- * Action implementation: set current state.
+ * Action implementation: set current state, ignoring current user permissione.
  */
 function workflow_rules_set_state($node, $states) {
   $sid = array_pop($states); // Select the last state on the list.
   if (!empty($comment)) {
     $node->workflow_comment = $comment;
   }
-  workflow_transition($node, $sid);
+  workflow_transition($node, $sid, TRUE);
   unset($node->workflow_comment);
 }
