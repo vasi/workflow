@@ -1,0 +1,6 @@
+name = Workflow VBO
+description = Provides workflow actions for VBO.
+dependencies[] = workflow
+dependencies[] = views_bulk_operations
+package = Workflow
+core = 7.x
