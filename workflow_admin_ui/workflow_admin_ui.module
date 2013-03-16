@@ -1137,7 +1137,6 @@ function workflow_admin_ui_types_form($form) {
   foreach (node_type_get_names() as $type => $name) {
     $form[$type]['workflow'] = array(
       '#type' => 'select',
-      '#title' => check_plain($name),
       '#options' => $workflows,
       '#default_value' => isset($type_map[$type]) ? $type_map[$type] : 0,
       );
@@ -1171,9 +1170,11 @@ function theme_workflow_admin_ui_types_form($variables) {
   $rows = array();
 
   foreach (node_type_get_names() as $type => $name) {
-    $name = $form[$type]['workflow']['#title'];
-    unset($form[$type]['workflow']['#title']);
-    $rows[] = array($name, drupal_render($form[$type]['workflow']), drupal_render($form[$type]['placement']));
+    $rows[] = array(
+      check_plain(t($name)),
+      drupal_render($form[$type]['workflow']),
+      drupal_render($form[$type]['placement']),
+      );
   }
 
   $output .= drupal_render($form['help']);
