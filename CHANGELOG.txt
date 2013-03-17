@@ -87,3 +87,5 @@ Issue #1691870 by berenddeboer: Allow Rules to bypass permissions on transition.
 Issue #1540914 by NancyDru: Pass parms in node form; allow comment alter at transition.
 Issue #1744612 by NancyDru: Move VBO stuff into its own module.
 Issue #1944574 by NancyDru: Undefined index.
+Issue #785194 by arcovia: Access to tab form.
+ 
