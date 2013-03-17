@@ -167,8 +167,9 @@ function workflow_check_state($node, $states) {
 /**
  * Action implementation: set current state, ignoring current user permissione.
  */
-function workflow_rules_set_state($node, $states) {
-  $sid = array_pop($states); // Select the last state on the list.
+function workflow_rules_set_state($node, $states, $comment = NULL) {
+  // Select the last state on the list.
+  $sid = array_pop($states);
   if (!empty($comment)) {
     $node->workflow_comment = $comment;
   }
