@@ -322,12 +322,19 @@ function workflow_features_api() {
  *   Allows bypassing permissions, primarily for Rules.
  */
 function workflow_transition($node, $sid, $force = FALSE) {
+  if ($force) {
+    $choices = workflow_get_other_states_by_sid($sid);
+  }
+  else {
+    $choices = workflow_field_choices($node, $force);
+  }
+
   // Make sure new state is a valid choice.
-  if (array_key_exists($sid, workflow_field_choices($node, $force))) {
+  if (array_key_exists($sid, $choices)) {
     $node->workflow_scheduled = isset($node->workflow_scheduled) ? $node->workflow_scheduled : FALSE;
     if (!$node->workflow_scheduled) {
       // It's an immediate change. Do the transition.
-      workflow_execute_transition($node, $sid, isset($node->workflow_comment) ? $node->workflow_comment : NULL, $force);
+      workflow_execute_transition($node, $sid, (isset($node->workflow_comment) ? $node->workflow_comment : NULL), $force);
     }
     else {
       // Schedule the the time to change the state.
@@ -731,7 +738,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
       $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node);
       $data = array(
         'nid' => $node->nid,
-        'old_sid' => $node->workflow,
+        'old_sid' => (isset($node->workflow) ? $node->workflow : $old_sid),
         'sid' => $sid,
         'uid' => $user->uid,
         'stamp' => $node->workflow_stamp,
@@ -1326,6 +1333,11 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
   // @todo consider merging this with workflow_get_workflow_states() and pass wid as option.
 }
 
+function workflow_get_workflow_by_sid($sid) {
+  return db_query("SELECT w.* FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",
+    array(':sid' => $sid))->fetchObject();
+}
+
 /**
  * Given a sid, return a state. Sids are a unique id.
  */
@@ -1336,6 +1348,17 @@ function workflow_get_workflow_states_by_sid($sid, $options = array()) {
     $sids[$sid] = $results->fetchObject();
   }
   return $sids[$sid];
+}
+
+/**
+ * Given a sid, return all other states in that workflow.
+ */
+function workflow_get_other_states_by_sid($sid) {
+  $query = "SELECT sid, state "
+    . "FROM {workflow_states} "
+    . "WHERE wid = (SELECT wid FROM workflow_states WHERE sid = :sid AND status = 1 AND sysid = 0) "
+    ;
+  return db_query($query, array(':sid' => $sid))->fetchAllKeyed();
 }
 
 /**
