@@ -134,7 +134,12 @@ function theme_workflow_deleted_state($variables) {
  * @return
  *   Form definition array.
  */
-function workflow_tab_form($form_id, $form_state, $node, $wid, $states, $current) {
+function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
+  // Let's make sure we should be here.
+  if (workflow_node_tab_access($node) === FALSE) {
+    return;
+  }
+
   $form['#tab'] = TRUE;
   $choices = workflow_field_choices($node);
   $min = $states[$current] == t('(creation)') ? 1 : 2;
