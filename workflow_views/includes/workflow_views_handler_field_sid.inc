@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Provide views field handler for workflow.module.
@@ -15,6 +14,7 @@ class workflow_views_handler_field_sid extends views_handler_field {
     }
     static $states;
     if (!isset($states)) {
+      $states = array();
       foreach (workflow_get_workflow_states() as $state) {
         $states[$state->sid] = check_plain($state->state);
       }

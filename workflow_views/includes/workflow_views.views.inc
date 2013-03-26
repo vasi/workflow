@@ -114,7 +114,7 @@ function workflow_views_views_data() {
     'node' => array(
       'table' => 'workflow_node_history',
       'field' => 'nid',
-      'left_table' => 'node',
+      'left_table' => 'workflow_node',
       'left_field' => 'nid',
       'extra' => 'workflow_node.stamp = workflow_node_current.stamp AND workflow_node.nid = workflow_node_current.nid',
     ),
