@@ -78,17 +78,17 @@ function workflow_cleanup_form($form, $form_state) {
       }
     }
   }
-  
+
   // Deal with no orphan states.
   if (!$orphans) {
     $orphans[0] = t('None');
   }
-  
+
   // Deal with no inactive states.
   if (!$inactive) {
     $inactive[0] = $states[0] = t('None');
   }
-  
+
   $form['#states'] = $states;
 
   $form['no_workflow'] = array(
@@ -146,7 +146,7 @@ function theme_workflow_cleanup_form($variables) {
   $form = $variables['form'];
   $output = '';
   $header = array(t('select'), t('State'));
-  
+
   $rows = array();
   foreach (element_children($form['no_workflow']) as $sid) {
     $rows[] = array(
@@ -158,7 +158,7 @@ function theme_workflow_cleanup_form($variables) {
   $output .= '<h3>' . $form['no_workflow']['#title'] . '</h3>';
   $output .= '<div class="description">' . $form['no_workflow']['#description'] . '</div>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width: auto;')));
-  
+
   $header[] = t('Workflow');
   $rows = array();
   foreach (element_children($form['inactive']) as $sid) {
@@ -192,6 +192,13 @@ function workflow_cleanup_form_submit($form, $form_state) {
         if ($trans_del) {
           drupal_set_message(t('@count transitions for the "@state" state have been deleted.',
             array('@state' => $states[$sid]->state, '@count' => $trans_del)));
+        }
+
+        // Remove history records too.
+        $hist_del = db_delete('workflow_node_history')->condition('sid', $sid)->execute();
+        if ($hist_del) {
+          drupal_set_message(t('@count history records for the "@state" state have been deleted.',
+            array('@state' => $states[$sid]->state, '@count' => $hist_del)));
         }
 
         // Go ahead and delete the state.

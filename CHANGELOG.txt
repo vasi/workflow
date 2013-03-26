@@ -93,3 +93,5 @@ Issue #785194 by arcovia: Access to tab form.
 Issue #785194 by NancyDru: Better access to tab form.
 Issue #1691870 by NancyDru: Rules record workflow comment.
 Issue #1691870 by NancyDru: Transition check wrong choices on Force.
+Issue #1951164 by Kristen Pol: Fix left join order.
+Issue #1951718 by NancyDru: Clean up history records.
