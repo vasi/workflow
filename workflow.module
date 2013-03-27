@@ -159,7 +159,15 @@ function workflow_user_delete($account) {
  * @TODO: Consider replacing with hook_entity_load().
  */
 function workflow_node_load($nodes, $types) {
+  // Get which types have workflows associated with them.
+  $workflow_types = array_filter(workflow_get_workflow_type_map());
+
   foreach ($nodes as $node) {
+    // If it's not a workflow type, exit immediately.
+    if (array_key_exists($node->type, $workflow_types)) {
+      return;
+    }
+
     // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
     // have been standardized to workflow_x, dropping the initial underscore.
     // Module maintainers integrating with workflow should keep that in mind.
