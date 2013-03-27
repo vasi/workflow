@@ -1116,10 +1116,7 @@ function workflow_admin_ui_types_form($form) {
     return $form;
   }
 
-  $type_map = array();
-  foreach (workflow_get_workflow_type_map() as $data) {
-    $type_map[$data->type] = $data->wid;
-  }
+  $type_map = workflow_get_workflow_type_map();
 
   $form['#tree'] = TRUE;
   $form['help'] = array(

@@ -163,7 +163,6 @@ function workflow_node_load($nodes, $types) {
     // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
     // have been standardized to workflow_x, dropping the initial underscore.
     // Module maintainers integrating with workflow should keep that in mind.
-//    $node->workflow = workflow_node_current_state($node);
     $last_history = workflow_get_recent_node_history($node->nid);
 
     // Nodes that existed before the workflow don't have any history.
@@ -452,20 +451,10 @@ function workflow_field_extra_fields() {
   $extra = array();
 
   // Get all workflows by content types.
-  $workflow_types = workflow_get_workflow_type_map();
-
-  $types = array();
-  foreach ($workflow_types as $key => $type) {
-    // If it has a wid (workflow ID), then there is a workflow defined for it.
-    if ($type->wid) {
-      $types[] = $type->type;
-    }
-  }
-  // Make sure there are no duplicates.
-  $types = array_unique($types);
+  $types = array_filter(workflow_get_workflow_type_map());
 
   // Add the extra fields to each content type that has a workflow.
-  foreach ($types as $type) {
+  foreach ($types as $type => $wid) {
     $extra['node'][$type] = array(
       'form' => array(
         'workflow' => array(
@@ -1074,8 +1063,8 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
  * Get all workflow_type_map.
  */
 function workflow_get_workflow_type_map() {
-  $results = db_query('SELECT * FROM {workflow_type_map}');
-  return $results->fetchAll();
+  $results = db_query('SELECT type, wid FROM {workflow_type_map}');
+  return $results->fetchAllKeyed();
 }
 
 /**
