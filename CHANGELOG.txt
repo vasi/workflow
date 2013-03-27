@@ -95,3 +95,5 @@ Issue #1691870 by NancyDru: Rules record workflow comment.
 Issue #1691870 by NancyDru: Transition check wrong choices on Force.
 Issue #1951164 by Kristen Pol: Fix left join order.
 Issue #1951718 by NancyDru: Clean up history records.
+Issue #1953642 by NancyDru: Add history row alter feature.
+Issue #1953642 by NancyDru: Add state revert feature.
