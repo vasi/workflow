@@ -1257,11 +1257,7 @@ function workflow_get_workflow_states_all() {
       . "WHERE status = 1 "
       . "ORDER BY sid "
       ;
-    $results = db_query($query);
-
-    foreach ($results as $row) {
-      $states[$row->sid] = t($row->state);
-    }
+    $states = db_query($query)->fetchAllKeyed();
   }
 
   return $states;
