@@ -97,3 +97,4 @@ Issue #1951164 by Kristen Pol: Fix left join order.
 Issue #1951718 by NancyDru: Clean up history records.
 Issue #1953642 by NancyDru: Add history row alter feature.
 Issue #1953642 by NancyDru: Add state revert feature.
+Issue #1953642 by NancyDru: Document hook_workflow_history_alter()

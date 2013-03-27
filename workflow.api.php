@@ -31,3 +31,23 @@ function hook_workflow($op, $old_state, $new_state, $node) {
       break;
   }
 }
+
+/**
+ * Implements hook_workflow_history_alter().
+ * Add an 'undo' operation for the most recent history change.
+ *
+ * @param $variables
+ *   The current workflow history information as an array.
+ *   'old_sid' - The state ID of the previous state.
+ *   'old_state_name' - The state name of the previous state.
+ *   'sid' - The state ID of the current state.
+ *   'state_name' - The state name of the current state.
+ *   'history' - The row from the workflow_node_history table.
+ *
+ * If you want to add additional data, such as an operation link,
+ * place it in the 'extra' value.
+ */
+function hook_workflow_history_alter(&$variables) {
+  // The Worflow module does nothing with this hook.
+  // For an example implementation, see the Workflow Revert add-on.
+}
