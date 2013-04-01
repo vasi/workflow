@@ -909,8 +909,8 @@ function workflow_transition_allowed($tid, $role = NULL) {
  *   The ID of the workflow.
  */
 function workflow_get_creation_state_by_wid($wid) {
-  $options = array(':sysid' => WORKFLOW_CREATION);
-  $result = workflow_get_workflow_states_by_wid($wid, $options);
+  $options = array(':sysid' => WORKFLOW_CREATION, 'wid' => $wid);
+  $result = workflow_get_workflow_states($options);
   return isset($result[0]->sid) ? $result[0]->sid : 0;
 }
 
@@ -1147,24 +1147,36 @@ function workflow_insert_workflow_type_map(&$data) {
  * Given a tid, get the transition. It is a unique object, only one return.
  */
 function workflow_get_workflow_transitions_by_tid($tid) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE tid = :tid', array(':tid' => $tid));
-  return $results->fetchObject();
+  static $transitions;
+  if (!isset($transitions[$tid])) {
+    $transitions[$tid] = db_query('SELECT * FROM {workflow_transitions} WHERE tid = :tid',
+      array(':tid' => $tid))->fetchObject();
+  }
+  return $transitions[$tid];
 }
 
 /**
  * Given a sid, get the transition.
  */
 function workflow_get_workflow_transitions_by_sid($sid) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE sid = :sid', array(':sid' => $sid));
-  return $results->fetchAll();
+  static $transitions;
+  if (!isset($transitions[$sid])) {
+    $transitions[$sid] = db_query('SELECT * FROM {workflow_transitions} WHERE sid = :sid',
+      array(':sid' => $sid))->fetchAll();
+  }
+  return $transitions[$sid];
 }
 
 /**
  * Given a target_sid, get the transition.
  */
 function workflow_get_workflow_transitions_by_target_sid($target_sid) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE target_sid = :target_sid', array(':target_sid' => $target_sid));
-  return $results->fetchAll();
+  static $transitions;
+  if (!isset($transitions[$target_sid])) {
+    $transitions[$target_sid] = db_query('SELECT * FROM {workflow_transitions} WHERE target_sid = :target_sid',
+      array(':target_sid' => $target_sid))->fetchAll();
+  }
+  return $transitions[$target_sid];
 }
 
 /**
@@ -1279,45 +1291,32 @@ function workflow_get_workflow_states_by_type($type) {
  * Get all states in the system, with options to filter, only where a workflow exists.
  */
 function workflow_get_workflow_states($options = array()) {
-  $query = 'SELECT * FROM {workflow_states} ws ' .
-    'LEFT JOIN {workflows} w ON ws.wid = w.wid WHERE 1=1 ';
-  $query_array = array();
+  // Build the basic query.
+  $query = db_select('workflow_states', 'ws');
+  $query->leftJoin('workflows', 'w', 'w.wid = ws.wid');
+  $query->fields('ws');
+  $query->addField('w', 'wid');
+  $query->addField('w', 'name');
 
-  if (isset($options['sysid'])) {
-    $query_array[':sysid'] = $options['sysid'];
-    $query .= 'AND ws.sysid = :sysid ';
+  // Spin through the options and add conditions.
+  foreach ($options as $column => $value) {
+    $query->condition('ws.' . $column, $value);
   }
 
-  if (isset($options['status'])) {
-    $query_array[':status'] = $options['status'];
-    $query .= 'AND ws.status = :status ';
-  }
+  // Set the sorting order.
+  $query->orderBy('ws.wid');
+  $query->orderBy('ws.weight');
 
-  $query .= 'ORDER BY ws.wid, ws.weight';
-  $results = db_query($query, $query_array);
-  return $results->fetchAll();
+  // Just for grins, add a tag that might result in modifications.
+  $query->addTag('workflow_states');
+
+  // Give them the answer.
+  return $query->execute()->fetchAll();
 }
 
 function workflow_get_workflow_states_by_wid($wid, $options = array()) {
-  $query = 'SELECT * FROM {workflow_states} WHERE 1=1 ';
-  $query_array = array();
-
-  if (isset($options['sysid'])) {
-    $query_array[':sysid'] = $options['sysid'];
-    $query .= 'AND sysid = :sysid ';
-  }
-
-  if (isset($options['status'])) {
-    $query_array[':status'] = $options['status'];
-    $query .= 'AND status = :status ';
-  }
-
-  $query_array[':wid'] = $wid;
-  $query .= 'AND wid = :wid ORDER BY wid, weight';
-
-  $results = db_query($query, $query_array);
-  return $results->fetchAll();
-  // @todo consider merging this with workflow_get_workflow_states() and pass wid as option.
+  $options['wid'] = $wid;
+  return workflow_get_workflow_states($options);
 }
 
 function workflow_get_workflow_by_sid($sid) {
@@ -1331,8 +1330,8 @@ function workflow_get_workflow_by_sid($sid) {
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
   static $sids = array();
   if (!isset($sids[$sid])) {
-    $results = db_query('SELECT * FROM {workflow_states} WHERE sid = :sid', array(':sid' => $sid));
-    $sids[$sid] = $results->fetchObject();
+    $options['sid'] = $sid;
+    $sids[$sid] = array_shift(workflow_get_workflow_states($options));
   }
   return $sids[$sid];
 }
@@ -1352,9 +1351,11 @@ function workflow_get_other_states_by_sid($sid) {
  * Given a wid and state, return a state. Wids / states are a unique id.
  */
 function workflow_get_workflow_states_by_wid_state($wid, $state) {
-  $results = db_query('SELECT * FROM {workflow_states} WHERE wid = :wid AND state = :state',
-    array(':wid' => $wid, ':state' => $state));
-  return $results->fetchObject();
+  $options = array(
+    'state' => $state,
+    'wid' => $wid,
+    );
+  return workflow_get_workflow_states($options);
 }
 
 /**
