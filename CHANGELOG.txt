@@ -101,3 +101,6 @@ Issue #1953642 by NancyDru: Document hook_workflow_history_alter().
 Issue #1484126 by NancyDru, nathangervais: Check if node type has a workflow before adding WF info.
 Issue #1957074 by andypost: Allow Views to show Sid value.
 Address some @TODO items.
+
+Since 7.x-1.1
+Issue #1961156 by mErilainen: Missing translate in Views.
