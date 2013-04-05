@@ -164,7 +164,7 @@ function workflow_node_load($nodes, $types) {
 
   foreach ($nodes as $node) {
     // If it's not a workflow type, exit immediately.
-    if (array_key_exists($node->type, $workflow_types)) {
+    if (!array_key_exists($node->type, $workflow_types)) {
       return;
     }
 
