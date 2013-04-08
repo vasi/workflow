@@ -105,3 +105,4 @@ Address some @TODO items.
 Since 7.x-1.1
 Issue #1961156 by mErilainen: Missing translate in Views.
 Issue #1962344 by NancyDru, manu77: Missing $node->workflow.
+Issue #1962512 by NancyDru: Don't let (creation) be changed.
