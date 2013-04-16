@@ -109,3 +109,4 @@ Issue #1962512 by NancyDru: Don't let (creation) be changed.
 Issue #1961426 by andypost: Fix reference error.
 Issue #1893420 by JackVVo: Fix node name.
 Issue #1966292 by aBrookland: Undefined index.
+Issue #1970538 by Tim Asplin: Improve Features support.

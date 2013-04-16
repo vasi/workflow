@@ -141,7 +141,7 @@ function workflow_access_features_rebuild($module) {
     foreach ($states as $state_name => $records) {
       $state = workflow_get_workflow_states_by_wid_state($wids[$workflow_name], $state_name);
       foreach ($records as $rname => $record) {
-        $record['sid'] = $state->sid;
+        $record['sid'] = (is_array($state)) ? $state[0]->sid : $state->sid;
         if ($rname == WORKFLOW_FEATURES_AUTHOR_NAME) {
           $record['rid'] = -1;
         }
