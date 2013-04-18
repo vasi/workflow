@@ -1542,18 +1542,18 @@ function workflow_get_recent_node_history($nid) {
 }
 
 /**
- * Get all recored history for a node id.
+ * Get all recorded history for a node id.
+ *
  * Since this may return a lot of data, a limit is included to allow for only one result.
  */
 function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
   if (empty($limit)) {
     $limit = variable_get('workflow_states_per_page', 20);
   }
-  $results = db_query('SELECT * FROM {workflow_node_history} h '
+  $results = db_query_range('SELECT * FROM {workflow_node_history} h '
     . 'LEFT JOIN {users} u ON h.uid = u.uid '
     . 'WHERE nid = :nid '
-//    . 'ORDER BY h.hid DESC ',
-    . 'ORDER BY h.stamp DESC ',
+    . 'ORDER BY h.stamp DESC ', 0, $limit,
     array(':nid' => $nid));
   if ($limit == 1) {
     return $results->fetchObject();

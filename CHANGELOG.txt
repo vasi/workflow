@@ -113,3 +113,4 @@ Issue #1970538 by Tim Asplin: Improve Features support.
 Issue #1589254 by DuaelFr: Improve Features support.
 Issue #1972728 by NancyDru: Deal with HTML entities and translations.
 Issue #1967794 by NancyDru, dforegger: Remove static cache.
+Issue #1966804 by andypost: Improve workflow_get_workflow_node_history_by_nid.
