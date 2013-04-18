@@ -111,3 +111,4 @@ Issue #1893420 by JackVVo: Fix node name.
 Issue #1966292 by aBrookland: Undefined index.
 Issue #1970538 by Tim Asplin: Improve Features support.
 Issue #1589254 by DuaelFr: Improve Features support.
+Issue #1972728 by NancyDru: Deal with HTML entities and translations.

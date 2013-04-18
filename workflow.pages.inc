@@ -197,7 +197,7 @@ function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
     $form['#wf'] = $workflow;
     $form['#choices'] = $choices;
 
-    $name = check_plain((t($workflow->name)));
+    $name = t($workflow->name);
     $timestamp = '';
     $comment = '';
 
@@ -218,7 +218,7 @@ function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
 
     // Include the same form elements here that are included on a
     // regular node editing page. $form is modified by reference.
-    workflow_node_form($form, $form_state, t('Change @name state', array('@name' => $name)), $name, $current, $choices, $timestamp, $comment);
+    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current, $choices, $timestamp, $comment);
 
     $form['node'] = array(
       '#type' => 'value',
