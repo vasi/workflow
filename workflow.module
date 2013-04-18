@@ -806,36 +806,33 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
  */
 function workflow_field_choices($node, $force = FALSE) {
   global $user;
-  static $choices = array();
-  if (!isset($choices[$node->type])) {
-    $choices[$node->type] = FALSE;
-    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-      $roles = array_keys($user->roles);
-      $current_sid = workflow_node_current_state($node);
+  $choices = FALSE;
+  if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+    $roles = array_keys($user->roles);
+    $current_sid = workflow_node_current_state($node);
 
-      // If user is node author or this is a new page, give the authorship role.
-      if (($user->uid == $node->uid && $node->uid > 0) || (arg(0) == 'node' && arg(1) == 'add')) {
-        $roles += array('author' => 'author');
-      }
-      if ($user->uid == 1 || $force) {
-        // Superuser is special. And Force allows Rules to cause transition.
-        $roles = 'ALL';
-      }
+    // If user is node author or this is a new page, give the authorship role.
+    if (($user->uid == $node->uid && $node->uid > 0) || (arg(0) == 'node' && arg(1) == 'add')) {
+      $roles += array('author' => 'author');
+    }
+    if ($user->uid == 1 || $force) {
+      // Superuser is special. And Force allows Rules to cause transition.
+      $roles = 'ALL';
+    }
 
-      // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
-      // Instead it returns just the allowable data as:
-      // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
-      $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
-      // Include current state if it is not the (creation) state.
-      foreach ($transitions as $transition) {
-        if ($transition->sysid != WORKFLOW_CREATION) {
-          $choices[$node->type][$transition->state_id] = check_plain(t($transition->state_name));
-        }
+    // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
+    // Instead it returns just the allowable data as:
+    // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
+    $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
+    // Include current state if it is not the (creation) state.
+    foreach ($transitions as $transition) {
+      if ($transition->sysid != WORKFLOW_CREATION) {
+        $choices[$transition->state_id] = check_plain(t($transition->state_name));
       }
     }
   }
 
-  return $choices[$node->type];
+  return $choices;
 }
 
 /**
