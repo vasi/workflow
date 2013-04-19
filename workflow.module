@@ -1355,7 +1355,7 @@ function workflow_get_workflow_states_by_sid($sid, $options = array()) {
 function workflow_get_other_states_by_sid($sid) {
   $query = "SELECT sid, state "
     . "FROM {workflow_states} "
-    . "WHERE wid = (SELECT wid FROM workflow_states WHERE sid = :sid AND status = 1 AND sysid = 0) "
+    . "WHERE wid = (SELECT wid FROM {workflow_states} WHERE sid = :sid AND status = 1 AND sysid = 0) "
     ;
   return db_query($query, array(':sid' => $sid))->fetchAllKeyed();
 }
