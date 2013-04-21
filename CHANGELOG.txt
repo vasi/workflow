@@ -1,4 +1,4 @@
-Lots of bug fixes.
+Since 7.x-1.0
 Performance improvements.
 Major restructure of admin UI.
 Workflow form detached from comment form.

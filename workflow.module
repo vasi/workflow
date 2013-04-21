@@ -592,7 +592,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
           The current time is: @time', array('@time' => $hours)),
         '#default_value' => $scheduled ?
           (isset($form_state['values']['workflow_scheduled_hour']) ?
-            $form_state['values']['workflow_scheduled_hour'] : $hours) : '24:00',
+            $form_state['values']['workflow_scheduled_hour'] : $hours) : '00:00',
         );
 
       global $user;
@@ -670,7 +670,7 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       }
 
       $form['#wf'] = $workflow;
-      $name = check_plain($workflow->name);
+      $name = $workflow->name;
       // If the current node state is not one of the choices, pick first choice.
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
