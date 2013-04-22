@@ -955,8 +955,6 @@ function workflow_get_creation_state_by_type($type) {
  * Sure it's a little type A, granted. But it's useful in the long run.
  */
 
-//@todo: Go through all of these and replace * with specific field names - indexing = effeciency.
-
 /**
  * Functions related to table workflows.
  */
@@ -1010,7 +1008,8 @@ function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
  * Get a specific workflow, name is a unique ID.
  */
 function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
-  $results = db_query('SELECT * FROM {workflows} WHERE name = :name', array(':name' => $name));
+  $results = db_query('SELECT wid, name, tab_roles, options FROM {workflows} WHERE name = :name',
+    array(':name' => $name));
   if ($workflow = $results->fetchObject()) {
     // This is only called by CRUD functions in workflow.features.inc
     // More than likely in prep for an import / export action.
@@ -1099,7 +1098,8 @@ function workflow_get_workflow_type_map() {
 function workflow_get_workflow_type_map_by_type($type) {
   static $map = array();
   if (!isset($map[$type])) {
-    $results = db_query('SELECT * FROM {workflow_type_map} WHERE type = :type AND wid <> 0', array(':type' => $type));
+    $results = db_query('SELECT type, wid FROM {workflow_type_map} WHERE type = :type AND wid <> 0',
+      array(':type' => $type));
     $map[$type] = $results->fetchObject();
   }
   return $map[$type];
@@ -1111,7 +1111,8 @@ function workflow_get_workflow_type_map_by_type($type) {
 function workflow_get_workflow_type_map_by_wid($wid) {
   static $map = array();
   if (!isset($map[$wid])) {
-    $results = db_query('SELECT * FROM {workflow_type_map} WHERE wid = :wid', array(':wid' => $wid));
+    $results = db_query('SELECT type, wid FROM {workflow_type_map} WHERE wid = :wid',
+      array(':wid' => $wid));
     $map[$wid] = $results->fetchAll();
   }
   return $map[$wid];
@@ -1162,7 +1163,7 @@ function workflow_insert_workflow_type_map(&$data) {
 function workflow_get_workflow_transitions_by_tid($tid) {
   static $transitions;
   if (!isset($transitions[$tid])) {
-    $transitions[$tid] = db_query('SELECT * FROM {workflow_transitions} WHERE tid = :tid',
+    $transitions[$tid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE tid = :tid',
       array(':tid' => $tid))->fetchObject();
   }
   return $transitions[$tid];
@@ -1174,7 +1175,7 @@ function workflow_get_workflow_transitions_by_tid($tid) {
 function workflow_get_workflow_transitions_by_sid($sid) {
   static $transitions;
   if (!isset($transitions[$sid])) {
-    $transitions[$sid] = db_query('SELECT * FROM {workflow_transitions} WHERE sid = :sid',
+    $transitions[$sid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid',
       array(':sid' => $sid))->fetchAll();
   }
   return $transitions[$sid];
@@ -1186,7 +1187,7 @@ function workflow_get_workflow_transitions_by_sid($sid) {
 function workflow_get_workflow_transitions_by_target_sid($target_sid) {
   static $transitions;
   if (!isset($transitions[$target_sid])) {
-    $transitions[$target_sid] = db_query('SELECT * FROM {workflow_transitions} WHERE target_sid = :target_sid',
+    $transitions[$target_sid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE target_sid = :target_sid',
       array(':target_sid' => $target_sid))->fetchAll();
   }
   return $transitions[$target_sid];
@@ -1196,7 +1197,7 @@ function workflow_get_workflow_transitions_by_target_sid($target_sid) {
  * Given a sid get any transition involved.
  */
 function workflow_get_workflow_transitions_by_sid_involved($sid) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE sid = :sid OR target_sid = :sid', array(':sid' => $sid));
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid OR target_sid = :sid', array(':sid' => $sid));
   return $results->fetchAll();
 }
 
@@ -1204,7 +1205,7 @@ function workflow_get_workflow_transitions_by_sid_involved($sid) {
  * Given a role string get any transition involved.
  */
 function workflow_get_workflow_transitions_by_roles($roles) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE roles LIKE :roles', array(':roles' => $roles));
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE roles LIKE :roles', array(':roles' => $roles));
   return $results->fetchAll();
 }
 
@@ -1212,7 +1213,7 @@ function workflow_get_workflow_transitions_by_roles($roles) {
  * Given a sid and target_sid, get the transition. This will be unique.
  */
 function workflow_get_workflow_transitions_by_sid_target_sid($sid, $target_sid) {
-  $results = db_query('SELECT * FROM {workflow_transitions} WHERE sid = :sid AND target_sid = :target_sid', array(':sid' => $sid, ':target_sid' => $target_sid));
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid AND target_sid = :target_sid', array(':sid' => $sid, ':target_sid' => $target_sid));
   return $results->fetchObject();
 }
 
@@ -1258,7 +1259,8 @@ function workflow_update_workflow_transitions(&$data) {
 }
 
 /**
- * Given a tid and new roles, update them. @todo - this should be refactored out, and the update made a full actual update.
+ * Given a tid and new roles, update them.
+ * @todo - this should be refactored out, and the update made a full actual update.
  */
 function workflow_update_workflow_transitions_roles($tid, $roles) {
   return db_update('workflow_transitions')->fields(array('roles' => implode(',', $roles)))->condition('tid', $tid, '=')->execute();
@@ -1333,7 +1335,7 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
 }
 
 function workflow_get_workflow_by_sid($sid) {
-  return db_query("SELECT w.* FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",
+  return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",
     array(':sid' => $sid))->fetchObject();
 }
 
@@ -1454,7 +1456,7 @@ function workflow_update_workflow_states(&$data) {
  * Given a node, get all scheduled transitions for it.
  */
 function workflow_get_workflow_scheduled_transition_by_nid($nid) {
-  $results = db_query('SELECT * FROM {workflow_scheduled_transition} WHERE nid = :nid ORDER BY scheduled ASC', array(':nid' => $nid));
+  $results = db_query('SELECT nid, old_sid, sid, scheduled, comment FROM {workflow_scheduled_transition} WHERE nid = :nid ORDER BY scheduled ASC', array(':nid' => $nid));
   return $results->fetchAll();
 }
 
@@ -1462,7 +1464,7 @@ function workflow_get_workflow_scheduled_transition_by_nid($nid) {
  * Given a timeframe, get all scheduled transistions.
  */
 function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end = REQUEST_TIME) {
-  $results = db_query('SELECT * FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
+  $results = db_query('SELECT nid, old_sid, sid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
   return $results->fetchAll();
 }
 
@@ -1507,6 +1509,7 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
     $field = 'sid';
     $field_where = 'target_sid';
   }
+  // @TODO:
   // Yes. This is a monster. This should, in all absolute seriousness, be cut down to size.
   // I also REALLY do not like the insecure field pieces in here.
   $results = db_query(''
@@ -1551,9 +1554,11 @@ function workflow_insert_workflow_scheduled_transition($data) {
  * Get most recent history for a node.
  */
 function workflow_get_recent_node_history($nid) {
-  $results = db_query_range('SELECT h.*, s.state AS state_name FROM {workflow_node_history} h ' .
-    'INNER JOIN {workflow_states} s ON s.sid = h.sid ' .
-    'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
+  $results = db_query_range('SELECT h.hid, h.nid, h.old_sid, h.sid, h.uid, h.stamp, h.comment, '
+    . 's.state AS state_name '
+    . 'FROM {workflow_node_history} h '
+    . 'INNER JOIN {workflow_states} s ON s.sid = h.sid '
+    . 'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
   return $results->fetchObject();
 }
 
@@ -1566,7 +1571,8 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
   if (empty($limit)) {
     $limit = variable_get('workflow_states_per_page', 20);
   }
-  $results = db_query_range('SELECT * FROM {workflow_node_history} h '
+  $results = db_query_range('SELECT h.hid, h.nid, h.old_sid, h.sid, h.uid, h.stamp, h.comment '
+    . 'FROM {workflow_node_history} h '
     . 'LEFT JOIN {users} u ON h.uid = u.uid '
     . 'WHERE nid = :nid '
     . 'ORDER BY h.stamp DESC ', 0, $limit,
@@ -1612,7 +1618,7 @@ function workflow_insert_workflow_node_history($data) {
  * Given a node id, find out what it's current state is. Unique (for now).
  */
 function workflow_get_workflow_node_by_nid($nid) {
-  $results = db_query('SELECT * FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
   return $results->fetchObject();
 }
 
@@ -1620,14 +1626,15 @@ function workflow_get_workflow_node_by_nid($nid) {
  * Given a sid, find out the nodes associated.
  */
 function workflow_get_workflow_node_by_sid($sid) {
-  $results = db_query('SELECT * FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
   return $results->fetchAll();
 }
 
 /**
  * Given nid, update the new stamp. This probably can be refactored. Called by workflow_execute_transition().
+ * @TODO refactor into a correct insert / update.
  */
-function workflow_update_workflow_node_stamp($nid, $new_stamp) { // @todo refactor into a correct insert / update.
+function workflow_update_workflow_node_stamp($nid, $new_stamp) {
   return db_update('workflow_node')->fields(array('stamp' => $new_stamp))->condition('nid', $nid, '=')->execute();
 }
 

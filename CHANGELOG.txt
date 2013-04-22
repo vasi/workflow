@@ -116,3 +116,4 @@ Issue #1967794 by NancyDru, dforegger: Remove static cache.
 Issue #1966804 by andypost: Improve workflow_get_workflow_node_history_by_nid.
 Issue #1970846 by NancyDru: Allow multiple workflow_tab_forms on the same page.
 Issue #1974828 by martysteer: Fix missing brackets in query.
+Replace all SELECT * with column names. (Remove @TODO)
