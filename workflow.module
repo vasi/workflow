@@ -1161,6 +1161,23 @@ function workflow_insert_workflow_type_map(&$data) {
  */
 
 /**
+ * Given a wid get the transitions.
+ */
+function workflow_get_workflow_transitions_by_wid($wid) {
+  static $transitions;
+  if (!isset($transitions[$wid])) {
+    $query = 'SELECT t.tid, t.sid, t.target_sid, t.roles, s1.wid '
+      . 'FROM {workflow_transitions} t '
+      . 'INNER JOIN {workflow_states} s1 ON t.sid=s1.sid '
+      . 'INNER JOIN {workflow_states} s2 ON t.target_sid=s2.sid '
+      . 'WHERE s1.wid = :wid AND s2.wid = :wid';
+    $transitions[$wid] = db_query('SELECT t.*, s1.wid FROM {workflow_transitions} AS t INNER JOIN {workflow_states} AS s1 ON t.sid=s1.sid INNER JOIN {workflow_states} AS s2 ON t.target_sid=s2.sid WHERE s1.wid = :wid AND s2.wid = :wid',
+      array(':wid' => $wid))->fetchAll();
+  }
+  return $transitions[$wid];
+}
+
+/**
  * Given a tid, get the transition. It is a unique object, only one return.
  */
 function workflow_get_workflow_transitions_by_tid($tid) {

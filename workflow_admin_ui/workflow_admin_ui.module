@@ -362,7 +362,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
   }
     // Create breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
-    
+
     $noyes = array(t('No'), t('Yes'));
 
     $form['wid'] = array('#type' => 'value', '#value' => $workflow->wid);
@@ -415,7 +415,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#description' => t('On the workflow tab, a Comment form can be shown so that the person making the state change can record ' .
         'reasons for doing so. The comment is then included in the node\'s workflow history.'),
       );
-      
+
     $form['watchdog'] = array(
       '#type' => 'fieldset',
       '#title' => t('Watchdog Logging for Workflow'),
