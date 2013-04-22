@@ -362,6 +362,8 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
   }
     // Create breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
+    
+    $noyes = array(t('No'), t('Yes'));
 
     $form['wid'] = array('#type' => 'value', '#value' => $workflow->wid);
     $form['#workflow'] = $workflow;
@@ -380,8 +382,10 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       );
 
     $form['basic']['name_as_title'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use the workflow name as the title of the workflow form.'),
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Use the workflow name as the title of the workflow form?'),
       '#default_value' => isset($workflow->options['name_as_title']) ? $workflow->options['name_as_title'] : 0,
       '#description' => t('The workflow section of the editing form is in its own fieldset. Checking the box will add the workflow ' .
         'name as the title of workflow section of the editing form.'),
@@ -393,19 +397,37 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       );
 
     $form['comment']['comment_log_node'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Show a comment field in the workflow section of the editing form.'),
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Show a comment field in the workflow section of the editing form?'),
       '#default_value' => isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 0,
       '#description' => t('On the node editing form, a Comment form can be shown so that the person making the state change can record ' .
         'reasons for doing so. The comment is then included in the node\'s workflow history.'),
       );
 
     $form['comment']['comment_log_tab'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Show a comment field in the workflow section of the workflow tab form.'),
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Show a comment field in the workflow section of the workflow tab form?'),
       '#default_value' => isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 0,
       '#description' => t('On the workflow tab, a Comment form can be shown so that the person making the state change can record ' .
         'reasons for doing so. The comment is then included in the node\'s workflow history.'),
+      );
+      
+    $form['watchdog'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Watchdog Logging for Workflow'),
+      );
+
+    $form['watchdog']['watchdog_log'] = array(
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Log informational watchdog messages when a transition is executed (state of a node is changed)?'),
+      '#default_value' => isset($workflow->options['watchdog_log']) ? $workflow->options['watchdog_log'] : 0,
+      '#description' => t('Optionally log transition state changes to watchdog.'),
       );
 
     $form['tab'] = array(
@@ -488,6 +510,7 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
     'comment_log_node' => $form_state['values']['comment_log_node'],
     'comment_log_tab' => $form_state['values']['comment_log_tab'],
     'name_as_title' => $form_state['values']['name_as_title'],
+    'watchdog_log' => $form_state['values']['watchdog_log'],
     );
 
   $workflow = array(

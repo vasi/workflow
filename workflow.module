@@ -797,12 +797,15 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
   // Register state change with watchdog.
   $type = node_type_get_name($node->type);
   if ($state = workflow_get_workflow_states_by_sid($sid)) {
-    watchdog('workflow', 'State of @type %node_title set to %state_name',
-      array(
-        '@type' => $type,
-        '%node_title' => $node->title,
-        '%state_name' => t($state->state)),
-      WATCHDOG_NOTICE, l('view', 'node/' . $node->nid));
+    $workflow = workflow_get_workflows_by_wid($state->wid);
+    if ($workflow->options['watchdog_log']) {
+      watchdog('workflow', 'State of @type %node_title set to %state_name',
+        array(
+          '@type' => $type,
+          '%node_title' => $node->title,
+          '%state_name' => t($state->state)),
+        WATCHDOG_NOTICE, l('view', 'node/' . $node->nid));
+    }
   }
   // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
   module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node);
