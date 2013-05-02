@@ -118,4 +118,5 @@ Issue #1970846 by NancyDru: Allow multiple workflow_tab_forms on the same page.
 Issue #1974828 by martysteer: Fix missing brackets in query.
 Replace all SELECT * with column names. (Remove @TODO)
 Issue #1976992 by bdone, NancyDru: Make watchdog logging optional.
-Issue $1976942 by dforegger: Fix transition import.
+Issue #1976942 by dforegger: Fix transition import.
+Issue #1984338 by NancyDru: Fix node_load looping.
