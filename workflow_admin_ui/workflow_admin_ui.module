@@ -575,7 +575,7 @@ function workflow_admin_ui_transitions_form_validate($form, $form_state) {
   $state_count = db_query('SELECT COUNT(sid) FROM {workflow_states} WHERE wid = :wid', array(':wid' => $wid))->fetchField();
   if (empty($author_has_permission) && $state_count > 1) {
     form_set_error('transitions', t('Please give the author permission to go from %creation to at least one state!',
-      array('%creation' => '(creation)')));
+      array('%creation' => t('(creation)'))));
   }
 }
 
