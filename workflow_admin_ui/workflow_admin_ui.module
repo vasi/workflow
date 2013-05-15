@@ -1199,7 +1199,11 @@ function theme_workflow_admin_ui_types_form($variables) {
   }
 
   $output .= drupal_render($form['help']);
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width: auto;')));
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('style' => 'width: auto; clear: both;'),
+    ));
 
   return $output . drupal_render_children($form);
 }
