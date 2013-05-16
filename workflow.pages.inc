@@ -67,6 +67,7 @@ function workflow_tab_page($node = NULL) {
         'old_sid' => $history->old_sid,
         'old_state_name' => $old_state_name,
         'sid' => $history->sid,
+        'uid' => $history->uid,
         'state_name' => $state_name,
         );
 
@@ -100,13 +101,14 @@ function theme_workflow_history_table_row($variables) {
   $old_state_name = $variables['old_state_name'];
   $state_name = $variables['state_name'];
   $history = $variables['history'];
+  $account = user_load($variables['uid']);
   $row = array(
     'data' => array(
       format_date($history->stamp),
       $old_state_name,
       $state_name,
-      theme('username', array('account' => $history)),
-      check_markup($history->comment, filter_default_format()),
+      theme('username', array('account' => $account)),
+      filter_xss($history->comment),
       ),
     'class' => array('workflow_history_row'),
     );

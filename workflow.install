@@ -196,6 +196,14 @@ function workflow_schema() {
         'default' => 0,
         'disp-width' => '10',
       ),
+      'uid' => array(
+        'description' => 'The user who scheduled this state transition.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'disp-width' => '10',
+      ),
       'scheduled' => array(
         'description' => 'The date this transition is scheduled for.',
         'type' => 'int',
@@ -353,4 +361,19 @@ function workflow_update_7001() {
     // Update the workflow without creating a creation state.
     workflow_update_workflows($workflow, FALSE);
   }
+}
+
+/**
+ * Add userid to scheduled transition table.
+ */
+function workflow_update_7002() {
+  db_add_field('workflow_scheduled_transition', 'uid', array(
+    'description' => 'The user who scheduled this state transition.',
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'disp-width' => '10',
+    'initial' => 0,
+    ));
 }

@@ -116,9 +116,18 @@ function workflow_cron() {
   // If the time now is greater than the time to execute a transition, do it.
   foreach (workflow_get_workflow_scheduled_transition_by_between() as $row) {
     $node = node_load($row->nid);
+
+    // If they didn't give a comment, create one.
+    if (empty($row->comment)) {
+      $row->comment = t('Scheduled by user @uid.', array('@uid' => $row->uid));
+    }
+
     // Make sure transition is still valid; i.e., the node is
     // still in the state it was when the transition was scheduled.
     if ($node->workflow == $row->old_sid) {
+      // Save the user who wanted this.
+      $node->workflow_uid = $row->uid;
+
       // Do transition. Force it because user who scheduled was checked.
       workflow_execute_transition($node, $row->sid, $row->comment, TRUE);
       watchdog('content', '%type: scheduled transition of %title.',
@@ -322,6 +331,7 @@ function workflow_features_api() {
  *   Allows bypassing permissions, primarily for Rules.
  */
 function workflow_transition($node, $sid, $force = FALSE) {
+  global $user;
   if ($force) {
     $choices = workflow_get_other_states_by_sid($sid);
   }
@@ -366,6 +376,7 @@ function workflow_transition($node, $sid, $force = FALSE) {
           'nid' => $node->nid,
           'old_sid' => $old_sid,
           'sid' => $sid,
+          'uid' => $user->uid,
           'scheduled' => $scheduled,
           'comment' => $node->workflow_comment,
           );
@@ -721,13 +732,13 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
  *   ID of new state.
  */
 function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALSE) {
+  global $user;
   // I think this happens because of Workflow Extensions;
   // it seems to be okay to ignore it.
   if (empty($node->nid)) {
     return;
   }
 
-  global $user;
   $old_sid = workflow_node_current_state($node);
 
   // Let other modules modify the comment.
@@ -735,6 +746,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
     'node' => $node,
     'sid' => $sid,
     'old_sid' => $old_sid,
+    'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
     );
   drupal_alter('workflow_comment', $comment, $context);
 
@@ -749,21 +761,23 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
         'nid' => $node->nid,
         'old_sid' => (isset($node->workflow) ? $node->workflow : $old_sid),
         'sid' => $sid,
-        'uid' => $user->uid,
+        'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
         'stamp' => $node->workflow_stamp,
         'comment' => $comment,
-      );
+        );
       workflow_insert_workflow_node_history($data);
       unset($node->workflow_comment);
       $result = module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node);
     }
     return;
   }
+
   $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $sid);
   if (!$transition && !$force) {
       watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', array('%old' => $old_sid, '%new' => $sid, WATCHDOG_ERROR));
       return;
   }
+
   // Make sure this transition is valid and allowed for the current user.
   // Check allowability of state change if user is not superuser (might be cron).
   if (($user->uid != 1) && !$force) {
@@ -773,29 +787,34 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
       return;
     }
   }
+
   // Invoke a callback indicating a transition is about to occur. Modules
   // may veto the transition by returning FALSE.
   $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node);
+
   // Stop if a module says so.
   if (in_array(FALSE, $result)) {
     watchdog('workflow', 'Transition vetoed by module.');
     return;
   }
+
   // If the node does not have an existing $node->workflow property, save the $old_sid there so it can be logged.
   if (!isset($node->workflow)) {
     $node->workflow = $old_sid;
   }
+
   // Change the state.
-  global $user;
   $data = array(
     'nid' => $node->nid,
     'sid' => $sid,
-    'uid' => $user->uid,
+    'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
     'stamp' => REQUEST_TIME,
-  );
-  // workflow_update_workflow_node places a history comment as well.
+    );
+
+  // Workflow_update_workflow_node places a history comment as well.
   workflow_update_workflow_node($data, $old_sid, $comment);
   $node->workflow = $sid;
+
   // Register state change with watchdog.
   $type = node_type_get_name($node->type);
   if ($state = workflow_get_workflow_states_by_sid($sid)) {
@@ -811,6 +830,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
   }
   // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
   module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node);
+
   // Clear any references in the scheduled listing.
   workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
   return $sid;
@@ -1478,7 +1498,7 @@ function workflow_update_workflow_states(&$data) {
  * Given a node, get all scheduled transitions for it.
  */
 function workflow_get_workflow_scheduled_transition_by_nid($nid) {
-  $results = db_query('SELECT nid, old_sid, sid, scheduled, comment FROM {workflow_scheduled_transition} WHERE nid = :nid ORDER BY scheduled ASC', array(':nid' => $nid));
+  $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment FROM {workflow_scheduled_transition} WHERE nid = :nid ORDER BY scheduled ASC', array(':nid' => $nid));
   return $results->fetchAll();
 }
 
@@ -1486,7 +1506,7 @@ function workflow_get_workflow_scheduled_transition_by_nid($nid) {
  * Given a timeframe, get all scheduled transistions.
  */
 function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end = REQUEST_TIME) {
-  $results = db_query('SELECT nid, old_sid, sid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
+  $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
   return $results->fetchAll();
 }
 

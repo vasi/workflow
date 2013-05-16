@@ -120,3 +120,6 @@ Replace all SELECT * with column names. (Remove @TODO)
 Issue #1976992 by bdone, NancyDru: Make watchdog logging optional.
 Issue #1976942 by dforegger: Fix transition import.
 Issue #1984338 by NancyDru: Fix node_load looping.
+Issue #1995004 by NancyDru: Fix form issue in admin.
+Issue #1975058 by NancyDru: Revert change to node_form on comments.
+Issue #1986220 by NancyDru: Add scheduling user's id to history.
