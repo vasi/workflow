@@ -756,7 +756,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
     if ($comment && empty($node->workflow_scheduled_comment)) {
       $node->workflow_stamp = REQUEST_TIME;
       workflow_update_workflow_node_stamp($node->nid, $node->workflow_stamp);
-      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node);
+      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node, $force);
       $data = array(
         'nid' => $node->nid,
         'old_sid' => (isset($node->workflow) ? $node->workflow : $old_sid),
@@ -767,7 +767,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
         );
       workflow_insert_workflow_node_history($data);
       unset($node->workflow_comment);
-      $result = module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node);
+      $result = module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node, $force);
     }
     return;
   }
@@ -790,7 +790,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
 
   // Invoke a callback indicating a transition is about to occur. Modules
   // may veto the transition by returning FALSE.
-  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node);
+  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node, $force);
 
   // Stop if a module says so.
   if (in_array(FALSE, $result)) {
@@ -829,7 +829,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
     }
   }
   // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
-  module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node);
+  module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node, $force);
 
   // Clear any references in the scheduled listing.
   workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
@@ -1054,7 +1054,7 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
  */
 function workflow_delete_workflows_by_wid($wid) {
   // Notify any interested modules before we delete, in case there's data needed.
-  module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL);
+  module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL, FALSE);
 
   // Delete associated state (also deletes any associated transitions).
   foreach (workflow_get_workflow_states_by_wid($wid) as $data) {
@@ -1264,7 +1264,7 @@ function workflow_get_workflow_transitions_by_sid_target_sid($sid, $target_sid) 
  */
 function workflow_delete_workflow_transitions_by_tid($tid) {
   // Notify any interested modules before we delete, in case there's data needed.
-  module_invoke_all('workflow', 'transition delete', $tid, NULL, NULL);
+  module_invoke_all('workflow', 'transition delete', $tid, NULL, NULL, FALSE);
   return db_delete('workflow_transitions')->condition('tid', $tid)->execute();
 }
 
@@ -1420,7 +1420,7 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
  */
 function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_delete = FALSE) {
   // Notify interested modules. We notify first to allow access to data before we zap it.
-  module_invoke_all('workflow', 'state delete', $sid, NULL, NULL);
+  module_invoke_all('workflow', 'state delete', $sid, NULL, NULL, FALSE);
 
   // Re-parent any nodes that we don't want to orphan.
   if ($new_sid) {

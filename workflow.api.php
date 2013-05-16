@@ -15,8 +15,11 @@
  *   The state ID of the new state.
  * @param $node
  *   The node whose workflow state is changing.
+ * @param $force
+ *   The caller indicated that the transition should be forced. (bool).
+ *   This is only available on the "pre" and "post" calls.
  */
-function hook_workflow($op, $old_state, $new_state, $node) {
+function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE) {
   switch ($op) {
     case 'transition pre':
       // The workflow module does nothing during this operation.
