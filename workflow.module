@@ -454,9 +454,9 @@ function workflow_node_view($node, $view_mode, $langcode) {
   }
 
   // Show state change form at the bottom of the node display.
-  $form_state = array('cache' => TRUE);
-  form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
-  // By including the nid in the form id
+  module_load_include('inc', 'workflow', 'workflow.pages');
+
+  // By including the nid in the form id.
   $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow->wid, $states, $current);
   $form['#weight'] = 99;
 
@@ -509,7 +509,7 @@ function workflow_field_extra_fields() {
 function workflow_forms($form_id, $args) {
   $forms = array();
 
-  if (substr($form_id, 0, 18) == 'workflow_tab_form_') {
+  if (strpos($form_id, 'workflow_tab_form_') !== FALSE) {
     $forms[$form_id] = array('callback' => 'workflow_tab_form');
   }
   return $forms;

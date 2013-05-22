@@ -163,6 +163,9 @@ function theme_workflow_deleted_state($variables) {
  *   Form definition array.
  */
 function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
+  // Tell FAPI where this form is.
+  form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
+
   // Let's make sure we should be here.
   if (workflow_node_tab_access($node) === FALSE) {
     return;

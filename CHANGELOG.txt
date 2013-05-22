@@ -126,3 +126,4 @@ Issue #1986220 by NancyDru: Add scheduling user's id to history.
 Automatically give "Participate in Workflow" permission to new roles.
 Issue #1984338 by NancyDru: Pass $force to hook_workflow().
 Issue #1996892 by Kristen Pol: Add previous state to Rules.
+Issue #1979562 by NancyDru: workflow_tab_form not found.
