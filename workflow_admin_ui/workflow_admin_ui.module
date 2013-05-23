@@ -1101,7 +1101,7 @@ function workflow_admin_ui_types_form($form) {
   $form = array();
 
   // Allow modules to insert their own action links.
-  $links = module_invoke_all('workflow_operations', 'top_actions');
+  $links = module_invoke_all('workflow_operations', 'top_actions', NULL);
   $links_args = array(
     'links' => $links,
     'attributes' => array('class' => array('inline', 'action-links')),
