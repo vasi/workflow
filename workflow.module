@@ -872,14 +872,23 @@ function workflow_field_choices($node, $force = FALSE) {
       $roles = 'ALL';
     }
 
-    // workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
+    // Workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
     // Instead it returns just the allowable data as:
     // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
     $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
+
     // Include current state if it is not the (creation) state.
     foreach ($transitions as $transition) {
       if ($transition->sysid != WORKFLOW_CREATION) {
-        $choices[$transition->state_id] = check_plain(t($transition->state_name));
+        // Invoke a callback indicating that we are collecting state choices. Modules
+        // may veto a choice by returning FALSE. In this case, the choice is
+        // never presented to the user.
+        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node);
+        // Did anybody veto this choice?
+        if (!in_array(FALSE, $result)) {
+          // If not vetoed, add to list.
+          $choices[$transition->state_id] = check_plain(t($transition->state_name));
+        }
       }
     }
   }
@@ -1554,31 +1563,45 @@ function workflow_delete_workflow_scheduled_transition_by_nid($nid) {
  */
 function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
   $transitions = array();
+
+  // Main query from transitions table.
+  $query = db_select('workflow_transitions', 't')
+    ->fields('t', array('tid'));
+
   if ($dir == 'to') {
-    $field = 'target_sid';
-    $field_where = 'sid';
+    $query->innerJoin('workflow_states', 's', 's.sid = t.target_sid');
+    $query->addField('t', 'target_sid', 'state_id');
+    $query->condition('t.sid', $sid);
   }
   else {
-    $field = 'sid';
-    $field_where = 'target_sid';
+    $query->innerJoin('workflow_states', 's', 's.sid = t.sid');
+    $query->addField('t', 'sid', 'state_id');
+    $query->condition('t.target_sid', $sid);
   }
-  // @TODO:
-  // Yes. This is a monster. This should, in all absolute seriousness, be cut down to size.
-  // I also REALLY do not like the insecure field pieces in here.
-  $results = db_query(''
-      . '(SELECT t.tid, t.' . $field . ' as state_id, s.state AS state_name, s.weight AS state_weight, s.sysid as sysid '
-        . 'FROM {workflow_transitions} t '
-        . 'INNER JOIN {workflow_states} s ON s.sid = t.' . $field . ' '
-        . 'WHERE t.' . $field_where . ' = :sid AND s.status = 1 '
-        // I don't think this actually does anything.
-//        . 'ORDER BY state_weight '
-          . ') '
-    . 'UNION '
-      . '(SELECT s.sid as tid, s.sid as state_id, s.state as state_name, s.weight as state_weight, s.sysid as sysid '
-        . 'FROM {workflow_states} s '
-        . 'WHERE s.sid = :sid AND s.status = 1) '
-        . 'ORDER BY state_weight, state_id',
-    array(':sid' => $sid));
+
+  $query->addField('s', 'state', 'state_name');
+  $query->addField('s', 'weight', 'state_weight');
+  $query->addField('s', 'sysid');
+  $query->condition('s.status', 1);
+
+  // Now let's get the current state.
+  $query2 = db_select('workflow_states', 's');
+  $query2->addField('s', 'sid', 'tid');
+  $query2->addField('s', 'sid', 'state_id');
+  $query2->addField('s', 'state', 'state_name');
+  $query2->addField('s', 'weight', 'state_weight');
+  $query2->addField('s', 'sysid');
+  $query2->condition('s.status', 1);
+  $query2->condition('s.sid', $sid);
+
+  $query2->orderBy('state_weight');
+  $query2->orderBy('state_id');
+
+  // Add the union of the two queries
+  $query->union($query2, 'UNION');
+
+  $results = $query->execute();
+
   foreach ($results as $transition) {
     if ($roles == 'ALL'  // Superuser.
       || $sid == $transition->state_id // Include current state for same-state transitions.

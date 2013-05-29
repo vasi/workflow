@@ -104,11 +104,11 @@ function theme_workflow_history_table_row($variables) {
   $account = user_load($variables['uid']);
   $row = array(
     'data' => array(
-      format_date($history->stamp),
-      $old_state_name,
-      $state_name,
-      theme('username', array('account' => $account)),
-      filter_xss($history->comment),
+      array('data' => format_date($history->stamp), 'class' => array('timestamp')),
+      array('data' => $old_state_name, 'class' => array('previous-state-name')),
+      array('data' => $state_name, 'class' => array('state-name')),
+      array('data' => theme('username', array('account' => $account)), 'class' => array('user-name')),
+      array('data' => filter_xss($history->comment), 'class' => array('log-comment')),
       ),
     'class' => array('workflow_history_row'),
     );
@@ -138,7 +138,7 @@ function theme_workflow_history_table($variables) {
  * Theme the current state in the workflow history table.
  */
 function theme_workflow_history_current_state($variables) {
-  return '<strong>' . check_plain(t($variables['state_name'])) . '</strong>';
+  return check_plain(t($variables['state_name']));
 }
 
 /**
@@ -173,26 +173,7 @@ function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
 
   $form['#tab'] = TRUE;
   $choices = workflow_field_choices($node);
-  $min = $states[$current] == t('(creation)') ? 1 : 2;
-
-  // Invoke a callback indicating a transition is about to occur. Modules
-  // may veto the transition by returning FALSE.
-  // In this case, the transition is not about to occur, but we want to
-  // know if it should be dropped from the list of choices.
-  if (empty($choices)) {
-    return;
-  };
-  foreach ($choices as $sid => $name) {
-    if ($current == $sid) {
-      continue;
-    }
-    $result = module_invoke_all('workflow', 'transition pre', $current, $sid, $node);
-    // Stop if a module says so.
-    if (in_array(FALSE, $result)) {
-      // if vetoed, remove from list.
-      unset($choices[$sid]);
-    }
-  }
+  $min = ($states[$current] == t('(creation)') ? 1 : 2);
 
   // Only build form if user has possible target state(s).
   if (count($choices) >= $min) {

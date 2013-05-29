@@ -129,3 +129,5 @@ Issue #1996892 by Kristen Pol: Add previous state to Rules.
 Issue #1979562 by NancyDru: workflow_tab_form not found.
 Issue #1974624 by NancyDru: Make sure all hook calls have two params.
 Issue #1971504 by NancyDru: Skip node form vertical tab if only one transition possible.
+Issue #1997242 by NancyDru: Hook to check if transition is allowed.
+Issue #1443166 by NancyDru: Clean up monster query (Oracle issue).
