@@ -339,7 +339,7 @@ function workflow_update_7000() {
   if (!db_index_exists('workflows', 'name')) {
     db_add_unique_key('workflows', 'name', array('name'));
   }
-  if (!db_index_exists('workflows', 'wid_state')) {
+  if (!db_index_exists('workflow_states', 'wid_state')) {
     db_add_unique_key('workflow_states', 'wid_state', array('wid', 'state'));
   }
 }
