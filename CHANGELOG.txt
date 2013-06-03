@@ -132,3 +132,5 @@ Issue #1971504 by NancyDru: Skip node form vertical tab if only one transition p
 Issue #1997242 by NancyDru: Hook to check if transition is allowed.
 Issue #1443166 by NancyDru: Clean up monster query (Oracle issue).
 Issue #2001980 by NancyDru: Revert checks if permitted.
+Issue #1856180 by JayMN: Correct typo in update.
+Issue #2009312 by NancyDru: Remove Workflow module form field.

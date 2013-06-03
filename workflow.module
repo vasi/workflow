@@ -475,13 +475,6 @@ function workflow_field_extra_fields() {
   // Add the extra fields to each content type that has a workflow.
   foreach ($types as $type => $wid) {
     $extra['node'][$type] = array(
-      'form' => array(
-        'workflow' => array(
-          'label' => t('Workflow'),
-          'description' => t('Workflow module form'),
-          'weight' => 99,
-          ),
-        ),
       'display' => array(
         'workflow_current_state' => array(
           'label' => t('Workflow: Current State'),
