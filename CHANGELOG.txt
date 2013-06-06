@@ -134,3 +134,4 @@ Issue #1443166 by NancyDru: Clean up monster query (Oracle issue).
 Issue #2001980 by NancyDru: Revert checks if permitted.
 Issue #1856180 by JayMN: Correct typo in update.
 Issue #2009312 by NancyDru: Remove Workflow module form field.
+Issue #457348 by NancyDru: Remove view mode check.

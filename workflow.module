@@ -421,7 +421,7 @@ function theme_workflow_current_state($variables) {
  * @return renderable content in $node->content array.
  */
 function workflow_node_view($node, $view_mode, $langcode) {
-  if ($view_mode != 'full' || !user_access('show workflow state form') || $node->status == 0) {
+  if (!user_access('show workflow state form') || $node->status == 0) {
     return;
   }
 
