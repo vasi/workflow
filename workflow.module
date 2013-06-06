@@ -447,6 +447,9 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
   // If we are at the terminal state, then don't show the change form.
   $choices = workflow_field_choices($node);
+  if (!$choices) {
+    return;
+  }
   if (count($choices) == 1) {
     if ($current == key($choices)) {
       return;
