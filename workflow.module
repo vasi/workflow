@@ -748,6 +748,14 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
 
   $old_sid = workflow_node_current_state($node);
 
+  // Make sure this transition is allowed.
+  $result = module_invoke_all('workflow', 'transition permitted', $sid, $old_sid, $node);
+  // Did anybody veto this choice?
+  if (in_array(FALSE, $result)) {
+    // If vetoed, quit.
+    return;
+  }
+
   // Let other modules modify the comment.
   $context = array(
     'node' => $node,
