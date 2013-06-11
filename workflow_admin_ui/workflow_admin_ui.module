@@ -1180,6 +1180,7 @@ function workflow_admin_ui_types_form($form) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save workflow mapping'),
+    '#weight' => 100,
     );
 
   return $form;
