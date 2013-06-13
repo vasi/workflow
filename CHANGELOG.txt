@@ -137,3 +137,5 @@ Issue #2009312 by NancyDru: Remove Workflow module form field.
 Issue #457348 by NancyDru: Remove view mode check.
 Fix terminal state check.
 Issue #1997242 by NancyDru: Recheck permitted transitions before execution.
+Issue #1781308 by NancyDru: Revert change to vertical tab.
+Issue #1997242 by Tim-Erwin: Honor force on transition permitted.

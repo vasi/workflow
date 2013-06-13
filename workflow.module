@@ -752,12 +752,14 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
 
   $old_sid = workflow_node_current_state($node);
 
-  // Make sure this transition is allowed.
-  $result = module_invoke_all('workflow', 'transition permitted', $sid, $old_sid, $node);
-  // Did anybody veto this choice?
-  if (in_array(FALSE, $result)) {
-    // If vetoed, quit.
-    return;
+  if (!$force) {
+    // Make sure this transition is allowed.
+    $result = module_invoke_all('workflow', 'transition permitted', $sid, $old_sid, $node);
+    // Did anybody veto this choice?
+    if (in_array(FALSE, $result)) {
+      // If vetoed, quit.
+      return;
+    }
   }
 
   // Let other modules modify the comment.
@@ -887,7 +889,7 @@ function workflow_field_choices($node, $force = FALSE) {
 
     // Include current state if it is not the (creation) state.
     foreach ($transitions as $transition) {
-      if ($transition->sysid != WORKFLOW_CREATION) {
+      if ($transition->sysid != WORKFLOW_CREATION && !$force) {
         // Invoke a callback indicating that we are collecting state choices. Modules
         // may veto a choice by returning FALSE. In this case, the choice is
         // never presented to the user.
