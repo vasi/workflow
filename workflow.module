@@ -478,6 +478,13 @@ function workflow_field_extra_fields() {
   // Add the extra fields to each content type that has a workflow.
   foreach ($types as $type => $wid) {
     $extra['node'][$type] = array(
+      'form' => array(
+        'workflow' => array(
+          'label' => t('Workflow'),
+          'description' => t('Workflow module form'),
+          'weight' => 99,    // Default to bottom.
+          ),
+        ),
       'display' => array(
         'workflow_current_state' => array(
           'label' => t('Workflow: Current State'),
@@ -548,11 +555,8 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
   }
   else {
     $form['workflow'] = array(
-      '#type' => 'fieldset',
-      '#title' => check_plain(t($name)),
-      '#group' => 'additional_settings',
-      // Attach the javascript for vertical tabs.
-      '#attached' => array('js' => array('vertical-tabs' => drupal_get_path('module', 'workflow') . '/workflow.js')),
+      '#type' => 'container',
+      '#attributes' => array('class' => array('workflow-form-container')),
       );
 
     // Note: title needs to be sanitized before calling this function.
