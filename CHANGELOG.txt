@@ -140,3 +140,4 @@ Issue #1997242 by NancyDru: Recheck permitted transitions before execution.
 Issue #1781308 by NancyDru: Revert change to vertical tab.
 Issue #1997242 by Tim-Erwin: Honor force on transition permitted.
 Issue #2019125 by Nancydru: Add access priority setting.
+Issue #2018959 by dev team data: Fix feature revert error.
