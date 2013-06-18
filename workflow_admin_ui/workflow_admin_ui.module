@@ -811,7 +811,7 @@ function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
   $states = array_combine($sids, $states);
 
   // Save the list in the form for later.
-  $form['#states'] = $states;
+  $form['#workflow_states'] = $states;
 
   // Allow modules to insert their own workflow operations.
   $links = module_invoke_all('workflow_operations', 'workflow', $workflow);
@@ -1005,7 +1005,7 @@ function workflow_admin_ui_overview_form_validate($form, &$form_state) {
   $wid = $form_state['values']['wid'];
 
   // Get the state objects.
-  $states = $form['#states'];
+  $states = $form['#workflow_states'];
 
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
@@ -1038,7 +1038,7 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
   $wf_name = $form['#wf_name'];
 
   // Get the state objects.
-  $states = $form['#states'];
+  $states = $form['#workflow_states'];
 
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
