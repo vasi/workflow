@@ -194,7 +194,8 @@ function workflow_access_form($form, $form_state, $workflow) {
     '#markup' => '<p><strong>'
       . t('WARNING:')
       . '</strong> '
-      . t('Use of the "Edit any" and/or "Edit own" permissions for the content type may override these access settings.')
+      . t('Use of the "Edit any," "Edit own," and even "View published content" permissions
+        for the content type may override these access settings.')
       . '</p>',
       );
 

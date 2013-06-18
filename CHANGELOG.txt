@@ -143,3 +143,4 @@ Issue #2019125 by Nancydru: Add access priority setting.
 Issue #2018959 by dev team data: Fix feature revert error.
 Issue #2012516 by maximpodorov: Add state system name and sid to theme functions
 Issue #2022381 by justanothermark: Fix array key collision
+Issue #2022333 by NancyDru: Add another common permission warning.
