@@ -93,16 +93,22 @@ function workflow_theme() {
     'workflow_history_current_state' => array(
       'variables' => array(
         'state_name' => NULL,
+        'state_system_name' => NULL,
+        'sid' => NULL,
         ),
       ),
     'workflow_current_state' => array(
       'variables' => array(
         'state' => NULL,
+        'state_system_name' => NULL,
+        'sid' => NULL,
         ),
       ),
     'workflow_deleted_state' => array(
       'variables' => array(
         'state_name' => NULL,
+        'state_system_name' => NULL,
+        'sid' => NULL,
         ),
       ),
     );
@@ -405,6 +411,7 @@ function workflow_transition($node, $sid, $force = FALSE) {
 function theme_workflow_current_state($variables) {
   $state = $variables['state'];
   return '<div class="workflow-current-state '
+    . 'workflow-current-sid-' . intval($variables['sid']) . ' '
     . drupal_html_class($state)
     . '">'
     . t('Current state: <span class="state">@state</span>', array('@state' => $state))
@@ -431,14 +438,16 @@ function workflow_node_view($node, $view_mode, $langcode) {
   }
 
   $states = array();
+  $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
     $states[$data->sid] = check_plain(t($data->state));
+    $state_system_names[$data->sid] = check_plain($data->state);
   }
 
   $current = workflow_node_current_state($node);
 
   // Show current state at the top of the node display.
-  $markup = theme('workflow_current_state', array('state' => $states[$current]));;
+  $markup = theme('workflow_current_state', array('state' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
 
   $node->content['workflow_current_state'] = array(
     '#markup' => $markup,

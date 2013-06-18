@@ -10,20 +10,25 @@
 function workflow_tab_page($node = NULL) {
   drupal_set_title($node->title);
   $workflow = workflow_get_workflow_type_map_by_type($node->type);
+  $states = array();
+  $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
     $states[$data->sid] = check_plain(t($data->state));
+    $state_system_names[$data->sid] = check_plain($data->state);
   }
   $deleted_states = array();
+  $deleted_state_system_names = array();
   $options = array('status' => 0);
   foreach (workflow_get_workflow_states($options) as $data) {
     $deleted_states[$data->sid] = check_plain(t($data->state));
+    $deleted_state_system_names[$data->sid] = check_plain($data->state);
   }
   $current = workflow_node_current_state($node);
 
   // theme_workflow_history_current_state() must run state through check_plain().
-  $current_state = theme('workflow_history_current_state', array('state_name' => $states[$current]));
+  $current_state = theme('workflow_history_current_state', array('state_name' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
 
-  $output = theme('workflow_current_state', array('state' => $states[$current]));
+  $output = theme('workflow_current_state', array('state' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
 
   // Show the form to allow state changing.
   // But only if we are not at the terminal state.
@@ -37,14 +42,14 @@ function workflow_tab_page($node = NULL) {
   foreach (workflow_get_workflow_node_history_by_nid($node->nid) as $history) {
     if ($history->sid == $current && !isset($deleted_states[$history->sid]) && !isset($current_themed)) {
       // Theme the current state differently so it stands out.
-      $state_name = theme('workflow_history_current_state',  array('state_name' => $states[$history->sid]));
+      $state_name = theme('workflow_history_current_state',  array('state_name' => $states[$history->sid], 'state_system_name' => $state_system_names[$history->sid], 'sid' => $history->sid));
       // Make a note that we have themed the current state; other times in the history
       // of this node where the node was in this state do not need to be specially themed.
       $current_themed = TRUE;
     }
     elseif (isset($deleted_states[$history->sid])) {
       // The state has been deleted, but we include it in the history.
-      $state_name = theme('workflow_deleted_state', array('deleted_state' => $deleted_states[$history->sid]));
+      $state_name = theme('workflow_deleted_state', array('state_name' => $deleted_states[$history->sid], 'state_system_name' => $deleted_state_system_names[$history->sid], 'sid' => $history->sid));
       $footer_needed = TRUE;
     }
     else {
@@ -52,7 +57,7 @@ function workflow_tab_page($node = NULL) {
       $state_name = check_plain(t($states[$history->sid]));
     }
     if (isset($deleted_states[$history->old_sid])) {
-      $old_state_name = theme('workflow_deleted_state', array('deleted_state' => $deleted_states[$history->old_sid]));
+      $old_state_name = theme('workflow_deleted_state', array('state_name' => $deleted_states[$history->old_sid], 'state_system_name' => $deleted_state_system_names[$history->old_sid], 'sid' => $history->old_sid));
       $footer_needed = TRUE;
     }
     elseif (isset($states[$history->old_sid])) {
