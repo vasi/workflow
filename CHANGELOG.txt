@@ -145,3 +145,4 @@ Issue #2012516 by maximpodorov: Add state system name and sid to theme functions
 Issue #2022381 by justanothermark: Fix array key collision
 Issue #2022333 by NancyDru: Add another common permission warning.
 Issue #2023233 by NancyDru: Fix double encoding.
+Issue #1993408 by NancyDru: Default new states to active.
