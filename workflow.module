@@ -50,6 +50,16 @@ function workflow_load($wid) {
 }
 
 /**
+ * Implements hook_admin_paths_alter().
+ * If node edits are done in admin mode, then workflow will be too.
+ */
+function workflow_admin_paths_alter(&$paths) {
+  if (isset($path['node/*/edit'])) {
+    $path['node/*/workflow'] = $path['node/*/edit'];
+  }
+}
+
+/**
  * Menu access control callback. Determine access to Workflow tab.
  */
 function workflow_node_tab_access($node = NULL) {
@@ -663,25 +673,18 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
   // Ignore all forms except comment forms and node editing forms.
-//  if (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id) {
   if ((isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
     || (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
-    // Skip if there are no workflows.
-    if (isset($form['#node'])) {
-      $node = $form['#node'];
-      // Abort if user does not want to display workflow form on node editing form.
-      if (!in_array('node', variable_get('workflow_' . $form['#node']->type, array('node')))) {
-        return;
-      }
+    // Set node to #node if available or load from nid value.
+    $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
+    $type = $node->type;
+    $workflow_entities = variable_get('workflow_' . $type, array());
+    // Abort if the entity type of the form is not in the list that the user
+    // wants to display the workflow form on.
+    if (!in_array($form['#entity_type'], $workflow_entities)) {
+      return;
     }
-    else {
-      $node = node_load($form['nid']['#value']);
-      $type = $node->type;
-      // Abort if user does not want to display workflow form on comment editing form.
-      if (!in_array('comment', variable_get('workflow_' . $type, array('node')))) {
-        return;
-      }
-    }
+
     if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
       $choices = workflow_field_choices($node);
       $workflow = workflow_get_workflows_by_wid($workflow->wid);
