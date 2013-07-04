@@ -1673,7 +1673,8 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
     . 'FROM {workflow_node_history} h '
     . 'LEFT JOIN {users} u ON h.uid = u.uid '
     . 'WHERE nid = :nid '
-    . 'ORDER BY h.stamp DESC ', 0, $limit,
+    // The timestamp is only granular to the second; on a busy site, we need the id.
+    . 'ORDER BY h.stamp DESC, h.hid DESC ', 0, $limit,
     array(':nid' => $nid));
   if ($limit == 1) {
     return $results->fetchObject();
