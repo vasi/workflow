@@ -274,7 +274,7 @@ function workflow_node_delete($node) {
   $node->workflow_stamp = REQUEST_TIME;
   // Delete the association of node to state.
   workflow_delete_workflow_node_by_nid($node->nid);
-  if (!empty($node->_worfklow)) {
+  if (!empty($node->worfklow)) {
     global $user;
     $data = array(
       'nid' => $node->nid,

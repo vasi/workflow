@@ -149,3 +149,6 @@ Issue #1993408 by NancyDru: Default new states to active.
 Issue #1542188 by justanothermark: Fix workflow display.
 Issue #2027507 by NancyDru: Fix sorting issue on history page.
 Issue #1993408 by NancyDru: Sysid not always set correctly.
+
+Since 7.x-1.2
+Issue #2037459 by johnv: Fix typo.
