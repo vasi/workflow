@@ -880,7 +880,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
  */
 function workflow_field_choices($node, $force = FALSE) {
   global $user;
-  $choices = FALSE;
+  $choices = array();
   if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
     $roles = array_keys($user->roles);
     $current_sid = workflow_node_current_state($node);
