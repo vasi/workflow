@@ -13,15 +13,15 @@ function workflow_tab_page($node = NULL) {
   $states = array();
   $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
-    $states[$data->sid] = check_plain(t($data->state));
-    $state_system_names[$data->sid] = check_plain($data->state);
+    $states[$data->sid] = t($data->state);
+    $state_system_names[$data->sid] = $data->state;
   }
   $deleted_states = array();
   $deleted_state_system_names = array();
   $options = array('status' => 0);
   foreach (workflow_get_workflow_states($options) as $data) {
-    $deleted_states[$data->sid] = check_plain(t($data->state));
-    $deleted_state_system_names[$data->sid] = check_plain($data->state);
+    $deleted_states[$data->sid] = t($data->state);
+    $deleted_state_system_names[$data->sid] = $data->state;
   }
   $current = workflow_node_current_state($node);
 

@@ -153,3 +153,4 @@ Issue #1993408 by NancyDru: Sysid not always set correctly.
 Since 7.x-1.2
 Issue #2037459 by johnv: Fix typo.
 Issue #2037531 by johnv, NancyDru: Fix choices return value.
+Issue #2039859 by Scaythe: Fix double encoding.
