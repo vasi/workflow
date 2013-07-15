@@ -714,7 +714,7 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
         $array = array_keys($choices);
         $current = $array[0];
       }
-      if (sizeof($choices) > 1) {
+      if (count($choices) > 1) {
         $form['workflow'] = array(
           '#type' => 'fieldset',
           '#title' => t('@name', array('@name' => $name)),
