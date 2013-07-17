@@ -164,7 +164,7 @@ function workflow_token_info() {
   $tokens = array();
   $tokens['workflow-name'] = array(
     'name' => t('Workflow name'),
-    'description' => t('Name of workflow appied to this node'),
+    'description' => t('Name of workflow applied to this node'),
     );
   $tokens['workflow-current-state-name'] = array(
     'name' => t('Current state name'),
