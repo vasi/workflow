@@ -50,6 +50,16 @@ function workflow_load($wid) {
 }
 
 /**
+ * Implements hook_hook_info().
+ * Allow adopters to place their hook implementaions in either
+ * their main module or in a module.workflow.inc file.
+ */
+function workflow_hook_info() {
+  $hooks['workflow'] = array('group' => 'workflow');
+  return $hooks;
+}
+
+/**
  * Implements hook_admin_paths_alter().
  * If node edits are done in admin mode, then workflow will be too.
  */

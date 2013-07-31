@@ -156,3 +156,4 @@ Issue #2037531 by johnv, NancyDru: Fix choices return value.
 Issue #2039859 by Scaythe: Fix double encoding.
 Issue #2043667 by rodrigoeg, johnv: Fix typo in tokens.
 Issue #2044199 by justanothermark: Fix Feature reversion on non-existent states.
+Issue #2019345 by NancyDru: Allow hooks to reside in separate file.

@@ -7,6 +7,9 @@
 /**
  * Implements hook_workflow().
  *
+ * NOTE: This hook may reside in the implementing module
+ * or in a module.workflow.inc file.
+ *
  * @param $op
  *   The current workflow operation: 'transition permitted', 'transition pre' or 'transition post'.
  * @param $old_state
