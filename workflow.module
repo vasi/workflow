@@ -579,7 +579,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
     $state = key($choices);
     $form['workflow'][$name] = array(
       '#type' => 'value',
-      '#options' => array($state => $state),
+      '#value' => array($state => $state),
       );
   }
   else {
