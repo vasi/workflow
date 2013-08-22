@@ -9,7 +9,11 @@
  */
 function workflow_tab_page($node = NULL) {
   drupal_set_title($node->title);
+
   $workflow = workflow_get_workflows_by_type($node->type);
+  $current = workflow_node_current_state($node);
+  $choices = workflow_field_choices($node);
+
   $states = array();
   $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
@@ -23,7 +27,6 @@ function workflow_tab_page($node = NULL) {
     $deleted_states[$data->sid] = t($data->state);
     $deleted_state_system_names[$data->sid] = $data->state;
   }
-  $current = workflow_node_current_state($node);
 
   // theme_workflow_history_current_state() must run state through check_plain().
   $current_state = theme('workflow_history_current_state', array('state_name' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
@@ -32,9 +35,8 @@ function workflow_tab_page($node = NULL) {
 
   // Show the form to allow state changing.
   // But only if we are not at the terminal state.
-  $choices = workflow_field_choices($node);
-  if (count($choices) != 0 || count($choices) != 1 || $current != key($choices)) {
-    $form = drupal_get_form('workflow_tab_form', $node, $workflow->wid, $states, $current);
+  if (workflow_show_form($current, $workflow, $choices)) {
+    $form = drupal_get_form('workflow_tab_form', $node, $workflow, $states, $current);
     $output .= drupal_render($form);
   }
 
@@ -158,8 +160,8 @@ function theme_workflow_deleted_state($variables) {
  *
  * @param $node
  *   Node for which workflow information will be displayed.
- * @param $wid
- *   ID of workflow to display.
+ * @param $workflow
+ *   Workflow object to display.
  * @param $states
  *   Array of states for the workflow.
  * @param $current
@@ -167,23 +169,20 @@ function theme_workflow_deleted_state($variables) {
  * @return
  *   Form definition array.
  */
-function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
-  // Tell FAPI where this form is.
-  form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
-
+function workflow_tab_form($form, $form_state, $node, $workflow, $states, $current) {
   // Let's make sure we should be here.
   if (workflow_node_tab_access($node) === FALSE) {
     return;
   }
 
-  $form['#tab'] = TRUE;
   $choices = workflow_field_choices($node);
-  $min = ($states[$current] == t('(creation)') ? 1 : 2);
 
   // Only build form if user has possible target state(s).
-  if (count($choices) >= $min) {
-    $workflow = workflow_get_workflows_by_type($node->type);
+  if (workflow_show_form($current, $workflow, $choices)) {
+    // Tell FAPI where this form is.
+    form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
 
+    $form['#tab'] = TRUE;
     $form['#wf'] = $workflow;
     $form['#choices'] = $choices;
 

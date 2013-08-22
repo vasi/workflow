@@ -464,15 +464,15 @@ function workflow_node_view($node, $view_mode, $langcode) {
   if (!$workflow = workflow_get_workflows_by_type($node->type)) {
     return;
   }
-	
+  $current = workflow_node_current_state($node);
+  $choices = workflow_field_choices($node);
+
   $states = array();
   $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
     $states[$data->sid] = check_plain(t($data->state));
     $state_system_names[$data->sid] = check_plain($data->state);
   }
-
-  $current = workflow_node_current_state($node);
 
   // Show current state at the top of the node display.
   $markup = theme('workflow_current_state', array('state' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
@@ -482,25 +482,16 @@ function workflow_node_view($node, $view_mode, $langcode) {
     '#weight' => -99,
     );
 
-  // If we are at the terminal state, then don't show the change form.
-  $choices = workflow_field_choices($node);
-  if (!$choices) {
-    return;
+  if (workflow_show_form($current, $workflow, $choices)) {
+    // Show state change form at the bottom of the node display.
+    module_load_include('inc', 'workflow', 'workflow.pages');
+
+    // By including the nid in the form id.
+    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $states, $current);
+    $form['#weight'] = 99;
+
+    $node->content['workflow'] = $form;
   }
-  if (count($choices) == 1) {
-    if ($current == key($choices)) {
-      return;
-    }
-  }
-
-  // Show state change form at the bottom of the node display.
-  module_load_include('inc', 'workflow', 'workflow.pages');
-
-  // By including the nid in the form id.
-  $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow->wid, $states, $current);
-  $form['#weight'] = 99;
-
-  $node->content['workflow'] = $form;
 }
 
 /**
@@ -705,20 +696,13 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
 
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $choices = workflow_field_choices($node);
-      $states = workflow_get_workflow_states_by_wid($workflow->wid);
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
       $current = isset($form_state['values']['workflow']) ?
         $form_state['values']['workflow'] : workflow_node_current_state($node);
-      $min = 2; // Our current status, and our new status.
-      foreach ($states as $state) {
-        if ($state->sid == $current) {
-          $min = $state->sysid == WORKFLOW_CREATION ? 1 : 2;
-        }
-      }
       // Stop if user has no new target state(s) to choose.
-      if (count($choices) < $min) {
+      if (!workflow_show_form($current, $workflow, $choices)) {
         return;
       }
 
@@ -1858,3 +1842,34 @@ function workflow_requirements($phase) {
     return $requirements;
   }
 }
+
+/*
+ * Determine if the Workflow Form must be shown. 
+ * If not, a formatter must be shown, since there are no valid options.
+ *
+ * @param $sid
+ *   the current state ID.
+ * @param $workflow
+ *   the workflow object (might be derived from $sid).
+ * @param $choices
+ *   array with options, as determined in workflow_field_choices().
+ * 
+ * @return
+ *  Boolean, TRUE = a form must be shown; FALSE = a formatter must be shown.
+ */
+
+function workflow_show_form($sid, $workflow, $choices) {
+  $count = count($choices);
+
+  // The easiest case first: more then one option: always show form.
+  if ($count > 1) {
+    return TRUE;
+   }
+  // Only when in creation fase, one option is sufficient,
+  // since the '(creation)' option is not shown.
+  if ($sid == $workflow->creation_state) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
