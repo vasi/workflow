@@ -175,6 +175,12 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     return;
   }
 
+  // @todo: remove this in a future version. 
+  // This is to support workflow-extensions 7.x-1.0, which still passes a $wid.
+  if (is_numeric($workflow)) {
+    $workflow = workflow_get_workflows_by_wid($wid);
+  }
+
   $choices = workflow_field_choices($node);
 
   // Only build form if user has possible target state(s).
