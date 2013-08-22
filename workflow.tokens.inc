@@ -40,12 +40,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         if (empty($last_history)) {
           // If the node has no workflow history,
           // the node is being inserted and will soon be transitioned to the first valid state.
-          // We find this state using the same logic as workflow_nodeapi().
           if ($choices = workflow_field_choices($node)) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
-            $keys = array_keys($choices);
-            $sid = array_shift($keys);
+            $sid = workflow_get_first_state($workflow, $choices);
             $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
           }
           else {

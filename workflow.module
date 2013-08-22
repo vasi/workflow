@@ -249,26 +249,20 @@ function workflow_node_load($nodes, $types) {
 function workflow_node_insert($node) {
   // Skip if there are no workflows.
   if ($workflow = workflow_get_workflows_by_type($node->type)) {
+    // Normally, the new state is already set.
     // If the state is not specified, use first valid state.
     // For example, a new node must move from (creation) to some
     // initial state.
     if (empty($node->workflow)) {
       $choices = workflow_field_choices($node);
-      if ($choices) {
-        $keys = array_keys($choices);
-        $sid = array_shift($keys);
-      }
-      else {
-        // This should never happen, but it did during testing.
-        drupal_set_message(t('There are no workflow states available. Please notify your site administrator.'), 'error');
-        return;
-      }
+      $sid = workflow_get_first_state($workflow, $choices);
     }
-    if (!isset($sid)) {
+    else {
       $sid = $node->workflow;
     }
-    // And make the transition.
-    workflow_transition($node, $sid);
+    if ($sid) {
+      workflow_transition($node, $sid);
+    }
   }
 }
 
@@ -278,11 +272,13 @@ function workflow_node_insert($node) {
 function workflow_node_update($node) {
   // Skip if there are no workflows.
   if ($workflow = workflow_get_workflows_by_type($node->type)) {
-    // Get new state from value of workflow form field, stored in $node->workflow.
-    if (!isset($sid)) {
+    // Get new state from workflow form, stored in $node->workflow.
+    if (!empty($node->workflow)) {
       $sid = $node->workflow;
     }
-    workflow_transition($node, $sid);
+    if ($sid) {
+      workflow_transition($node, $sid);
+    }
   }
 }
 
@@ -374,8 +370,8 @@ function workflow_transition($node, $sid, $force = FALSE) {
     $choices = workflow_field_choices($node, $force);
   }
 
-  // Make sure new state is a valid choice.
-  if (array_key_exists($sid, $choices)) {
+  // Only execute if the new state is a valid choice.
+  if ($sid && array_key_exists($sid, $choices)) {
     $node->workflow_scheduled = isset($node->workflow_scheduled) ? $node->workflow_scheduled : FALSE;
     if (!$node->workflow_scheduled) {
       // It's an immediate change. Do the transition.
@@ -701,29 +697,30 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       // the state.
       $current = isset($form_state['values']['workflow']) ?
         $form_state['values']['workflow'] : workflow_node_current_state($node);
+
+      // If the current node state is not one of the choices, pick first valid choice.
+      // We know all states in $choices are states that user has permission to
+      // go to because workflow_field_choices() has already checked that.
+      if (!isset($choices[$current])) {
+        $current = workflow_get_first_state($workflow, $choices);
+      }
+
       // Stop if user has no new target state(s) to choose.
       if (!workflow_show_form($current, $workflow, $choices)) {
         return;
       }
 
-      $form['#wf'] = $workflow;
       $name = $workflow->name;
-      // If the current node state is not one of the choices, pick first choice.
-      // We know all states in $choices are states that user has permission to
-      // go to because workflow_field_choices() has already checked that.
-      if (!isset($choices[$current])) {
-        $array = array_keys($choices);
-        $current = $array[0];
-      }
-      if (count($choices) > 1) {
-        $form['workflow'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('@name', array('@name' => $name)),
-          '#collapsible' => TRUE,
-          '#collapsed' => FALSE,
-          '#weight' => 10,
-        );
-      }
+
+      $form['#wf'] = $workflow;
+      $form['workflow'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('@name', array('@name' => $name)),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+        '#weight' => 10,
+      );
+
       $timestamp = NULL;
       $comment = '';
       // See if scheduling information is present.
@@ -984,6 +981,29 @@ function workflow_transition_allowed($tid, $role = NULL) {
     }
     return array_intersect($role, $allowed) ==  TRUE;
   }
+}
+
+/**
+ * Return the ID of the first valid state for this workflow.
+ *
+ * @param $workflow
+ *   The ID of the workflow.
+ * @param $choices
+ *   Array of valid options.
+ */
+function workflow_get_first_state($workflow, $choices) {
+  $sid = FALSE;
+
+  if ($choices) {
+    $keys = array_keys($choices);
+    $sid = $keys[0];
+  }
+  else {
+    // This should never happen, but it did during testing.
+    drupal_set_message(t('There are no workflow states available. Please notify your site administrator.'), 'error');
+  }
+
+  return $sid;
 }
 
 /**
