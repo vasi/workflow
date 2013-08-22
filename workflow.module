@@ -325,7 +325,6 @@ function workflow_forms($form_id, $args) {
  *   An array of possible target states.
  */
 function workflow_node_form(&$form, $form_state, $title, $name, $current, $choices, $timestamp = NULL, $comment = NULL) {
-dpm(debug_backtrace());
   // Give form_alters the chance to see the parameters.
   $form['#wf_options'] = array(
     'title' => $title,
