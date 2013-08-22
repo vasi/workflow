@@ -189,13 +189,12 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
 
     $form['#tab'] = TRUE;
+    $name = t($workflow->name);
     $form['#wf'] = $workflow;
     $form['#choices'] = $choices;
 
-    $name = t($workflow->name);
-    $timestamp = '';
-    $comment = '';
-
+    $timestamp = NULL;
+    $comment = NULL;
     // See if scheduling information is present.
     if (!empty($node->workflow_scheduled_timestamp) && !empty($node->workflow_scheduled_sid)) {
       global $user;

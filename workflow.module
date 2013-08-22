@@ -245,6 +245,9 @@ function workflow_node_load($nodes, $types) {
 
 /**
  * Implements hook_node_insert().
+ * 
+ * This is executed after saving data to the database.
+ * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.  
  */
 function workflow_node_insert($node) {
   // Skip if there are no workflows.
@@ -671,26 +674,51 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Shows the form only on Node Edit forms.
+ *
+ */
+function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
+  return _workflow_form_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Shows the form only on Comment forms.
+ *
+ */
+function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
+  return _workflow_form_alter($form, $form_state, $form_id);
+}
+
+/**
+ * Used to Implement hook_form_alter().
+ * Is now a subfunction of workflow_form_BASE_FORM_ID_alter().
+ * This is more performant, since it is called only on form with correct BASE_FORM_ID.
  *
  * @param object &$node
  * @return array
+ *
+ * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
  */
-function workflow_form_alter(&$form, &$form_state, $form_id) {
+function _workflow_form_alter(&$form, &$form_state, $form_id) {
   // Ignore all forms except comment forms and node editing forms.
   if ((isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
     || (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
     // Set node to #node if available or load from nid value.
     $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
     $type = $node->type;
-    $workflow_entities = variable_get('workflow_' . $type, array());
-    // Abort if the entity type of the form is not in the list that the user
-    // wants to display the workflow form on.
-    if (!in_array($form['#entity_type'], $workflow_entities)) {
-      return;
-    }
 
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
+      $workflow_entities = variable_get('workflow_' . $type, array());
+      // Abort if the entity type of the form is not in the list that the user
+      // wants to display the workflow form on.
+      if (!in_array($form['#entity_type'], $workflow_entities)) {
+        return;
+      }
+
       $choices = workflow_field_choices($node);
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
@@ -710,19 +738,19 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
         return;
       }
 
-      $name = $workflow->name;
+      $name = t($workflow->name);
 
       $form['#wf'] = $workflow;
       $form['workflow'] = array(
         '#type' => 'fieldset',
-        '#title' => t('@name', array('@name' => $name)),
+        '#title' => $name,
         '#collapsible' => TRUE,
         '#collapsed' => FALSE,
         '#weight' => 10,
       );
 
       $timestamp = NULL;
-      $comment = '';
+      $comment = NULL;
       // See if scheduling information is present.
       if (isset($node->workflow_scheduled_timestamp) && isset($node->workflow_scheduled_sid)) {
         // The default value should be the upcoming sid.
@@ -733,14 +761,16 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form_state['values']['workflow_comment'])) {
         $comment = $form_state['values']['workflow_comment'];
       }
-      workflow_node_form($form, $form_state, t('Change @name state', array('@name' => $name)), $name, $current, $choices, $timestamp, $comment);
+
+     // Include the 'workflow form'. $form is modified by reference.
+      workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current, $choices, $timestamp, $comment);
     }
   }
 }
 
 /**
  * Execute a transition (change state of a node).
- *
+	 *
  * @param $node
  * @param $sid
  *   Target state ID.
