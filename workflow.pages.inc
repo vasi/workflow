@@ -9,7 +9,7 @@
  */
 function workflow_tab_page($node = NULL) {
   drupal_set_title($node->title);
-  $workflow = workflow_get_workflow_type_map_by_type($node->type);
+  $workflow = workflow_get_workflows_by_type($node->type);
   $states = array();
   $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
@@ -182,8 +182,7 @@ function workflow_tab_form($form, $form_state, $node, $wid, $states, $current) {
 
   // Only build form if user has possible target state(s).
   if (count($choices) >= $min) {
-    $workflow = workflow_get_workflow_type_map_by_type($node->type);
-    $workflow = workflow_get_workflows_by_wid($workflow->wid);
+    $workflow = workflow_get_workflows_by_type($node->type);
 
     $form['#wf'] = $workflow;
     $form['#choices'] = $choices;

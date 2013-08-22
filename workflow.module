@@ -71,22 +71,24 @@ function workflow_admin_paths_alter(&$paths) {
 
 /**
  * Menu access control callback. Determine access to Workflow tab.
+ *
+ * @todo: this function is called several times per page. (for every menu/trail)
+ *        use a page cache.
  */
 function workflow_node_tab_access($node = NULL) {
   global $user;
-  if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-    if ($workflow = workflow_get_workflows_by_wid($workflow->wid)) {
-      $roles = array_keys($user->roles);
-      if ($node->uid == $user->uid) {
-        $roles = array_merge(array('author'), $roles);
-      }
-      $allowed_roles = $workflow->tab_roles ? explode(',', $workflow->tab_roles) : array();
-      if (user_access('administer nodes') || array_intersect($roles, $allowed_roles)) {
-        return TRUE;
-      }
-      else {
-        return FALSE;
-      }
+dpm(__FUNCTION__);
+  if ($workflow = workflow_get_workflows_by_type($node->type)) {
+    $roles = array_keys($user->roles);
+    if ($node->uid == $user->uid) {
+      $roles = array_merge(array('author'), $roles);
+    }
+    $allowed_roles = $workflow->tab_roles ? explode(',', $workflow->tab_roles) : array();
+    if (user_access('administer nodes') || array_intersect($roles, $allowed_roles)) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
     }
   }
   return FALSE;
@@ -193,6 +195,7 @@ function workflow_user_delete($account) {
  * @TODO: Consider replacing with hook_entity_load().
  */
 function workflow_node_load($nodes, $types) {
+dpm(__FUNCTION__);
   // Get which types have workflows associated with them.
   $workflow_types = array_filter(workflow_get_workflow_type_map());
 
@@ -207,9 +210,13 @@ function workflow_node_load($nodes, $types) {
     // Module maintainers integrating with workflow should keep that in mind.
     $last_history = workflow_get_recent_node_history($node->nid);
 
+    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+      $node->workflow_wid = $workflow->wid;
+      $node->workflow = $workflow->creation_state;
+    }
+
     // Nodes that existed before the workflow don't have any history.
     if ($last_history === FALSE) {
-      $node->workflow = workflow_get_creation_state_by_type($node->type);
       $node->workflow_stamp = $node->created;
       continue;
     }
@@ -217,10 +224,6 @@ function workflow_node_load($nodes, $types) {
       $node->workflow = $last_history->sid;
       $node->workflow_stamp = $last_history->stamp;
       $node->workflow_state_name = $last_history->state_name;
-    }
-
-    if ($workflow_map = workflow_get_workflow_type_map_by_type($node->type)) {
-      $node->workflow_wid = $workflow_map->wid;
     }
 
     // Add scheduling information.
@@ -239,7 +242,7 @@ function workflow_node_load($nodes, $types) {
  */
 function workflow_node_insert($node) {
   // Skip if there are no workflows.
-  if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+  if ($workflow = workflow_get_workflows_by_type($node->type)) {
     // If the state is not specified, use first valid state.
     // For example, a new node must move from (creation) to some
     // initial state.
@@ -268,7 +271,7 @@ function workflow_node_insert($node) {
  */
 function workflow_node_update($node) {
   // Skip if there are no workflows.
-  if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+  if ($workflow = workflow_get_workflows_by_type($node->type)) {
     // Get new state from value of workflow form field, stored in $node->workflow.
     if (!isset($sid)) {
       $sid = $node->workflow;
@@ -452,11 +455,10 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  $workflow = workflow_get_workflow_type_map_by_type($node->type);
-  if (!$workflow) {
+  if (!$workflow = workflow_get_workflows_by_type($node->type)) {
     return;
   }
-
+	
   $states = array();
   $state_system_names = array();
   foreach (workflow_get_workflow_states() as $data) {
@@ -695,9 +697,8 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
       return;
     }
 
-    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+    if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $choices = workflow_field_choices($node);
-      $workflow = workflow_get_workflows_by_wid($workflow->wid);
       $states = workflow_get_workflow_states_by_wid($workflow->wid);
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
@@ -891,7 +892,7 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
 function workflow_field_choices($node, $force = FALSE) {
   global $user;
   $choices = array();
-  if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
+  if ($workflow = workflow_get_workflows_by_type($node->type)) {
     $roles = array_keys($user->roles);
     $current_sid = workflow_node_current_state($node);
 
@@ -949,9 +950,10 @@ function workflow_node_current_state($node) {
   }
   if (!$state && !empty($node->type)) {
     // No current state. Use creation state.
-    $sid = workflow_get_creation_state_by_type($node->type);
+    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+      $sid = $workflow->creation_state;
+    }
   }
-
   return $sid;
 }
 
@@ -966,7 +968,9 @@ function workflow_node_previous_state($node) {
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
-    $sid = workflow_get_creation_state_by_type($node->type);
+    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+      $sid = $workflow->creation_state;
+    }
   }
   return $sid;
 }
@@ -1011,18 +1015,11 @@ function workflow_get_creation_state_by_wid($wid) {
  *   The type of the content.
  */
 function workflow_get_creation_state_by_type($type) {
-  static $sids = array();
-  if (!isset($sids[$type])) {
-    $options = array(':sysid' => WORKFLOW_CREATION, ':type' => $type);
-    $query = "SELECT s.sid "
-      . "FROM {workflow_type_map} m "
-      . "INNER JOIN {workflow_states} s ON s.wid = m.wid "
-      . "WHERE m.type = :type AND s.sysid = :sysid ";
-    $result = db_query($query, $options);
-    $sids[$type] = $result->fetchField();
+  $sid = FALSE;
+  if ($workflow = workflow_get_workflows_by_type($type)) {
+    $sid = $workflow->creation_state;
   }
-
-  return $sids[$type];
+  return $sid;
 }
 
 /**
@@ -1100,6 +1097,31 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
 }
 
 /**
+ * Get a specific workflow, given a Node type. Only one workflow is possible per node type.
+ * @param $type
+ *   A node type.
+ *
+ * @return
+ *   A workflow standard class, or FALSE if no workflow is retrieved.
+ */
+function workflow_get_workflows_by_type($type) {
+  static $map = array();
+  if (!isset($map[$type])) {
+    // Get the $wid.
+    $results = db_query('SELECT type, wid FROM {workflow_type_map} WHERE type = :type AND wid <> 0',
+      array(':type' => $type));
+    $map[$type] = $results->fetchObject();
+  }
+  if ($map[$type]) {
+    // Get the workflow by wid.
+    return workflow_get_workflows_by_wid($map[$type]->wid);
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
  * Given a wid, delete the workflow and its stuff.
  *
  * @TODO: This should probably move to workflow_admin_ui.
@@ -1171,6 +1193,9 @@ function workflow_get_workflow_type_map() {
  * tweaked to account for multiple results.
  * ALERT: If a node type is *not* mapped to a workflow it will be listed as wid 0.
  * Hence, we filter out the non-mapped results.
+ *
+ * @todo: remove in a future (D8) version. This function is deprecated in favour of 
+ * @see workflow_get_workflows_by_type()
  */
 function workflow_get_workflow_type_map_by_type($type) {
   static $map = array();

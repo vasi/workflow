@@ -19,77 +19,74 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
     // Get a list of all possible states for returning state names.
     $states = workflow_get_workflow_states_all();
 
-    if ($workflow = workflow_get_workflow_type_map_by_type($node->type)) {
-      // @TODO: If we ever move Workflow to allow M:M content types to workflows, this will need updating.
-      if ($workflow = workflow_get_workflows_by_wid($workflow->wid)) {
-        $wid = $workflow->wid;
-        $last_history = workflow_get_recent_node_history($node->nid);
+    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+      $wid = $workflow->wid;
+      $last_history = workflow_get_recent_node_history($node->nid);
 
-        if (isset($node->workflow) && !isset($node->workflow_stamp)) {
-          // The node is being submitted but the form data has not been saved to the database yet,
-          // so we set the token values from the workflow form fields.
-          $sid = $node->workflow;
-          $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : workflow_get_creation_state_by_wid($workflow->wid);
-          $user_name = $node->uid ? (isset($node->name) ? $node->name
-            : variable_get('anonymous', 'Anonymous'))
-            : variable_get('anonymous', 'Anonymous');
+      if (isset($node->workflow) && !isset($node->workflow_stamp)) {
+        // The node is being submitted but the form data has not been saved to the database yet,
+        // so we set the token values from the workflow form fields.
+        $sid = $node->workflow;
+        $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : workflow_get_creation_state_by_wid($workflow->wid);
+        $user_name = $node->uid ? (isset($node->name) ? $node->name
+          : variable_get('anonymous', 'Anonymous'))
+          : variable_get('anonymous', 'Anonymous');
+        $uid = $node->uid;
+        $account = user_load($node->uid);
+        $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
+        $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
+      }
+      else {
+        if (empty($last_history)) {
+          // If the node has no workflow history,
+          // the node is being inserted and will soon be transitioned to the first valid state.
+          // We find this state using the same logic as workflow_nodeapi().
+          if ($choices = workflow_field_choices($node)) {
+            // @TODO: Some users, like anonymous, may not be allowed
+            // to cause transitions, so there will be no choices.
+            $keys = array_keys($choices);
+            $sid = array_shift($keys);
+            $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
+          }
+          else {
+            // What to choose?
+            $sid = $node->workflow;
+            $old_sid = $workflow->creation_state;
+          }
+          $sid = workflow_get_workflow_states_by_sid($sid)->sid;
+          $old_sid = workflow_get_workflow_states_by_sid($old_sid)->sid;
+          $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
           $uid = $node->uid;
           $account = user_load($node->uid);
           $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
           $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
         }
         else {
-          if (empty($last_history)) {
-            // If the node has no workflow history,
-            // the node is being inserted and will soon be transitioned to the first valid state.
-            // We find this state using the same logic as workflow_nodeapi().
-            if ($choices = workflow_field_choices($node)) {
-              // @TODO: Some users, like anonymous, may not be allowed
-              // to cause transitions, so there will be no choices.
-              $keys = array_keys($choices);
-              $sid = array_shift($keys);
-              $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
-            }
-            else {
-              // What to choose?
-              $sid = $node->workflow;
-              $old_sid = $workflow->creation_state;
-            }
-            $sid = workflow_get_workflow_states_by_sid($sid)->sid;
-            $old_sid = workflow_get_workflow_states_by_sid($old_sid)->sid;
-            $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
+          // Sometimes there is no workflow set (edit?).
+          if (!isset($node->workflow)) {
+            $node->workflow = $last_history->sid;
+          }
+          // Is a transition in progress?
+          if ($node->workflow != $last_history->sid) {
+            $sid = $node->workflow;
+            $old_sid = $last_history->sid;
+            $date = $node->workflow_stamp;
             $uid = $node->uid;
             $account = user_load($node->uid);
-            $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
-            $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
           }
           else {
-            // Sometimes there is no workflow set (edit?).
-            if (!isset($node->workflow)) {
-              $node->workflow = $last_history->sid;
-            }
-            // Is a transition in progress?
-            if ($node->workflow != $last_history->sid) {
-              $sid = $node->workflow;
-              $old_sid = $last_history->sid;
-              $date = $node->workflow_stamp;
-              $uid = $node->uid;
-              $account = user_load($node->uid);
-            }
-            else {
-              // Not a transition.
-              $sid = $last_history->sid;
-              $old_sid = $last_history->old_sid;
-              $date = $last_history->stamp;
-              $uid = $last_history->uid;
-              $account = user_load($last_history->uid);
-            }
-
-            // Default to the most recent transition data in the workflow history table.
-            $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
-            $mail = $account->uid ? $account->mail : '';
-            $comment = $last_history->comment;
+            // Not a transition.
+            $sid = $last_history->sid;
+            $old_sid = $last_history->old_sid;
+            $date = $last_history->stamp;
+            $uid = $last_history->uid;
+            $account = user_load($last_history->uid);
           }
+
+          // Default to the most recent transition data in the workflow history table.
+          $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
+          $mail = $account->uid ? $account->mail : '';
+          $comment = $last_history->comment;
         }
 
         foreach ($tokens as $name => $original) {
