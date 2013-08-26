@@ -159,3 +159,10 @@ Issue #2044199 by justanothermark: Fix Feature reversion on non-existent states.
 Issue #2019345 by NancyDru: Allow hooks to reside in separate file.
 Issue #2052707 by NancyDru: Fix typo in single state value.
 Issue #2056773 by ambientdrup: Fix typo in VBO.
+Issue #2041329 by johnv: Changed api: added workflow_get_workflows_by_type(), for shorter code.
+Issue #2071663 by johnv: Changed function workflow_node_tab_access to gain performance.
+Issue #2071733 by johnv: Changed determination of showing Form, with new function workflow_show_form.
+Issue #2071733 by johnv: Preserve compatibility with workflow_extensions.
+Issue #2041319 by johnv: Added function workflow_get_first_state(), to have more unified code.
+Issue #2072059 by johnv: Changed call to hook_form_alter, by using hook_form_BASE_FORM_ID_alter, creating better performance.
+Issue #2072203 by johnv: Moved all node API functions from module file to node.inc file, to facilitate introduction of field API.
