@@ -8,7 +8,7 @@ define('WORKFLOW_CREATION', 1);
 define('WORKFLOW_CREATION_DEFAULT_WEIGHT', -50);
 define('WORKFLOW_DELETION', 0);
 
-// Include the hooks for the 'conventional' (vesion D5/D6/D7.1) Node API.
+// Include the hooks for the 'conventional' (version D5/D6/D7.1) Node API.
 // @todo: make this optional when only Field API is used. (version D7.2/D8)
 module_load_include('inc', 'workflow', 'workflow.node');
 
@@ -84,7 +84,7 @@ function workflow_node_tab_access($node = NULL) {
   static $access = array();
 
   if ($workflow = workflow_get_workflows_by_type($node->type)) {
-    $nid = isset($node->nid) ? $node->uid : 0; // new nodes do not have a nid.
+    $nid = isset($node->nid) ? $node->nid : 0; // new nodes do not have a nid.
     if (isset($access[$user->uid][$nid])) {
       return $access[$user->uid][$nid];
     }
