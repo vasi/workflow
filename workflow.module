@@ -571,15 +571,30 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
  *
  * @param object $node
  *   The node to check.
+ * @param boolean $force
+ *   A switch to enable access to all states (e.g. for Rules)
+ * @param State $state
+ *   The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
  * @return
  *   Array of transitions.
  */
-function workflow_field_choices($node, $force = FALSE) {
+function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   global $user;
   $choices = array();
-  if ($workflow = workflow_get_workflows_by_type($node->type)) {
-    $roles = array_keys($user->roles);
+
+  if ($state) {
+    // This is used in Field API.
+    $workflow = workflow_get_workflows_by_wid($state->wid);
+    $current_sid = $state->sid;
+  }
+  else {
+    // This is used in Node API.
+    $workflow = workflow_get_workflow_type_map_by_type($node->type);
     $current_sid = workflow_node_current_state($node);
+  }
+
+  if ($workflow) {
+    $roles = array_keys($user->roles);
 
     // If user is node author or this is a new page, give the authorship role.
     if (($user->uid == $node->uid && $node->uid > 0) || (arg(0) == 'node' && arg(1) == 'add')) {

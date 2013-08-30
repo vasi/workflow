@@ -167,3 +167,4 @@ Issue #2041319 by johnv: Added function workflow_get_first_state(), to have more
 Issue #2072059 by johnv: Changed call to hook_form_alter, by using hook_form_BASE_FORM_ID_alter, creating better performance.
 Issue #2072203 by johnv: Moved all node API functions from module file to node.inc file, to facilitate introduction of field API.
 Issue #2072081 by johnv: Fixed typo in workflow_node_tab_access().
+Issue #2077693 by johnv: Added Field API support in workflow_field_choices().
