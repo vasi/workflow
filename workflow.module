@@ -221,31 +221,34 @@ function workflow_features_api() {
  * Validate target state and either execute a transition immediately or schedule
  * a transition to be executed later by cron.
  *
- * @param $node
- * @param $sid
+ * @param object $node
+ * @param string $sid
  *   An integer; the target state ID.
- * @param $false
+ * @param string $false
  *   Allows bypassing permissions, primarily for Rules.
+ * @param array $field
+ *   The field structure for the operation.
  */
-function workflow_transition($node, $sid, $force = FALSE) {
+function workflow_transition($node, $new_sid, $force = FALSE, $field = NULL) {
   global $user;
   if ($force) {
-    $choices = workflow_get_other_states_by_sid($sid);
+    $choices = workflow_get_other_states_by_sid($new_sid);
   }
   else {
-    $choices = workflow_field_choices($node, $force);
+    $state = workflow_get_workflow_states_by_sid($new_sid);
+    $choices = workflow_field_choices($node, $force, $state);
   }
 
   // Only execute if the new state is a valid choice.
-  if ($sid && array_key_exists($sid, $choices)) {
+  if ($new_sid && array_key_exists($new_sid, $choices)) {
     $node->workflow_scheduled = isset($node->workflow_scheduled) ? $node->workflow_scheduled : FALSE;
     if (!$node->workflow_scheduled) {
       // It's an immediate change. Do the transition.
-      workflow_execute_transition($node, $sid, (isset($node->workflow_comment) ? $node->workflow_comment : NULL), $force);
+      workflow_execute_transition($node, $new_sid, (isset($node->workflow_comment) ? $node->workflow_comment : NULL), $force, $field);
     }
     else {
       // Schedule the the time to change the state.
-      $old_sid = workflow_node_current_state($node);
+      $old_sid = workflow_node_current_state($node, $field);
       if ($node->workflow_scheduled_date['day'] < 10) {
         $node->workflow_scheduled_date['day'] = '0' .
         $node->workflow_scheduled_date['day'];
@@ -272,7 +275,7 @@ function workflow_transition($node, $sid, $force = FALSE) {
         $data = array(
           'nid' => $node->nid,
           'old_sid' => $old_sid,
-          'sid' => $sid,
+          'sid' => $new_sid,
           'uid' => $user->uid,
           'scheduled' => $scheduled,
           'comment' => $node->workflow_comment,
@@ -280,7 +283,7 @@ function workflow_transition($node, $sid, $force = FALSE) {
 
         workflow_insert_workflow_scheduled_transition($data);
         // Get name of state.
-        if ($state = workflow_get_workflow_states_by_sid($sid)) {
+        if ($state = workflow_get_workflow_states_by_sid($new_sid)) {
           $t_args = array(
               '@node_title' => $node->title,
               '%state_name' => t($state->state),
@@ -453,7 +456,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  * @return int
  *   ID of new state.
  */
-function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALSE) {
+function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = FALSE, $field = NULL) {
   global $user;
   // I think this happens because of Workflow Extensions;
   // it seems to be okay to ignore it.
@@ -461,11 +464,11 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
     return;
   }
 
-  $old_sid = workflow_node_current_state($node);
+  $old_sid = workflow_node_current_state($node, $field);
 
   if (!$force) {
     // Make sure this transition is allowed.
-    $result = module_invoke_all('workflow', 'transition permitted', $sid, $old_sid, $node);
+    $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $node);
     // Did anybody veto this choice?
     if (in_array(FALSE, $result)) {
       // If vetoed, quit.
@@ -476,37 +479,37 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
   // Let other modules modify the comment.
   $context = array(
     'node' => $node,
-    'sid' => $sid,
+    'sid' => $new_sid,
     'old_sid' => $old_sid,
     'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
     );
   drupal_alter('workflow_comment', $comment, $context);
 
-  if ($old_sid == $sid) {
+  if ($old_sid == $new_sid) {
     // Stop if not going to a different state.
     // Write comment into history though.
     if ($comment && empty($node->workflow_scheduled_comment)) {
       $node->workflow_stamp = REQUEST_TIME;
       workflow_update_workflow_node_stamp($node->nid, $node->workflow_stamp);
-      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node, $force);
+      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force);
       $data = array(
         'nid' => $node->nid,
         'old_sid' => (isset($node->workflow) ? $node->workflow : $old_sid),
-        'sid' => $sid,
+        'sid' => $new_sid,
         'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
         'stamp' => $node->workflow_stamp,
         'comment' => $comment,
         );
       workflow_insert_workflow_node_history($data);
       unset($node->workflow_comment);
-      $result = module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node, $force);
+      $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force);
     }
     return;
   }
 
-  $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $sid);
+  $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $new_sid);
   if (!$transition && !$force) {
-      watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', array('%old' => $old_sid, '%new' => $sid, WATCHDOG_ERROR));
+      watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', array('%old' => $old_sid, '%new' => $new_sid, WATCHDOG_ERROR));
       return;
   }
 
@@ -515,14 +518,14 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
   if (($user->uid != 1) && !$force) {
     if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
       watchdog('workflow', 'User %user not allowed to go from state %old to %new',
-        array('%user' => $user->name, '%old' => $old_sid, '%new' => $sid, WATCHDOG_NOTICE));
+        array('%user' => $user->name, '%old' => $old_sid, '%new' => $new_sid, WATCHDOG_NOTICE));
       return;
     }
   }
 
   // Invoke a callback indicating a transition is about to occur. Modules
   // may veto the transition by returning FALSE.
-  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $sid, $node, $force);
+  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force);
 
   // Stop if a module says so.
   if (in_array(FALSE, $result)) {
@@ -531,25 +534,29 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
   }
 
   // If the node does not have an existing $node->workflow property, save the $old_sid there so it can be logged.
-  if (!isset($node->workflow)) {
+  // This is only valid for Node API.
+  // @todo: why is this set here? It is set again 16 lines down.
+  if (!$field && !isset($node->workflow)) {
     $node->workflow = $old_sid;
   }
 
   // Change the state.
   $data = array(
     'nid' => $node->nid,
-    'sid' => $sid,
+    'sid' => $new_sid,
     'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
     'stamp' => REQUEST_TIME,
     );
 
   // Workflow_update_workflow_node places a history comment as well.
   workflow_update_workflow_node($data, $old_sid, $comment);
-  $node->workflow = $sid;
+  if (!$field) {
+    $node->workflow = $new_sid;
+  }
 
   // Register state change with watchdog.
   $type = node_type_get_name($node->type);
-  if ($state = workflow_get_workflow_states_by_sid($sid)) {
+  if ($state = workflow_get_workflow_states_by_sid($new_sid)) {
     $workflow = workflow_get_workflows_by_wid($state->wid);
     if ($workflow->options['watchdog_log']) {
       watchdog('workflow', 'State of @type %node_title set to %state_name',
@@ -561,11 +568,11 @@ function workflow_execute_transition($node, $sid, $comment = NULL, $force = FALS
     }
   }
   // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
-  module_invoke_all('workflow', 'transition post', $old_sid, $sid, $node, $force);
+  module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force);
 
   // Clear any references in the scheduled listing.
   workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
-  return $sid;
+  return $new_sid;
 }
 
 /**
@@ -639,18 +646,37 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  * @return
  *   The ID of the current state.
  */
-function workflow_node_current_state($node) {
+function workflow_node_current_state($node, $field = NULL) {
   $sid = FALSE;
   $state = FALSE;
 
+  // Field API: Get current/previous state.
+  if ($field) {
+    if (isset($node->is_new) && $node->is_new == TRUE) {
+      // A new node.
+      $workflow = workflow_get_workflows_by_wid($field['settings']['wid']);
+      $sid = $workflow->creation_state;
+    }
+    elseif (isset($node->original)) {
+      // A changed node.
+      $referenced_entity = $node->original;
+      // @todo: use proper function to support field_collection, translation, etc.
+      $entity_type = 'node'; // todo: support Entity API
+      $field_name = $field['field_name'];
+      $items = field_get_items($entity_type, $referenced_entity, $field_name);
+      $sid = _workflowfield_get_sid_by_items($items);
+    }
+  }
+
+  // Node API: Get current/previous state.
   // There is no nid when creating a node.
-  if (!empty($node->nid)) {
+  if (!sid && !empty($node->nid)) {
     $state = workflow_get_workflow_node_by_nid($node->nid);
     if ($state) {
       $sid = $state->sid;
     }
   }
-  if (!$state && !empty($node->type)) {
+  if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $sid = $workflow->creation_state;
@@ -1542,6 +1568,7 @@ function workflow_delete_workflow_node_by_sid($sid) {
 
 /**
  * Given data, insert the node association.
+ * @todo: Can we split this in 2? First half for Node API, second half for Node + Field API.
  */
 function workflow_update_workflow_node($data, $old_sid, $comment = NULL) {
   $data = (object) $data;
@@ -1551,6 +1578,7 @@ function workflow_update_workflow_node($data, $old_sid, $comment = NULL) {
   else {
     drupal_write_record('workflow_node', $data);
   }
+
   // Write to history for this node.
   $data = array(
     'nid' => $data->nid,
