@@ -171,7 +171,7 @@ function theme_workflow_deleted_state($variables) {
  */
 function workflow_tab_form($form, $form_state, $node, $workflow, $states, $current) {
   // Let's make sure we should be here.
-  if (workflow_node_tab_access($node) === FALSE) {
+  if (workflow_tab_access($node) === FALSE) {
     return;
   }
 

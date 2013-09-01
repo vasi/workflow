@@ -36,7 +36,7 @@ function workflow_menu() {
     'title' => 'Workflow',
     'type' => MENU_LOCAL_TASK,
     'file' => 'workflow.pages.inc',
-    'access callback' => 'workflow_node_tab_access',
+    'access callback' => 'workflow_tab_access',
     'access arguments' => array(1),
     'page callback' => 'workflow_tab_page',
     'page arguments' => array(1),
@@ -76,14 +76,16 @@ function workflow_admin_paths_alter(&$paths) {
 /**
  * Menu access control callback. Determine access to Workflow tab.
  *
- * @todo: this function is called several times per page. (for every menu/trail)
- *        use a page cache.
+ * @todo: this function is called several times per page. (for every menu path/menu trail)
+ *        Use a page cache.
  */
-function workflow_node_tab_access($node = NULL) {
+function workflow_tab_access($node = NULL) {
   global $user;
   static $access = array();
+  $entity_type = 'node';
+  $node_type = $node->type;
 
-  if ($workflow = workflow_get_workflows_by_type($node->type)) {
+  if ($workflow = workflow_get_workflows_by_type($node_type, $entity_type)) {
     $nid = isset($node->nid) ? $node->nid : 0; // new nodes do not have a nid.
     if (isset($access[$user->uid][$nid])) {
       return $access[$user->uid][$nid];
@@ -823,27 +825,47 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
 
 /**
  * Get a specific workflow, given a Node type. Only one workflow is possible per node type.
- * @param $type
- *   A node type.
+ * @param $node_type
+ *   A node type (a.k.a. entity bundle).
+ * @param $entity_type
+ *   An entity type. This is passed when also the Field API must be checked.
  *
  * @return
  *   A workflow standard class, or FALSE if no workflow is retrieved.
  */
-function workflow_get_workflows_by_type($type) {
+function workflow_get_workflows_by_type($node_type, $entity_type = '') {
   static $map = array();
-  if (!isset($map[$type])) {
-    // Get the $wid.
-    $results = db_query('SELECT type, wid FROM {workflow_type_map} WHERE type = :type AND wid <> 0',
-      array(':type' => $type));
-    $map[$type] = $results->fetchObject();
+  $wid = 0;
+
+  if (!isset($map[$node_type]) ) {
+
+    // Check the Node API first: Get $wid.
+    $type_map = workflow_get_workflow_type_map_by_type($node_type);
+    if ($type_map) {
+      // Get the workflow by wid.
+      $wid = $type_map->wid;
+    }
+
+    // If $entity_type is set, we must check Field API. Data is already cached by core.
+    if (!$wid && isset($entity_type)) {
+      $entity_bundle = $node_type;
+      foreach( field_info_instances($entity_type, $entity_bundle) as $field_name => $field) {
+        $field_info = field_info_field($field['field_name']);
+        $field_type = $field_info['type'];
+        if ($field_type == 'workflowfield') {
+          $wid = $field_info['settings']['wid'];
+        }
+      }
+    }
+
+    // Set the cache with a workflow object.
+    $map[$node_type] = FALSE;
+    if ($wid) {
+      $map[$node_type] = $workflow = workflow_get_workflows_by_wid($wid);
+    }
   }
-  if ($map[$type]) {
-    // Get the workflow by wid.
-    return workflow_get_workflows_by_wid($map[$type]->wid);
-  }
-  else {
-    return FALSE;
-  }
+
+  return $map[$node_type];
 }
 
 /**

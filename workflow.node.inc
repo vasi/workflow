@@ -334,3 +334,14 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 }
+
+/**
+ * Wrapper function for workflow_tab_access after 
+ * renaming workflow_node_tab_access() to workflow_tab_access(),
+ * since *_tab_access() is a Workflow functionality, not Node API.
+ * 
+ * @todo: deprecated. Remove if it is not called anymore.
+ */
+function workflow_node_tab_access($node = NULL) {
+  return workflow_tab_access($node);
+}
