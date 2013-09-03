@@ -170,3 +170,4 @@ Issue #2072081 by johnv: Fixed typo in workflow_node_tab_access().
 Issue #2077693 by johnv: Added Field API support in workflow_field_choices().
 Issue #2078785 by johnv: Added Field API support in workflow_node_tab_access().
 Issue #2079017 by johnv: Added Field API support for workflow_execute_transition().
+Issue #2080857 by johnv: Added Field API support for workflow_tab_page().

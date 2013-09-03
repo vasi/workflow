@@ -12,7 +12,8 @@ function workflow_tab_page($node = NULL) {
 
   $workflow = workflow_get_workflows_by_type($node->type);
   $current = workflow_node_current_state($node);
-  $choices = workflow_field_choices($node);
+  $state = workflow_get_workflow_states_by_sid($current);
+  $choices = workflow_field_choices($node, $force = FALSE, $state);
 
   $states = array();
   $state_system_names = array();
@@ -181,7 +182,8 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     $workflow = workflow_get_workflows_by_wid($wid);
   }
 
-  $choices = workflow_field_choices($node);
+  $state = workflow_get_workflow_states_by_sid($current);
+  $choices = workflow_field_choices($node, $force = FALSE, $state);
 
   // Only build form if user has possible target state(s).
   if (workflow_show_form($current, $workflow, $choices)) {
