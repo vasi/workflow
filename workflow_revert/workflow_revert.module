@@ -64,12 +64,31 @@ function workflow_revert_form_submit($form, $form_state) {
   $node = $form['#node'];
   $comment = t('State reverted');
   $sid = $form['#sid'];
+  
+  // If Rules is available, signal the reversion.
+  if (module_exists('rules')) {
+    rules_invoke_event('workflow_state_reverted', $node);
+  }
 
   // Force the transition because it's probably not valid.
   workflow_execute_transition($node, $sid, $comment, TRUE);
   drupal_set_message(t('Workflow reverted.', array()));
 
   drupal_goto('node/' . $form['#nid'] . '/workflow');
+}
+
+/**
+ * Implements hook_rules_event_info().
+ */
+function workflow_revert_rules_event_info() {
+  $events = array(
+    'workflow_state_reverted' => array(
+      'group' => t('Workflow'),
+      'label' => t('Workflow state reverted'),
+      'variables' => rules_events_node_variables(t('updated content'), TRUE),
+    ),
+  );
+  return $events;
 }
 
 /**
