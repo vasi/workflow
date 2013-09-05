@@ -589,7 +589,18 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
  */
 function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   global $user;
+
+  static $cache = array(); // Node-specific cache per page load.
+  $sid = isset($state->sid) ? $state->sid : 0;
+  $nid = isset($node->nid) ? $node->nid : 0;
   $choices = array();
+
+  if ($nid && isset($cache[$nid][$force][$sid])) {
+    // Do not cache new nodes (for security reasons).
+    // @todo: add support for $entity_type.
+    $choices = $cache[$nid][$force][$sid];
+    return $choices;
+  }
 
   if ($state) {
     // This is used in Field API.
@@ -625,6 +636,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
         // Invoke a callback indicating that we are collecting state choices. Modules
         // may veto a choice by returning FALSE. In this case, the choice is
         // never presented to the user.
+        // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
         $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node, $field = NULL);
         // Did anybody veto this choice?
         if (!in_array(FALSE, $result)) {
@@ -633,6 +645,9 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
         }
       }
     }
+
+    // Save to node-specific cache.
+    $cache[(int)$nid][$force][$sid] = $choices;
   }
 
   return $choices;
