@@ -488,7 +488,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
   if ($old_sid == $new_sid) {
     // Stop if not going to a different state.
     // Write comment into history though.
-    if ($comment && empty($node->workflow_scheduled_comment)) {
+    if ($comment) {
       $node->workflow_stamp = REQUEST_TIME;
       workflow_update_workflow_node_stamp($node->nid, $node->workflow_stamp);
       $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force, $field);
@@ -504,6 +504,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
       unset($node->workflow_comment);
       $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force, $field);
     }
+    workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
     return;
   }
 
