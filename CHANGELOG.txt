@@ -172,3 +172,4 @@ Issue #2078785 by johnv: Added Field API support in workflow_node_tab_access().
 Issue #2079017 by johnv: Added Field API support for workflow_execute_transition().
 Issue #2080857 by johnv: Added Field API support for workflow_tab_page().
 Issue #2080915 by NancyDru: Signal Rules on reversion.
+Issue #2082225 by johnv: Changed interface of hook_workflow() (new optional parameter) to support Field API.

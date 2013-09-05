@@ -21,8 +21,11 @@
  * @param $force
  *   The caller indicated that the transition should be forced. (bool).
  *   This is only available on the "pre" and "post" calls.
+ * @param $field
+ *   The field definition.
+ *   This is used when saving a state change of a Workflow Field.
  */
-function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE) {
+function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE, $field = NULL) {
   switch ($op) {
     case 'transition permitted':
       // The workflow module does nothing during this operation.

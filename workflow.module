@@ -468,7 +468,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
 
   if (!$force) {
     // Make sure this transition is allowed.
-    $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $node);
+    $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $node, $field);
     // Did anybody veto this choice?
     if (in_array(FALSE, $result)) {
       // If vetoed, quit.
@@ -491,7 +491,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
     if ($comment && empty($node->workflow_scheduled_comment)) {
       $node->workflow_stamp = REQUEST_TIME;
       workflow_update_workflow_node_stamp($node->nid, $node->workflow_stamp);
-      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force);
+      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force, $field);
       $data = array(
         'nid' => $node->nid,
         'old_sid' => (isset($node->workflow) ? $node->workflow : $old_sid),
@@ -502,7 +502,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
         );
       workflow_insert_workflow_node_history($data);
       unset($node->workflow_comment);
-      $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force);
+      $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force, $field);
     }
     return;
   }
@@ -525,7 +525,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
 
   // Invoke a callback indicating a transition is about to occur. Modules
   // may veto the transition by returning FALSE.
-  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force);
+  $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $node, $force, $field);
 
   // Stop if a module says so.
   if (in_array(FALSE, $result)) {
@@ -568,7 +568,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
     }
   }
   // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
-  module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force);
+  module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force, $field);
 
   // Clear any references in the scheduled listing.
   workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
@@ -625,7 +625,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
         // Invoke a callback indicating that we are collecting state choices. Modules
         // may veto a choice by returning FALSE. In this case, the choice is
         // never presented to the user.
-        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node);
+        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node, $field = NULL);
         // Did anybody veto this choice?
         if (!in_array(FALSE, $result)) {
           // If not vetoed, add to list.
