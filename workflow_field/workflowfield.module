@@ -1,0 +1,9 @@
+<?php
+/**
+ * @file
+ * Support workflows made up of arbitrary states.
+ */
+
+module_load_include('inc', 'workflowfield', 'workflowfield.field');
+//module_load_include('inc', 'workflowfield', 'workflowfield.widget');
+//module_load_include('inc', 'workflowfield', 'workflowfield.formatter');

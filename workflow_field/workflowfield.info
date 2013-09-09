@@ -1,0 +1,8 @@
+name = Workflow field
+description = Defines a Workflow field, widget and formatter. THIS VERSION IS NOT SUITED FOR PRODUCTION SITES.
+package = Workflow
+core = 7.x
+
+dependencies[] = field
+dependencies[] = options
+dependencies[] = workflow
