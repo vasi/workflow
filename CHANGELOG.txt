@@ -175,3 +175,4 @@ Issue #2080915 by NancyDru: Signal Rules on reversion.
 Issue #2082225 by johnv: Changed interface of hook_workflow() (new optional parameter) to support Field API.
 Issue #2082247 by johnv: Added caching to workflow_field_choices().
 Issue #1357406 by pikku-h: Fixed Cron Scheduling keeps repeating if Old state and New state are the same.
+Issue #2019345 by johnv: Create a Workflow Field, with basic options.
