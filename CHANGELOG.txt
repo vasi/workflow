@@ -177,3 +177,4 @@ Issue #2082247 by johnv: Added caching to workflow_field_choices().
 Issue #1357406 by pikku-h: Fixed Cron Scheduling keeps repeating if Old state and New state are the same.
 Issue #2019345 by johnv: Create a Workflow Field, with basic options.
 Issue #2087851 by ttkaminski: Fixed failing upgrade 7001 due to missing function: workflow_get_workflows().
+Issue #2042345 by arpeggio, rickdonohoe, johnv: Added dependency on "Views>3.3" to Workflow Views submodule.
