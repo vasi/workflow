@@ -348,6 +348,11 @@ function workflow_update_7000() {
  * Initialize all workflows to show watchdog messages.
  */
 function workflow_update_7001() {
+  // Not all module functions are available from within a hook_update_N() function.
+  // In order to call a function from your mymodule.module or an include file,
+  // you need to explicitly load that file first.
+  module_load_include('module','workflow');
+
   // Get all workflows.
   $workflows = workflow_get_workflows();
   
