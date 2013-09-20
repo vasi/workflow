@@ -179,3 +179,4 @@ Issue #2019345 by johnv: Create a Workflow Field, with basic options.
 Issue #2087851 by ttkaminski: Fixed failing upgrade 7001 due to missing function: workflow_get_workflows().
 Issue #2042345 by arpeggio, rickdonohoe, johnv: Added dependency on "Views>3.3" to Workflow Views submodule.
 Issue #2019345 by johnv: Added helper function _workflow_get_sid_by_items() for Workflow Field.
+Issue #2094031 by johnv: Added return parameter to workflow_execute_transition().

@@ -452,19 +452,25 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  *   A comment for the node's workflow history.
  * @param $force
  *   If set to TRUE, workflow permissions will be ignored.
+ * @param array $field
+ *   A field_info data structure, used when changing a Workflow Field
+ * @param $old_sid
+ *   The current/old State ID. Passed if known by caller.
+ *   @todo: D8: make $old_sid parameter required.
+ *
  *
  * @return int
  *   ID of new state.
  */
-function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = FALSE, $field = NULL) {
+function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = FALSE, $field = NULL, $old_sid = 0) {
   global $user;
   // I think this happens because of Workflow Extensions;
   // it seems to be okay to ignore it.
   if (empty($node->nid)) {
-    return;
+    return $old_sid;
   }
 
-  $old_sid = workflow_node_current_state($node, $field);
+  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($node, $field);
 
   if (!$force) {
     // Make sure this transition is allowed.
@@ -472,7 +478,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
     // Did anybody veto this choice?
     if (in_array(FALSE, $result)) {
       // If vetoed, quit.
-      return;
+      return $old_sid;
     }
   }
 
@@ -505,13 +511,13 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
       $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $node, $force, $field);
     }
     workflow_delete_workflow_scheduled_transition_by_nid($node->nid);
-    return;
+    return $old_sid;
   }
 
   $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $new_sid);
   if (!$transition && !$force) {
       watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', array('%old' => $old_sid, '%new' => $new_sid, WATCHDOG_ERROR));
-      return;
+      return $old_sid;
   }
 
   // Make sure this transition is valid and allowed for the current user.
@@ -520,7 +526,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
     if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
       watchdog('workflow', 'User %user not allowed to go from state %old to %new',
         array('%user' => $user->name, '%old' => $old_sid, '%new' => $new_sid, WATCHDOG_NOTICE));
-      return;
+      return $old_sid;
     }
   }
 
@@ -531,7 +537,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
   // Stop if a module says so.
   if (in_array(FALSE, $result)) {
     watchdog('workflow', 'Transition vetoed by module.');
-    return;
+    return $old_sid;
   }
 
   // If the node does not have an existing $node->workflow property, save the $old_sid there so it can be logged.
@@ -562,9 +568,10 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
     if ($workflow->options['watchdog_log']) {
       watchdog('workflow', 'State of @type %node_title set to %state_name',
         array(
-          '@type' => $type,
-          '%node_title' => $node->title,
-          '%state_name' => t($state->state)),
+            '@type' => $type,
+            '%node_title' => $node->title,
+            '%state_name' => t($state->state),
+          ),
         WATCHDOG_NOTICE, l('view', 'node/' . $node->nid));
     }
   }
