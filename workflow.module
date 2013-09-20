@@ -1673,3 +1673,19 @@ function workflow_show_form($sid, $workflow, $choices) {
   }
   return FALSE;
 }
+
+/**
+ * Get a single value from an Field API $items array.
+ *
+ * @param $items
+ *   Array with values, as passed in the hook_field_<op> functions.
+ *   Although we are parsing an array, 
+ *   the Workflow Field settings ensure that the cardinality is set to 1.
+ * 
+ * @return $sid
+ *   A State ID.
+ */
+function _workflow_get_sid_by_items($items) {
+  $sid = isset($items[0]['value']) ? $items[0]['value'] : 0;
+  return $sid;
+}
