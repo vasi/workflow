@@ -3,3 +3,10 @@ description = "Allows the creation and assignment of arbitrary workflows to node
 package = Workflow
 core = 7.x
 files[] = workflow.pages.inc
+
+files[] = includes/Entity/Workflow.php
+files[] = includes/Entity/WorkflowState.php
+files[] = includes/Field/WorkflowD7Base.php
+files[] = includes/Field/WorkflowItem.php
+files[] = includes/Field/WorkflowDefaultWidget.php
+files[] = includes/Test/WorkflowUnitTest.test
