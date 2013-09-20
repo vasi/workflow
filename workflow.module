@@ -680,7 +680,7 @@ function workflow_node_current_state($node, $field = NULL) {
       $entity_type = 'node'; // todo: support Entity API
       $field_name = $field['field_name'];
       $items = field_get_items($entity_type, $referenced_entity, $field_name);
-      $sid = _workflowfield_get_sid_by_items($items);
+      $sid = _workflow_get_sid_by_items($items);
     }
   }
 
