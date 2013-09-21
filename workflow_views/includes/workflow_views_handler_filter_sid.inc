@@ -32,7 +32,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       }
       else {
         foreach (workflow_get_workflow_states($options) as $state) {
-          $states[$state->sid] = check_plain($state->state);
+          $states[$state->sid] = check_plain(t($state->state));
         }
       }
       $this->value_options = $states;

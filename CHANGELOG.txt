@@ -182,3 +182,4 @@ Issue #2019345 by johnv: Added helper function _workflow_get_sid_by_items() for 
 Issue #2094031 by johnv: Added return parameter to workflow_execute_transition().
 Issue #2019345 by johnv: Added classes for WorkflowDefaultWidget, WorkflowItem (Field type), Workflow, WorkflowState.
 Issue #2019345 by johnv: Fixed Field API: do not save node, when a scheduled state chage is posed on a comment.
+Issue #884788 by gdud, liquidcms: Fixed Views field "State: Current state name" isn't translated.
