@@ -248,8 +248,15 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       // Remember: we are on a comment form, so the comment is saved automatically, the referenced entity not.
       // @todo: probably we'd like to do this form within the Widget, but that does not know
       //        wether we are on a comment or a node form.
-      $referenced_entity->{$field_name}['und'] = $items;
-      node_save($referenced_entity);
+      //
+      // submit() returns the new value in a 'sane' state.
+      // Save the referenced entity, but only is transition succeeded, and is not scheduled. 
+      $old_sid = _workflow_get_sid_by_items($referenced_entity->{$field_name}['und']);
+      $new_sid = _workflow_get_sid_by_items($items);
+      if ($old_sid != $new_sid) {
+        $referenced_entity->{$field_name}['und'] = $items;
+        node_save($referenced_entity);
+      }
 
     }
     elseif ($nid && $this->entity_type != 'comment') {
