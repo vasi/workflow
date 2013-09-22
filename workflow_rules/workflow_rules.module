@@ -4,7 +4,7 @@
  * Provide rules for workflows.
  * Why it's own module? Some sites prefer rules, some prefer actions,
  * all prefer a lower code footprint and better performance.
- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
+ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
  * the initial push to split rules out of core workflow.
  */
 

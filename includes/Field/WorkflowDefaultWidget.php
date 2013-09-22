@@ -127,7 +127,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       '#weight' => 10,
       );
 
-    // Save the current value of the node in the form.
+    // Save the current value of the node in the form, for later reference.
     $element['workflow']['#node'] = $entity;
 
 //dpm(array_pop($options));

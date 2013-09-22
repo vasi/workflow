@@ -55,7 +55,7 @@ function workflow_load($wid) {
 
 /**
  * Implements hook_hook_info().
- * Allow adopters to place their hook implementaions in either
+ * Allow adopters to place their hook implementations in either
  * their main module or in a module.workflow.inc file.
  */
 function workflow_hook_info() {
@@ -405,7 +405,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
       $hours = format_date($timestamp, 'custom', 'H:i');
       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
+        '#description' => t('Please enter a time in 24 hour (e.g. HH:MM) format.
           If no time is included, the default will be midnight on the specified date.
           The current time is: @time', array('@time' => $hours)),
         '#default_value' => $scheduled ?
@@ -521,7 +521,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
   }
 
   // Make sure this transition is valid and allowed for the current user.
-  // Check allowability of state change if user is not superuser (might be cron).
+  // Check allow-ability of state change if user is not superuser (might be cron).
   if (($user->uid != 1) && !$force) {
     if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
       watchdog('workflow', 'User %user not allowed to go from state %old to %new',
@@ -964,7 +964,7 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
 
       workflow_update_workflow_states($state_data);
       // @TODO consider adding state data to return here as part of workflow data structure.
-      // That way we could past sructs and transitions around as a data object as a whole.
+      // That way we could past structs and transitions around as a data object as a whole.
       // Might make clone easier, but it might be a little hefty for our needs?
     }
   }
@@ -990,7 +990,7 @@ function workflow_get_workflow_type_map() {
  * ALERT: If a node type is *not* mapped to a workflow it will be listed as wid 0.
  * Hence, we filter out the non-mapped results.
  *
- * @todo: remove in a future (D8) version. This function is deprecated in favour of 
+ * @todo: remove in a future (D8) version. This function is deprecated in favor of
  * @see workflow_get_workflows_by_type()
  */
 function workflow_get_workflow_type_map_by_type($type) {
@@ -1146,8 +1146,8 @@ function workflow_delete_workflow_transitions_by_tid($tid) {
  */
 function workflow_delete_workflow_transitions_by_roles($roles) {
   // NOTE: This allows us to send notifications out.
-  foreach (workflow_get_workflow_transitions_by_roles($roles) as $transistion) {
-    workflow_delete_workflow_transitions_by_tid($transistion->tid);
+  foreach (workflow_get_workflow_transitions_by_roles($roles) as $transition) {
+    workflow_delete_workflow_transitions_by_tid($transition->tid);
   }
 }
 
@@ -1376,7 +1376,7 @@ function workflow_get_workflow_scheduled_transition_by_nid($nid) {
 }
 
 /**
- * Given a timeframe, get all scheduled transistions.
+ * Given a timeframe, get all scheduled transitions.
  */
 function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end = REQUEST_TIME) {
   $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
@@ -1466,8 +1466,8 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
 }
 
 /**
- * Insert a new scheduled transistion.
- * Only one transistion at a time (for now).
+ * Insert a new scheduled transition.
+ * Only one transition at a time (for now).
  */
 function workflow_insert_workflow_scheduled_transition($data) {
   $data = (object) $data;
@@ -1673,7 +1673,7 @@ function workflow_show_form($sid, $workflow, $choices) {
   if ($count > 1) {
     return TRUE;
    }
-  // Only when in creation fase, one option is sufficient,
+  // Only when in creation phase, one option is sufficient,
   // since the '(creation)' option is not shown.
   if ($sid == $workflow->creation_state) {
     return TRUE;

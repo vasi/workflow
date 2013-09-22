@@ -64,6 +64,6 @@ function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE, $fiel
  * place it in the 'extra' value.
  */
 function hook_workflow_history_alter(&$variables) {
-  // The Worflow module does nothing with this hook.
+  // The Workflow module does nothing with this hook.
   // For an example implementation, see the Workflow Revert add-on.
 }

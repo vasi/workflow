@@ -50,7 +50,7 @@ function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
     return confirm_form($args,
       $question,
       "node/$nid",
-      t('The worflow state will be changed.')
+      t('The workflow state will be changed.')
       );
   }
   else {

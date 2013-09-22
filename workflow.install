@@ -36,7 +36,7 @@ function workflow_schema() {
         'not null' => TRUE
       ),
       'name' => array(
-        'description' => 'The name of the workflow (used as machine name for features intergration).',
+        'description' => 'The name of the workflow (used as machine name for features integration).',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,

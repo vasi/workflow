@@ -27,7 +27,7 @@ function workflow_vbo_action_info() {
 }
 
 /**
- * Implements a Drupal action. Move a node to the next state in the workfow.
+ * Implements a Drupal action. Move a node to the next state in the workflow.
  */
 function workflow_vbo_next_state_action($node, $context) {
   // If this action is being fired because it's attached to a workflow transition

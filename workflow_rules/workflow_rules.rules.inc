@@ -197,7 +197,7 @@ function workflow_check_given_state($node, $states, $node_state) {
 }
 
 /**
- * Action implementation: set current state, ignoring current user permissione.
+ * Action implementation: set current state, ignoring current user permission.
  */
 function workflow_rules_set_state($node, $states, $comment = NULL) {
   // Select the last state on the list.

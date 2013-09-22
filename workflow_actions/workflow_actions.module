@@ -4,7 +4,7 @@
  * Provide actions and triggers for workflows.
  * Why it's own module? Some sites prefer rules, some prefer actions,
  * all prefer a lower code footprint and better performance.
- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
+ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
  * the initial push to split actions out of core workflow.
  */
 
@@ -170,7 +170,7 @@ function workflow_actions_remove($tid, $aid) {
  */
 
 /**
- * Get all trigger assingments for workflow.
+ * Get all trigger assignments for workflow.
  */
 function workflow_actions_get_trigger_assignments() {
   $results = db_query('SELECT hook FROM {trigger_assignments} WHERE hook = "workflow"');
@@ -178,7 +178,7 @@ function workflow_actions_get_trigger_assignments() {
 }
 
 /**
- * Get all trigger assignements for workflow and a given action.
+ * Get all trigger assignments for workflow and a given action.
  */
 function workflow_actions_get_trigger_assignments_by_aid($aid) {
   $results = db_query('SELECT hook FROM {trigger_assignments} WHERE hook = "workflow" AND aid = ":aid"', array(':aid' => $aid));
@@ -210,7 +210,7 @@ function workflow_actions_get_actions_by_tid($tid) {
     // Transition ID is the last part, e.g., foo-bar-1.
     $transition = array_pop(explode('-', $data->hook));
     if ($tid == $transition) {
-      // Specialized, TODO seprate this SQL out later
+      // Specialized, TODO separate this SQL out later
       $results = db_query('SELECT aa.aid, a.type FROM {trigger_assignments} aa ' .
         'LEFT JOIN {actions} a ON aa.aid = a.aid ' .
         'WHERE aa.hook = ":hook" ' .

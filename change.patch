@@ -1,0 +1,402 @@
+diff --git a/CHANGELOG.txt b/CHANGELOG.txt
+index 5e83945..f2a2577 100644
+--- a/CHANGELOG.txt
++++ b/CHANGELOG.txt
+@@ -183,3 +183,4 @@ Issue #2094031 by johnv: Added return parameter to workflow_execute_transition()
+ Issue #2019345 by johnv: Added classes for WorkflowDefaultWidget, WorkflowItem (Field type), Workflow, WorkflowState.
+ Issue #2019345 by johnv: Fixed Field API: do not save node, when a scheduled state chage is posed on a comment.
+ Issue #884788 by gdud, liquidcms: Fixed Views field "State: Current state name" isn't translated.
++Issue #2086287 by dooug: Fixed many typos in workflow and sub-modules.
+diff --git a/UPDATE.txt b/UPDATE.txt
+index 9333bd5..5065295 100644
+--- a/UPDATE.txt
++++ b/UPDATE.txt
+@@ -9,7 +9,7 @@ CONTENTS OF THIS FILE
+ UPDATE FROM DRUPAL 6 TO DRUPAL 7 INSTRUCTIONS
+ ------------
+ 
+-Upgrading from 6 to 7 for Workflow using this module is fairly simple. The tables and formats of Drupal 6 configurations have not been changed, nor have the names of tokens or of Views filters and plugins.
++Upgrading from 6 to 7 for Workflow using this module is fairly simple. The tables and formats of Drupal 6 configurations have not been changed, nor have the names of tokens or of Views filters and plug-ins.
+ 
+ The only major change in the Drupal 7 update was to the Rules integration of Workflow. The following steps should lead you through the process:
+ 
+diff --git a/includes/Field/WorkflowDefaultWidget.php b/includes/Field/WorkflowDefaultWidget.php
+index 96d2e97..d92e431 100644
+--- a/includes/Field/WorkflowDefaultWidget.php
++++ b/includes/Field/WorkflowDefaultWidget.php
+@@ -127,7 +127,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
+       '#weight' => 10,
+       );
+ 
+-    // Save the current value of the node in the form.
++    // Save the current value of the node in the form, for later reference.
+     $element['workflow']['#node'] = $entity;
+ 
+ //dpm(array_pop($options));
+diff --git a/includes/Field/WorkflowItem.php b/includes/Field/WorkflowItem.php
+index f2dcf18..4f056e8 100644
+--- a/includes/Field/WorkflowItem.php
++++ b/includes/Field/WorkflowItem.php
+@@ -173,7 +173,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
+       '#required' => FALSE,
+       '#default_value' => $settings['history']['show'],
+       '#description' => t('If checked, the state change is recorded in table {workflow_node_history}, ' .
+-        "and a tab 'Worklow' is shown on the node page, which gives access to the History of the workflow."),
++        "and a tab 'Workflow' is shown on the node page, which gives access to the History of the workflow."),
+     );
+     $element['history']['roles'] = array(
+       '#type' => 'checkboxes',
+diff --git a/workflow.api.php b/workflow.api.php
+index a010893..b6ee5a9 100644
+--- a/workflow.api.php
++++ b/workflow.api.php
+@@ -64,6 +64,6 @@ function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE, $fiel
+  * place it in the 'extra' value.
+  */
+ function hook_workflow_history_alter(&$variables) {
+-  // The Worflow module does nothing with this hook.
++  // The Workflow module does nothing with this hook.
+   // For an example implementation, see the Workflow Revert add-on.
+ }
+diff --git a/workflow.features.inc b/workflow.features.inc
+index 1313782..dc3dc20 100644
+--- a/workflow.features.inc
++++ b/workflow.features.inc
+@@ -2,7 +2,7 @@
+ 
+ /**
+  * @file
+- * Intergrates workflow with features.
++ * Integrates workflow with features.
+  */
+ 
+ define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
+@@ -66,7 +66,7 @@ function workflow_features_export_options() {
+  * Implements hook_features_revert().
+  */
+ function workflow_features_revert($module) {
+-  // Including the features inc to make sure this func is available during install of a Features module.
++  // Including the features inc to make sure this function is available during install of a Features module.
+   module_load_include('inc', 'features', 'features.export');
+   foreach (features_get_default('workflow', $module) as $key => $workflow) {
+     workflow_update_workflows_full_object($workflow);
+@@ -192,7 +192,7 @@ function workflow_get_workflows_full_object($name) {
+     // Now we need to add data to the export for each transition, an array of sub-objects.
+     // Same goes for transitions, see above re: states.
+     foreach ($active_states as $sid => $state) {
+-      // We're going to look everythign up by the start state, not state involved, to avoid dupes.
++      // We're going to look everything up by the start state, not state involved, to avoid dupes.
+       foreach (workflow_get_workflow_transitions_by_sid($sid, $options) as $transition) {
+         // And to get the target state (by name) we need to look it up too.
+         $target_state = workflow_get_workflow_states_by_sid($transition->target_sid);
+@@ -234,7 +234,7 @@ function _workflow_user_roles($reset = FALSE) {
+  *   A string of roles or fake 'author' role.
+  *
+  * @return
+- *   A string of RIDs seperated by commas.
++ *   A string of RIDs separated by commas.
+  */
+ function _workflow_roles_to_rids($role_string) {
+   $roles = _workflow_user_roles();
+@@ -257,7 +257,7 @@ function _workflow_roles_to_rids($role_string) {
+  *   A string of rids or fake 'author' role.
+  *
+  * @return
+- *   A string of role names seperated by commas.
++ *   A string of role names separated by commas.
+  */
+ function _workflow_rids_to_roles($rid_string) {
+   $roles = _workflow_user_roles();
+diff --git a/workflow.install b/workflow.install
+index d9319cf..d262648 100644
+--- a/workflow.install
++++ b/workflow.install
+@@ -36,7 +36,7 @@ function workflow_schema() {
+         'not null' => TRUE
+       ),
+       'name' => array(
+-        'description' => 'The name of the workflow (used as machine name for features intergration).',
++        'description' => 'The name of the workflow (used as machine name for features integration).',
+         'type' => 'varchar',
+         'length' => '255',
+         'not null' => TRUE,
+diff --git a/workflow.module b/workflow.module
+index 8d7f5bb..a42fea2 100644
+--- a/workflow.module
++++ b/workflow.module
+@@ -55,7 +55,7 @@ function workflow_load($wid) {
+ 
+ /**
+  * Implements hook_hook_info().
+- * Allow adopters to place their hook implementaions in either
++ * Allow adopters to place their hook implementations in either
+  * their main module or in a module.workflow.inc file.
+  */
+ function workflow_hook_info() {
+@@ -405,7 +405,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
+       $hours = format_date($timestamp, 'custom', 'H:i');
+       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
+         '#type' => 'textfield',
+-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
++        '#description' => t('Please enter a time in 24 hour (e.g. HH:MM) format.
+           If no time is included, the default will be midnight on the specified date.
+           The current time is: @time', array('@time' => $hours)),
+         '#default_value' => $scheduled ?
+@@ -521,7 +521,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force =
+   }
+ 
+   // Make sure this transition is valid and allowed for the current user.
+-  // Check allowability of state change if user is not superuser (might be cron).
++  // Check allow-ability of state change if user is not superuser (might be cron).
+   if (($user->uid != 1) && !$force) {
+     if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
+       watchdog('workflow', 'User %user not allowed to go from state %old to %new',
+@@ -964,7 +964,7 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
+ 
+       workflow_update_workflow_states($state_data);
+       // @TODO consider adding state data to return here as part of workflow data structure.
+-      // That way we could past sructs and transitions around as a data object as a whole.
++      // That way we could past structs and transitions around as a data object as a whole.
+       // Might make clone easier, but it might be a little hefty for our needs?
+     }
+   }
+@@ -990,7 +990,7 @@ function workflow_get_workflow_type_map() {
+  * ALERT: If a node type is *not* mapped to a workflow it will be listed as wid 0.
+  * Hence, we filter out the non-mapped results.
+  *
+- * @todo: remove in a future (D8) version. This function is deprecated in favour of 
++ * @todo: remove in a future (D8) version. This function is deprecated in favor of
+  * @see workflow_get_workflows_by_type()
+  */
+ function workflow_get_workflow_type_map_by_type($type) {
+@@ -1146,8 +1146,8 @@ function workflow_delete_workflow_transitions_by_tid($tid) {
+  */
+ function workflow_delete_workflow_transitions_by_roles($roles) {
+   // NOTE: This allows us to send notifications out.
+-  foreach (workflow_get_workflow_transitions_by_roles($roles) as $transistion) {
+-    workflow_delete_workflow_transitions_by_tid($transistion->tid);
++  foreach (workflow_get_workflow_transitions_by_roles($roles) as $transition) {
++    workflow_delete_workflow_transitions_by_tid($transition->tid);
+   }
+ }
+ 
+@@ -1376,7 +1376,7 @@ function workflow_get_workflow_scheduled_transition_by_nid($nid) {
+ }
+ 
+ /**
+- * Given a timeframe, get all scheduled transistions.
++ * Given a timeframe, get all scheduled transitions.
+  */
+ function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end = REQUEST_TIME) {
+   $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
+@@ -1466,8 +1466,8 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
+ }
+ 
+ /**
+- * Insert a new scheduled transistion.
+- * Only one transistion at a time (for now).
++ * Insert a new scheduled transition.
++ * Only one transition at a time (for now).
+  */
+ function workflow_insert_workflow_scheduled_transition($data) {
+   $data = (object) $data;
+@@ -1673,7 +1673,7 @@ function workflow_show_form($sid, $workflow, $choices) {
+   if ($count > 1) {
+     return TRUE;
+    }
+-  // Only when in creation fase, one option is sufficient,
++  // Only when in creation phase, one option is sufficient,
+   // since the '(creation)' option is not shown.
+   if ($sid == $workflow->creation_state) {
+     return TRUE;
+diff --git a/workflow.pages.inc b/workflow.pages.inc
+index 2f62367..5042832 100644
+--- a/workflow.pages.inc
++++ b/workflow.pages.inc
+@@ -194,6 +194,7 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
+     $name = t($workflow->name);
+     $form['#wf'] = $workflow;
+     $form['#choices'] = $choices;
++    $form['#node'] = $node; // Added for integration with Field widget.
+ 
+     $timestamp = NULL;
+     $comment = NULL;
+diff --git a/workflow_access/workflow_access.features.inc b/workflow_access/workflow_access.features.inc
+index 32c9c99..87cc469 100644
+--- a/workflow_access/workflow_access.features.inc
++++ b/workflow_access/workflow_access.features.inc
+@@ -58,7 +58,7 @@ function workflow_access_features_export($data, &$export, $module_name = '') {
+   foreach ($data as $component) {
+     $export['features']['workflow_access'][$component] = $component;
+ 
+-    // Access configuration for a workflow needs that worfklow to exist.
++    // Access configuration for a workflow needs that workflow to exist.
+     $pipe['workflow'][$component] = $component;
+ 
+     // And it needs the roles to which rights are granted.
+diff --git a/workflow_actions/workflow_actions.module b/workflow_actions/workflow_actions.module
+index 886f38b..62a7848 100644
+--- a/workflow_actions/workflow_actions.module
++++ b/workflow_actions/workflow_actions.module
+@@ -4,7 +4,7 @@
+  * Provide actions and triggers for workflows.
+  * Why it's own module? Some sites prefer rules, some prefer actions,
+  * all prefer a lower code footprint and better performance.
+- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
++ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
+  * the initial push to split actions out of core workflow.
+  */
+ 
+@@ -170,7 +170,7 @@ function workflow_actions_remove($tid, $aid) {
+  */
+ 
+ /**
+- * Get all trigger assingments for workflow.
++ * Get all trigger assignments for workflow.
+  */
+ function workflow_actions_get_trigger_assignments() {
+   $results = db_query('SELECT hook FROM {trigger_assignments} WHERE hook = "workflow"');
+@@ -178,7 +178,7 @@ function workflow_actions_get_trigger_assignments() {
+ }
+ 
+ /**
+- * Get all trigger assignements for workflow and a given action.
++ * Get all trigger assignments for workflow and a given action.
+  */
+ function workflow_actions_get_trigger_assignments_by_aid($aid) {
+   $results = db_query('SELECT hook FROM {trigger_assignments} WHERE hook = "workflow" AND aid = ":aid"', array(':aid' => $aid));
+@@ -210,7 +210,7 @@ function workflow_actions_get_actions_by_tid($tid) {
+     // Transition ID is the last part, e.g., foo-bar-1.
+     $transition = array_pop(explode('-', $data->hook));
+     if ($tid == $transition) {
+-      // Specialized, TODO seprate this SQL out later
++      // Specialized, TODO separate this SQL out later
+       $results = db_query('SELECT aa.aid, a.type FROM {trigger_assignments} aa ' .
+         'LEFT JOIN {actions} a ON aa.aid = a.aid ' .
+         'WHERE aa.hook = ":hook" ' .
+diff --git a/workflow_admin_ui/workflow_admin_ui.module b/workflow_admin_ui/workflow_admin_ui.module
+index 186b56d..afbbd39 100644
+--- a/workflow_admin_ui/workflow_admin_ui.module
++++ b/workflow_admin_ui/workflow_admin_ui.module
+@@ -3,7 +3,7 @@
+  * @file
+  * Provides administrative UI for workflow.
+  * Why it's own module? Lower code footprint and better performance.
+- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
++ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
+  * the initial push to split UI out of core workflow.
+  * We're moving workflow in a API direction, so UI and the like - out.
+  */
+@@ -761,13 +761,13 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
+         'workflow_transitions' => array(
+           'title' => t('Transitions'),
+           'href' => "admin/config/workflow/workflow/transitions/$workflow->wid",
+-          'attributes' => array('alt' => t('Edit the @wf transitios', array('@wf' => $workflow->name))),
++          'attributes' => array('alt' => t('Edit the @wf transitions', array('@wf' => $workflow->name))),
+           ),
+ 
+         'workflow_permission_summary' => array(
+           'title' => t('Summary'),
+           'href' => "admin/config/workflow/workflow/perm_summary/$workflow->wid",
+-          'attributes' => array('alt' => t('See a summary of the @wf transitios', array('@wf' => $workflow->name))),
++          'attributes' => array('alt' => t('See a summary of the @wf transitions', array('@wf' => $workflow->name))),
+           ),
+ 
+         'workflow_overview_delete' => array(
+@@ -971,7 +971,7 @@ function theme_workflow_admin_ui_overview_form($variables) {
+         // Add our 'sysid' column
+         drupal_render($form['states'][$id]['sysid']),
+       ),
+-      // To support the tabledrag behaviour, we need to assign each row of the
++      // To support the tabledrag behavior, we need to assign each row of the
+       // table a class attribute of 'draggable'. This will add the 'draggable'
+       // class to the <tr> element for that row when the final table is
+       // rendered.
+diff --git a/workflow_field/workflowfield.field.inc b/workflow_field/workflowfield.field.inc
+index 0eb342c..711a56a 100644
+--- a/workflow_field/workflowfield.field.inc
++++ b/workflow_field/workflowfield.field.inc
+@@ -18,7 +18,7 @@ function workflowfield_field_info() {
+  * Changes the hook_field_settings_form.
+  * Fixes some Field settings and Field Instance settings, and makes sure users cannot change it.
+  * @todo: perhaps this is core functionality, but these values are only saved 
+- *        when the site builder explicitely save the instance settings. :-(
++ *        when the site builder explicitly save the instance settings. :-(
+  */
+ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+   if ($form['#field']['type'] == 'workflow') {
+diff --git a/workflow_revert/workflow_revert.module b/workflow_revert/workflow_revert.module
+index 14242c1..70cfb2e 100644
+--- a/workflow_revert/workflow_revert.module
++++ b/workflow_revert/workflow_revert.module
+@@ -50,7 +50,7 @@ function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
+     return confirm_form($args,
+       $question,
+       "node/$nid",
+-      t('The worflow state will be changed.')
++      t('The workflow state will be changed.')
+       );
+   }
+   else {
+diff --git a/workflow_rules/workflow_rules.module b/workflow_rules/workflow_rules.module
+index 8f2fb44..ca22e39 100644
+--- a/workflow_rules/workflow_rules.module
++++ b/workflow_rules/workflow_rules.module
+@@ -4,7 +4,7 @@
+  * Provide rules for workflows.
+  * Why it's own module? Some sites prefer rules, some prefer actions,
+  * all prefer a lower code footprint and better performance.
+- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
++ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
+  * the initial push to split rules out of core workflow.
+  */
+ 
+diff --git a/workflow_rules/workflow_rules.rules.inc b/workflow_rules/workflow_rules.rules.inc
+index 3c43d5c..dfe6406 100644
+--- a/workflow_rules/workflow_rules.rules.inc
++++ b/workflow_rules/workflow_rules.rules.inc
+@@ -197,7 +197,7 @@ function workflow_check_given_state($node, $states, $node_state) {
+ }
+ 
+ /**
+- * Action implementation: set current state, ignoring current user permissione.
++ * Action implementation: set current state, ignoring current user permission.
+  */
+ function workflow_rules_set_state($node, $states, $comment = NULL) {
+   // Select the last state on the list.
+diff --git a/workflow_vbo/README.txt b/workflow_vbo/README.txt
+index 88750f5..8ec45ff 100644
+--- a/workflow_vbo/README.txt
++++ b/workflow_vbo/README.txt
+@@ -22,7 +22,7 @@ the content type.
+ 
+ So: KEEP YOUR CONTENT TYPE NAMES SHORT.
+ 
+-Unfortunately the code that handles this is in core, so not readily changable. If
++Unfortunately the code that handles this is in core, so not readily changeable. If
+ you have trouble seeing your actions check your name lengths.
+ 
+ See further discussion at:
+diff --git a/workflow_vbo/workflow_vbo.module b/workflow_vbo/workflow_vbo.module
+index f81a90d..5d31392 100644
+--- a/workflow_vbo/workflow_vbo.module
++++ b/workflow_vbo/workflow_vbo.module
+@@ -27,7 +27,7 @@ function workflow_vbo_action_info() {
+ }
+ 
+ /**
+- * Implements a Drupal action. Move a node to the next state in the workfow.
++ * Implements a Drupal action. Move a node to the next state in the workflow.
+  */
+ function workflow_vbo_next_state_action($node, $context) {
+   // If this action is being fired because it's attached to a workflow transition
+diff --git a/workflow_views/includes/workflow_views_handler_field_username.inc b/workflow_views/includes/workflow_views_handler_field_username.inc
+index 8312ff0..263dd9d 100644
+--- a/workflow_views/includes/workflow_views_handler_field_username.inc
++++ b/workflow_views/includes/workflow_views_handler_field_username.inc
+@@ -1,5 +1,4 @@
+ <?php
+-// $Id$
+ /**
+  * @file
+  * Provide views field handler for workflow.module.

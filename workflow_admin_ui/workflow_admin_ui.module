@@ -3,7 +3,7 @@
  * @file
  * Provides administrative UI for workflow.
  * Why it's own module? Lower code footprint and better performance.
- * Additional creadit to gcassie ( http://drupal.org/user/80260 ) for
+ * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
  * the initial push to split UI out of core workflow.
  * We're moving workflow in a API direction, so UI and the like - out.
  */
@@ -761,13 +761,13 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
         'workflow_transitions' => array(
           'title' => t('Transitions'),
           'href' => "admin/config/workflow/workflow/transitions/$workflow->wid",
-          'attributes' => array('alt' => t('Edit the @wf transitios', array('@wf' => $workflow->name))),
+          'attributes' => array('alt' => t('Edit the @wf transitions', array('@wf' => $workflow->name))),
           ),
 
         'workflow_permission_summary' => array(
           'title' => t('Summary'),
           'href' => "admin/config/workflow/workflow/perm_summary/$workflow->wid",
-          'attributes' => array('alt' => t('See a summary of the @wf transitios', array('@wf' => $workflow->name))),
+          'attributes' => array('alt' => t('See a summary of the @wf transitions', array('@wf' => $workflow->name))),
           ),
 
         'workflow_overview_delete' => array(
@@ -971,7 +971,7 @@ function theme_workflow_admin_ui_overview_form($variables) {
         // Add our 'sysid' column
         drupal_render($form['states'][$id]['sysid']),
       ),
-      // To support the tabledrag behaviour, we need to assign each row of the
+      // To support the tabledrag behavior, we need to assign each row of the
       // table a class attribute of 'draggable'. This will add the 'draggable'
       // class to the <tr> element for that row when the final table is
       // rendered.

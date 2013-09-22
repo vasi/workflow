@@ -18,7 +18,7 @@ function workflowfield_field_info() {
  * Changes the hook_field_settings_form.
  * Fixes some Field settings and Field Instance settings, and makes sure users cannot change it.
  * @todo: perhaps this is core functionality, but these values are only saved 
- *        when the site builder explicitely save the instance settings. :-(
+ *        when the site builder explicitly save the instance settings. :-(
  */
 function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
   if ($form['#field']['type'] == 'workflow') {

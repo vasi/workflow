@@ -173,7 +173,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       '#required' => FALSE,
       '#default_value' => $settings['history']['show'],
       '#description' => t('If checked, the state change is recorded in table {workflow_node_history}, ' .
-        "and a tab 'Worklow' is shown on the node page, which gives access to the History of the workflow."),
+        "and a tab 'Workflow' is shown on the node page, which gives access to the History of the workflow."),
     );
     $element['history']['roles'] = array(
       '#type' => 'checkboxes',

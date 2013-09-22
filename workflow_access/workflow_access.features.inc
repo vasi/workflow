@@ -58,7 +58,7 @@ function workflow_access_features_export($data, &$export, $module_name = '') {
   foreach ($data as $component) {
     $export['features']['workflow_access'][$component] = $component;
 
-    // Access configuration for a workflow needs that worfklow to exist.
+    // Access configuration for a workflow needs that workflow to exist.
     $pipe['workflow'][$component] = $component;
 
     // And it needs the roles to which rights are granted.

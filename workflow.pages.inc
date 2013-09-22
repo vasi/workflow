@@ -194,6 +194,7 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     $name = t($workflow->name);
     $form['#wf'] = $workflow;
     $form['#choices'] = $choices;
+    $form['#node'] = $node; // Added for integration with Field widget.
 
     $timestamp = NULL;
     $comment = NULL;

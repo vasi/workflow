@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Intergrates workflow with features.
+ * Integrates workflow with features.
  */
 
 define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
@@ -66,7 +66,7 @@ function workflow_features_export_options() {
  * Implements hook_features_revert().
  */
 function workflow_features_revert($module) {
-  // Including the features inc to make sure this func is available during install of a Features module.
+  // Including the features inc to make sure this function is available during install of a Features module.
   module_load_include('inc', 'features', 'features.export');
   foreach (features_get_default('workflow', $module) as $key => $workflow) {
     workflow_update_workflows_full_object($workflow);
@@ -192,7 +192,7 @@ function workflow_get_workflows_full_object($name) {
     // Now we need to add data to the export for each transition, an array of sub-objects.
     // Same goes for transitions, see above re: states.
     foreach ($active_states as $sid => $state) {
-      // We're going to look everythign up by the start state, not state involved, to avoid dupes.
+      // We're going to look everything up by the start state, not state involved, to avoid dupes.
       foreach (workflow_get_workflow_transitions_by_sid($sid, $options) as $transition) {
         // And to get the target state (by name) we need to look it up too.
         $target_state = workflow_get_workflow_states_by_sid($transition->target_sid);
@@ -234,7 +234,7 @@ function _workflow_user_roles($reset = FALSE) {
  *   A string of roles or fake 'author' role.
  *
  * @return
- *   A string of RIDs seperated by commas.
+ *   A string of RIDs separated by commas.
  */
 function _workflow_roles_to_rids($role_string) {
   $roles = _workflow_user_roles();
@@ -257,7 +257,7 @@ function _workflow_roles_to_rids($role_string) {
  *   A string of rids or fake 'author' role.
  *
  * @return
- *   A string of role names seperated by commas.
+ *   A string of role names separated by commas.
  */
 function _workflow_rids_to_roles($rid_string) {
   $roles = _workflow_user_roles();
