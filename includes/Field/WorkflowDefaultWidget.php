@@ -156,6 +156,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $name)) : '',
         '#options' => $options,
 //        '#name' => $name,
+        '#name' => 'workflow_scheduled', // used for #states to hide/show schedule info.
 //        '#parents' => array('workflow'),
         '#default_value' => $sid,
         );

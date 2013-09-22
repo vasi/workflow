@@ -185,3 +185,4 @@ Issue #2019345 by johnv: Fixed Field API: do not save node, when a scheduled sta
 Issue #884788 by gdud, liquidcms: Fixed Views field "State: Current state name" isn't translated.
 Issue #2086287 by dooug: Fixed many typos in workflow and sub-modules.
 Issue #2086605 by johnv: Added settings to hide TimeZone for "Schedule for state change" option.
+Issue #2019345 by johnv: Fixed #states to hide/show scheduling info in Workflow Field Widget.
