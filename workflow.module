@@ -369,7 +369,9 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
   // Display scheduling form only if a node is being edited and user has
   // permission. State change cannot be scheduled at node creation because
   // that leaves the node in the (creation) state.
-  if (!(arg(0) == 'node' && arg(1) == 'add') && user_access('schedule workflow transitions')) {
+  if (!(arg(0) == 'node' && arg(1) == 'add') &&
+      (!isset($form['#wf']->options['schedule']) || !empty($form['#wf']->options['schedule'])) &&
+      user_access('schedule workflow transitions')) {
     $scheduled = $timestamp ? 1 : 0;
     $timestamp = $scheduled ? $timestamp : REQUEST_TIME;
     $form['workflow']['workflow_scheduled'] = array(
@@ -420,13 +422,13 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
       else {
         $timezone = variable_get('date_default_timezone', 0);
       }
-
+      $timezone_type = (isset($form['#wf']->options['schedule_timezone']) && empty($form['#wf']->options['schedule_timezone'])) ? 'hidden' : 'select';
       $timezones = drupal_map_assoc(timezone_identifiers_list());
 
       $form['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
-        '#type' => 'select',
-        '#options' => $timezones,
+        '#type' => $timezone_type,
         '#title' => t('Time zone'),
+        '#options' => $timezones,
         '#default_value' => array($timezone => $timezone),
         );
   }

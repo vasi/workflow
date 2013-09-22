@@ -399,6 +399,29 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
         'name as the title of workflow section of the editing form.'),
       );
 
+    $form['schedule'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Scheduling for Workflow'),
+      );
+
+    $form['schedule']['schedule'] = array(
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Allow scheduling of workflow transitions?'),
+      '#default_value' => isset($workflow->options['schedule']) ? $workflow->options['schedule'] : 1,
+      '#description' => t('Workflow transitions may be scheduled to a moment in the future. ' .
+        'Soon after the desired moment, the transition is executed by Cron.'),
+      );
+
+    $form['schedule']['schedule_timezone'] = array(
+      '#type' => 'radios',
+      '#options' => $noyes,
+      '#attributes' => array('class' => array('container-inline')),
+      '#title' => t('Show a timezone when scheduling a transition?'),
+      '#default_value' => isset($workflow->options['schedule_timezone']) ? $workflow->options['schedule_timezone'] : 1,
+      );
+
     $form['comment'] = array(
       '#type' => 'fieldset',
       '#title' => t('Comment for Workflow Log'),
@@ -515,9 +538,11 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   }
 
   $options = array(
+    'name_as_title' => $form_state['values']['name_as_title'],
+    'schedule' => $form_state['values']['schedule'],
+    'schedule_timezone' => $form_state['values']['schedule_timezone'],
     'comment_log_node' => $form_state['values']['comment_log_node'],
     'comment_log_tab' => $form_state['values']['comment_log_tab'],
-    'name_as_title' => $form_state['values']['name_as_title'],
     'watchdog_log' => $form_state['values']['watchdog_log'],
     );
 
