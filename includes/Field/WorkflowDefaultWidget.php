@@ -105,11 +105,11 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if ($settings_schedule == TRUE && isset($entity->nid)) {
       // Read scheduled information.
       // Technically you could have more than one scheduled, but this will only add the soonest one.
-      foreach (workflow_get_workflow_scheduled_transition_by_nid($entity->nid) as $schedule_info) {
-        $sid = $schedule_info->sid;
+      foreach (WorkflowScheduledTransition::load($entity->nid) as $scheduled_transition) {
         $scheduled = '1';
-        $timestamp = $schedule_info->scheduled;
-        $comment = $schedule_info->comment;
+        $sid = $scheduled_transition->sid;
+        $timestamp = $scheduled_transition->scheduled;
+        $comment = $scheduled_transition->comment;
         break;
       }
     }
@@ -319,24 +319,17 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           . $schedule->workflow_scheduled_timezone
           ;
 
-        if ($scheduled_date_time = strtotime($scheduled_date_time)) {
+        if ($stamp = strtotime($scheduled_date_time)) {
           // Clear previous entries and insert.
-          $data = array(
-            'nid' => $entity->nid,
-            'old_sid' => $old_sid,
-            'sid' => $new_sid,
-            'uid' => $user->uid,
-            'scheduled' => $scheduled_date_time,
-            'comment' => $comment,
-            );
+          $scheduled_transition = new WorkflowScheduledTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+          $scheduled_transition->save();
 
-          workflow_insert_workflow_scheduled_transition($data);
           // Get name of state.
-          if ($state = workflow_get_workflow_states_by_sid($new_sid)) {
+          if ($state = new WorkflowState($new_sid)) {
             $t_args = array(
                 '@node_title' => $entity->title,
-                '%state_name' => t($state->state),
-                '%scheduled_date' => format_date($scheduled_date_time),
+                '%state_name' => t($state->getName()),
+                '%scheduled_date' => format_date($stamp),
                 );
             watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
               WATCHDOG_NOTICE, l('view', 'node/' . $entity->nid . '/workflow'));

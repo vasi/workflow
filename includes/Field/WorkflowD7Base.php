@@ -31,6 +31,10 @@ abstract class WorkflowD7Base {
     
   }
 
+  public function getFieldInfo() {
+    return $this->field;
+  }
+
   protected function getSettings() {
     $settings = isset($this->instance['widget']['settings']) ? $this->instance['widget']['settings'] : array();
     $field_info = self::settings();

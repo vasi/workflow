@@ -255,7 +255,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       $new_sid = _workflow_get_sid_by_items($items);
       if ($old_sid != $new_sid) {
         $referenced_entity->{$field_name}['und'] = $items;
-        node_save($referenced_entity);
+        $this->entitySave($referenced_entity_type, $referenced_entity);
       }
 
     }
@@ -294,7 +294,21 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         // This is hidden from the admin, because the default value can be different for every user.
       }
     }
-  } 
+  }
+
+  /*
+   * Saves an entity.
+   * Use this externally if the WorkflowItem isn't called from node_save/update itself, 
+    * E.g., from workflow_cron().
+   */
+  public function entitySave($entity_type, $entity) {
+    if ($entity_type == 'node') {
+      node_save($entity);
+    }
+    else {
+      entity_save($entity_type, $entity);
+    }
+  }
 
 /**
  * Implements hook_field_delete() -> FieldItemInterface::delete()
