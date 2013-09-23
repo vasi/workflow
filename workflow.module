@@ -1653,10 +1653,13 @@ function workflow_show_form($sid, $workflow, $choices) {
   // The easiest case first: more then one option: always show form.
   if ($count > 1) {
     return TRUE;
-   }
+  }
   // Only when in creation phase, one option is sufficient,
-  // since the '(creation)' option is not shown.
-  if ($sid == $workflow->creation_state) {
+  // since the '(creation)' option is not included in $choices.
+  // (First convert the $workflow object of unknown origin to a 'new' Workflow object.)
+  $workflow = Workflow::getWorkflow($workflow->wid);
+  //  if ($sid == $workflow->creation_state) {
+  if ($sid == $workflow->getCreationState()->sid) {
     return TRUE;
   }
   return FALSE;
