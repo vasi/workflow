@@ -11,10 +11,10 @@ class WorkflowState {
 
   public $sid = 0;
   public $wid = 0;
-  private $name = '';
   private $weight = 0; 
   private $sysid = 0; 
-  private $status;
+  private $state; // @todo: rename to 'label'.
+  public $status;
   private $workflow = NULL; 
 
   public function __construct($sid = 0, $wid = 0) {
@@ -31,25 +31,28 @@ class WorkflowState {
       // @todo: this copy-thing should not be necessary.
       $this->sid = self::$states[$sid]->sid;
       $this->wid = self::$states[$sid]->wid;
-      $this->name = self::$states[$sid]->state; 
       $this->weight = self::$states[$sid]->weight; 
       $this->sysid = self::$states[$sid]->sysid;
-      $this->status = self::$states[$sid]->status; 
+      $this->state = self::$states[$sid]->state;
+      $this->status = self::$states[$sid]->status;
       $this->workflow = self::$states[$sid]->workflow;
     }
   }
 
   /**
-   * Get all states in the system, with options to filter, only where a workflow exists.
-   * @todo: deprecate workflow_get_workflow_states()
-   * @todo: deprecate workflow_get_workflow_states_all()
-   * @todo: rename table column {workflow_states}-state to {workflow_states}-name
+   * Alternative constructor, via a static function.
    */
   public static function getState($sid, $wid) {
     $states = self::getStates($sid, $wid);
     return $states[$sid];
   }
 
+  /**
+   * Get all states in the system, with options to filter, only where a workflow exists.
+   * @deprecated workflow_get_workflow_states() --> WorkflowState->getStates()
+   * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
+   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates($sid)
+   */
   public static function getStates($sid = 0, $wid = 0, $options = array()) {
     if ($sid && isset(self::$states[$sid])) {
       // Only 1 is requested and cached: return this one.
@@ -65,6 +68,9 @@ class WorkflowState {
 //    @todo: add "WHERE status = 1 " in some calls 
 //    $query->condition('ws.' . 'status', '1');
 
+    if ($wid) {
+      $query->condition('ws.wid', $wid);
+    }
     // Spin through the options and add conditions.
     foreach ($options as $column => $value) {
       $query->condition('ws.' . $column, $value);
@@ -104,16 +110,18 @@ class WorkflowState {
   /*
    * Returns the allowed values for the current state.
    */
-  function getOptions($node) {
-    return workflow_field_choices($node, $force = FALSE, $this);
+  function getOptions($node, $force = FALSE) {
+    return workflow_field_choices($node, $force, $this);
   }
 
   /*
-   * Mimics Entity::getName().
+   * Mimics Entity API functions.
    *
-   * @see Entity::getName
    */
-  function getName() {
-    return $this->name;
+  function label() {
+    return $this->state;
+  }
+  function value() {
+    return $this->sid;
   }
 }

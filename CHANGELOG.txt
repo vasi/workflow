@@ -189,3 +189,4 @@ Issue #2019345 by johnv: Fixed #states to hide/show scheduling info in Workflow 
 Issue #2095467 by johnv: Changed flow logic to use new class WorkflowScheduledTransition.
 Issue #2095467 by johnv: Moved deprecated functions for class WorkflowScheduledTransition to new file workflow.deprecated.inc.
 Issue #2071733 by johnv: Changed workflow_show_form() to work with both old and new workflow objects.
+Issue #2019345 by johnv: Updated Workflow classes to show Workflow Form also on Node View page.

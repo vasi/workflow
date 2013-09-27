@@ -240,16 +240,14 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
       $form = array();
       $form_state = array();
-      $form['#node'] = $referenced_entity;
-      $form['#node_type'] = $referenced_entity_type;
-      $widget = new WorkflowDefaultWidget($this->field, $this->instance);
+      $widget = new WorkflowDefaultWidget($this->field, $this->instance, $referenced_entity_type, $referenced_entity);
       $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
-      // Remember: we are on a comment form, so the comment is saved automatically, the referenced entity not.
+      // Remember: we are on a comment form, so the comment is saved automatically, but the referenced entity is not.
       // @todo: probably we'd like to do this form within the Widget, but that does not know
       //        wether we are on a comment or a node form.
       //
-      // submit() returns the new value in a 'sane' state.
+      // Widget::submit() returns the new value in a 'sane' state.
       // Save the referenced entity, but only is transition succeeded, and is not scheduled. 
       $old_sid = _workflow_get_sid_by_items($referenced_entity->{$field_name}['und']);
       $new_sid = _workflow_get_sid_by_items($items);
@@ -257,7 +255,6 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         $referenced_entity->{$field_name}['und'] = $items;
         $this->entitySave($referenced_entity_type, $referenced_entity);
       }
-
     }
     elseif ($nid && $this->entity_type != 'comment') {
       if (isset($items[0]['value'])) {
@@ -265,18 +262,14 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       }
       elseif (isset($items[0]['workflow'])) {
         // The WorkflowDefaultWidget is used.
-        $form['#node'] = $entity;
-
         // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
         $form = array();
         $form_state = array();
-        $form['#node'] = $entity;
-        $form['#node_type'] = $entity_type;
-        $widget = new WorkflowDefaultWidget($this->field, $this->instance);
+        $widget = new WorkflowDefaultWidget($this->field, $this->instance, $entity_type, $entity);
         $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
       }
       else {
-        drupal_set_message('error', 'error');
+        drupal_set_message('error in WorkfowItem->update()', 'error');
       }
     }
     elseif (!$nid && $entity_type == 'comment') {
@@ -286,8 +279,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       if ($entity) {
         // A 'normal' node add page.
         // We should not be here, since we only do inserts after $nid is known.
-        $current_sid = workflow_get_creation_state_by_wid($wid);
-        $current_sid = Workflow::getWorkflow($wid)->getCreationState();
+        $current_sid = Workflow::getWorkflow($wid)->getCreationSid();
       }
       else {
         // No entity available, we are on the field Settings page - 'default value' field.
@@ -296,26 +288,11 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     }
   }
 
-  /*
-   * Saves an entity.
-   * Use this externally if the WorkflowItem isn't called from node_save/update itself, 
-    * E.g., from workflow_cron().
+  /**
+   * Implements hook_field_delete() -> FieldItemInterface::delete()
    */
-  public function entitySave($entity_type, $entity) {
-    if ($entity_type == 'node') {
-      node_save($entity);
-    }
-    else {
-      entity_save($entity_type, $entity);
-    }
-  }
-
-/**
- * Implements hook_field_delete() -> FieldItemInterface::delete()
- */
-//  public function delete() {
+//   public function delete() {
 //  }
-
 
   public function getCurrentState() {
     $field_name = $this->field['field_name'];
@@ -346,7 +323,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     elseif ($nid && $this->entity_type != 'comment') {
       // A 'normal' node edit page.
       $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
-      $state = new WorkflowState(_workflow_get_sid_by_items($items), $wid);
+      $state = new WorkflowState($sid = _workflow_get_sid_by_items($items), $wid);
       if (!$state) {
         // E.g., the node was created before the field was added: do the same as 'Node Add' page.
         $state = $workflow->getCreationState();
@@ -354,6 +331,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     }
     elseif (!$nid && $entity_type == 'comment') {
       // not possible: a comment on a non-existent node.
+      $state = NULL;
     }
     elseif (!$nid && $entity_type != 'comment') {
       if ($entity) {
@@ -388,19 +366,20 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
    */
   private function _allowed_values_string($wid = 0) {
     $lines = array();
-    $states = $wid ? workflow_get_workflow_states_by_wid($wid) : workflow_get_workflow_states();
-    $last_wid = -1;
-  
+    $states = WorkflowState::getStates(0, $wid);
+    $previous_wid = -1;
+
     foreach ($states as $state) {
       // Only show enabled states.
       if ($state->status) {
-        if (($wid == 0) && ($last_wid <> $state->wid)) {
-          // Show a Workflow name between Workflows, if more then 1 in the list.
-          $last_wid = $state->wid;
+        // Show a Workflow name between Workflows, if more then 1 in the list.
+        if (($wid == 0) && ($previous_wid <> $state->wid)) {
+          $previous_wid = $state->wid;
           $lines[] = $state->name . "'s states: ";
         }
-        $states[$state->sid] = check_plain(t($state->state));
-        $lines[] = $state->sid . ' | ' . check_plain(t($state->state));
+        $label = t($state->label());
+        $states[$state->sid] = check_plain($label);
+        $lines[] = $state->sid . ' | ' . check_plain($label);
       }
     }
     return implode("\n", $lines);
@@ -409,8 +388,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
   /*
    * Helper function for list.module formatter.
    *
-   * Returns the array of allowed values for a list field.
-   * Used as a callback function in the list module.
+   * Callback function for the list module formatter.
    * @see list_allowed_values() : 
    * "The strings are not safe for output. Keys and values of the array should be
    * "sanitized through field_filter_xss() before being displayed.
@@ -419,12 +397,12 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
    *   The array of allowed values. Keys of the array are the raw stored values
    *   (number or text), values of the array are the display labels.
    *
-   * @todo: this function only needs to return the current value, not ALL.
+   * @todo: this function needs to read the correct state. It is incorrect when showing comments on a node page.
    */
   public function getAllowedValues() {
     $options = array();
-    if ($state = $this->getCurrentState()) {
-      $options = array($state->sid => $state->getName());
+    foreach($this->getCurrentState()->getWorkflow()->getStates() as $state) {
+      $options[$state->value()] = $state->label();
     }
     return $options;
   }

@@ -28,7 +28,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    */
   public static function settings() {
     return array(
-      'workflow' => array(
+      'workflow_default' => array(
         'label' => t('Workflow'),
         'field types' => array('workflow'),
         'settings' => array(
@@ -50,31 +50,38 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Be careful: this widget may be shown in very different places. Test carefully!!
+   *  - On a node add/edit page
+   *  - On a node preview page
+   *  - On a node view page
+   *  - On a node 'workflow history' tab
+   *  - On a comment display, in the comment history
+   *  - On a comment form, below the comment history
    * @todo D8: change "array $items" to "FieldInterface $items"
    */
   public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
     $field_name = $this->field['field_name'];
-    $entity = $element['#entity'];
-    $entity_type = 'node';
+    $entity = $this->entity;
+    $entity_type = $this->entity_type;
+
     if (!$entity) {
       // If no entity given, do not show a form. E.g., on the field settings page.
       return $element;
     }
 
+    // Capture settings to format the form/widget.
     $settings_title_as_name = ($this->field['settings']['widget']['name_as_title'] && $this->instance['widget']['settings']['name_as_title']);
-    $settings_schedule = $this->field['settings']['widget']['schedule'];
+    // The schedule cannot be shown on a node add page.
+    $settings_schedule = $this->field['settings']['widget']['schedule'] && isset($entity->nid);
     $settings_schedule_timezone = $this->field['settings']['widget']['schedule_timezone'];
     // Show comment, when Field ánd Instance allow this.
     $settings_comment = ($this->field['settings']['widget']['comment'] && $this->instance['widget']['settings']['comment']) ? 'textarea' : 'hidden';
 
+    // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(), to add the submit button on the Node view page.
+    $settings_submit = isset($this->instance['widget']['settings']['submit']) ? TRUE : FALSE;
     $wid = $this->field['settings']['wid'];
     $workflow = new Workflow($wid);
-    $name = t($workflow->name);
-
-    // We need to decide here, which is the entity to act upon: are we working with a comment, or a node?
-    // So, bluntly override "$entity = $element['#entity'];" with "$entity = $form['#node']".
-    $entity = $form['#node'];
-    $entity_type = 'node'; // comments are only supported on nodes.
 
     // @todo: Get the current sid for node, comment, preview.
     if (count($items)) {
@@ -83,7 +90,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $state = new WorkflowState($sid);
     }
     else {
-      // Node add or Comment add.
+      // Node add or Comment add (which do not have a state, yet).
+      // Or existing nodes, which didn't have a state before.
       $items = field_get_items($entity_type, $entity, $field_name);
       if ($items) {
         $sid = _workflow_get_sid_by_items($items);
@@ -102,7 +110,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $scheduled = '0';
     $timestamp = REQUEST_TIME;
     $comment = NULL;
-    if ($settings_schedule == TRUE && isset($entity->nid)) {
+
+    if ($settings_schedule) {
       // Read scheduled information.
       // Technically you could have more than one scheduled, but this will only add the soonest one.
       foreach (WorkflowScheduledTransition::load($entity->nid) as $scheduled_transition) {
@@ -119,16 +128,20 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       return $element;
     }
 
+    $name = t($workflow->label());
     $element['workflow'] = array(
       '#type' => 'fieldset',
       '#title' => $name,
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-      '#weight' => 10,
+//      '#weight' => 10,
       );
 
     // Save the current value of the node in the form, for later reference.
     $element['workflow']['#node'] = $entity;
+    $element['workflow']['#entity'] = $entity;
+    $element['#node'] = $entity;
+    $element['#entity'] = $entity;
 
 //dpm(array_pop($options));
 //dpm(array_pop($options));
@@ -145,10 +158,9 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         );
     }
     else {
-      $element['workflow'] = array(
-        '#type' => 'container',
-        '#attributes' => array('class' => array('workflow-form-container')),
-      );
+      // @todo: why are we overwriting 'fieldset' with 'container' ?
+      $element['workflow']['#type'] = 'container';
+      $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
 //      $element['workflow'][$name] = array(
       $element['workflow']['workflow_options'] = array(
@@ -238,6 +250,16 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       '#rows' => 2,
       );
 
+    if ($settings_submit ) {
+      // Add a submit button, but only on Node View and History page.
+      $element['workflow']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Update workflow'),
+        '#executes_submit_callback' => TRUE,
+        '#submit' => array('workflowfield_field_widget_form_submit'),
+        );
+    }
+
     return $element;
   }
 
@@ -261,25 +283,23 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   public function submit(array $form, array &$form_state, array &$items = array(), $force = FALSE) {
     global $user;
 
-    $entity = $form['#node']; // @todo: deprecated in D8.
-    $entity_type = isset($form['#node_type']) ? $form['#node_type'] : ''; // custom setting.
-
+    $entity = $this->entity;
+    $entity_type = $this->entity_type;
     $field = $this->field;
     $old_sid = workflow_node_current_state($entity, $field);
-    $new_sid = $items[0]['workflow']['workflow_options'];
+    $new_sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $items[0]['value'];
 
     // The scheduling options may not be set in formElement(), e.g, on 'node add' pages.
     $scheduled = isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0;
-    $schedule = isset($items[0]['workflow']['workflow_scheduled_date_time']) ? (object) $items[0]['workflow']['workflow_scheduled_date_time'] : NULL;
-    $comment = $items[0]['workflow']['workflow_comment'];
+    $schedule = isset($items[0]['workflow']['workflow_scheduled_date']) ? (object) $items[0]['workflow'] : NULL;
+    $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
 
+    $state = new WorkflowState($new_sid);
     if ($force) {
-      // @todo: move this function to class.
-      $options = workflow_get_other_states_by_sid($new_sid);
+      $options = $state->getWorkflow()->getOptions();
     }
     else {
-      $state = new WorkflowState($new_sid);
-      $options = workflow_field_choices($entity, $force, $state);
+      $options = $state->getOptions($entity, $force);
     }
 
     // Only execute if the new state is a valid choice.
@@ -328,7 +348,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           if ($state = new WorkflowState($new_sid)) {
             $t_args = array(
                 '@node_title' => $entity->title,
-                '%state_name' => t($state->getName()),
+                '%state_name' => t($state->label()),
                 '%scheduled_date' => format_date($stamp),
                 );
             watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,

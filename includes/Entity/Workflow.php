@@ -87,6 +87,10 @@ class Workflow {
     return $this->creation_state;
   }
 
+  function getCreationSid() {
+    return $this->creation_sid;
+  }
+
   /* Get the first valid state state, after the creation state.
    * Use getOptions(), because this does a access check.
    */
@@ -104,6 +108,26 @@ class Workflow {
       $sid = 0;
     }
     return new WorkflowState($sid);
+  }
+
+  /* 
+   * @Return
+   *   An array of WorflowState objects.
+   */
+  function getStates() {
+    return WorkflowState::getStates(0, $this->wid);
+  }
+
+  /* 
+   * @Return
+   *   All states in a Workflow, as an array of $key => $label.
+   */
+  function getOptions() {
+    $options = array();
+    foreach($this->getStates() as $state) {
+      $options[$state->value()] = $state->label();
+    }
+    return $options;
   }
 
   public function getSetting($key, array $field = array()) {
@@ -128,20 +152,14 @@ class Workflow {
   }
 
   /*
-   * Mimics Entity::getName().
+   * Mimics Entity API functions.
    *
-   * @see Entity::getName
    */
-  function getName() {
+  function label() {
     return $this->name;
   }
-
-  /*
-   * CRUD functions
-   */
-  public function createState($name, $options) { //return $sid; 
+  function value() {
+    return $this->wid;
   }
 
-  public function createTransition($from, $to) {
-  }
 }

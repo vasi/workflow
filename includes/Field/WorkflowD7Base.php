@@ -63,4 +63,19 @@ abstract class WorkflowD7Base {
 //    $this->entity_type = $entity_type;
 //  }
 
+  /*	
+   * Saves an entity.
+   *
+   * Usage: call this externally if the WorkflowItem isn't called from node_save/update itself, 
+   * E.g., from workflow_cron().
+   */
+  public function entitySave($entity_type, $entity) {
+    if ($entity_type == 'node') {
+      node_save($entity);
+    }
+    else {
+      entity_save($entity_type, $entity);
+    }
+  }
+
 }
