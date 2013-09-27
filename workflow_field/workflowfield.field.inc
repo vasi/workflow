@@ -41,8 +41,6 @@ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state,
 
 /**
  * Implements hook_field_settings_form().
- * 
- * @todo: 'allowed_values_string' should not be saved in settings upon submit.
  */
 function workflowfield_field_settings_form($field, $instance, $has_data) {
   $form = array();

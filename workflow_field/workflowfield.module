@@ -4,6 +4,26 @@
  * Support workflows made up of arbitrary states.
  */
 
+// The name of the Workfow form and function, to be used in various callbacks.
+define('WORKFLOWFIELD_FORM', 'workflowfield_field_widget_form');
+
 module_load_include('inc', 'workflowfield', 'workflowfield.field');
 module_load_include('inc', 'workflowfield', 'workflowfield.widget');
-//module_load_include('inc', 'workflowfield', 'workflowfield.formatter');
+module_load_include('inc', 'workflowfield', 'workflowfield.formatter');
+
+/**
+ * Implements hook_forms().
+ *
+ * Allows the workflow form to be repeated multiple times on a page.
+ * See http://drupal.org/node/1970846.
+ * 
+ * This is called by the formatter, to show the widget.
+ *
+ */
+function workflowfield_forms($form_id, $args) {
+  $forms = array();
+  if (strpos($form_id, WORKFLOWFIELD_FORM) !== FALSE) {
+    $forms[$form_id] = array('callback' => WORKFLOWFIELD_FORM);
+  }
+  return $forms;
+}

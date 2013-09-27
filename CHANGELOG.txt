@@ -191,3 +191,4 @@ Issue #2095467 by johnv: Moved deprecated functions for class WorkflowScheduledT
 Issue #2071733 by johnv: Changed workflow_show_form() to work with both old and new workflow objects.
 Issue #2019345 by johnv: Updated Workflow classes to show Workflow Form also on Node View page.
 Issue #2019345 by johnv: Fixed some issues in workflow.module file when using WorkflowField submodule.
+Issue #2019345 by johnv: Changed workflow_field submodule to support Workflow Form on Node view page.
