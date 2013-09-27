@@ -179,7 +179,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       '#type' => 'checkboxes',
       '#options' => workflow_admin_ui_get_roles(),
       '#title' => t('Workflow history permissions'),
-      '#default_value' => explode(',', $workflow->tab_roles),
+      '#default_value' => $settings['history']['roles'],
       '#description' => t('Select any roles that should have access to the workflow tab on nodes that have a workflow.'),
     );
 
