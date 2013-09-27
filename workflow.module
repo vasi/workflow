@@ -299,7 +299,7 @@ function workflow_transition($node, $new_sid, $force = FALSE, $field = NULL) {
         if ($state = new WorkflowState($new_sid)) {
           $t_args = array(
               '@node_title' => $node->title,
-              '%state_name' => t($state->getName()),
+              '%state_name' => t($state->label()),
               '%scheduled_date' => format_date($stamp),
               );
           watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
@@ -620,6 +620,11 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   $nid = isset($node->nid) ? $node->nid : 0;
   $choices = array();
 
+  if (!$node) {
+    // If no node is given, no result (e.g., on a Field settings page)
+    return $choices;
+  }
+
   if ($nid && isset($cache[$nid][$force][$sid])) {
     // Do not cache new nodes (for security reasons).
     // @todo: add support for $entity_type.
@@ -891,7 +896,7 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
 
 /**
  * Get a specific workflow, given a Node type. Only one workflow is possible per node type.
- * @param $node_type
+ * @param $entity_bundle
  *   A node type (a.k.a. entity bundle).
  * @param $entity_type
  *   An entity type. This is passed when also the Field API must be checked.
@@ -899,14 +904,13 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
  * @return
  *   A workflow standard class, or FALSE if no workflow is retrieved.
  */
-function workflow_get_workflows_by_type($node_type, $entity_type = '') {
+function workflow_get_workflows_by_type($entity_bundle, $entity_type = '') {
   static $map = array();
   $wid = 0;
 
-  if (!isset($map[$node_type]) ) {
-
+  if (!isset($map[$entity_type][$entity_bundle]) ) {
     // Check the Node API first: Get $wid.
-    $type_map = workflow_get_workflow_type_map_by_type($node_type);
+    $type_map = workflow_get_workflow_type_map_by_type($entity_bundle);
     if ($type_map) {
       // Get the workflow by wid.
       $wid = $type_map->wid;
@@ -914,7 +918,6 @@ function workflow_get_workflows_by_type($node_type, $entity_type = '') {
 
     // If $entity_type is set, we must check Field API. Data is already cached by core.
     if (!$wid && isset($entity_type)) {
-      $entity_bundle = $node_type;
       foreach( field_info_instances($entity_type, $entity_bundle) as $field_name => $field) {
         $field_info = field_info_field($field['field_name']);
         $field_type = $field_info['type'];
@@ -925,13 +928,13 @@ function workflow_get_workflows_by_type($node_type, $entity_type = '') {
     }
 
     // Set the cache with a workflow object.
-    $map[$node_type] = FALSE;
+    $map[$entity_type][$entity_bundle] = FALSE;
     if ($wid) {
-      $map[$node_type] = $workflow = workflow_get_workflows_by_wid($wid);
+      $map[$entity_type][$entity_bundle] = $workflow = workflow_get_workflows_by_wid($wid);
     }
   }
 
-  return $map[$node_type];
+  return $map[$entity_type][$entity_bundle];
 }
 
 /**
@@ -1236,6 +1239,8 @@ function workflow_get_workflow_states_by_type($type) {
 
 /**
  * Get all states in the system, with options to filter, only where a workflow exists.
+ *
+ * @deprecated: replaced by WorkflowState::getStates($sid)
  */
 function workflow_get_workflow_states($options = array()) {
   // Build the basic query.
@@ -1266,6 +1271,9 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
   return workflow_get_workflow_states($options);
 }
 
+/*
+ * @deprecated: replaced by WorkflowState->getWorkflow()
+ */
 function workflow_get_workflow_by_sid($sid) {
   return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",
     array(':sid' => $sid))->fetchObject();
@@ -1273,6 +1281,8 @@ function workflow_get_workflow_by_sid($sid) {
 
 /**
  * Given a sid, return a state. Sids are a unique id.
+ *
+ * @deprecated: replaced by WorkflowState::getStates($sid)
  */
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
   static $sids = array();
@@ -1285,6 +1295,8 @@ function workflow_get_workflow_states_by_sid($sid, $options = array()) {
 
 /**
  * Given a sid, return all other states in that workflow.
+ *
+ * @deprecated: replaced by WorkflowState::getStates($sid)
  */
 function workflow_get_other_states_by_sid($sid) {
   $query = "SELECT sid, state "
@@ -1677,6 +1689,9 @@ function workflow_show_form($sid, $workflow, $choices) {
  *   A State ID.
  */
 function _workflow_get_sid_by_items($items) {
+  // On a normal widget:
   $sid = isset($items[0]['value']) ? $items[0]['value'] : 0;
+  // On a workflow form widget:
+  $sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $sid;
   return $sid;
 }
