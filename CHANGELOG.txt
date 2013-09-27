@@ -174,7 +174,7 @@ Issue #2080857 by johnv: Added Field API support for workflow_tab_page().
 Issue #2080915 by NancyDru: Signal Rules on reversion.
 Issue #2082225 by johnv: Changed interface of hook_workflow() (new optional parameter) to support Field API.
 Issue #2082247 by johnv: Added caching to workflow_field_choices().
-Issue #1357406 by pikku-h: Fixed Cron Scheduling keeps repeating if Old state and New state are the same.
+Issue #1357406 by pikku-h: Fixed Cron Scheduling keeps repeating if Old state and New state are the same.	
 Issue #2019345 by johnv: Create a Workflow Field, with basic options.
 Issue #2087851 by ttkaminski: Fixed failing upgrade 7001 due to missing function: workflow_get_workflows().
 Issue #2042345 by arpeggio, rickdonohoe, johnv: Added dependency on "Views>3.3" to Workflow Views submodule.
@@ -192,3 +192,4 @@ Issue #2071733 by johnv: Changed workflow_show_form() to work with both old and 
 Issue #2019345 by johnv: Updated Workflow classes to show Workflow Form also on Node View page.
 Issue #2019345 by johnv: Fixed some issues in workflow.module file when using WorkflowField submodule.
 Issue #2019345 by johnv: Changed workflow_field submodule to support Workflow Form on Node view page.
+Issue #2019345 by johnv: Moved Node specific function workflow_forms() from workflow.module to workflow.node.inc.

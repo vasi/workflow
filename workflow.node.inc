@@ -18,6 +18,22 @@ function theme_workflow_current_state($variables) {
 }
 
 /**
+ * Implements hook_forms().
+ *
+ * Allows the workflow tab form to be repeated multiple times on a page.
+ * See http://drupal.org/node/1970846.
+ * This is for Workflow Node. Workflow_field implements the same hook again.
+ */
+function workflow_forms($form_id, $args) {
+  $forms = array();
+
+  if (strpos($form_id, 'workflow_tab_form_') !== FALSE) {
+    $forms[$form_id] = array('callback' => 'workflow_tab_form');
+  }
+  return $forms;
+}
+
+/**
  * Implements hook_node_load().
  * @TODO: Consider replacing with hook_entity_load().
  */
