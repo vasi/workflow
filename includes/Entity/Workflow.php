@@ -15,6 +15,7 @@ class Workflow {
   public $options = array();
   private $creation_sid = 0;
   private $creation_state = NULL;
+  private $item = NULL; // helper for workflow_get_workflows_by_type() to get/set the Item of a particular Workflow.
 
   public function __construct($wid = 0) {
     if (!$wid) {
@@ -149,6 +150,18 @@ class Workflow {
       default:
         drupal_set_message( 'Setting Workflow::getSetting(' . $key . ') does not exist', 'error');
     }
+  }
+
+  /*
+   * Helper function for workflow_get_workflows_by_type() to get/set the Item of a particular Workflow.
+   * It loads the Workflow object with the particular Field Instance data.
+   * @todo: this is not robust: 1 Item has 1 Workflow; 1 Workflow may have N Items (fields)
+   */
+  public function getWorkflowItem(WorkflowItem $item = NULL) {
+    if ($item) {
+      $this->item = $item;
+    }
+    return $this->item;
   }
 
   /*

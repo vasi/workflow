@@ -53,7 +53,7 @@ class WorkflowState {
    * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
    * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates($sid)
    */
-  public static function getStates($sid = 0, $wid = 0, $options = array()) {
+  public static function getStates($sid = 0, $wid = 0) {
     if ($sid && isset(self::$states[$sid])) {
       // Only 1 is requested and cached: return this one.
       return array($sid => self::$states[$sid]);
@@ -61,12 +61,7 @@ class WorkflowState {
 
     // Build the query.
     $query = db_select('workflow_states', 'ws');
-    $query->leftJoin('workflows', 'w', 'w.wid = ws.wid');
     $query->fields('ws');
-    $query->addField('w', 'wid');
-    $query->addField('w', 'name');
-//    @todo: add "WHERE status = 1 " in some calls 
-//    $query->condition('ws.' . 'status', '1');
 
     if ($wid) {
       $query->condition('ws.wid', $wid);
@@ -105,6 +100,10 @@ class WorkflowState {
       $this->workflow = new Workflow($this->wid);
     }
     return $this->workflow;
+  }
+
+  function isActive() {
+    return (bool) $this->status;
   }
 
   /*

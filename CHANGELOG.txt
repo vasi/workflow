@@ -194,3 +194,4 @@ Issue #2019345 by johnv: Fixed some issues in workflow.module file when using Wo
 Issue #2019345 by johnv: Changed workflow_field submodule to support Workflow Form on Node view page.
 Issue #2019345 by johnv: Moved Node specific function workflow_forms() from workflow.module to workflow.node.inc.
 Issue #2019345 by johnv: Fixed WorkflowItem did not save tab_roles properly on Field Settings page.
+Issue #2019345 by johnv: Added some functions to the Workflow Entity classes.

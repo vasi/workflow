@@ -31,8 +31,12 @@ abstract class WorkflowD7Base {
     
   }
 
-  public function getFieldInfo() {
+  public function getField() {
     return $this->field;
+  }
+
+  public function getInstance() {
+    return $this->instance;
   }
 
   protected function getSettings() {
