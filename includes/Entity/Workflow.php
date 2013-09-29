@@ -47,6 +47,25 @@ class Workflow {
     return $workflows[$wid];
   }
 
+/* 
+ * A Factory function to get a Workflow from the database by Name.
+ * This is only called by CRUD functions in workflow.features.inc
+ * More than likely in prep for an import / export action.
+ * Therefore we don't want to fiddle with the response.
+ * @todo D8: return a proper Workflow object instead of a stdClass.
+ */ 
+  public static function getWorkflowByName($name, $unserialize_options = FALSE) {
+    foreach($workflows = self::getWorkflows() as $workflow) {
+      if ($name == $workflow->getName()) {
+        if (!$unserialize_options) {
+          $workflow->options = serialize($workflow->options);
+        }
+        return $workflow;
+      }
+    }
+    return FALSE;
+  }
+
   public static function getWorkflows($wid = 0, $reset = FALSE) {
     if ($reset) {
       self::$workflows = array();
@@ -168,11 +187,13 @@ class Workflow {
    * Mimics Entity API functions.
    *
    */
-  function label() {
+  function label($langcode = NULL) {
+    return t($this->name, $args = array(), $options = array('langcode' => $langcode));
+  }
+  function getName() {
     return $this->name;
   }
   function value() {
     return $this->wid;
   }
-
 }

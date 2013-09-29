@@ -596,9 +596,9 @@ function workflow_admin_ui_transitions_form_validate($form, $form_state) {
   $workflow = $form['#workflow'];
 
   // Make sure 'author' is checked for (creation) -> [something].
-  $creation_id = workflow_get_creation_state_by_wid($wid);
-  if (isset($form_state['values']['transitions'][$creation_id]) && is_array($form_state['values']['transitions'][$creation_id])) {
-    foreach ($form_state['values']['transitions'][$creation_id] as $to => $roles) {
+  $creation_sid = $workflow->getCreationSid();
+  if (isset($form_state['values']['transitions'][$creation_sid]) && is_array($form_state['values']['transitions'][$creation_sid])) {
+    foreach ($form_state['values']['transitions'][$creation_sid] as $to => $roles) {
       if ($roles['author']) {
         $author_has_permission = TRUE;
         break;
@@ -927,7 +927,7 @@ function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
       );
 
     // Don't let the creation state change weight or status or name.
-    if ($state->sid == $workflow->creation_state) {
+    if ($state->sid == $workflow->getCreationSid()) {
       $form['states'][$state->sid]['weight']['#value'] = -50;
       $form['states'][$state->sid]['sysid']['#value'] = 1;
       $form['states'][$state->sid]['state']['#disabled'] = TRUE;
@@ -1153,7 +1153,7 @@ function workflow_admin_ui_types_form($form) {
 
     // Also check for transitions at least out of the creation state.
     // This always gets at least the "from" state.
-    $transitions = workflow_allowable_transitions($data->creation_state, 'to');
+    $transitions = workflow_allowable_transitions($data->getCreationSid(), 'to');
     if (count($transitions) == 1) {
       // That's all, so let's remind them to create some transitions.
       drupal_set_message(t('%workflow has no transitions defined, so it cannot be assigned to content yet.',

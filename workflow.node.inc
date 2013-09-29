@@ -5,7 +5,7 @@
  */
 
 /**
- * Theme the current workflow state.
+ * Theme the current workflow state as top line of History tab.
  */
 function theme_workflow_current_state($variables) {
   $state = $variables['state'];
@@ -54,7 +54,7 @@ function workflow_node_load($nodes, $types) {
 
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $node->workflow_wid = $workflow->wid;
-      $node->workflow = $workflow->creation_state;
+      $node->workflow = $workflow->getCreationSid();
     }
 
     // Nodes that existed before the workflow don't have any history.

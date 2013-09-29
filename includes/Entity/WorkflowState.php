@@ -113,7 +113,10 @@ class WorkflowState {
    * Mimics Entity API functions.
    *
    */
-  function label() {
+  function label($langcode = NULL) {
+    return t($this->state, $args = array(), $options = array('langcode' => $langcode));
+  }
+  function getName() {
     return $this->state;
   }
   function value() {

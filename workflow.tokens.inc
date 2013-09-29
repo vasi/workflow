@@ -27,7 +27,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         // The node is being submitted but the form data has not been saved to the database yet,
         // so we set the token values from the workflow form fields.
         $sid = $node->workflow;
-        $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : workflow_get_creation_state_by_wid($workflow->wid);
+        $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : $workflow->getCreationSid();
         $user_name = $node->uid ? (isset($node->name) ? $node->name
           : variable_get('anonymous', 'Anonymous'))
           : variable_get('anonymous', 'Anonymous');
@@ -44,12 +44,12 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
             $sid = workflow_get_first_state($workflow, $choices);
-            $old_sid = workflow_get_creation_state_by_wid($workflow->wid);
+            $old_sid = $workflow->getCreationSid();
           }
           else {
             // What to choose?
             $sid = $node->workflow;
-            $old_sid = $workflow->creation_state;
+            $old_sid = $workflow->getCreationSid();
           }
           $sid = workflow_get_workflow_states_by_sid($sid)->sid;
           $old_sid = workflow_get_workflow_states_by_sid($old_sid)->sid;
