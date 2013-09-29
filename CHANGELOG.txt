@@ -196,3 +196,4 @@ Issue #2019345 by johnv: Moved Node specific function workflow_forms() from work
 Issue #2019345 by johnv: Fixed WorkflowItem did not save tab_roles properly on Field Settings page.
 Issue #2019345 by johnv: Added some functions to the Workflow Entity classes.
 Issue #2019345 by johnv: Changed calls to Workflow object in various includes.
+Issue #2019345 by johnv: Added Workflow Field support in History tab page.
