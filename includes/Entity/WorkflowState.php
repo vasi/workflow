@@ -66,10 +66,6 @@ class WorkflowState {
     if ($wid) {
       $query->condition('ws.wid', $wid);
     }
-    // Spin through the options and add conditions.
-    foreach ($options as $column => $value) {
-      $query->condition('ws.' . $column, $value);
-    }
 
     // Set the sorting order.
     $query->orderBy('ws.wid');
