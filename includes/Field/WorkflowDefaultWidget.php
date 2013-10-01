@@ -40,7 +40,9 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   }
 
   /**
+   * Implements hook_field_widget_settings_form() --> WidgetInterface::settingsForm().
    * {@inheritdoc}
+   *
    * The Widget Instance has no settings. To have a uniform UX, all settings are done on the Field level.
    */
   public function settingsForm(array $form, array &$form_state, $has_data) {
@@ -49,6 +51,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   }
 
   /**
+   * Implements hook_field_widget_form --> WidgetInterface::formElement().
    * {@inheritdoc}
    *
    * Be careful: this widget may be shown in very different places. Test carefully!!
@@ -106,7 +109,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $options = $state->getOptions($entity);
 
-    // Get the scheduling info. This influences the current sid.
+    // Get the scheduling info. This may change the current $sid on the Form.
     $scheduled = '0';
     $timestamp = REQUEST_TIME;
     $comment = NULL;
@@ -264,7 +267,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   }
 
   /*
-   * Implements workflow_transition() -> submit() 
+   * Implements workflow_transition() -> WorkflowDefaultWidget::submit() 
    * Overrides submit(array $form, array &$form_state).
    * Contains 2 extra parameters for D7
    * @param array $items
@@ -286,89 +289,105 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity = $this->entity;
     $entity_type = $this->entity_type;
     $field = $this->field;
+
+    // Massage the items, depending on the type of widget.
+    // @todo: use MassageFormValues($values, $form, $form_state).
     $old_sid = workflow_node_current_state($entity, $field);
     $new_sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $items[0]['value'];
+    $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
+    $transition = $this->getTransition($entity, $old_sid, $new_sid, $new_items);
 
-    // The scheduling options may not be set in formElement(), e.g, on 'node add' pages.
-    $scheduled = isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0;
-    $schedule = isset($items[0]['workflow']['workflow_scheduled_date']) ? (object) $items[0]['workflow'] : NULL;
-    $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
+    // Now the data is captured in the Transition, restore the default values for Workflow Field.
+    $items = array();
+    $items[0]['value'] = $old_sid;
 
-    $state = new WorkflowState($new_sid);
-    if ($force) {
-      $options = $state->getWorkflow()->getOptions();
+    if ($error = $transition->isAllowed($force)) {
+      drupal_set_message($error, 'error');
+      return;
+    }
+
+    if (!$transition->isScheduled()) {
+      // It's an immediate change. Do the transition.
+      // - validate option; add hook to let other modules change comment.
+      // - add to history; add to watchdog
+      // return the new value of the sid. (Execution may fail and return the old Sid.)
+      $new_sid = workflow_execute_transition($entity, $new_sid, $transition->comment, $force = FALSE, $field, $old_sid);
+
+      // Restore the default values for Workflow Field.
+      $items = array();
+      $items[0]['value'] = $new_sid;
     }
     else {
-      $options = $state->getOptions($entity, $force);
-    }
+      // A scheduled transition must only be saved to the database. The entity is not changed.
+      $transition->save();
 
-    // Only execute if the new state is a valid choice.
-    if ($new_sid && array_key_exists($new_sid, $options)) {
-      if (!$scheduled) {
-        // It's an immediate change. Do the transition.
-        // - validate option; add hook to let other modules change comment.
-        // - add to history; add to watchdog
-        // return the new value of the sid. (execution may fail.)
-        $new_sid = workflow_execute_transition($entity, $new_sid, $comment, $force = FALSE, $field, $old_sid);
-
-        // Restore the default values for Workflow Field.
-        $items = array();
-        $items[0]['value'] = $new_sid;
-      }
-      else {
-        // Schedule the time to change the state.
-        if ($schedule->workflow_scheduled_date['day'] < 10) {
-          $schedule->workflow_scheduled_date['day'] = '0' .
-          $schedule->workflow_scheduled_date['day'];
-        }
-        if ($schedule->workflow_scheduled_date['month'] < 10) {
-          $schedule->workflow_scheduled_date['month'] = '0' .
-          $schedule->workflow_scheduled_date['month'];
-        }
-        if (!isset($schedule->workflow_scheduled_hour)) {
-          $schedule->workflow_scheduled_hour = '00:00';
-        }
-
-        $scheduled_date_time =
-            $schedule->workflow_scheduled_date['year']
-          . $schedule->workflow_scheduled_date['month']
-          . $schedule->workflow_scheduled_date['day']
-          . ' '
-          . $schedule->workflow_scheduled_hour
-          . ' '
-          . $schedule->workflow_scheduled_timezone
-          ;
-
-        if ($stamp = strtotime($scheduled_date_time)) {
-          // Clear previous entries and insert.
-          $scheduled_transition = new WorkflowScheduledTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
-          $scheduled_transition->save();
-
-          // Get name of state.
-          if ($state = new WorkflowState($new_sid)) {
-            $t_args = array(
-                '@node_title' => $entity->title,
-                '%state_name' => t($state->label()),
-                '%scheduled_date' => format_date($stamp),
-                );
-            watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
-              WATCHDOG_NOTICE, l('view', 'node/' . $entity->nid . '/workflow'));
-            drupal_set_message(t('@node_title is scheduled for state change to %state_name on %scheduled_date',
-              $t_args));
-          }
-        }
-
-        // Restore the default values for Workflow Field.
-        $items = array();
-        $items[0]['value'] = $old_sid;
+      // Get name of state.
+      if ($state = new WorkflowState($new_sid)) {
+        $t_args = array(
+            '@node_title' => $entity->title,
+            '%state_name' => t($state->label()),
+            '%scheduled_date' => format_date($transition->scheduled),
+            );
+        watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
+          WATCHDOG_NOTICE, l('view', 'node/' . $entity->nid . '/workflow'));
+        drupal_set_message(t('@node_title is scheduled for state change to %state_name on %scheduled_date',
+          $t_args));
       }
     }
   }
 
+  /*
+   * Implements hook_field_widget_error --> WidgetInterface::errorElement().
+   */
   public function errorElement(array $element, ConstraintViolationInterface $violation, array $form, array &$form_state) {
   }
 
   public function settingsSummary() {
+  }
+
+//  public function massageFormValues(array $values, array $form, array &$form_state) {
+//  }
+
+  /*
+   * Extract a WorkflowTransition or a WorkflowScheduledTransition from the form.
+   * @todo: move validation and messages to errorElement();
+   */
+  function getTransition($entity, $old_sid, $new_sid, array $form_data) {
+    global $user;
+
+    $scheduled = isset($form_data['workflow_scheduled']) ? $form_data['workflow_scheduled'] : 0;
+    $comment = isset($form_data['workflow_comment']) ? $form_data['workflow_comment'] : '';
+
+    if (!$scheduled) {
+      $stamp = REQUEST_TIME;
+      $transition = new WorkflowTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+    }
+    else {
+      // Schedule the time to change the state.
+      // If $form_data is passed, use plain values; if $form is passed, use fieldset 'workflow_scheduled_date_time'.
+      $schedule = isset($form_data['workflow_scheduled_date_time']) ? $form_data['workflow_scheduled_date_time'] : $form_data;
+      if (!isset($schedule['workflow_scheduled_hour'])) {
+        $schedule['workflow_scheduled_hour'] = '00:00';
+      }
+
+      $scheduled_date_time =
+          $schedule['workflow_scheduled_date']['year']
+        . substr('0' . $schedule['workflow_scheduled_date']['month'], -2, 2)
+        . substr('0' . $schedule['workflow_scheduled_date']['day'], -2, 2)
+        . ' '
+        . $schedule['workflow_scheduled_hour']
+        . ' '
+        . $schedule['workflow_scheduled_timezone']
+        ;
+
+      if ($stamp = strtotime($scheduled_date_time)) {
+        $transition = new WorkflowScheduledTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+      }
+      else {
+        $transition = NULL;
+      }
+    }
+    return $transition;
   }
 
   /**

@@ -197,3 +197,4 @@ Issue #2019345 by johnv: Fixed WorkflowItem did not save tab_roles properly on F
 Issue #2019345 by johnv: Added some functions to the Workflow Entity classes.
 Issue #2019345 by johnv: Changed calls to Workflow object in various includes.
 Issue #2019345 by johnv: Added Workflow Field support in History tab page.
+Issue #2019345 by johnv: Added new WorkflowTransition class.

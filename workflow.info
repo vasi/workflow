@@ -6,8 +6,11 @@ files[] = workflow.pages.inc
 
 files[] = includes/Entity/Workflow.php
 files[] = includes/Entity/WorkflowState.php
+files[] = includes/Entity/WorkflowTransition.php
 files[] = includes/Entity/WorkflowScheduledTransition.php
+
 files[] = includes/Field/WorkflowD7Base.php
 files[] = includes/Field/WorkflowItem.php
 files[] = includes/Field/WorkflowDefaultWidget.php
+
 files[] = includes/Test/WorkflowUnitTest.test

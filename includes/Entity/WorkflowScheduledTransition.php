@@ -5,21 +5,13 @@
  * Contains workflow\includes\Entity\WorkflowScheduledTransition.
  */
 
-class WorkflowScheduledTransition {
-  public $nid; // @todo: make private. Use getEntity() instead.
-  private $field_name = ''; // @todo: add support for Fields in ScheduledTransition.
+/*
+ * Implements a scheduled transition, as shown on Workflow form.
+ */
+class WorkflowScheduledTransition extends WorkflowTransition {
+  public $hid;
+  public $scheduled; // @todo: replace by $stamp;
 
-  public $old_sid;
-  public $new_sid;
-  private $entity;
-  public $sid; // @todo: remove $sid in D8: replaced by $new_sid.
-
-  /**
-   * Constructor
-   * No arguments passed, when loading from DB.
-   * All arguments must be passed, when creating an object programmatically.
-   * One argument $entity may be passed, only to directly call delete() afterwards.
-   */
   public function __construct($entity = NULL, $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
     if ($entity && $old_sid && $new_sid && $stamp) {
       $this->entity = $entity;
@@ -58,10 +50,10 @@ class WorkflowScheduledTransition {
     return $results->fetchAll(PDO::FETCH_CLASS, 'WorkflowScheduledTransition');
   }
 
-/**
- * Given a timeframe, get all scheduled transitions.
- * @todo: deprecate: workflow_get_workflow_scheduled_transition_by_between() --> WorkflowScheduledTransition::loadBetween()
- */
+  /**
+   * Given a timeframe, get all scheduled transitions.
+   * @todo: deprecate: workflow_get_workflow_scheduled_transition_by_between() --> WorkflowScheduledTransition::loadBetween()
+   */
   public static function LoadBetween($start = 0, $end = REQUEST_TIME) {
     $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment ' .
                         'FROM {workflow_scheduled_transition} ' .
@@ -132,11 +124,14 @@ class WorkflowScheduledTransition {
   }
 
   /*
-   * Get the Transitions $entity.
-   * @todo: support other Entity types then only 'node'.
+   * Functions, common to the WorkflowTransitions.
    */
-  public function getEntity() {
-    return node_load($this->nid);
-  }
+
+  public function isScheduled() {
+    return TRUE;
+  } 
+  public function isExecuted() {
+    return FALSE;
+  } 
 
 }
