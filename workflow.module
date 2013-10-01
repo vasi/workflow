@@ -241,6 +241,8 @@ function workflow_features_api() {
  * Validate target state and either execute a transition immediately or schedule
  * a transition to be executed later by cron.
  *
+ * @deprecated: workflow_transition --> WorkflowDefaultWidget::submit()
+ *
  * @param object $node
  * @param string $sid
  *   An integer; the target state ID.
@@ -249,67 +251,14 @@ function workflow_features_api() {
  * @param array $field
  *   The field structure for the operation.
  */
-function workflow_transition($node, $new_sid, $force = FALSE, $field = NULL) {
-  global $user;
-  if ($force) {
-    $choices = workflow_get_other_states_by_sid($new_sid);
-  }
-  else {
-    $state = workflow_get_workflow_states_by_sid($new_sid);
-    $choices = workflow_field_choices($node, $force, $state);
-  }
-
-  // Only execute if the new state is a valid choice.
-  if ($new_sid && array_key_exists($new_sid, $choices)) {
-    $node->workflow_scheduled = isset($node->workflow_scheduled) ? $node->workflow_scheduled : FALSE;
-    if (!$node->workflow_scheduled) {
-      // It's an immediate change. Do the transition.
-      workflow_execute_transition($node, $new_sid, (isset($node->workflow_comment) ? $node->workflow_comment : NULL), $force, $field);
-    }
-    else {
-      // Schedule the time to change the state.
-      $old_sid = workflow_node_current_state($node, $field);
-      if ($node->workflow_scheduled_date['day'] < 10) {
-        $node->workflow_scheduled_date['day'] = '0' .
-        $node->workflow_scheduled_date['day'];
-      }
-      if ($node->workflow_scheduled_date['month'] < 10) {
-        $node->workflow_scheduled_date['month'] = '0' .
-        $node->workflow_scheduled_date['month'];
-      }
-      if (!isset($node->workflow_scheduled_hour)) {
-        $node->workflow_scheduled_hour = '00:00';
-      }
-
-      $scheduled_date_time = $node->workflow_scheduled_date['year']
-        . $node->workflow_scheduled_date['month']
-        . $node->workflow_scheduled_date['day']
-        . ' '
-        . $node->workflow_scheduled_hour
-        . ' '
-        . $node->workflow_scheduled_timezone
-        ;
-
-      if ($stamp = strtotime($scheduled_date_time)) {
-        // Clear previous entries and insert.
-        $scheduled_transition = new WorkflowScheduledTransition($node, $old_sid, $new_sid, $user->uid, $stamp, $node->workflow_comment);
-        $scheduled_transition->save();
-
-        // Get name of state.
-        if ($state = new WorkflowState($new_sid)) {
-          $t_args = array(
-              '@node_title' => $node->title,
-              '%state_name' => t($state->label()),
-              '%scheduled_date' => format_date($stamp),
-              );
-          watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
-            WATCHDOG_NOTICE, l('view', 'node/' . $node->nid . '/workflow'));
-          drupal_set_message(t('@node_title is scheduled for state change to %state_name on %scheduled_date',
-            $t_args));
-        }
-      }
-    }
-  }
+function workflow_transition($node, $new_sid, $force = FALSE, $field = array()) {
+  $widget = new WorkflowDefaultWidget($field, $instance = array(), $entity_type = 'node', $entity = $node);
+  $form = array();
+  $form_state = array();
+  $items = array();
+  $items[0]['workflow'] = (array) $node;
+  $items[0]['workflow']['workflow_options'] = $new_sid;
+  $widget->submit($form, $form_state, $items, $force);
 }
 
 /**
@@ -682,6 +631,8 @@ function workflow_node_current_state($node, $field = NULL) {
 
   // Field API: Get current/previous state.
   if ($field) {
+    $field_name = $field['field_name'];
+    $entity_type = 'node'; // @todo: support other entity types (in workflow_node_current_state()).
     if (isset($node->is_new) && $node->is_new == TRUE) {
       // A new node.
       $workflow = workflow_get_workflows_by_wid($field['settings']['wid']);
@@ -690,10 +641,12 @@ function workflow_node_current_state($node, $field = NULL) {
     elseif (isset($node->original)) {
       // A changed node.
       $referenced_entity = $node->original;
-      // @todo: use proper function to support field_collection, translation, etc.
-      $entity_type = 'node'; // todo: support Entity API
-      $field_name = $field['field_name'];
       $items = field_get_items($entity_type, $referenced_entity, $field_name);
+      $sid = _workflow_get_sid_by_items($items);
+    }
+    else {
+      // A normal node, on Node view page / Workflow history tab.
+      $items = field_get_items($entity_type, $node, $field_name);
       $sid = _workflow_get_sid_by_items($items);
     }
   }

@@ -45,7 +45,11 @@ function workflowfield_field_widget_form(&$form, &$form_state, $field, $instance
     return $element;
   }
 
-  if (isset($form['#entity'])) {
+  if ($entity_type == 'comment') {
+    $entity_type = 'node'; // @todo: Comments are only possible on nodes?
+    $entity = $form['#node'];
+  }
+  elseif (isset($form['#entity'])) {
     // We are on an Entity add/edit page.
     $entity = $form['#entity'];
     $entity_type = 'node'; // @todo: add support for other entity types.
@@ -59,14 +63,6 @@ function workflowfield_field_widget_form(&$form, &$form_state, $field, $instance
     // We are on a Node View page, with self-added form.
     $entity = $element['#entity']; // this is comment on a comment form
     $entity_type = $element['#entity_type'];
-  }
-
-  if ($entity_type == 'comment') {
-    $entity = $element['entity']['#value']; // this is de comment on a comment form
-    $entity_type = $element['entity_type']['#value'];
-
-    $entity_type = 'node'; // @todo: Comments are only possible on nodes?
-    $entity = $form['#node'];
   }
 
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
@@ -125,15 +121,27 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
   }
 }
 
-/**
- * Form element validation handler for workflow element.
- */
-function workflowfield_field_widget_validate($element, &$form_state) {
-//  if ($element['#required'] && $element['#value'] == '_none') {
-//    form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
-//  }
-//  // Transpose selections from field => delta to delta => field, turning
-//  // multiple selected options into multiple parent elements.
-//  $items = _workflowfield_form_to_storage($element);
-//  form_set_value($element, $items, $form_state);
+function workflowfield_field_widget_form_submit($form, &$form_state) {
+  // Emulate the D7 arrays.
+  $field = $form_state['values']['workflow_field'];
+  $instance = $form_state['values']['workflow_instance'];
+  $entity_type = $form['#entity_type'];
+  $entity = $form['#entity'];
+  $items[0]['workflow'] = $form_state['values'];
+
+  // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
+  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+
+  // Remember: we are on a Node view, so the Widget->submit saves the scheduled transition, 
+  // but not the new state of the node itself.
+  // Widget::submit() returns the new value in a 'sane' state.
+  // Save the referenced entity, but only is transition succeeded, and is not scheduled.
+  $field_name = $field['field_name'];
+  $old_sid = _workflow_get_sid_by_items($entity->{$field_name}['und']);
+  $new_sid = _workflow_get_sid_by_items($items);
+  if ($old_sid != $new_sid) {
+      $entity->{$field_name}['und'][0]['value'] = $new_sid;
+      $widget->entitySave($entity_type, $entity);
+  }
 }

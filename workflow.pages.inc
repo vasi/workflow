@@ -14,7 +14,6 @@ function workflow_tab_page($node = NULL) {
 
   $entity_type = 'node'; // @todo: add support for other entity types.
   $entity_bundle = $node->type;  
-  $current_sid = workflow_node_current_state($node);
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
   $states = $workflow->getStates();
 
@@ -24,6 +23,7 @@ function workflow_tab_page($node = NULL) {
   // Probably this can be done in hook_forms(), but this is better to maintain.
   if ($workflow_item = $workflow->getWorkflowItem()) {
     // This is a Workflow Field workflow. 
+    $current_sid = workflow_node_current_state($node, $workflow_item->getField());
     $entity = $node;
     $field = $workflow_item->getField();
     $instance = $workflow_item->getInstance();
@@ -35,6 +35,7 @@ function workflow_tab_page($node = NULL) {
   }
   else {
     // This is a Workflow Node workflow. 
+    $current_sid = workflow_node_current_state($node, $field = array());
     $name = $states[$current_sid]->getName();
     $label = $states[$current_sid]->label();
     $output = theme('workflow_current_state', array('state' => $label,

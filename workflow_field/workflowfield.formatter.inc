@@ -36,7 +36,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   $list_entity->{$field_name}['und'][0]['value'] = $current_sid;
   // Render the field.
   $list_element = field_view_field($entity_type, $list_entity, $field_name, $list_display, $langcode);
-  
+
   if ($entity_type == 'comment' || // No Workflow form on a comment display. (Also, this avoids a lot of error messages.)
       $entity->status == 0 ||      // If the node is not published,  
       !user_access('show workflow state form') // IF user has no access to Workflow Form.
@@ -88,30 +88,4 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   $element += drupal_get_form(WORKFLOWFIELD_FORM . '_$entity->nid', $field, $instance, $langcode, $items, $delta, $element);
 
   return $element;
-}
-
-function workflowfield_field_widget_form_submit($form, &$form_state) {
-  // Emulate the D7 arrays.
-  $field = $form_state['values']['workflow_field'];
-  $instance = $form_state['values']['workflow_instance'];
-  $entity_type = $form['#entity_type'];
-  $entity = $form['#entity'];
-  $items[0]['workflow'] = $form_state['values'];
-
-  // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
-  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
-
-  // Remember: we are on a Node view, so the Widget->submit saves the scheduled transition, 
-  // but not the new state of the node itself.
-  // Widget::submit() returns the new value in a 'sane' state.
-  // Save the referenced entity, but only is transition succeeded, and is not scheduled.
-  $field_name = $field['field_name'];
-  $old_sid = _workflow_get_sid_by_items($entity->{$field_name}['und']);
-  $new_sid = _workflow_get_sid_by_items($items);
-  if ($old_sid != $new_sid) {
-      $entity->{$field_name}['und'] = $items;
-      $widget->entitySave($entity_type, $entity);
-  }
-
 }
