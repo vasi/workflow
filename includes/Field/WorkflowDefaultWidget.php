@@ -90,7 +90,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if (count($items)) {
       // A normal Node edit.
       $sid = _workflow_get_sid_by_items($items);
-      $state = new WorkflowState($sid);
     }
     else {
       // Node add or Comment add (which do not have a state, yet).
@@ -98,15 +97,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $items = field_get_items($entity_type, $entity, $field_name);
       if ($items) {
         $sid = _workflow_get_sid_by_items($items);
-        $state = new WorkflowState($sid);
       }
       else {
         // Node add page: No valid sid is given, so get the first state.
-        $state = $workflow->getFirstState($entity);
-        $sid = $state->sid;
+        $sid = $workflow->getFirstSid($entity);
       }
     }
 
+    $state = new WorkflowState($sid);
     $options = $state->getOptions($entity);
 
     // Get the scheduling info. This may change the current $sid on the Form.

@@ -37,9 +37,9 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   // Render the field.
   $list_element = field_view_field($entity_type, $list_entity, $field_name, $list_display, $langcode);
 
-  if ($entity_type == 'comment' || // No Workflow form on a comment display. (Also, this avoids a lot of error messages.)
-      $entity->status == 0 ||      // If the node is not published,  
-      !user_access('show workflow state form') // IF user has no access to Workflow Form.
+  if ($entity_type == 'comment' || // No Workflow form on a comment display, (Also, this avoids a lot of error messages.)
+      $entity->status == 0 ||      // or if the entity is not published,  
+      !user_access('show workflow state form') // or if the user has no access to Workflow Form.
       ) {
     return $list_element;
   }

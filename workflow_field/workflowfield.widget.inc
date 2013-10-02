@@ -114,7 +114,7 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
     else {
       // A node add page.
       $workflow = Workflow::getWorkflow($wid);
-      $current_sid = $workflow->getFirstState($entity)->sid;
+      $current_sid = $workflow->getFirstSid($entity);
     }
 
     $element['#default_value'] = $current_sid;
@@ -133,8 +133,8 @@ function workflowfield_field_widget_form_submit($form, &$form_state) {
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
   $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
-  // Remember: we are on a Node view, so the Widget->submit saves the scheduled transition, 
-  // but not the new state of the node itself.
+  // Remember: we are on an Entity view page, so the Widget->submit saves the scheduled transition, 
+  // but not the new state of the entity itself.
   // Widget::submit() returns the new value in a 'sane' state.
   // Save the referenced entity, but only is transition succeeded, and is not scheduled.
   $field_name = $field['field_name'];
