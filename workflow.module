@@ -700,37 +700,6 @@ function workflow_transition_allowed($tid, $role = NULL) {
 }
 
 /**
- * Return the ID of the creation state for this workflow.
- * @deprecated: workflow_get_creation_state_by_wid($wid) --> $workflow->getCreationSid().
- *
- * @param $wid
- *   The ID of the workflow.
- */
-function workflow_get_creation_state_by_wid($wid) {
-  $sid = 0;
-  if ($workflow = Workflow::load($wid)) {
-    $sid = $workflow->getCreationSid();
-  }
-  return $sid;
-}
-
-/**
- * Return the ID of the creation state given a content type.
- *
- * @param $type
- *   The type of the content.
- * 
- * @todo: deprecate workflow_get_creation_state_by_type() in future version. It can be replaced with inner code.
- */
-function workflow_get_creation_state_by_type($type) {
-  $sid = FALSE;
-  if ($workflow = workflow_get_workflows_by_type($type)) {
-    $sid = $workflow->getCreationSid();
-  }
-  return $sid;
-}
-
-/**
  * DB functions. All SQL in workflow.module should be put into its own function and placed here.
  * This encourages good separation of code and reuse of SQL statements. It *also* makes it easy to
  * make schema updates and changes without rummaging through every single inch of code looking for SQL.

@@ -44,6 +44,35 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
 }
 
 /**
+ * Return the ID of the creation state for this workflow.
+ * @deprecated: workflow_get_creation_state_by_wid($wid) --> $workflow->getCreationSid().
+ *
+ * @param $wid
+ *   The ID of the workflow.
+ */
+function workflow_get_creation_state_by_wid($wid) {
+  $sid = 0;
+  if ($workflow = Workflow::load($wid)) {
+    $sid = $workflow->getCreationSid();
+  }
+  return $sid;
+}
+
+/**
+ * Return the ID of the creation state given a content type.
+ *
+ * @param $type
+ *   The type of the content.
+ */
+function workflow_get_creation_state_by_type($type) {
+  $sid = FALSE;
+  if ($workflow = workflow_get_workflows_by_type($type)) {
+    $sid = $workflow->getCreationSid();
+  }
+  return $sid;
+}
+
+/**
  * Given a wid, delete the workflow and its data.
  *
  * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().
