@@ -43,7 +43,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           if ($choices = workflow_field_choices($node)) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
-            $sid = workflow_get_first_state($workflow, $choices);
+            $sid = $workflow->getFirstSid($node);
             $old_sid = $workflow->getCreationSid();
           }
           else {

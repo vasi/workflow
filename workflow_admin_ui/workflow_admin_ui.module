@@ -163,8 +163,8 @@ function workflow_admin_ui_add_form_validate($form, &$form_state) {
 
   // Make sure workflow name is not a duplicate.
   $workflows = array();
-  foreach (workflow_get_workflows() as $data) {
-    $workflows[$data->wid] = check_plain(t($data->name));
+  foreach (Workflow::getWorkflows() as $workflow) {
+    $workflows[$workflow->wid] = check_plain(t($workflow->getName())); //@todo: must we use t() here?
   }
   if (!empty($workflows)) {
     $workflows = array_flip($workflows);
@@ -237,13 +237,15 @@ function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
  * @see workflow_delete_form()
  */
 function workflow_admin_ui_delete_form_submit($form, &$form_state) {
-  if ($form_state['values']['confirm'] == 1
-    && $workflow = workflow_get_workflows_by_wid($form_state['values']['wid'])) {
-    workflow_delete_workflows_by_wid($form_state['values']['wid']);
+  $wid = $form_state['values']['wid'];
+  if ($form_state['values']['confirm'] == 1 && $workflow = Workflow::getWorkflow($wid)) {
+    $name = $workflow->getName();
+    $message = 'The workflow %name with all its states was deleted.';
 
-    watchdog('workflow', 'Deleted workflow %name with all its states', array('%name' => $workflow->name));
+    $workflow->delete(); //@todo: states must be deleted, too.
 
-    drupal_set_message(t('The workflow %name with all its states was deleted.', array('%name' => $workflow->name)));
+    watchdog('workflow', $message, array('%name' => $name));
+    drupal_set_message(t($message, array('%name' => $name)));
 
     $form_state['redirect'] = 'admin/config/workflow/workflow';
   }
@@ -509,6 +511,7 @@ function theme_workflow_admin_ui_edit_form($variables) {
  * Validate the workflow editing form.
  *
  * @see workflow_edit_form()
+ * @todo: this duplicates code from workflow_admin_ui_add_form_validate()
  */
 function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
   $wid = $form_state['values']['wid'];
@@ -516,8 +519,8 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
   if (array_key_exists('wf_name', $form_state['values']) /*&& $form_state['values']['wf_name'] != ''*/) {
     $workflow_name = $form_state['values']['wf_name'];
     $workflows = array();
-    foreach (workflow_get_workflows() as $data) {
-      $workflows[$data->wid] = check_plain(t($data->name));
+    foreach (Workflow::getWorkflows() as $workflow) {
+      $workflows[$workflow->wid] = check_plain(t($workflow->getName()));
     }
     $workflows = array_flip($workflows);
     if (array_key_exists($workflow_name, $workflows) && $wid != $workflows[$workflow_name]) {
@@ -531,6 +534,8 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
  * Submit handler for the workflow editing form.
  *
  * @see workflow_edit_form()
+ * @todo: this is only valid for Node API, not for Field API.
+ *        Field API has 'Field settings'.
  */
 function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   if (isset($form_state['values']['transitions'])) {
@@ -753,7 +758,6 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
   switch ($op) {
     case 'top_actions':
       // Build a link to each workflow.
-      $workflows = workflow_get_workflows();
       $alt = t('Add a new workflow');
       $actions = array(
         'add-workflow' => array(
@@ -764,7 +768,7 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
           ),
         );
 
-      foreach ($workflows as $workflow) {
+      foreach (Workflow::getWorkflows() as $workflow) {
         $alt = t('Work with @wf', array('@wf' => $workflow->name));
         $actions[drupal_html_class($workflow->name)] = array(
           'title' => t($workflow->name),
@@ -1100,7 +1104,8 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
         }
 
         // Delete the old state without orphaning nodes, move them to the new state.
-        workflow_delete_workflow_states_by_sid($id, $new_sid);
+        $state = WorkflowState::getState($id);
+        $state->delete($new_sid);
 
         $args = array(
           '%state' => $states[$id]->state,
@@ -1137,15 +1142,15 @@ function workflow_admin_ui_types_form($form) {
     );
 
   $these_workflows = array();
-  foreach (workflow_get_workflows() as $data) {
+  foreach (Workflow::getWorkflows() as $workflow) {
     // Don't allow workflows with no states.
-    $states = workflow_get_workflow_states_by_wid($data->wid, array('status' => 1));
+    $states = workflow_get_workflow_states_by_wid($workflow->wid, array('status' => 1));
 
     // There should always be a creation state.
     if (count($states) == 1) {
       // That's all, so let's remind them to create some states.
       drupal_set_message(t('%workflow has no states defined, so it cannot be assigned to content yet.',
-        array('%workflow' => ucwords($data->name))), 'warning');
+        array('%workflow' => ucwords($workflow->getName()))), 'warning');
 
       // Skip allowing this workflow.
       continue;
@@ -1153,18 +1158,18 @@ function workflow_admin_ui_types_form($form) {
 
     // Also check for transitions at least out of the creation state.
     // This always gets at least the "from" state.
-    $transitions = workflow_allowable_transitions($data->getCreationSid(), 'to');
+    $transitions = workflow_allowable_transitions($workflow->getCreationSid(), 'to');
     if (count($transitions) == 1) {
       // That's all, so let's remind them to create some transitions.
       drupal_set_message(t('%workflow has no transitions defined, so it cannot be assigned to content yet.',
-        array('%workflow' => ucwords($data->name))), 'warning');
+        array('%workflow' => ucwords($workflow->getName()))), 'warning');
 
       // Skip allowing this workflow.
       continue;
     }
 
     // Add this workflow to the allowed list.
-    $these_workflows[$data->wid] = t($data->name);
+    $these_workflows[$workflow->wid] = t($workflow->getName());
   }
 
   $workflows = array(t('None')) + $these_workflows;

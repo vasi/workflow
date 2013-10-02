@@ -6,6 +6,54 @@
  */
 
 /**
+ * Deprecated functions related to table {workflows}.
+ * These are replaced by methods of class Workflow.
+ */
+
+/**
+ * Menu wild card loader: %workflow.
+ * May be used by add on modules, such as workflow_admin_ui.
+ * @deprecated: workflow_load($wid) --> Workflow::load($wid)
+ */
+function workflow_load($wid) {
+  return Workflow::getWorkflow($wid);
+}
+
+/**
+ * Get all workflows.
+ * @deprecated: workflow_get_workflows() --> Workflow::getWorkflows($wid)
+ */
+function workflow_get_workflows() {
+  return Workflow::getWorkflows();
+}
+
+/**
+ * Get a specific workflow, wid is a unique ID.
+ * @deprecated: workflow_get_workflows_by_wid() --> Workflow::getWorkflow($wid)
+ */
+function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
+  return Workflow::getWorkflow($wid, $reset);
+}
+
+/**
+ * Get a specific workflow, name is a unique ID.
+ * @deprecated: workflow_get_workflows_by_name() --> Workflow::getWorkflowByName($name)
+ */
+function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
+  return Workflow::getWorkflowByName($name, $unserialize_options);
+}
+
+/**
+ * Given a wid, delete the workflow and its data.
+ *
+ * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().
+ */
+function workflow_delete_workflows_by_wid($wid) {
+  $workflow = Workflow::getWorkflow($wid);
+  $workflow->delete();
+}
+
+/**
  * Deprecated functions related to table workflow_scheduled_transition.
  * These are replaced by methods of class WorkflowScheduledTransition.
  */

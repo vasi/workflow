@@ -18,7 +18,7 @@ function workflow_features_export($data, &$export, $module_name = '') {
   // fontyourface_default_fonts integration is provided by Features.
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['workflow'] = 'workflow';
-  foreach (workflow_get_workflows() as $workflow) {
+  foreach (Workflow::getWorkflows() as $workflow) {
     if (in_array($workflow->name, $data)) {
       $export['features']['workflow'][$workflow->name] = $workflow->name;
     }
@@ -34,7 +34,7 @@ function workflow_features_export_render($module, $data) {
   $code[] = '  $workflows = array();';
   $code[] = '';
 
-  $workflows = workflow_get_workflows();
+  $workflows = Workflow::getWorkflows();
   foreach ($data as $name) {
     if ($workflow = workflow_get_workflows_full_object($name)) {
       unset($workflow->wid);
@@ -56,8 +56,9 @@ function workflow_features_export_render($module, $data) {
  */
 function workflow_features_export_options() {
   $workflows = array();
-  foreach (workflow_get_workflows() as $workflow) {
-    $workflows[$workflow->name] = $workflow->name;
+  foreach (Workflow::getWorkflows() as $workflow) {
+    $name = $workflow->getName();
+    $workflows[$name] = $name;
   }
   return $workflows;
 }
@@ -105,7 +106,7 @@ function workflow_update_workflows_full_object($workflow) {
   unset($workflow->states, $workflow->transitions, $workflow->node_types);
 
   // Then make a workflow so we can track by wid.
-  if ($orig_workflow = workflow_get_workflows_by_name($workflow->name)) {
+  if ($orig_workflow = Workflow::getWorkflowByName($workflow->name)) {
     $workflow->wid = $orig_workflow->wid;
   }
 
@@ -177,7 +178,7 @@ function workflow_update_workflows_full_object($workflow) {
  *   A fully loaded workflow object with type and statue mappings.
  */
 function workflow_get_workflows_full_object($name) {
-  if ($workflow = workflow_get_workflows_by_name($name)) {
+  if ($workflow = Workflow::getWorkflowByName($name)) {
     // Now we need to add data to the object for each state, an array of sub-objects.
     $options = array('status' => 1); // We only want active states for this export.
     $active_states = array();

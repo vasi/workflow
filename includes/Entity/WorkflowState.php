@@ -42,7 +42,7 @@ class WorkflowState {
   /**
    * Alternative constructor, via a static function.
    */
-  public static function getState($sid, $wid) {
+  public static function getState($sid, $wid = 0) {
     $states = self::getStates($sid, $wid);
     return $states[$sid];
   }
@@ -53,7 +53,11 @@ class WorkflowState {
    * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
    * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates($sid)
    */
-  public static function getStates($sid = 0, $wid = 0) {
+  public static function getStates($sid = 0, $wid = 0, $reset = FALSE) {
+    if ($reset) {
+      self::$states = array();
+    }
+
     if ($sid && isset(self::$states[$sid])) {
       // Only 1 is requested and cached: return this one.
       return array($sid => self::$states[$sid]);
@@ -121,5 +125,74 @@ class WorkflowState {
   }
   function value() {
     return $this->sid;
+  }
+
+  /**
+   * Given a sid, delete the state and all associated data.
+   * @deprecated: workflow_delete_workflow_states_by_sid($sid, $new_sid, $true_delete) --> WorkflowState->delete()
+   */
+  function delete($new_sid = FALSE, $true_delete = FALSE) {
+    $sid = $this->sid;
+    // Notify interested modules. We notify first to allow access to data before we zap it.
+    module_invoke_all('workflow', 'state delete', $sid, NULL, NULL, FALSE);
+
+    // Re-parent any nodes that we don't want to orphan.
+    if ($new_sid) {
+      global $user;
+      // A candidate for the batch API.
+      // @TODO: Future updates should seriously consider setting this with batch.
+      $node = new stdClass();
+      $node->workflow_stamp = REQUEST_TIME;
+      foreach (workflow_get_workflow_node_by_sid($sid) as $data) {
+        $node->nid = $data->nid;
+        $node->workflow = $sid;
+        $data = array(
+          'nid' => $node->nid,
+          'sid' => $new_sid,
+          'uid' => $user->uid,
+          'stamp' => $node->workflow_stamp,
+        );
+        workflow_update_workflow_node($data, $sid, t('Previous state deleted'));
+      }
+    }
+
+    // Find out which transitions this state is involved in.
+    $preexisting = array();
+    foreach (workflow_get_workflow_transitions_by_sid_involved($sid) as $data) {
+      $preexisting[$data->sid][$data->target_sid] = TRUE;
+    }
+
+    // Delete the transitions.
+    foreach ($preexisting as $from => $array) {
+      foreach (array_keys($array) as $target_id) {
+        if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($from, $target_id)) {
+          workflow_delete_workflow_transitions_by_tid($transition->tid);
+        }
+      }
+    }
+
+    // Delete any lingering node to state values.
+    workflow_delete_workflow_node_by_sid($sid);
+
+    // Delete the state. -- We don't actually delete, just deactivate.
+    // This is a matter up for some debate, to delete or not to delete, since this
+    // causes name conflicts for states. In the meantime, we just stick with what we know.
+    if ($true_delete) {
+      db_delete('workflow_states')->condition('sid', $sid)->execute();
+    }
+    else {
+      db_update('workflow_states')->fields(array('status' => 0))->condition('sid', $sid, '=')->execute();
+    }
+
+    // Clear the cache.
+    self::$states = array();
+  }
+
+  /**
+   * Given data, update or insert into workflow_states.
+   * @deprecate: workflow_update_workflow_states() --> WorkflowState->delete()
+   * @todo: implement WorkflowState->save()
+   */
+  function save() {
   }
 }

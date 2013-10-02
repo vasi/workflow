@@ -42,17 +42,21 @@ class Workflow {
  * A Factory function to get Workflow data from the database, and return objects.
  * The execution of the query instantiates objects and saves them in a static array.
  */ 
+  public static function load($wid) {
+    $workflows = self::getWorkflows($wid, $reset = FALSE);
+    return $workflows[$wid];
+  }
   public static function getWorkflow($wid, $reset = FALSE) {
     $workflows = self::getWorkflows($wid, $reset);
     return $workflows[$wid];
   }
 
 /* 
- * A Factory function to get a Workflow from the database by Name.
+ * A Factory function to get Workflow data from the database, and return objects.
  * This is only called by CRUD functions in workflow.features.inc
  * More than likely in prep for an import / export action.
  * Therefore we don't want to fiddle with the response.
- * @todo D8: return a proper Workflow object instead of a stdClass.
+ * @deprecated: workflow_get_workflows_by_name() --> Workflow::getWorkflowByName($name)
  */ 
   public static function getWorkflowByName($name, $unserialize_options = FALSE) {
     foreach($workflows = self::getWorkflows() as $workflow) {
@@ -111,13 +115,12 @@ class Workflow {
     return $this->creation_sid;
   }
 
-  /* Get the first valid state state, after the creation state.
+  /* Get the first valid state ID, after the creation state.
    * Use getOptions(), because this does a access check.
    */
-  function getFirstState($node) {
+  function getFirstSid($node) {
     $creation_state = self::getCreationState();
     $options = $creation_state->getOptions($node);
-
     if ($options) {
       $keys = array_keys($options);
       $sid = $keys[0];
@@ -127,7 +130,7 @@ class Workflow {
       drupal_set_message(t('There are no workflow states available. Please notify your site administrator.'), 'error');
       $sid = 0;
     }
-    return new WorkflowState($sid);
+    return $sid;
   }
 
   /* 
@@ -196,4 +199,61 @@ class Workflow {
   function value() {
     return $this->wid;
   }
+
+  /**
+   * Given a wid, delete the workflow and its data.
+   *
+   * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().
+   * @todo: This function does NOT delete WorkflowStates.
+   */
+  function delete() {
+    $wid = $this->wid;
+
+    // Notify any interested modules before we delete, in case there's data needed.
+    module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL, FALSE);
+
+    // Delete associated state (also deletes any associated transitions).
+    foreach ($this->getStates() as $state) {
+//    @todo:  $state->delete();
+      workflow_delete_workflow_states_by_sid($state->sid);
+    }
+
+    // Delete type map.
+    workflow_delete_workflow_type_map_by_wid($wid);
+
+    // Delete the workflow.
+    db_delete('workflows')->condition('wid', $wid)->execute();
+  }
+
+  /**
+   * Given information, update or insert a new workflow.
+   *
+   * @deprecated: workflow_update_workflows() --> Workflow->save()
+   * @todo: implement Workflow->save()
+   */
+  function save($create_creation_state = TRUE) {
+//    if (isset($this->tab_roles) && is_array($this->tab_roles)) {
+//      $this->tab_roles = implode(',', $this->tab_roles);
+//    }
+//
+//    if (isset($this->wid) && count(Workflow::getWorkflow($data->wid)) > 0) {
+//      drupal_write_record('workflows', $data, 'wid');
+//    }
+//    else {
+//      drupal_write_record('workflows', $data);
+//      if ($create_creation_state) {
+//        $state_data = array(
+//          'wid' => $data->wid,
+//          'state' => t('(creation)'),
+//          'sysid' => WORKFLOW_CREATION,
+//          'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
+//        );
+//
+//        workflow_update_workflow_states($state_data);
+//      // @TODO consider adding state data to return here as part of workflow data structure.
+//      // That way we could past structs and transitions around as a data object as a whole.
+//      // Might make clone easier, but it might be a little hefty for our needs?
+//    }
+  }
+  
 }

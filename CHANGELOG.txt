@@ -199,3 +199,4 @@ Issue #2019345 by johnv: Changed calls to Workflow object in various includes.
 Issue #2019345 by johnv: Added Workflow Field support in History tab page.
 Issue #2019345 by johnv: Added new WorkflowTransition class.
 Issue #2019345 by johnv: Moved Workflow Form processing code from workflow.module into new WorkflowTransition class.
+Issue #2019345 by johnv: Replaced all functional calls to Workflow object by OOP Methods of Workflow class.

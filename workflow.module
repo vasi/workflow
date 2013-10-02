@@ -47,14 +47,6 @@ function workflow_menu() {
 }
 
 /**
- * Menu wild card loader: %workflow.
- * May be used by add on modules, such as workflow_admin_ui.
- */
-function workflow_load($wid) {
-  return workflow_get_workflows_by_wid($wid);
-}
-
-/**
  * Implements hook_hook_info().
  * Allow adopters to place their hook implementations in either
  * their main module or in a module.workflow.inc file.
@@ -514,7 +506,7 @@ function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = 
   // Register state change with watchdog.
   $type = node_type_get_name($node->type);
   if ($state = workflow_get_workflow_states_by_sid($new_sid)) {
-    $workflow = workflow_get_workflows_by_wid($state->wid);
+    $workflow = Workflow::getWorkflow($state->wid);
     if ($workflow->options['watchdog_log']) {
       watchdog('workflow', 'State of @type %node_title set to %state_name',
         array(
@@ -568,7 +560,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
 
   if ($state) {
     // This is used in Field API.
-    $workflow = workflow_get_workflows_by_wid($state->wid);
+    $workflow = Workflow::getWorkflow($state->wid);
     $current_sid = $state->sid;
   }
   else {
@@ -635,7 +627,7 @@ function workflow_node_current_state($node, $field = NULL) {
     $entity_type = 'node'; // @todo: support other entity types (in workflow_node_current_state()).
     if (isset($node->is_new) && $node->is_new == TRUE) {
       // A new node.
-      $workflow = workflow_get_workflows_by_wid($field['settings']['wid']);
+      $workflow = Workflow::getWorkflow($field['settings']['wid']);
       $sid = $workflow->getCreationSid();
     }
     elseif (isset($node->original)) {
@@ -708,38 +700,18 @@ function workflow_transition_allowed($tid, $role = NULL) {
 }
 
 /**
- * Return the ID of the first valid state for this workflow.
- *
- * @param $workflow
- *   The ID of the workflow.
- * @param $choices
- *   Array of valid options.
- */
-function workflow_get_first_state($workflow, $choices) {
-  $sid = FALSE;
-
-  if ($choices) {
-    $keys = array_keys($choices);
-    $sid = $keys[0];
-  }
-  else {
-    // This should never happen, but it did during testing.
-    drupal_set_message(t('There are no workflow states available. Please notify your site administrator.'), 'error');
-  }
-
-  return $sid;
-}
-
-/**
  * Return the ID of the creation state for this workflow.
+ * @deprecated: workflow_get_creation_state_by_wid($wid) --> $workflow->getCreationSid().
  *
  * @param $wid
  *   The ID of the workflow.
  */
 function workflow_get_creation_state_by_wid($wid) {
-  $options = array(':sysid' => WORKFLOW_CREATION, 'wid' => $wid);
-  $result = workflow_get_workflow_states($options);
-  return isset($result[0]->sid) ? $result[0]->sid : 0;
+  $sid = 0;
+  if ($workflow = Workflow::load($wid)) {
+    $sid = $workflow->getCreationSid();
+  }
+  return $sid;
 }
 
 /**
@@ -748,7 +720,7 @@ function workflow_get_creation_state_by_wid($wid) {
  * @param $type
  *   The type of the content.
  * 
- * @todo: remove this in some future version. It can be replaces with code inside.
+ * @todo: deprecate workflow_get_creation_state_by_type() in future version. It can be replaced with inner code.
  */
 function workflow_get_creation_state_by_type($type) {
   $sid = FALSE;
@@ -769,26 +741,6 @@ function workflow_get_creation_state_by_type($type) {
  * Functions related to table workflows.
  */
 
-/**
- * Get all workflows.
- */
-function workflow_get_workflows() {
-  return Workflow::getWorkflows();
-}
-
-/**
- * Get a specific workflow, wid is a unique ID.
- */
-function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
-  return Workflow::getWorkflow($wid, $reset);
-}
-
-/**
- * Get a specific workflow, name is a unique ID.
- */
-function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
-  return Workflow::getWorkflowByName($name, $unserialize_options);
-}
 
 /**
  * Get a specific workflow, given a Node type. Only one workflow is possible per node type.
@@ -842,30 +794,9 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = '') {
 }
 
 /**
- * Given a wid, delete the workflow and its stuff.
- *
- * @TODO: This should probably move to workflow_admin_ui.
- */
-function workflow_delete_workflows_by_wid($wid) {
-  // Notify any interested modules before we delete, in case there's data needed.
-  module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL, FALSE);
-
-  // Delete associated state (also deletes any associated transitions).
-  foreach (workflow_get_workflow_states_by_wid($wid) as $data) {
-    workflow_delete_workflow_states_by_sid($data->sid);
-  }
-
-  // Delete type map.
-  workflow_delete_workflow_type_map_by_wid($wid);
-
-  // Delete the workflow.
-  db_delete('workflows')->condition('wid', $wid)->execute();
-}
-
-/**
  * Given information, update or insert a new workflow. Returns data by ref. (like node_save).
  *
- * @TODO: This should probably move to workflow_admin_ui.
+ * @deprecated: workflow_update_workflows() --> Workflow->save()
  */
 function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
   $data = (object) $data;
@@ -873,7 +804,7 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
     $data->tab_roles = implode(',', $data->tab_roles);
   }
 
-  if (isset($data->wid) && count(workflow_get_workflows_by_wid($data->wid)) > 0) {
+  if (isset($data->wid) && count(Workflow::getWorkflow($data->wid)) > 0) {
     drupal_write_record('workflows', $data, 'wid');
   }
   else {
@@ -1223,57 +1154,11 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
 
 /**
  * Given a sid, delete the state and all associated data.
+ * @deprecated: workflow_delete_workflow_states_by_sid($sid, $new_sid, $true_delete) --> WorkflowState->delete()
  */
 function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_delete = FALSE) {
-  // Notify interested modules. We notify first to allow access to data before we zap it.
-  module_invoke_all('workflow', 'state delete', $sid, NULL, NULL, FALSE);
-
-  // Re-parent any nodes that we don't want to orphan.
-  if ($new_sid) {
-    global $user;
-    // A candidate for the batch API.
-    // @TODO: Future updates should seriously consider setting this with batch.
-    $node = new stdClass();
-    $node->workflow_stamp = REQUEST_TIME;
-    foreach (workflow_get_workflow_node_by_sid($sid) as $data) {
-      $node->nid = $data->nid;
-      $node->workflow = $sid;
-      $data = array(
-        'nid' => $node->nid,
-        'sid' => $new_sid,
-        'uid' => $user->uid,
-        'stamp' => $node->workflow_stamp,
-      );
-      workflow_update_workflow_node($data, $sid, t('Previous state deleted'));
-    }
-  }
-
-  // Find out which transitions this state is involved in.
-  $preexisting = array();
-  foreach (workflow_get_workflow_transitions_by_sid_involved($sid) as $data) {
-    $preexisting[$data->sid][$data->target_sid] = TRUE;
-  }
-
-  // Delete the transitions.
-  foreach ($preexisting as $from => $array) {
-    foreach (array_keys($array) as $target_id) {
-      if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($from, $target_id)) {
-        workflow_delete_workflow_transitions_by_tid($transition->tid);
-      }
-    }
-  }
-
-  // Delete any lingering node to state values.
-  workflow_delete_workflow_node_by_sid($sid);
-
-  // Delete the state. -- We don't actually delete, just deactivate.
-  // This is a matter up for some debate, to delete or not to delete, since this
-  // causes name conflicts for states. In the meantime, we just stick with what we know.
-  if ($true_delete) {
-    db_delete('workflow_states')->condition('sid', $sid)->execute();
-  }
-  else {
-    db_update('workflow_states')->fields(array('status' => 0))->condition('sid', $sid, '=')->execute();
+  if ($state = WorkflowState::getState($sid)) {
+    $state->delete($new_sid, $true_delete);
   }
 }
 

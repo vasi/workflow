@@ -96,14 +96,13 @@ function workflow_node_insert($node) {
     // For example, a new node must move from (creation) to some
     // initial state.
     if (empty($node->workflow)) {
-      $choices = workflow_field_choices($node);
-      $sid = workflow_get_first_state($workflow, $choices);
+      $new_sid = $workflow->getFirstSid($node);
     }
     else {
-      $sid = $node->workflow;
+      $new_sid = $node->workflow;
     }
-    if ($sid) {
-      workflow_transition($node, $sid);
+    if ($new_sid) {
+      workflow_transition($node, $new_sid);
     }
   }
 }
@@ -316,7 +315,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
       if (!isset($choices[$current])) {
-        $current = workflow_get_first_state($workflow, $choices);
+        $current = $workflow->getFirstSid($node);
       }
 
       // Stop if user has no new target state(s) to choose.

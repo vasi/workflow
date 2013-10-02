@@ -354,7 +354,7 @@ function workflow_update_7001() {
   module_load_include('module','workflow');
 
   // Get all workflows.
-  $workflows = workflow_get_workflows();
+  $workflows = Workflow::getWorkflows();
   
   foreach ($workflows as $workflow) {
     // Add the option.

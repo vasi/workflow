@@ -83,7 +83,7 @@ function workflow_access_features_export_render($module_name, $data, $export = N
   // For each selected workflow, fetch all related workflow access records
   // we want to put into code.
   foreach ($data as $workflow_name) {
-    $workflow = workflow_get_workflows_by_name($workflow_name);
+    $workflow = Workflow::getWorkflowByName($workflow_name);
     if (!empty($workflow)) {
       $states = workflow_get_workflow_states_by_wid($workflow->wid);
       if (!empty($states)) {
@@ -121,7 +121,7 @@ function workflow_access_features_rebuild($module) {
   // retrieve the workflow ids
   $wids = array();
   foreach ($workflow_access_records as $workflow_name => $state) {
-    $workflow = workflow_get_workflows_by_name($workflow_name);
+    $workflow = Workflow::getWorkflowByName($workflow_name);
     $wids[$workflow_name] = $workflow->wid;
   }
 
