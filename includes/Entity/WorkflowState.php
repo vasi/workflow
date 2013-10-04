@@ -114,6 +114,7 @@ class WorkflowState {
 
   /*
    * Returns the allowed values for the current state.
+   * @todo: deprecate workflow_field_choices() --> WorkflowState->getOptions()
    */
   function getOptions($node, $force = FALSE) {
     return workflow_field_choices($node, $force, $this);
@@ -135,7 +136,7 @@ class WorkflowState {
 
   /**
    * Given a sid, delete the state and all associated data.
-   * @deprecated: workflow_delete_workflow_states_by_sid($sid, $new_sid, $true_delete) --> WorkflowState->delete()
+   * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->delete()
    */
   function delete($new_sid = FALSE, $true_delete = FALSE) {
     $sid = $this->sid;

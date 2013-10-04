@@ -134,15 +134,23 @@ class Workflow {
   }
 
   /* 
-   * @Return
-   *   An array of WorflowState objects.
+   * @return
+   *   An array of WorkflowState objects.
    */
   function getStates() {
     return WorkflowState::getStates(0, $this->wid);
   }
 
   /* 
-   * @Return
+   * @return
+   *   A WorkflowState object.
+   */
+  function getState($sid) {
+    return array_shift(WorkflowState::getStates($sid));
+  }
+
+  /* 
+   * @return
    *   All states in a Workflow, as an array of $key => $label.
    */
   function getOptions() {

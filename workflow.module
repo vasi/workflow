@@ -420,6 +420,7 @@ function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force 
 
 /**
  * Get the states current user can move to for a given node.
+ * @todo: deprecate workflow_field_choices() --> WorkflowState->getOptions()
  *
  * @param object $node
  *   The node to check.
@@ -935,7 +936,8 @@ function workflow_get_workflow_states_by_type($type) {
 /**
  * Get all states in the system, with options to filter, only where a workflow exists.
  *
- * @deprecated: replaced by WorkflowState::getStates($sid)
+ * @deprecated workflow_get_workflow_states() --> WorkflowState::getStates()
+ * @deprecated workflow_get_workflow_states_by_wid() --> WorkflowState::getStates()
  */
 function workflow_get_workflow_states($options = array()) {
   // Build the basic query.
@@ -967,7 +969,7 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
 }
 
 /*
- * @deprecated: replaced by WorkflowState->getWorkflow()
+ * @deprecated: workflow_get_workflow_by_sid --> WorkflowState->getWorkflow()
  */
 function workflow_get_workflow_by_sid($sid) {
   return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",

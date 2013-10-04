@@ -191,30 +191,30 @@ function workflow_node_view($node, $view_mode, $langcode) {
   if (!$workflow = workflow_get_workflows_by_type($node->type)) {
     return;
   }
-  $current = workflow_node_current_state($node);
-  $choices = workflow_field_choices($node);
 
-  $states = array();
-  $state_system_names = array();
-  foreach (workflow_get_workflow_states() as $data) {
-    $states[$data->sid] = check_plain(t($data->state));
-    $state_system_names[$data->sid] = check_plain($data->state);
+  $state_labels = array();
+  foreach ($workflow_states = $workflow->getStates() as $state) {
+    $state_labels[$state->sid] = check_plain($state->label());
   }
 
+  $current_sid = workflow_node_current_state($node);
+  $current_state = $workflow_states[$current_sid];
+  $choices = $current_state->getOptions($node);
+
   // Show current state at the top of the node display.
-  $markup = theme('workflow_current_state', array('state' => $states[$current], 'state_system_name' => $state_system_names[$current], 'sid' => $current));
+  $markup = theme('workflow_current_state', array('state' => $current_state->label(), 'state_system_name' => $current_state->getName(), 'sid' => $current_state->sid));
 
   $node->content['workflow_current_state'] = array(
     '#markup' => $markup,
     '#weight' => -99,
     );
 
-  if (workflow_show_form($current, $workflow, $choices)) {
+  if (workflow_show_form($current_sid, $workflow, $choices)) {
     // Show state change form at the bottom of the node display.
     module_load_include('inc', 'workflow', 'workflow.pages');
 
     // By including the nid in the form id.
-    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $states, $current);
+    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
     $form['#weight'] = 99;
 
     $node->content['workflow'] = $form;
