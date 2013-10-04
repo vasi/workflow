@@ -115,7 +115,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if ($settings_schedule) {
       // Read scheduled information.
       // Technically you could have more than one scheduled, but this will only add the soonest one.
-      foreach ($a = WorkflowScheduledTransition::load($entity_type, $entity_id) as $scheduled_transition) {
+      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
         $scheduled = '1';
         $sid = $scheduled_transition->sid;
         $timestamp = $scheduled_transition->scheduled;
@@ -309,7 +309,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
 
     $transition = $this->getTransition($old_sid, $new_sid, $new_items);
-    $transition->getEntity($entity_type, $entity);
+    $transition->getEntity($entity_type, $entity_id, $entity);
 
     // Now the data is captured in the Transition, restore the default values for Workflow Field.
     $items = array();
@@ -334,19 +334,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     else {
       // A scheduled transition must only be saved to the database. The entity is not changed.
       $transition->save();
-
-      // Get name of state.
-      if ($state = new WorkflowState($new_sid)) {
-        $t_args = array(
-            '@entity_title' => $entity->title,
-            '%state_name' => t($state->label()),
-            '%scheduled_date' => format_date($transition->scheduled),
-            );
-        watchdog('workflow', '@entity_title scheduled for state change to %state_name on %scheduled_date', $t_args,
-          WATCHDOG_NOTICE, l('view', 'node/' . $entity_id . '/workflow'));
-        drupal_set_message(t('@entity_title is scheduled for state change to %state_name on %scheduled_date',
-          $t_args));
-      }
     }
   }
 
@@ -373,6 +360,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity = $this->entity;
     $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
     $comment = isset($form_data['workflow_comment']) ? $form_data['workflow_comment'] : '';
+    $field_name = !empty($this->field) ? $this->field['field_name'] : '';
 
     // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
     // We check both variants, for Node API and Field API, for backwards compatibility.
@@ -381,7 +369,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
                  ( isset($form_data[$element_name]) ? $form_data[$element_name] : 0 );
     if (!$scheduled) {
       $stamp = REQUEST_TIME;
-      $transition = new WorkflowTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+      $transition = new WorkflowTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment, $field_name);
     }
     else {
       // Schedule the time to change the state.
@@ -402,7 +390,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         ;
 
       if ($stamp = strtotime($scheduled_date_time)) {
-        $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+        $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment, $field_name);
       }
       else {
         $transition = NULL;

@@ -9,15 +9,18 @@
  * Implements an actual Transition.
  */
 class WorkflowTransition {
-  public $nid; // @todo D8: remove $nid, use $entity_id; make private. Use getEntity(), entity_id() instead.
+  public $nid; // @todo D8: remove $nid, use $entity_id; (requires conversion of Views displays.)
   public $entity_id;
   public $entity_type;
   private $entity; // This is dynamically loaded, in first call to getEntity();
-  private $field_name = ''; // @todo: add support for Fields in WorkflowTransition.
+
+  public $field_name = ''; // @todo: add support for Fields in WorkflowTransition.
+  public $language = 'und';
+  public $delta = 0;
 
   public $old_sid = 0;
   public $new_sid = 0;
-  public $sid; // @todo: remove $sid in D8: replaced by $new_sid.
+  public $sid; // @todo: remove $sid in D8: replaced by $new_sid. (requires conversion of Views displays.)
 
   public $uid = 0;
   public $stamp;
@@ -29,21 +32,23 @@ class WorkflowTransition {
    * All arguments must be passed, when creating an object programmatically.
    * One argument $entity may be passed, only to directly call delete() afterwards.
    */
-  public function __construct($entity_type = 'node', $entity = NULL, $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
-    $this->entity_type = $entity_type;
+  public function __construct($entity_type = 'node', $entity = NULL, $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '', $field_name = '') {
+    $this->entity_type = ($this->entity_type) ? $this->entity_type : $entity_type;
+    $this->field_name = (!$field_name) ? $this->field_name : $field_name;
+    $this->language = ($this->language) ? $this->language : 'und';
     $this->entity = $entity;
     $this->nid = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
- 
+
     $this->old_sid = $old_sid;
     $this->sid = $new_sid;
-
-    // fill the 'new' fields correctly. @todo: rename these fields in db table.
-    $this->entity_id = $this->nid;
-    $this->new_sid = $this->sid;
 
     $this->uid = $uid;
     $this->stamp = $stamp;
     $this->comment = $comment;
+
+    // fill the 'new' fields correctly. @todo: rename these fields in db table.
+    $this->entity_id = $this->nid;
+    $this->new_sid = $this->sid;
   }
 
   /*
@@ -94,6 +99,7 @@ class WorkflowTransition {
   public function execute($force = FALSE, $field = NULL) {
     global $user;
 
+    $field_name = $this->field_name;
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
 
@@ -143,7 +149,7 @@ class WorkflowTransition {
       }
 
       // Clear any references in the scheduled listing.
-      foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id) as $scheduled_transition) {
+      foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id, $field_name) as $scheduled_transition) {
         $scheduled_transition->delete();
       }
       return $old_sid;
@@ -192,33 +198,33 @@ class WorkflowTransition {
 
     // Workflow_update_workflow_node places a history comment as well.
     workflow_update_workflow_node($data, $old_sid, $this->comment);
+
     if (!$field) {
+      /// Only for Node API.
       $node->workflow = $new_sid;
     }
 
     // Register state change with watchdog.
-    if (!$type = node_type_get_name($this->entity->type)) {
-      $type = $this->entity->type; //@todo: enable entity API.
-    }
-    
     if ($state = WorkflowState::getState($new_sid)) {
       $workflow = $state->getWorkflow();
       if ($workflow->options['watchdog_log']) {
+        $message = ($this->isScheduled()) ? 'Scheduled state change of @type %node_title to %state_name executed'
+                                          : 'State of @type %node_title set to %state_name';
+        $args = array(
+            '@type' => ($type = node_type_get_name($this->entity->type)) ? $type : $this->entity->type,
+            '%node_title' => isset($this->entity->title) ? $this->entity->title : $this->entity->type, //@todo: enable entity API.
+            '%state_name' => $state->label(),
+        );
         $uri = entity_uri($this->entity_type, $this->entity);
-        watchdog('workflow', 'State of @type %node_title set to %state_name',
-          array(
-              '@type' => $type,
-              '%node_title' => isset($this->entity->title) ? $this->entity->title : $this->entity->type, //@todo: enable entity API.
-              '%state_name' => $state->label(),
-            ),
-          WATCHDOG_NOTICE, l('view', $uri['path']));
+        watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
       }
     }
+
     // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
     module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $this->entity, $force, $field, $this->entity_type);
 
     // Clear any references in the scheduled listing.
-    foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id) as $scheduled_transition) {
+    foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id, $field_name) as $scheduled_transition) {
       $scheduled_transition->delete();
     }
 
@@ -227,21 +233,53 @@ class WorkflowTransition {
 
   /*
    * Get/Set the Transitions $entity.
+   * IF no arguments are provided, the $entity_type and $entity_id must be known upfront.
+   *
+   * @param string $entity_type
+   *   If setting an $entity, its entity_type, else empty.  
+   * @param stdClass $entity_id
+   *   If setting an $entity, its ID, else empty.
+   * @param stdClass $entity
+   *   If setting an $entity, the object, else empty.
+   *
+   * @return $entity
+   *   The entity, that is added to the Transition.
    */
-  public function getEntity($entity_type = '', $entity = NULL) {
-    // Not sure if we want to set the entity from outside: should we have an abstract Transition for AdminUI?
-    if ($entity) {
-      // Set entity.
-      $this->entity_type = $entity_type;
+  public function getEntity($entity_type = '', $entity_id = 0, stdClass $entity = NULL) {
+
+    if (!$entity_type && !$entity_id && !$entity) {
+      // A correct call, return the $entity.
+      if (empty($this->entity)) {
+        $entity_type = $this->entity_type;
+        $entity_id = $this->entity_id;
+        $this->entity = ($entity_type == 'node') ? node_load($entity_id) : array_shift( entity_load($entity_type, array($entity_id)) );
+      }
+      return $this->entity;
+    }
+
+    // Set the entity argument, if not provided.
+    if ($entity_type && $entity_id && !$entity) {
+        // Use node API or Entity API to load the object.
+      $entity = ($entity_type == 'node') ? node_load($entity_id) : array_shift( entity_load($entity_type, array($entity_id)) );
       $this->entity = $entity;
-      $this->entity_id = $this->entity_id();
-      $this->nid = $this->entity_id();
+      $this->entity_type = $entity_type;
+      $this->entity_id = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
+      $this->nid = $this->entity_id;
     }
-    elseif (!$this->entity && $this->entity_type == 'node') {
-      $this->entity = node_load($this->nid);
+    elseif ($entity_type && $entity) {
+      // Set entity.
+      $this->entity = $entity;
+      $this->entity_type = $entity_type;
+      $this->entity_id = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
+      $this->nid = $this->entity_id;
     }
-    elseif (!$this->entity) {
-      $this->entity = entity_load($this->entity_type, $this->entity_id);
+    else {
+      // Not all paramaters are passed programmatically.
+      drupal_set_message('Workflow: Wrong program call to function ' . __FUNCTION__, 'error');
+      $this->entity = NULL;
+      $this->entity_type = '';
+      $this->entity_id = 0;
+      $this->nid = $this->entity_id;
     }
 
     return $this->entity;

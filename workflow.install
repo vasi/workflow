@@ -172,13 +172,41 @@ function workflow_schema() {
   );
   $schema['workflow_scheduled_transition'] = array(
     'fields' => array(
+      'entity_type' => array(
+        'description' => 'The type of entity this transition belongs to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
       'nid' => array(
-        'description' => 'The {node}.nid this transition is scheduled for.',
+        'description' => 'The entity ID of the object this transition belongs to.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
         'disp-width' => '10',
+      ),
+      'field_name' => array(
+        'description' => 'The name of the field the transition relates to.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'language' => array(
+        'description' => 'The {languages}.language of the entity.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'delta' => array(
+        'description' => 'The sequence number for this data item, used for multi-value fields',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
       ),
       'old_sid' => array(
         'description' => 'The {workflow_states}.sid this state starts at.',
@@ -220,7 +248,8 @@ function workflow_schema() {
       ),
     ),
     'indexes' => array(
-      'nid' => array('nid')
+      'entity_type' => array('entity_type'),
+      'entity_id' => array('nid'),
     ),
   );
   $schema['workflow_node_history'] = array(
@@ -381,4 +410,71 @@ function workflow_update_7002() {
     'disp-width' => '10',
     'initial' => 0,
     ));
+}
+
+/**
+ * Add Entity field capabilities to workflow_scheduled_transition table.
+ */
+function workflow_update_7003() {
+  db_add_field('workflow_scheduled_transition', 'entity_type', array(
+        'description' => 'The type of entity this transition belongs to.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ));
+  db_add_field('workflow_scheduled_transition', 'field_name', array(
+        'description' => 'The name of the field the transition relates to.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ));
+  db_add_field('workflow_scheduled_transition', 'language', array(
+        'description' => 'The {languages}.language of the entity.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ));
+  db_add_field('workflow_scheduled_transition', 'delta', array(
+        'description' => 'The sequence number for this data item, used for multi-value fields',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ));
+}
+
+/**
+ * Update contents of table workflow_scheduled_transition for new columns.
+ */
+function workflow_update_7004() {
+  // Not all module functions are available from within a hook_update_N() function.
+  // In order to call a function from your mymodule.module or an include file,
+  // you need to explicitly load that file first.
+  module_load_include('module','workflow');
+
+  foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
+    $entity_type = $scheduled_transition->entity_type;
+    // Set the correct entity_type. This will always be 'node'. 
+    $entity_type = empty($entity_type) ? 'node' : $entity_type;
+    $entity_id = $scheduled_transition->entity_id;
+    $entity = $scheduled_transition->getEntity($entity_type, $entity_id);
+    // When testing, we got Comments in the table. They should not be there, and do not have type set.
+    $entity_bundle = isset($entity->type) ? $entity->type : '';
+
+    if ($entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
+      // All missing data is set upon loading/constructing the ScheduledTransition.
+      if($workflow_item = $workflow->getWorkflowItem()) {
+        // Field API. The field name is set explicitely.
+        $instance = $workflow_item->getInstance();
+        $scheduled_transition->field_name = $instance['field_name'];
+      }
+      else {
+        // Node API. The field_name is not set: this implies 'workflow'.
+      }
+      $scheduled_transition->save();
+    }
+  }
 }

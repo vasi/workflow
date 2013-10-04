@@ -10,8 +10,8 @@ define('WORKFLOW_DELETION', 0);
 
 // Include the hooks for the 'conventional' (version D5/D6/D7.1) Node API.
 // @todo: make this optional when only Field API is used. (version D7.2/D8)
-module_load_include('inc', 'workflow', 'workflow.node');
-module_load_include('inc', 'workflow', 'workflow.deprecated');
+//module_load_include('inc', 'workflow', 'workflow.node');
+//module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
  * Implements hook_permission().
@@ -75,7 +75,7 @@ function workflow_admin_paths_alter(&$paths) {
 function workflow_tab_access($node = NULL) {
   global $user;
   static $access = array();
-  $entity_type = 'node';
+  $entity_type = 'node'; // @todo: support entity API in workflow_tab_access().
   $node_type = $node->type;
 
   if ($workflow = workflow_get_workflows_by_type($node_type, $entity_type)) {
@@ -149,8 +149,8 @@ function workflow_cron() {
   $clear_cache = FALSE;
   // If the time now is greater than the time to execute a transition, do it.
   foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
-    $entity_type = 'node';
-    $node = $scheduled_transition->getEntity();
+    $entity_type = $scheduled_transition->entity_type;
+    $entity = $scheduled_transition->getEntity();
 
     // If user didn't give a comment, create one.
     if (empty($scheduled_transition->comment)) {
@@ -160,18 +160,18 @@ function workflow_cron() {
     // A Field API will return a WorkflowItem. A Node API will not.
     $workflowItem = $scheduled_transition->getWorkflowItem();
     $field_info = ($workflowItem) ? $workflowItem->getField() : array() ;
-    $current_sid = workflow_node_current_state($node, $entity_type, $field_info);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_info);
 
     // Make sure transition is still valid; i.e., the node is
     // still in the state it was when the transition was scheduled.
     if ($current_sid == $scheduled_transition->old_sid) {
       // Save the user who wanted this.
-      $node->workflow_uid = $scheduled_transition->uid;
+      $entity->workflow_uid = $scheduled_transition->uid;
 
       // Do transition. Force it because user who scheduled was checked.
       // The scheduled transition is also deleted from DB.
-      $new_sid = $scheduled_transition->new_sid;
-      workflow_execute_transition($node, $new_sid, $scheduled_transition->comment, TRUE, $current_sid, $entity_type, $field_info);
+      // A watchdog message is created with the result.
+      $new_sid = $scheduled_transition->execute($force = TRUE, $field_info);
 
       if ($field_info) {
         // Only in case of Workflow Field API (not for Workflow Node API), do a separate update,
@@ -179,13 +179,10 @@ function workflow_cron() {
         // @todo: move this to a better place.
         $items[0]['value'] = $new_sid;
         $field_name = $field_info['field_name'];
-//        $workflowItem->update($items);
-        $node->{$field_name}['und'] = $items;
-        $workflowItem->entitySave('node', $node);
+        $entity->{$field_name}['und'] = $items;
+        $workflowItem->entitySave($entity_type, $entity);
       }
-    
-      watchdog('content', '%type: scheduled transition of %title.',
-        array('%type' => t($node->type), '%title' => $node->title), WATCHDOG_NOTICE, l(t('view'), 'node/' . $node->nid));
+
       $clear_cache = TRUE;
     }
     else {
@@ -244,12 +241,13 @@ function workflow_features_api() {
  * @param array $field
  *   The field structure for the operation.
  */
-function workflow_transition($node, $new_sid, $force = FALSE, $field = array()) {
-  $widget = new WorkflowDefaultWidget($field, $instance = array(), $entity_type = 'node', $entity = $node);
+function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()) {
+  $entity_type = 'node'; // Entity support is in workflow_transition --> WorkflowDefaultWidget::submit()
+  $widget = new WorkflowDefaultWidget($field, $instance = array(), $entity_type, $entity);
   $form = array();
   $form_state = array();
   $items = array();
-  $items[0]['workflow'] = (array) $node;
+  $items[0]['workflow'] = (array) $entity;
   $items[0]['workflow']['workflow_options'] = $new_sid;
   $widget->submit($form, $form_state, $items, $force);
 }
@@ -388,7 +386,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  * Execute a transition (change state of a node).
  * @deprecated: workflow_execute_transition() --> WorkflowTransition::execute().
  *
- * @param $node
+ * @param $entity
  * @param $sid
  *   Target state ID.
  * @param $comment
@@ -405,17 +403,17 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  * @return int
  *   ID of new state.
  */
-function workflow_execute_transition($node, $new_sid, $comment = NULL, $force = FALSE, $old_sid = 0, $entity_type = 'node', $field = NULL) {
+function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force = FALSE, $old_sid = 0, $entity_type = 'node', $field = NULL) {
   global $user;
   // I think this happens because of Workflow Extensions;
   // it seems to be okay to ignore it.
-  if (empty($node->nid)) {
+  if (empty($entity->nid)) {
     return $old_sid;
   }
 
-  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($node, $entity_type, $field);
+  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($entity, $entity_type, $field);
 
-  $transition = new WorkflowTransition('node', $node, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+  $transition = new WorkflowTransition($entity_type, $entity, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
   $new_sid = $transition->execute($force, $field);
   return $new_sid;
 }
