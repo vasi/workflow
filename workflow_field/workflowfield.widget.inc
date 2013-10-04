@@ -35,9 +35,10 @@ function workflowfield_field_widget_form(&$form, &$form_state, $field, $instance
     $entity = $form_state['node'];
     $entity_type = 'node'; // comments are only supported on nodes.
   }
-  else {
-    $entity = $element['#entity']; // this is de comment on a comment form
-    $entity_type = $element['#entity_type'];
+  elseif (isset($element['#entity_type'])) {
+    // We are on an Entity add/edit page.
+    $entity = $element['#entity'];
+    $entity_type = $element['#entity_type']; // @todo: add support for other entity types.
   }
 
   if (!$entity) {
@@ -46,23 +47,9 @@ function workflowfield_field_widget_form(&$form, &$form_state, $field, $instance
   }
 
   if ($entity_type == 'comment') {
-    $entity_type = 'node'; // @todo: Comments are only possible on nodes?
+    // On a comment form, get the referenced entity.
+    $entity_type = 'node'; // Comments are only possible on nodes
     $entity = $form['#node'];
-  }
-  elseif (isset($form['#entity'])) {
-    // We are on an Entity add/edit page.
-    $entity = $form['#entity'];
-    $entity_type = 'node'; // @todo: add support for other entity types.
-  }
-  elseif (isset($form_state['node'])) {
-    // We are on a node edit page. We should never come here, since #entity is already filled.
-    $entity = $form_state['node'];
-    $entity_type = 'node'; // comments are only supported on nodes.
-  }
-  else {
-    // We are on a Node View page, with self-added form.
-    $entity = $element['#entity']; // this is comment on a comment form
-    $entity_type = $element['#entity_type'];
   }
 
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
@@ -94,7 +81,6 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
     }
 
     $field_name = $context['field']['field_name'];
-    $wid = $context['field']['settings']['wid'];
     if ($entity_type == 'comment') {
       $entity_type = 'node'; // @todo: Comments are only possible on nodes?
       $entity = $context['form']['#node'];
@@ -113,6 +99,7 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
     }
     else {
       // A node add page.
+      $wid = $context['field']['settings']['wid'];
       $workflow = Workflow::getWorkflow($wid);
       $current_sid = $workflow->getFirstSid($entity);
     }

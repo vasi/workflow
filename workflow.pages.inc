@@ -12,6 +12,7 @@ define('MARK_STATE_IS_DELETED', '*');
 function workflow_tab_page($node = NULL) {
   drupal_set_title($node->title);
 
+  $entity = $node;
   $entity_type = 'node'; // @todo: add support for other entity types.
   $entity_bundle = $node->type;  
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
@@ -23,8 +24,7 @@ function workflow_tab_page($node = NULL) {
   // Probably this can be done in hook_forms(), but this is better to maintain.
   if ($workflow_item = $workflow->getWorkflowItem()) {
     // This is a Workflow Field workflow. 
-    $current_sid = workflow_node_current_state($node, $workflow_item->getField());
-    $entity = $node;
+    $current_sid = workflow_node_current_state($entity, $entity_type, $workflow_item->getField());
     $field = $workflow_item->getField();
     $instance = $workflow_item->getInstance();
     $langcode = NULL;
@@ -35,7 +35,7 @@ function workflow_tab_page($node = NULL) {
   }
   else {
     // This is a Workflow Node workflow. 
-    $current_sid = workflow_node_current_state($node, $field = array());
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field = array());
     $name = $states[$current_sid]->getName();
     $label = $states[$current_sid]->label();
     $output = theme('workflow_current_state', array('state' => $label,
@@ -49,8 +49,9 @@ function workflow_tab_page($node = NULL) {
   $rows = array();
   $current_themed = FALSE;
   foreach (workflow_get_workflow_node_history_by_nid($node->nid) as $history) {
+    $old_state_name = $new_state_name = '';
     $label = $name = '';
-    $history_state = $states[$history->sid];
+    $history_state = isset($states[$history->sid]) ? $states[$history->sid] : 0;
     if ($history_state != NULL) {
       $name = $history_state->getName();
       $label = $history_state->label();
@@ -62,7 +63,7 @@ function workflow_tab_page($node = NULL) {
     }
     elseif ($history->sid == $current_sid && $history_state->isActive() && !$current_themed) {
       // Theme the current state differently so it stands out.
-      $state_name = theme('workflow_history_current_state',  array('state_name' => $label,
+      $new_state_name = theme('workflow_history_current_state',  array('state_name' => $label,
                                                                    'state_system_name' => $name, 
                                                                    'sid' => $history->sid));
       // Make a note that we have themed the current state; other times in the history
@@ -71,14 +72,14 @@ function workflow_tab_page($node = NULL) {
     }
     elseif (!$history_state->isActive()) {
       // The state has been deleted, but we include it in the history.
-      $state_name = theme('workflow_deleted_state', array('state_name' => $label,
+      $new_state_name = theme('workflow_deleted_state', array('state_name' => $label,
                                                           'state_system_name' => $name, 
                                                           'sid' => $history->sid));
       $footer_needed = TRUE;
     }
     else {
       // Regular state.
-      $state_name = check_plain($label);
+      $new_state_name = check_plain($label);
     }
 
     $label = $name = MARK_STATE_IS_DELETED;
@@ -110,7 +111,7 @@ function workflow_tab_page($node = NULL) {
         'sid' => $history->sid, // @todo D8: remove this redundant property.
         'uid' => $history->uid, // @todo D8: remove this redundant property.
         'old_state_name' => $old_state_name,
-        'state_name' => $state_name,
+        'state_name' => $new_state_name,
         );
 
     // Allow other modules to modify the row.

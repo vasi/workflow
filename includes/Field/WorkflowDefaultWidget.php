@@ -67,6 +67,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $field_name = $this->field['field_name'];
     $entity = $this->entity;
     $entity_type = $this->entity_type;
+    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
 
     if (!$entity) {
       // If no entity given, do not show a form. E.g., on the field settings page.
@@ -75,31 +76,30 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = ($this->field['settings']['widget']['name_as_title'] && $this->instance['widget']['settings']['name_as_title']);
-    // The schedule cannot be shown on a node add page.
-    $settings_schedule = $this->field['settings']['widget']['schedule'] && isset($entity->nid);
+    // The schedule cannot be shown on a Content add page.
+    $settings_schedule = $this->field['settings']['widget']['schedule'] && $entity_id;
     $settings_schedule_timezone = $this->field['settings']['widget']['schedule_timezone'];
     // Show comment, when Field ánd Instance allow this.
     $settings_comment = ($this->field['settings']['widget']['comment'] && $this->instance['widget']['settings']['comment']) ? 'textarea' : 'hidden';
 
-    // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(), to add the submit button on the Node view page.
+    // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(), to add the submit button on the Content view page.
     $settings_submit = isset($this->instance['widget']['settings']['submit']) ? TRUE : FALSE;
-    $wid = $this->field['settings']['wid'];
-    $workflow = new Workflow($wid);
+    $workflow = new Workflow($this->field['settings']['wid']);
 
-    // @todo: Get the current sid for node, comment, preview.
+    // @todo: Get the current sid for content, comment, preview.
     if (count($items)) {
-      // A normal Node edit.
+      // A normal Content edit.
       $sid = _workflow_get_sid_by_items($items);
     }
     else {
-      // Node add or Comment add (which do not have a state, yet).
-      // Or existing nodes, which didn't have a state before.
+      // We are on a Content add or Comment add (which do not have a state, yet),
+      // or we are viewing existing content, which didn't have a state before.
       $items = field_get_items($entity_type, $entity, $field_name);
       if ($items) {
         $sid = _workflow_get_sid_by_items($items);
       }
       else {
-        // Node add page: No valid sid is given, so get the first state.
+        // Content add page: No valid sid is given, so get the first state.
         $sid = $workflow->getFirstSid($entity);
       }
     }
@@ -115,7 +115,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if ($settings_schedule) {
       // Read scheduled information.
       // Technically you could have more than one scheduled, but this will only add the soonest one.
-      foreach (WorkflowScheduledTransition::load($entity->nid) as $scheduled_transition) {
+      foreach ($a = WorkflowScheduledTransition::load($entity_type, $entity_id) as $scheduled_transition) {
         $scheduled = '1';
         $sid = $scheduled_transition->sid;
         $timestamp = $scheduled_transition->scheduled;
@@ -126,13 +126,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Stop if user has no new target state(s) to choose.
     if (!workflow_show_form($sid, $workflow, $options)) {
+//dpm('show only formatter for ' . $sid , __FUNCTION__);
       return $element;
     }
 
-    $name = t($workflow->label());
+    $label = $workflow->label();
     $element['workflow'] = array(
       '#type' => 'fieldset',
-      '#title' => $name,
+      '#title' => $label,
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
 //      '#weight' => 10,
@@ -153,36 +154,50 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // There is no need to show the single choice.
       // A form choice would be an array with the key of the state.
       $state = key($options);
-      $element['workflow'][$name] = array(
+//      $element['workflow'][$label] = array(
+      $element['workflow']['workflow_options'] = array(
         '#type' => 'value',
         '#value' => array($state => $state),
         );
     }
     else {
-      // @todo: why are we overwriting 'fieldset' with 'container' ?
+      // @todo: Q: why are we overwriting 'fieldset' with 'container' ?
+      //        A: this is because you'd want the form in a vertical tab, and a fieldset makes no sense there.
       $element['workflow']['#type'] = 'container';
       $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
-//      $element['workflow'][$name] = array(
+
       $element['workflow']['workflow_options'] = array(
         '#type' => $this->field['settings']['widget']['options'],
-        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $name)) : '',
+        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
-//        '#name' => $name,
-        '#name' => 'workflow_scheduled', // used for #states to hide/show schedule info.
+//        '#name' => $label,
 //        '#parents' => array('workflow'),
         '#default_value' => $sid,
         );
     }
 
-    // Display scheduling form, but only if a node is being edited and user has
-    // permission. State change cannot be scheduled at node creation because
-    // that leaves the node in the (creation) state.
+    // Display scheduling form, but only if entity is being edited and user has
+    // permission. State change cannot be scheduled at entity creation because
+    // that leaves the entity in the (creation) state.
     if ($settings_schedule == TRUE
         && !(arg(0) == 'node' && arg(1) == 'add') 
         && user_access('schedule workflow transitions')) {
 
-    $element['workflow']['workflow_scheduled'] = array(
+      // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
+      if (isset($form['#id']) && $form['#id'] == 'comment-form') {
+        // This is already the name for Node API and now also for Comment form.
+        // We assume there is only one Comment form on a page.
+        $element_name = 'workflow_scheduled';
+      }
+      else {
+        // This name allows for multiple nodes on a page.
+        // @todo: #states doesn't work yet for non-Node entities.
+        $element_name = 'workflow_scheduled' . '-' . $entity_type . '-' . $entity_id;
+      }
+
+//    $element['workflow']['workflow_scheduled'] = array(
+    $element['workflow'][$element_name] = array(
       '#type' => 'radios',
       '#title' => t('Schedule'),
       '#options' => array(
@@ -191,20 +206,18 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         ),
       '#default_value' => $scheduled,
       );
-
-    // @todo: now that we work on an element instead of the form itself, #states doesn't work anymore: 
-    // @todo: the scheduling date is not hidden anymore.
     $element['workflow']['workflow_scheduled_date_time'] = array(
       '#type' => 'fieldset',
       '#title' => t('At'),
       '#prefix' => '<div style="margin-left: 1em;">',
       '#suffix' => '</div>',
       '#states' => array(
-        'visible' => array(':input[name="workflow_scheduled"]' => array('value' => 1)),
-        'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => 0)),
+//        'visible' => array(':input[name="workflow_scheduled"]' => array('value' => '1')),
+//        'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => '0')),
+        'visible' => array(':input[name="' . $element_name . '"]' => array('value' => '1')),
+        'invisible' => array(':input[name="' . $element_name . '"]' => array('value' => '0')),
         ),
       );
-
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_date'] = array(
         '#type' => 'date',
         '#default_value' => array(
@@ -251,8 +264,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       '#rows' => 2,
       );
 
-    if ($settings_submit ) {
-      // Add a submit button, but only on Node View and History page.
+    if ($settings_submit) {
+      // Add a submit button, but only on Entity View and History page.
       $element['workflow']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Update workflow'),
@@ -284,16 +297,19 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   public function submit(array $form, array &$form_state, array &$items = array(), $force = FALSE) {
     global $user;
 
-    $entity = $this->entity;
     $entity_type = $this->entity_type;
+    $entity = $this->entity;
+    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
     $field = $this->field;
 
     // Massage the items, depending on the type of widget.
     // @todo: use MassageFormValues($values, $form, $form_state).
-    $old_sid = workflow_node_current_state($entity, $field);
+    $old_sid = workflow_node_current_state($entity, $entity_type, $field); // Todo : entity support.
     $new_sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $items[0]['value'];
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
-    $transition = $this->getTransition($entity, $old_sid, $new_sid, $new_items);
+
+    $transition = $this->getTransition($old_sid, $new_sid, $new_items);
+    $transition->getEntity($entity_type, $entity);
 
     // Now the data is captured in the Transition, restore the default values for Workflow Field.
     $items = array();
@@ -309,8 +325,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // - validate option; add hook to let other modules change comment.
       // - add to history; add to watchdog
       // return the new value of the sid. (Execution may fail and return the old Sid.)
-      $new_sid = workflow_execute_transition($entity, $new_sid, $transition->comment, $force = FALSE, $field, $old_sid);
-
+      $new_sid = $transition->execute($force = FALSE, $field);
+     
       // Restore the default values for Workflow Field.
       $items = array();
       $items[0]['value'] = $new_sid;
@@ -322,13 +338,13 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // Get name of state.
       if ($state = new WorkflowState($new_sid)) {
         $t_args = array(
-            '@node_title' => $entity->title,
+            '@entity_title' => $entity->title,
             '%state_name' => t($state->label()),
             '%scheduled_date' => format_date($transition->scheduled),
             );
-        watchdog('workflow', '@node_title scheduled for state change to %state_name on %scheduled_date', $t_args,
-          WATCHDOG_NOTICE, l('view', 'node/' . $entity->nid . '/workflow'));
-        drupal_set_message(t('@node_title is scheduled for state change to %state_name on %scheduled_date',
+        watchdog('workflow', '@entity_title scheduled for state change to %state_name on %scheduled_date', $t_args,
+          WATCHDOG_NOTICE, l('view', 'node/' . $entity_id . '/workflow'));
+        drupal_set_message(t('@entity_title is scheduled for state change to %state_name on %scheduled_date',
           $t_args));
       }
     }
@@ -350,15 +366,22 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * Extract a WorkflowTransition or a WorkflowScheduledTransition from the form.
    * @todo: move validation and messages to errorElement();
    */
-  function getTransition($entity, $old_sid, $new_sid, array $form_data) {
+  function getTransition($old_sid, $new_sid, array $form_data) {
     global $user;
 
-    $scheduled = isset($form_data['workflow_scheduled']) ? $form_data['workflow_scheduled'] : 0;
+    $entity_type = $this->entity_type;
+    $entity = $this->entity;
+    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
     $comment = isset($form_data['workflow_comment']) ? $form_data['workflow_comment'] : '';
 
+    // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
+    // We check both variants, for Node API and Field API, for backwards compatibility.
+    $element_name = 'workflow_scheduled' . '-' . $entity_type . '-' . $entity_id;
+    $scheduled = ( isset($form_data['workflow_scheduled']) ? $form_data['workflow_scheduled'] : 0 ) ||
+                 ( isset($form_data[$element_name]) ? $form_data[$element_name] : 0 );
     if (!$scheduled) {
       $stamp = REQUEST_TIME;
-      $transition = new WorkflowTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+      $transition = new WorkflowTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
     }
     else {
       // Schedule the time to change the state.
@@ -379,7 +402,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         ;
 
       if ($stamp = strtotime($scheduled_date_time)) {
-        $transition = new WorkflowScheduledTransition($entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+        $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment);
       }
       else {
         $transition = NULL;

@@ -96,8 +96,11 @@ function workflowfield_field_insert($entity_type, $entity, $field, $instance, $l
  * We cannot use hook_field_presave, since $nid is not yet known at that moment.
  */
 function workflowfield_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
-  $workflow_field->update($items);
+  $form = array();
+  $form_state = array();
+  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+
 }
 
 /**

@@ -92,7 +92,7 @@ function workflow_delete_workflows_by_wid($wid) {
  * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
  */
 function workflow_get_workflow_scheduled_transition_by_nid($nid) {
-  return WorkflowScheduledTransition::load($nid);
+  return WorkflowScheduledTransition::load('node', $nid);
 }
 
 /**
@@ -100,8 +100,7 @@ function workflow_get_workflow_scheduled_transition_by_nid($nid) {
  * @deprecated: workflow_get_workflow_scheduled_transition_by_between() --> WorkflowScheduledTransition::loadBetween()
  */
 function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end = REQUEST_TIME) {
-  $results = db_query('SELECT nid, old_sid, sid, uid, scheduled, comment FROM {workflow_scheduled_transition} WHERE scheduled > :start AND scheduled < :end ORDER BY scheduled ASC', array(':start' => $start, ':end' => $end));
-  return $results->fetchAll();
+  return WorkflowScheduledTransition::loadBetween($start, $end);
 }
 
 /**

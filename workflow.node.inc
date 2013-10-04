@@ -70,7 +70,7 @@ function workflow_node_load($nodes, $types) {
 
     // Add scheduling information.
     // Technically you could have more than one scheduled, but this will only add the soonest one.
-    foreach (WorkflowScheduledTransition::load($node->nid) as $scheduled_transition) {
+    foreach (WorkflowScheduledTransition::load('node', $node->nid) as $scheduled_transition) {
       // Add the scheduled_transition as an object.
       $node->workflow_scheduled_transition = $scheduled_transition;
       // @todo: remove the separate '$node->workflow_scheduled' properties.
@@ -143,7 +143,7 @@ function workflow_node_delete($node) {
     workflow_insert_workflow_node_history($data);
   }
   // Delete any scheduled transitions for this node.
-  WorkflowScheduledTransition::deleteByNid($node->nid);
+  WorkflowScheduledTransition::deleteByNid('node', $node->nid);
 }
 
 /**

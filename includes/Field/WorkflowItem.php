@@ -156,7 +156,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     $element['watchdog_log'] = array(
       '#type' => 'checkbox',
       '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Log informational watchdog messages when a transition is executed (state of a node is changed)'),
+      '#title' => t('Log informational watchdog messages when a transition is executed (a state value is changed)'),
       '#default_value' => $settings['watchdog_log'],
       '#description' => t('Optionally log transition state changes to watchdog.'),
     );
@@ -230,7 +230,14 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     $entity_type = $this->entity_type;
 
     $nid = isset($entity->nid) ? $entity->nid : 0;
-    if ($nid && $this->entity_type == 'comment') {
+    if (!$entity) {
+      // No entity available, we are on the field Settings page - 'default value' field.
+      // This is hidden from the admin, because the default value can be different for every user.
+    }
+    elseif (!$nid && $entity_type == 'comment') {
+      // not possible: a comment on a non-existent node.
+    }
+    elseif ($nid && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
       // todo: for now, if nid is set, then it is a node. What happens with other entities?
       $referenced_entity_type = 'node';
@@ -256,7 +263,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         $this->entitySave($referenced_entity_type, $referenced_entity);
       }
     }
-    elseif ($nid && $this->entity_type != 'comment') {
+    elseif ($this->entity_type != 'comment') {
       if (isset($items[0]['value'])) {
         // A 'normal' options.module-widget is used, and $items[0]['value'] is already properly set.
       }
@@ -272,20 +279,9 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         drupal_set_message('error in WorkfowItem->update()', 'error');
       }
     }
-    elseif (!$nid && $entity_type == 'comment') {
-      // not possible: a comment on a non-existent node.
-    }
-    elseif (!$nid && $entity_type != 'comment') {
-      if ($entity) {
-        // A 'normal' node add page.
-        // We should not be here, since we only do inserts after $nid is known.
-        $current_sid = Workflow::getWorkflow($wid)->getCreationSid();
-      }
-      else {
-        // No entity available, we are on the field Settings page - 'default value' field.
-        // This is hidden from the admin, because the default value can be different for every user.
-      }
-    }
+//        // A 'normal' node add page.
+//        // We should not be here, since we only do inserts after $nid is known.
+//        $current_sid = Workflow::getWorkflow($wid)->getCreationSid();
   }
 
   /**
