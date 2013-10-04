@@ -203,3 +203,4 @@ Issue #2019345 by johnv: Replaced all functional calls to Workflow object by OOP
 Issue #2019345 by johnv: Fixed wrong calls to Workflow::getFirstSid().
 Issue #2102405 by johnv: Added basic Entity support for Workflow Field.
 Issue #2102405 by johnv: Added Entity support for Workflow Scheduled Transitions.
+Issue #2019345 by johnv: Fixed caching for WorkflowState:getStates.

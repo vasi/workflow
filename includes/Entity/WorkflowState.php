@@ -49,6 +49,11 @@ class WorkflowState {
 
   /**
    * Get all states in the system, with options to filter, only where a workflow exists.
+   * @param $sid   : the requested State ID
+   * @param $wid   : the requested Workflow ID
+   * @param $reset : an option to refresh all caches.
+   * @return       : an array of states.
+   * 
    * @deprecated workflow_get_workflow_states() --> WorkflowState->getStates()
    * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
    * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates($sid)
@@ -58,37 +63,38 @@ class WorkflowState {
       self::$states = array();
     }
 
-    if ($sid && isset(self::$states[$sid])) {
-      // Only 1 is requested and cached: return this one.
-      return array($sid => self::$states[$sid]);
+    if (empty(self::$states)) {
+      // Build the query, and get ALL states.
+      // Note: self::states[] is populated in respective constructors.
+      $query = db_select('workflow_states', 'ws');
+      $query->fields('ws');
+      $query->orderBy('ws.wid');
+      $query->orderBy('ws.weight');
+      // Just for grins, add a tag that might result in modifications.
+      $query->addTag('workflow_states');
+
+      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'WorkflowState');
     }
 
-    // Build the query.
-    $query = db_select('workflow_states', 'ws');
-    $query->fields('ws');
+    if (!$sid && !$wid) {
+      // All states are requested and cached: return them.
+      return self::$states;
+    }
+
+    if ($sid) {
+      // Only 1 State is requested and cached: return this one.
+      return array($sid => self::$states[$sid]);
+    }
 
     if ($wid) {
-      $query->condition('ws.wid', $wid);
-    }
-
-    // Set the sorting order.
-    $query->orderBy('ws.wid');
-    $query->orderBy('ws.weight');
-
-    // Just for grins, add a tag that might result in modifications.
-    $query->addTag('workflow_states');
-
-    // return array of objects, even if only 1 is requested.
-    // note: self::states[] is populated in respective constructors.
-    if ($sid) {
-      // return 1 object.
-      $query->condition('ws.sid', $sid);
-      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'WorkflowState');
-      return array($sid => self::$states[$sid]);
-    }
-    else {
-      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'WorkflowState');
-      return self::$states;
+      // All states of only 1 Workflow is requested: return this one.
+      $result = array();
+      foreach (self::$states as $state) {
+        if ($state->wid == $wid) {
+          $result[$state->sid] = $state;
+        }
+      }
+      return $result;
     }
   }
 
