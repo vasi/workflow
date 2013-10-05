@@ -205,3 +205,4 @@ Issue #2102405 by johnv: Added basic Entity support for Workflow Field.
 Issue #2102405 by johnv: Added Entity support for Workflow Scheduled Transitions.
 Issue #2019345 by johnv: Fixed caching for WorkflowState:getStates.
 Issue #2019345 by johnv: Changed workflow_node_view() to use Workflow classes.
+Issue #2102405 by johnv: Fixed indices for Workflow Scheduled Transitions.

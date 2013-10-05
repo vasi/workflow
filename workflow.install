@@ -249,7 +249,7 @@ function workflow_schema() {
     ),
     'indexes' => array(
       'entity_type' => array('entity_type'),
-      'entity_id' => array('nid'),
+      'entity_id' => array('entity_type', 'nid'),
     ),
   );
   $schema['workflow_node_history'] = array(
@@ -444,6 +444,10 @@ function workflow_update_7003() {
         'not null' => TRUE,
         'default' => 0,
       ));
+
+  db_drop_index('workflow_scheduled_transition', 'nid');
+  db_add_index('workflow_scheduled_transition', 'entity_id', array('entity_type', 'nid'));
+  db_add_index('workflow_scheduled_transition', 'entity_type', array('entity_type'));
 }
 
 /**
