@@ -67,6 +67,15 @@ function workflow_admin_paths_alter(&$paths) {
 }
 
 /**
+ * Menu wild card loader {wildcard_name}_load for '%workflow'.
+ * Used by add-on modules, such as workflow_admin_ui.
+ * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
+ */
+function workflow_load($wid) {
+  return Workflow::getWorkflow($wid);
+}
+
+/**
  * Menu access control callback. Determine access to Workflow tab.
  *
  * @todo: this function is called several times per page. (for every menu path/menu trail)

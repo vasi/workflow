@@ -11,15 +11,6 @@
  */
 
 /**
- * Menu wild card loader: %workflow.
- * May be used by add on modules, such as workflow_admin_ui.
- * @deprecated: workflow_load($wid) --> Workflow::load($wid)
- */
-function workflow_load($wid) {
-  return Workflow::getWorkflow($wid);
-}
-
-/**
  * Get all workflows.
  * @deprecated: workflow_get_workflows() --> Workflow::getWorkflows($wid)
  */
