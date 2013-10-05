@@ -48,6 +48,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
           ),
         'default_widget' => 'options_select',
         'default_formatter' => 'list_default',
+        'property_type' => 'list', // Used for Entity API / Rules integration.
       ),
     );
   }
@@ -240,7 +241,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     elseif ($nid && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
       // todo: for now, if nid is set, then it is a node. What happens with other entities?
-      $referenced_entity_type = 'node';
+      $referenced_entity_type = 'node'; // Comments only exist on nodes.
       $referenced_entities = entity_load($referenced_entity_type, array($nid));
       $referenced_entity = $referenced_entities[$nid];
 
@@ -299,8 +300,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 
     $entity = $this->entity;
     $entity_type = $this->entity_type;
-
-    $nid = isset($entity->nid) ? $entity->nid : 0;
+    $nid = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);	
     if ($nid && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
       // We need to fetch the field value of the original node, and show it on the comment. 

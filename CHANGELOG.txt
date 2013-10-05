@@ -207,3 +207,4 @@ Issue #2019345 by johnv: Fixed caching for WorkflowState:getStates.
 Issue #2019345 by johnv: Changed workflow_node_view() to use Workflow classes.
 Issue #2102405 by johnv: Fixed indices for Workflow Scheduled Transitions.
 Issue #2019345 by johnv: Fixed order of States in Options list doesn't respect weight.
+Issue #2019345 by johnv: Added 'property_info' to Workflow Field for Entity/ Rules support.
