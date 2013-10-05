@@ -68,8 +68,8 @@ class WorkflowState {
       // Note: self::states[] is populated in respective constructors.
       $query = db_select('workflow_states', 'ws');
       $query->fields('ws');
-      $query->orderBy('ws.wid');
       $query->orderBy('ws.weight');
+      $query->orderBy('ws.wid');
       // Just for grins, add a tag that might result in modifications.
       $query->addTag('workflow_states');
 
