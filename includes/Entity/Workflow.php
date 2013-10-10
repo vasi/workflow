@@ -116,7 +116,7 @@ class Workflow {
   }
 
   /* Get the first valid state ID, after the creation state.
-   * Use getOptions(), because this does a access check.
+   * Use WorkflowState::getOptions(), because this does a access check.
    */
   function getFirstSid($entity) {
     $creation_state = self::getCreationState();
@@ -150,13 +150,23 @@ class Workflow {
   }
 
   /* 
+   * @param bool $grouped
+   *   Indicates if the value must be grouped per workflow.
+   *   This influence the rendering of the select_list options.
+   *
    * @return
    *   All states in a Workflow, as an array of $key => $label.
    */
-  function getOptions() {
+  function getOptions($grouped = FALSE) {
     $options = array();
     foreach($this->getStates() as $state) {
-      $options[$state->value()] = $state->label();
+      $options[$state->value()] = check_plain($state->label());
+    }
+    if ($grouped) {
+      // make a group for each Workflow.
+      $label = check_plain($this->label());
+      $grouped_options[$label] = $options;
+      return $grouped_options;
     }
     return $options;
   }
