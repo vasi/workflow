@@ -181,7 +181,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // permission. State change cannot be scheduled at entity creation because
     // that leaves the entity in the (creation) state.
     if ($settings_schedule == TRUE
-        && !(arg(0) == 'node' && arg(1) == 'add') 
+        // && !(arg(0) == 'node' && arg(1) == 'add') // This is already tackled by checking $entity_id
         && user_access('schedule workflow transitions')) {
 
       // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
@@ -301,6 +301,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity = $this->entity;
     $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
     $field = $this->field;
+    $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
 
     // Massage the items, depending on the type of widget.
     // @todo: use MassageFormValues($values, $form, $form_state).
@@ -309,31 +310,47 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
 
     $transition = $this->getTransition($old_sid, $new_sid, $new_items);
-    $transition->getEntity($entity_type, $entity_id, $entity);
-
-    // Now the data is captured in the Transition, restore the default values for Workflow Field.
-    $items = array();
-    $items[0]['value'] = $old_sid;
+    $transition->setEntity($entity_type, $entity);
 
     if ($error = $transition->isAllowed($force)) {
       drupal_set_message($error, 'error');
-      return;
     }
+    elseif (!$transition->isScheduled()) {
+      // Now the data is captured in the Transition, and before calling the Execution,
+      // restore the default values for Workflow Field.
+      // For instance, workflow_rules evaluates this.
+      if ($field_name) {
+        $items = array();
+        $items[0]['value'] = $new_sid;
+        $entity->{$field_name}['und'] = $items;
+      }
 
-    if (!$transition->isScheduled()) {
       // It's an immediate change. Do the transition.
       // - validate option; add hook to let other modules change comment.
       // - add to history; add to watchdog
       // return the new value of the sid. (Execution may fail and return the old Sid.)
-      $new_sid = $transition->execute($force = FALSE, $field);
-     
-      // Restore the default values for Workflow Field.
-      $items = array();
-      $items[0]['value'] = $new_sid;
+      $new_sid = $transition->execute($force = FALSE);
+
+      // In case the transition is not executed, reset the old value.
+      if ($field_name) {
+        $items = array();
+        $items[0]['value'] = $new_sid;
+        $entity->{$field_name}['und'] = $items;
+      }
     }
     else {
       // A scheduled transition must only be saved to the database. The entity is not changed.
       $transition->save();
+
+      // The current value is still the previous state.
+      $new_sid = $old_sid;
+    }
+
+    // The entity is still to be saved, so set to a 'normal' value.
+    if ($field_name) {
+      $items = array();
+      $items[0]['value'] = $new_sid;
+      $entity->{$field_name}['und'] = $items;
     }
   }
 
@@ -369,7 +386,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
                  ( isset($form_data[$element_name]) ? $form_data[$element_name] : 0 );
     if (!$scheduled) {
       $stamp = REQUEST_TIME;
-      $transition = new WorkflowTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment, $field_name);
+      $transition = new WorkflowTransition($this->entity_type, $this->entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
     }
     else {
       // Schedule the time to change the state.
@@ -390,7 +407,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         ;
 
       if ($stamp = strtotime($scheduled_date_time)) {
-        $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $old_sid, $new_sid, $user->uid, $stamp, $comment, $field_name);
+        $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
       }
       else {
         $transition = NULL;
@@ -399,28 +416,4 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     return $transition;
   }
 
-  /**
-   * Returns the array of options for the widget.
-   *
-   * @return array
-   *   The array of options for the widget.
-   */
-//  protected function getOptions() {
-//    // @todo: move workflow_field_options here, into Widget::getOptions().
-
-//    @todo: remove: These are the testdata from list_test.
-//        This is listed here because it hints to the use of 'Phases', 
-//        just like Commerce module uses State ('Phase') vs. Status (Workflow State).
-//    $values = array(
-//      'Group 1' => array(
-//        0 => 'Zero',
-//      ),
-//      2 => 'One',
-//      'Group 2' => array(
-//        2 => 'Some <script>dangerous</script> & unescaped <strong>markup</strong>',
-//      ),
-//    );
-//
-//    return $values;
-//  }
 }

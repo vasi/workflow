@@ -180,7 +180,7 @@ function workflow_cron() {
       // Do transition. Force it because user who scheduled was checked.
       // The scheduled transition is also deleted from DB.
       // A watchdog message is created with the result.
-      $new_sid = $scheduled_transition->execute($force = TRUE, $field_info);
+      $new_sid = $scheduled_transition->execute($force = TRUE);
 
       if ($field_info) {
         // Only in case of Workflow Field API (not for Workflow Node API), do a separate update,
@@ -408,11 +408,10 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  *   The current/old State ID. Passed if known by caller.
  *   @todo: D8: make $old_sid parameter required.
  *
- *
  * @return int
  *   ID of new state.
  */
-function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force = FALSE, $old_sid = 0, $entity_type = 'node', $field = NULL) {
+function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force = FALSE, $old_sid = 0, $entity_type = 'node', $field_name = '') {
   global $user;
   // I think this happens because of Workflow Extensions;
   // it seems to be okay to ignore it.
@@ -420,10 +419,9 @@ function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force 
     return $old_sid;
   }
 
-  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($entity, $entity_type, $field);
-
-  $transition = new WorkflowTransition($entity_type, $entity, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
-  $new_sid = $transition->execute($force, $field);
+  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($entity, $entity_type, $field_name);
+  $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+  $new_sid = $transition->execute($force);
   return $new_sid;
 }
 
@@ -495,7 +493,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
         // may veto a choice by returning FALSE. In this case, the choice is
         // never presented to the user.
         // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node, $field = NULL);
+        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node, $field_name = '');
         // Did anybody veto this choice?
         if (!in_array(FALSE, $result)) {
           // If not vetoed, add to list.
@@ -511,6 +509,27 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   return $choices;
 }
 
+
+/**
+ * Get an options list for workflow states (to show in a widget).
+ * To be used in non-OO modules, like workflow_rules.
+ *
+ * @param $wid
+ *   The Workflow ID.
+ * @param bool $grouped
+ *   Indicates if the value must be grouped per workflow.
+ *   This influence the rendering of the select_list options.
+ * @return
+ *   An array of $sid => state->label(), grouped per Workfllow.
+ */
+function workflow_get_workflow_options($wid = 0, $grouped = FALSE) {
+  $options = array();
+  foreach (Workflow::getWorkflows($wid) as $workflow) {
+    $options += $workflow->getOptions($grouped);
+  }
+  return $options;
+}
+
 /**
  * Get the current state of a given node.
  *
@@ -519,7 +538,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  * @return
  *   The ID of the current state.
  */
-function workflow_node_current_state($entity, $entity_type = 'node', $field = NULL) {
+function workflow_node_current_state($entity, $entity_type = 'node', $field = array()) {
   $sid = FALSE;
   $state = FALSE;
 

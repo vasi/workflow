@@ -464,7 +464,7 @@ function workflow_update_7004() {
     // Set the correct entity_type. This will always be 'node'. 
     $entity_type = empty($entity_type) ? 'node' : $entity_type;
     $entity_id = $scheduled_transition->entity_id;
-    $entity = $scheduled_transition->getEntity($entity_type, $entity_id);
+    $entity = $scheduled_transition->setEntity($entity_type, $entity_id);
     // When testing, we got Comments in the table. They should not be there, and do not have type set.
     $entity_bundle = isset($entity->type) ? $entity->type : '';
 

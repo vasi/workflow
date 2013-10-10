@@ -113,22 +113,24 @@ function workflowfield_field_widget_form_submit($form, &$form_state) {
   $field = $form_state['values']['workflow_field'];
   $instance = $form_state['values']['workflow_instance'];
   $entity_type = $form['#entity_type'];
+  $field_name = $field['field_name'];
   $entity = $form['#entity'];
   $items[0]['workflow'] = $form_state['values'];
 
+  $old_sid = _workflow_get_sid_by_items($entity->{$field_name}['und']); // @todo: replace by currentState().
+
   // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+//  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
   // Remember: we are on an Entity view page, so the Widget->submit saves the scheduled transition, 
   // but not the new state of the entity itself.
   // Widget::submit() returns the new value in a 'sane' state.
   // Save the referenced entity, but only is transition succeeded, and is not scheduled.
-  $field_name = $field['field_name'];
-  $old_sid = _workflow_get_sid_by_items($entity->{$field_name}['und']);
   $new_sid = _workflow_get_sid_by_items($items);
   if ($old_sid != $new_sid) {
-      $entity->{$field_name}['und'][0]['value'] = $new_sid;
+//      $entity->{$field_name}['und'][0]['value'] = $new_sid;
+      $entity->{$field_name}['und'][0]['workflow'] =$form_state['values'];
       $widget->entitySave($entity_type, $entity);
   }
 }

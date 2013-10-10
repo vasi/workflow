@@ -95,12 +95,30 @@ function workflowfield_field_insert($entity_type, $entity, $field, $instance, $l
  * It is called also from hook_field_insert, since we need $nid to store workflow_node_history.
  * We cannot use hook_field_presave, since $nid is not yet known at that moment.
  */
-function workflowfield_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
+function workflowfield_field_update($entity_type, $entity, array $field, $instance, $langcode, &$items) {
   $form = array();
   $form_state = array();
-  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
+  if ($entity_type == 'comment') {
+    // This happens when we are on an entity's comment.
+    $nid = isset($entity->nid) ? $entity->nid : 0;
+    $referenced_entity_type = 'node'; // Comments only exist on nodes.
+    $referenced_entities = entity_load($referenced_entity_type, array($nid));
+    $referenced_entity = $referenced_entities[$nid];
+
+    // @todo: when changing Workflow via comment, the history is saved twice.
+    $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
+    $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+
+    // We must save the node, too.
+    $widget->entitySave($referenced_entity_type, $referenced_entity);
+  }
+  else {
+    $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+    $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+//    $widget->setEntity($entity_type, $entity);
+//    $widget->entitySave($entity_type, $entity);
+  }
 }
 
 /**
