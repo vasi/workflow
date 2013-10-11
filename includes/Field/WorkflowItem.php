@@ -14,7 +14,8 @@
  *   label = @Translation("Workflow"),
  *   description = @Translation("This field stores Workflow values for a certain Workflow type from a list of allowed 'value => label' pairs, i.e. 'Publishing': 1 => unpublished, 2 => draft, 3 => published."),
  *   default_widget = "options_select",
- *   default_formatter = "list_formatter"
+ *   default_formatter = "list_formatter",
+ *   property_type' = WORKFLOW_FIELD_PROPERTY_TYPE,
  * )
  */
 class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase implements PrepareCacheInterface {
@@ -48,7 +49,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
           ),
         'default_widget' => 'options_select',
         'default_formatter' => 'list_default',
-        'property_type' => 'list', // Used for Entity API / Rules integration.
+        'property_type' => WORKFLOW_FIELD_PROPERTY_TYPE, // Used for Entity API / Rules integration.
       ),
     );
   }

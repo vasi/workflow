@@ -294,7 +294,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * - restore the normal $items for the field.
    * @todo: remove update of {node_form} table. (separate task, because it has features, too)
    */
-  public function submit(array $form, array &$form_state, array &$items = array(), $force = FALSE) {
+  public function submit(array $form, array &$form_state, array &$items, $force = FALSE) {
     global $user;
 
     $entity_type = $this->entity_type;
@@ -310,7 +310,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
 
     $transition = $this->getTransition($old_sid, $new_sid, $new_items);
-    $transition->setEntity($entity_type, $entity);
 
     if ($error = $transition->isAllowed($force)) {
       drupal_set_message($error, 'error');
@@ -329,7 +328,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // - validate option; add hook to let other modules change comment.
       // - add to history; add to watchdog
       // return the new value of the sid. (Execution may fail and return the old Sid.)
-      $new_sid = $transition->execute($force = FALSE);
+      $new_sid = $transition->execute($force);
 
       // In case the transition is not executed, reset the old value.
       if ($field_name) {
@@ -352,6 +351,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $items[0]['value'] = $new_sid;
       $entity->{$field_name}['und'] = $items;
     }
+    return $new_sid;
   }
 
   /*
@@ -386,7 +386,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
                  ( isset($form_data[$element_name]) ? $form_data[$element_name] : 0 );
     if (!$scheduled) {
       $stamp = REQUEST_TIME;
-      $transition = new WorkflowTransition($this->entity_type, $this->entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+      $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
     }
     else {
       // Schedule the time to change the state.
