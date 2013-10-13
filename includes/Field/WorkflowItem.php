@@ -230,16 +230,16 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     // @todo D8: remove below lines.
     $entity = $this->entity;
     $entity_type = $this->entity_type;
+    $entity_id = _workflow_get_entity_id($entity_type, $entity);
 
-    $nid = isset($entity->nid) ? $entity->nid : 0;
     if (!$entity) {
       // No entity available, we are on the field Settings page - 'default value' field.
       // This is hidden from the admin, because the default value can be different for every user.
     }
-    elseif (!$nid && $entity_type == 'comment') {
+    elseif (!$entity_id && $entity_type == 'comment') {
       // not possible: a comment on a non-existent node.
     }
-    elseif ($nid && $this->entity_type == 'comment') {
+    elseif ($entity_id && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
       // todo: for now, if nid is set, then it is a node. What happens with other entities?
       $referenced_entity_type = 'node'; // Comments only exist on nodes.
@@ -282,7 +282,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       }
     }
 //        // A 'normal' node add page.
-//        // We should not be here, since we only do inserts after $nid is known.
+//        // We should not be here, since we only do inserts after $entity_id is known.
 //        $current_sid = Workflow::getWorkflow($wid)->getCreationSid();
   }
 
@@ -301,14 +301,14 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 
     $entity = $this->entity;
     $entity_type = $this->entity_type;
-    $nid = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);	
-    if ($nid && $this->entity_type == 'comment') {
+    $entity_id = _workflow_get_entity_id($entity_type, $entity);
+    if ($entity_id && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
       // We need to fetch the field value of the original node, and show it on the comment. 
 
       $entity_type = 'node'; // Comments only exist on nodes.
-      $referenced_entities = entity_load($entity_type, array($nid));
-      $entity = $referenced_entities[$nid];
+      $referenced_entities = entity_load($entity_type, array($entity_id));
+      $entity = $referenced_entities[$entity_id];
 
       $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
       $state = new WorkflowState(_workflow_get_sid_by_items($items), $wid);
@@ -317,7 +317,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         $state = $workflow->getCreationState();
       }
     }
-    elseif ($nid && $this->entity_type != 'comment') {
+    elseif ($entity_id && $this->entity_type != 'comment') {
       // A 'normal' node edit page.
       $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
       $state = new WorkflowState($sid = _workflow_get_sid_by_items($items), $wid);
@@ -326,11 +326,11 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
         $state = $workflow->getCreationState();
       }
     }
-    elseif (!$nid && $entity_type == 'comment') {
+    elseif (!$entity_id && $entity_type == 'comment') {
       // not possible: a comment on a non-existent node.
       $state = NULL;
     }
-    elseif (!$nid && $entity_type != 'comment') {
+    elseif (!$entity_id && $entity_type != 'comment') {
       if ($entity) {
         // A 'normal' node add page.
         $state = $workflow->getCreationState();
@@ -406,13 +406,10 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 
   /**
    * Callback function for the default Options widgets.
-   * This function really does a getOptions for a State.
-   * However, a State is not aware of the entity (node or comment)
-   * So, this Workflow Field function serves as a wrapper. 
    */
   public function getOptions() {
     $state = $this->getCurrentState();
-    $options = workflow_field_choices($this->entity, FALSE, $state);
+    $options = $state->getOptions($this->entity_type, $this->entity, $force = FALSE);
 
     return $options;
   }

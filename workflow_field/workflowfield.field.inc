@@ -27,7 +27,7 @@ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state,
     $form['instance']['required']['#default_value'] = 1;
     $form['instance']['required']['#disabled'] = TRUE;
 
-    // User may not set a default value, this is done by the Workflow module, @see workflow_field_choices().
+    // User may not set a default value, this is done by the Workflow module, @see WorkflowState->getOptions().
     $form['instance']['default_value_widget']['#type'] = 'hidden';
     $form['instance']['default_value_widget']['#disabled'] = TRUE;
     unset($form['instance']['default_value_widget']);

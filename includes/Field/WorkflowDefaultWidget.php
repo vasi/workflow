@@ -100,12 +100,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       }
       else {
         // Content add page: No valid sid is given, so get the first state.
-        $sid = $workflow->getFirstSid($entity);
+        $sid = $workflow->getFirstSid($entity_type, $entity);
       }
     }
 
     $state = new WorkflowState($sid);
-    $options = $state->getOptions($entity);
+    $options = $state->getOptions($entity_type, $entity);
 
     // Get the scheduling info. This may change the current $sid on the Form.
     $scheduled = '0';

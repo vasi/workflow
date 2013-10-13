@@ -114,10 +114,68 @@ class WorkflowState {
 
   /*
    * Returns the allowed values for the current state.
-   * @todo: deprecate workflow_field_choices() --> WorkflowState->getOptions()
+   * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
-  function getOptions($node, $force = FALSE) {
-    return workflow_field_choices($node, $force, $this);
+  function getOptions($entity_type, $entity, $force = FALSE) {
+  global $user;
+  static $cache = array(); // Entity-specific cache per page load.
+
+  $choices = array();
+
+  if (!$entity) {
+    // If no entity is given, no result (e.g., on a Field settings page)
+    $choices = array();
+    return $choices;
+  }
+
+  $entity_id = _workflow_get_entity_id($entity_type, $entity);
+  $sid = $this->sid;
+  $workflow = Workflow::getWorkflow($this->wid);
+
+  // Get options from page cache.
+  if (isset($cache[$entity_type][$entity_id][$force][$sid])) {
+    $choices = $cache[$entity_type][$entity_id][$force][$sid];
+    return $choices;
+  }
+
+  if ($workflow) {
+    $roles = array_keys($user->roles);
+
+    // If user is node author or this is a new page, give the authorship role.
+    if (($user->uid == $entity->uid && $entity->uid > 0) || empty($entity_id)) {
+      $roles += array('author' => 'author');
+    }
+    if ($user->uid == 1 || $force) {
+      // Superuser is special. And Force allows Rules to cause transition.
+      $roles = 'ALL';
+    }
+
+    // Workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
+    // Instead it returns just the allowable data as:
+    // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
+    $transitions = workflow_allowable_transitions($sid, 'to', $roles);
+
+    // Include current state if it is not the (creation) state.
+    foreach ($transitions as $transition) {
+      if ($transition->sysid != WORKFLOW_CREATION && !$force) {
+        // Invoke a callback indicating that we are collecting state choices. Modules
+        // may veto a choice by returning FALSE. In this case, the choice is
+        // never presented to the user.
+        // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
+        $result = module_invoke_all('workflow', 'transition permitted', $sid, $transition->state_id, $entity, $field_name = '');
+        // Did anybody veto this choice?
+        if (!in_array(FALSE, $result)) {
+          // If not vetoed, add to list.
+          $choices[$transition->state_id] = check_plain(t($transition->state_name));
+        }
+      }
+    }
+
+    // Save to entity-specific cache.
+    $cache[$entity_type][$entity_id][$force][$sid] = $choices;
+  }
+
+  return $choices;
   }
 
   /*

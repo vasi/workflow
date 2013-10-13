@@ -194,6 +194,7 @@ function theme_workflow_deleted_state($variables) {
 
 /**
  * Form builder. Allow workflow state change and scheduling from workflow tab.
+ * N.B. This function is only used for Node API, not Field API.
  *
  * @param $node
  *   Node for which workflow information will be displayed.
@@ -218,18 +219,19 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     $workflow = workflow::getWorkflow($workflow);
   }
 
+  // This function is only used for Node API, not Field API, hence only 'node'.
   $state = new WorkflowState($current_sid);
-  $choices = workflow_field_choices($node, $force = FALSE, $state);
+  $options = $state->getOptions($entity_type = 'node', $node, $force = FALSE);
 
   // Only build form if user has possible target state(s).
-  if (workflow_show_form($current_sid, $workflow, $choices)) {
+  if (workflow_show_form($current_sid, $workflow, $options)) {
     // Tell FAPI where this form is.
     form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
 
     $form['#tab'] = TRUE;
     $name = t($workflow->name);
     $form['#wf'] = $workflow;
-    $form['#choices'] = $choices;
+    $form['#choices'] = $options;
     $form['#node'] = $node; // Added for integration with Field widget.
 
     $timestamp = NULL;
@@ -251,7 +253,7 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
 
     // Include the same form elements here that are included on a
     // regular node editing page. $form is modified by reference.
-    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current_sid, $choices, $timestamp, $comment);
+    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current_sid, $options, $timestamp, $comment);
 
     $form['node'] = array(
       '#type' => 'value',

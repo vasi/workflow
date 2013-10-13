@@ -211,3 +211,4 @@ Issue #2019345 by johnv: Added 'property_info' to Workflow Field for Entity/ Rul
 Issue #2019345 by johnv: Moved 'workflow_load' functon back to main module, since this is a menu callback.
 Issue #2019345 by johnv: Added 'grouped' options for Workflow::getOptions().
 Issue #2102663 by johnv: Added support for Workflow Field to workflow_rules sub-module.
+Issue #2111043 by johnv: Moved function workflow_field_choices() to WorkflowState->getOptions().

@@ -14,6 +14,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   $date = REQUEST_TIME;
 
   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])  && !empty($data['node']->nid)) {
+    $entity_type = 'node';
     $node = $data['node'];
 
     // Get a list of all possible states for returning state names.
@@ -40,10 +41,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         if (empty($last_history)) {
           // If the node has no workflow history,
           // the node is being inserted and will soon be transitioned to the first valid state.
-          if ($choices = workflow_field_choices($node)) {
+          $sid = $workflow->getFirstSid($entity_type, $node);
+          if ($sid) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
-            $sid = $workflow->getFirstSid($node);
             $old_sid = $workflow->getCreationSid();
           }
           else {

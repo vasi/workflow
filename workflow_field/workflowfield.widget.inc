@@ -101,7 +101,7 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
       // A node add page.
       $wid = $context['field']['settings']['wid'];
       $workflow = Workflow::getWorkflow($wid);
-      $current_sid = $workflow->getFirstSid($entity);
+      $current_sid = $workflow->getFirstSid($entity_type, $entity);
     }
 
     $element['#default_value'] = $current_sid;

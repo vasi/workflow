@@ -118,9 +118,9 @@ class Workflow {
   /* Get the first valid state ID, after the creation state.
    * Use WorkflowState::getOptions(), because this does a access check.
    */
-  function getFirstSid($entity) {
+  function getFirstSid($entity_type, $entity) {
     $creation_state = self::getCreationState();
-    $options = $creation_state->getOptions($entity);
+    $options = $creation_state->getOptions($entity_type, $entity);
     if ($options) {
       $keys = array_keys($options);
       $sid = $keys[0];

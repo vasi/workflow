@@ -67,7 +67,7 @@ class WorkflowTransition {
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = $force ? $new_state->getWorkflow()->getOptions()
-                      : $new_state->getOptions($this->entity, $force);
+                      : $new_state->getOptions($this->entity_type, $this->entity, $force);
 
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array('%old_sid' => $old_sid, '%new_sid' => $new_sid, );

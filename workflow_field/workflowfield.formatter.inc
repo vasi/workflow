@@ -45,12 +45,12 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   }
 
   $state = new WorkflowState($current_sid);
+  $options = $state->getOptions($entity_type, $entity, $force = FALSE);
+
   $workflow = $state->getWorkflow();
-  $choices = workflow_field_choices($entity, $force = FALSE, $state); // All valid to-states from current sid.
-  $states = $workflow->getOptions(); // All states of the Workflow, in format $key => $label.
 
   // Only build form if user has possible target state(s).
-  if (!workflow_show_form($current_sid, $workflow, $choices)) {
+  if (!workflow_show_form($current_sid, $workflow, $options)) {
 //dpm('show only formatter', __FUNCTION__);
     return $list_element;
   }
