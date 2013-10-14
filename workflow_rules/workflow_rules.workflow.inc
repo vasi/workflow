@@ -20,8 +20,6 @@
 function workflow_rules_workflow($op, $old_sid, $new_sid, $entity) {
   switch ($op) {
     case 'transition post':
-dpm(__FUNCTION__ . ' '.  $op);
-dpm(debug_backtrace());
       // Rules are updated only after the transition.
       if ($old_sid == $new_sid) {
         rules_invoke_event('workflow_comment_added', $entity, $old_sid, $new_sid);
