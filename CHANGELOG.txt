@@ -213,3 +213,4 @@ Issue #2019345 by johnv: Added 'grouped' options for Workflow::getOptions().
 Issue #2102663 by johnv: Added support for Workflow Field to workflow_rules sub-module.
 Issue #2111043 by johnv: Moved function workflow_field_choices() to WorkflowState->getOptions().
 Issue #2102663 by johnv: Fixed apparently rules functions must be in main include.
+Issue #2111795 by johnv: Fixed error when adding a Workflow with a name that is a translation of other workflow's name.

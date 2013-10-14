@@ -164,13 +164,10 @@ function workflow_admin_ui_add_form_validate($form, &$form_state) {
   // Make sure workflow name is not a duplicate.
   $workflows = array();
   foreach (Workflow::getWorkflows() as $workflow) {
-    $workflows[$workflow->wid] = check_plain(t($workflow->getName())); //@todo: must we use t() here?
-  }
-  if (!empty($workflows)) {
-    $workflows = array_flip($workflows);
-    if (array_key_exists($workflow_name, $workflows)) {
+    if ($workflow_name == check_plain($workflow->getName())) {
       form_set_error('wf_name', t('A workflow with the name %name already exists. Please enter another name for your new workflow.',
         array('%name' => $workflow_name)));
+      break;
     }
   }
 }
