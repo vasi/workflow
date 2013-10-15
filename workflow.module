@@ -10,8 +10,8 @@ define('WORKFLOW_DELETION', 0);
 
 // Include the hooks for the 'conventional' (version D5/D6/D7.1) Node API.
 // @todo: make this optional when only Field API is used. (version D7.2/D8)
-//module_load_include('inc', 'workflow', 'workflow.node');
-//module_load_include('inc', 'workflow', 'workflow.deprecated');
+module_load_include('inc', 'workflow', 'workflow.node');
+module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
  * Implements hook_permission().

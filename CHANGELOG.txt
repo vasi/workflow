@@ -214,3 +214,5 @@ Issue #2102663 by johnv: Added support for Workflow Field to workflow_rules sub-
 Issue #2111043 by johnv: Moved function workflow_field_choices() to WorkflowState->getOptions().
 Issue #2102663 by johnv: Fixed apparently rules functions must be in main include.
 Issue #2111795 by johnv: Fixed error when adding a Workflow with a name that is a translation of other workflow's name.
+Issue #2112263 by Nancydru: Typo in workflow_get_workflow)by_sid().
+Issue #2019345 by johnv: Fixed accidentally removed includes from workflow.module file.
