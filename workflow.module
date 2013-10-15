@@ -903,7 +903,7 @@ function workflow_get_workflow_states($options = array()) {
   $query->addTag('workflow_states');
 
   // Give them the answer.
-  return $query->execute()->fetchAll();
+  return $query->execute()->fetchAllAssoc('sid');
 }
 
 function workflow_get_workflow_states_by_wid($wid, $options = array()) {
@@ -915,7 +915,8 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
  * @deprecated: workflow_get_workflow_by_sid --> WorkflowState->getWorkflow()
  */
 function workflow_get_workflow_by_sid($sid) {
-  return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s INNER JOIN {workflow} w ON w.wid=s.wid ",
+  return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s
+    INNER JOIN {workflows} w ON w.wid=s.wid ",
     array(':sid' => $sid))->fetchObject();
 }
 
