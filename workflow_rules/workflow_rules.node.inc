@@ -109,38 +109,10 @@ function _workflow_rules_rules_node_action_info() {
           'optional' => TRUE,
         ),
       ),
+      'base' => '_workflow_rules_node_set_state',
+      'callbacks' => array(
+        'execute' => '_workflow_rules_node_set_state',
+      ),
     ),
   );
-}
-
-/**
- * Condition implementation: check state transition.
- * 
- * @param $node : the node with the new values. Other entity types are not supported.
- * @param : array $old_sids : an array of old sids to meet the condition.
- * @param : array $new_sids : an array of new sids to meet the condition.
- * @param : array $condition: a RulesCondition->settings array.
- */
-function _workflow_rules_workflow_check_transition($node, array $old_sids, array $new_sids, array $condition) {
-  $old_sid = workflow_node_previous_state($node);
-  $new_sid = workflow_node_current_state($node);
-
-  return _workflow_rules_workflow_check_given_state($old_sid, $old_sids) &&
-         _workflow_rules_workflow_check_given_state($new_sid, $new_sids);
-}
-
-/**
- * Condition implementation: check current state.
- */
-function _workflow_rules_workflow_check_state($node, $sids) {
-  $sid = workflow_node_current_state($node);
-  return _workflow_rules_workflow_check_given_state($sid, $sids);
-}
-
-/**
- * Condition implementation: check previous state.
- */
-function _workflow_rules_workflow_check_previous_state($node, $sids) {
-  $sid = workflow_node_previous_state($node);
-  return _workflow_rules_workflow_check_given_state($sid, $sids);
 }
