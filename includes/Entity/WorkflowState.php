@@ -58,9 +58,9 @@ class WorkflowState {
    * @param $reset : an option to refresh all caches.
    * @return       : an array of states.
    * 
-   * @deprecated workflow_get_workflow_states() --> WorkflowState->getStates()
-   * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
-   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates()
+   * @deprecated workflow_get_workflow_states() --> WorkflowState::getStates()
+   * @deprecated workflow_get_workflow_states_all() --> WorkflowState::getStates()
+   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState::getStates()
    */
   public static function getStates($sid = 0, $wid = 0, $reset = FALSE) {
     if ($reset) {
@@ -100,6 +100,15 @@ class WorkflowState {
       }
       return $result;
     }
+  }
+
+  public static function getStatesByName($name, $wid) {
+    foreach($states = WorkflowState::getStates(0, $wid) as $state) {
+      if ($name != $state->getName()) {
+        unset($states[$state->sid]);
+      }
+    }
+    return $states;
   }
 
   /*
