@@ -221,3 +221,4 @@ Issue #2019345 by johnv: Added workflow_admin_ui now uses classes, too.
 Issue #2019345 by johnv: Added workflow.features.inc now includes workflow.deprecated.inc.
 Issue #2019345 by johnv: Added workflow.tokens.inc now uses classes, too.
 Issue #2019345 by johnv: Added extra methods to Workflow objects.
+Issue #2019345 by johnv: Added workflow_access now uses classes, too.
