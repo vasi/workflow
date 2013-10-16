@@ -217,3 +217,4 @@ Issue #2111795 by johnv: Fixed error when adding a Workflow with a name that is 
 Issue #2112263 by Nancydru: Typo in workflow_get_workflow)by_sid().
 Issue #2019345 by johnv: Fixed accidentally removed includes from workflow.module file.
 Issue #2019345 by johnv: Added extra methods to Workflow objects.
+Issue #2019345 by johnv: Added workflow_admin_ui now uses classes, too.
