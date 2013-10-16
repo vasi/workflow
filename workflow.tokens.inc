@@ -8,12 +8,10 @@
  * Implements hook_tokens().
  */
 function workflow_tokens($type, $tokens, array $data = array(), array $options = array()) {
-dpm(__FUNCTION__);
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
   $date = REQUEST_TIME;
-dpm($type);
 
   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])  && !empty($data['node']->nid)) {
     $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
@@ -149,7 +147,6 @@ dpm($type);
  * Implements hook_token_info().
  */
 function workflow_token_info() {
-dpm(__FUNCTION__);
   $type = array(
     'name' => t('Workflow'),
     'description' => t('Tokens related to workflows.'),
