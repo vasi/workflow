@@ -23,7 +23,9 @@ class Workflow {
       if (!is_array($this->options)) {
         $this->options = unserialize($this->options);
       }
-      self::$workflows[$this->wid] = $this;
+      if ($this->wid) {
+        self::$workflows[$this->wid] = $this;
+      }
     }
     else {
       if (!isset(self::$workflows[$wid])) {
@@ -38,26 +40,27 @@ class Workflow {
     }
   }
 
-/* 
+/*
  * A Factory function to get Workflow data from the database, and return objects.
  * The execution of the query instantiates objects and saves them in a static array.
- */ 
+ */
   public static function load($wid) {
     $workflows = self::getWorkflows($wid, $reset = FALSE);
     return $workflows[$wid];
   }
+
   public static function getWorkflow($wid, $reset = FALSE) {
     $workflows = self::getWorkflows($wid, $reset);
     return $workflows[$wid];
   }
 
-/* 
+/*
  * A Factory function to get Workflow data from the database, and return objects.
  * This is only called by CRUD functions in workflow.features.inc
  * More than likely in prep for an import / export action.
  * Therefore we don't want to fiddle with the response.
  * @deprecated: workflow_get_workflows_by_name() --> Workflow::getWorkflowByName($name)
- */ 
+ */
   public static function getWorkflowByName($name, $unserialize_options = FALSE) {
     foreach($workflows = self::getWorkflows() as $workflow) {
       if ($name == $workflow->getName()) {
@@ -90,16 +93,15 @@ class Workflow {
     // Initially, only get the creation_state of the Workflow.
     $query->condition('ws.sysid' , WORKFLOW_CREATION);
 
+    $query->execute()->fetchAll(PDO::FETCH_CLASS, 'Workflow');
+
     // return array of objects, even if only 1 is requested.
     // note: self::workflows[] is populated in respective constructors.
-    if ($wid) {
+    if ($wid > 0) {
       // return 1 object.
-      $query->condition('w.wid', $wid);
-      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'Workflow');
       return array($wid => self::$workflows[$wid]);
     }
     else {
-      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'Workflow');
       return self::$workflows;
     }
   }
@@ -133,23 +135,33 @@ class Workflow {
     return $sid;
   }
 
-  /* 
+  /*
+   * @param bool $all
+   *   Indicates to return all (TRUE) or only active (FALSE) states of a workflow.
    * @return
    *   An array of WorkflowState objects.
    */
-  function getStates() {
-    return WorkflowState::getStates(0, $this->wid);
+  function getStates($all = FALSE) {
+    $states = WorkflowState::getStates(0, $this->wid);
+    if (!$all) {
+      foreach($states as $state) {
+        if (!$state->isActive() && !$state->isCreationState()) {
+          unset($states[$state->sid]);
+        }
+      }
+    }
+    return $states;
   }
 
-  /* 
+  /*
    * @return
    *   A WorkflowState object.
    */
   function getState($sid) {
-    return array_shift(WorkflowState::getStates($sid));
+    return WorkflowState::load($sid);
   }
 
-  /* 
+  /*
    * @param bool $grouped
    *   Indicates if the value must be grouped per workflow.
    *   This influence the rendering of the select_list options.
@@ -231,9 +243,9 @@ class Workflow {
     module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL, FALSE);
 
     // Delete associated state (also deletes any associated transitions).
-    foreach ($this->getStates() as $state) {
-//    @todo:  $state->delete();
-      workflow_delete_workflow_states_by_sid($state->sid);
+    foreach ($this->getStates($all = TRUE) as $state) {
+      $state->deactivate($new_sid = 0);
+      $state->delete();
     }
 
     // Delete type map.
@@ -250,28 +262,32 @@ class Workflow {
    * @todo: implement Workflow->save()
    */
   function save($create_creation_state = TRUE) {
-//    if (isset($this->tab_roles) && is_array($this->tab_roles)) {
-//      $this->tab_roles = implode(',', $this->tab_roles);
-//    }
-//
-//    if (isset($this->wid) && count(Workflow::getWorkflow($data->wid)) > 0) {
-//      drupal_write_record('workflows', $data, 'wid');
-//    }
-//    else {
-//      drupal_write_record('workflows', $data);
-//      if ($create_creation_state) {
-//        $state_data = array(
-//          'wid' => $data->wid,
-//          'state' => t('(creation)'),
-//          'sysid' => WORKFLOW_CREATION,
-//          'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
-//        );
-//
-//        workflow_update_workflow_states($state_data);
+    if (isset($this->tab_roles) && is_array($this->tab_roles)) {
+      $this->tab_roles = implode(',', $this->tab_roles);
+    }
+    if (is_array($this->options)) {
+        $this->options = serialize($this->options);
+    }
+
+    if (($this->wid > 0) && count(Workflow::getWorkflow($this->wid)) > 0) {
+      drupal_write_record('workflows',  $this, 'wid');
+    }
+    else {
+      drupal_write_record('workflows', $this);
+      if ($create_creation_state) {
+        $state_data = array(
+          'wid' => $this->wid,
+          'state' => t('(creation)'),
+          'sysid' => WORKFLOW_CREATION,
+          'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
+        );
+
+        workflow_update_workflow_states($state_data);
 //      // @TODO consider adding state data to return here as part of workflow data structure.
 //      // That way we could past structs and transitions around as a data object as a whole.
 //      // Might make clone easier, but it might be a little hefty for our needs?
-//    }
+      }
+    }
   }
-  
+
 }
