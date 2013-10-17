@@ -37,14 +37,18 @@ function workflow_revert_menu() {
  * Menu callback to do the revert function.
  */
 function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
-  $args = array('#nid' => $nid, '#sid' => $sid);
 
   if (drupal_valid_token($_GET['token'], 'workflow_revert ' . $sid)) {
-    $states = workflow_get_workflow_states_all();
+    $state = WorkflowState::load($sid);
+
+    $entity_type = 'node';
     $node = node_load($nid);
+
+    $args['#sid'] = $sid;
+    $args['#nid'] = $nid;
     $args['#node'] = $node;
     $question = t('Are you sure you want to revert %title to the "@state" state?', array(
-      '@state' => $states[$sid],
+      '@state' => $state->label(),
       '%title' => $node->title,
       ));
     return confirm_form($args,
@@ -61,9 +65,10 @@ function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
 }
 
 function workflow_revert_form_submit($form, $form_state) {
-  $node = $form['#node'];
-  $comment = t('State reverted');
   $sid = $form['#sid'];
+  $nid = $form['#nid'];
+  $node = $form['#node'];
+  $comment = t('State reverted.');
   
   // If Rules is available, signal the reversion.
   if (module_exists('rules')) {
@@ -71,8 +76,9 @@ function workflow_revert_form_submit($form, $form_state) {
   }
 
   // Force the transition because it's probably not valid.
+  //@todo: use WorkflowTransition->execute() in workflow_revert.
   workflow_execute_transition($node, $sid, $comment, TRUE);
-  drupal_set_message(t('Workflow reverted.', array()));
+  drupal_set_message($comment);
 
   drupal_goto('node/' . $form['#nid'] . '/workflow');
 }
@@ -107,8 +113,10 @@ function workflow_revert_rules_event_info() {
  */
 function workflow_revert_workflow_history_alter(&$variables) {
   static $first = TRUE;
+
   // Only mark the first row.
   if ($first) {
+    $first = FALSE;
     // Let's ask other modules if the reversion is allowed.
     $node = node_load($variables['history']->nid);
     $result = module_invoke_all('workflow', 'transition permitted', $variables['sid'], $variables['old_sid'], $node);
@@ -119,7 +127,5 @@ function workflow_revert_workflow_history_alter(&$variables) {
       $path = 'workflow_revert/' . $variables['history']->nid . '/' . $variables['old_sid'];
       $variables['extra'] = l('Revert state change', $path, $options);
     }
-    // That was your one chance...
-    $first = FALSE;
   }
 }
