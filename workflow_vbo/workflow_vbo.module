@@ -29,7 +29,9 @@ function workflow_vbo_action_info() {
 /**
  * Implements a Drupal action. Move a node to the next state in the workflow.
  */
-function workflow_vbo_next_state_action($node, $context) {
+function workflow_vbo_next_state_action($node, array $context) {
+  global $user;
+
   // If this action is being fired because it's attached to a workflow transition
   // then the node's new state (now its current state) should be in $node->workflow
   // because that is where the value from the workflow form field is stored;
@@ -44,30 +46,34 @@ function workflow_vbo_next_state_action($node, $context) {
     return;
   }
 
-  $current_state = $node->workflow;
-  $new_state = $current_state;
+  $entity_type = 'node';
+  $entity = $node;
+  $current_sid = $node->workflow;
+  $current_state = WorkflowState::load($current_sid);
 
   // Get the node's new state.
-  $choices = workflow_field_choices($node);
-  foreach ($choices as $sid => $name) {
+  $new_sid = $current_sid;
+  $options = $current_state->getOptions($entity_type, $entity);
+  foreach ($options as $sid => $name) {
     if (isset($flag)) {
-      $new_state = $sid;
+      $new_sid = $sid;
       $new_state_name = $name;
       break;
     }
-    if ($sid == $current_state) {
+    if ($sid == $current_sid) {
       $flag = TRUE;
     }
   }
 
   // Fire the transition.
-  workflow_execute_transition($node, $new_state);
+  $transition = new WorkflowTransition($entity_type, $entity, $field_name = '', $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment='');
+  $new_sid = $transition->execute($force = FALSE);
 }
 
 /**
  * Implements a Drupal action. Move a node to a specified state.
  */
-function workflow_vbo_given_state_action($node, $context) {
+function workflow_vbo_given_state_action($node, array $context) {
   global $user;
   if (!isset($node->nid)) {
     watchdog('workflow_vbo', 'Unable to get current node id state of node - node is not yet saved.');
@@ -80,7 +86,13 @@ function workflow_vbo_given_state_action($node, $context) {
       '%user' => theme('username', array('account' => $user)),
       ));
 
-  workflow_execute_transition($node, $context['target_sid'], $comment, $context['force']);
+  $entity_type = 'node';
+  $entity = $node;
+  $current_sid = $node->workflow;
+
+  // Fire the transition.
+  $transition = new WorkflowTransition($entity_type, $entity, $field_name = '', $current_sid, $new_sid = $context['target_sid'], $user->uid, REQUEST_TIME, $comment);
+  $new_sid = $transition->execute($force = $context['force']);
 }
 
 /**
@@ -88,16 +100,17 @@ function workflow_vbo_given_state_action($node, $context) {
  *
  * @see workflow_vbo_given_state_action()
  */
-function workflow_vbo_given_state_action_form($context) {
+function workflow_vbo_given_state_action_form(array $context) {
   $previous_workflow = '';
   $options = array();
 
+// @todo: you can choose a state from an illegal Workflow.
   // Get all states, only where active.
-  foreach (workflow_get_workflow_states(array('status' => 1)) as $data) {
-    $options[$data->name][$data->sid] = check_plain($data->state);
+  foreach (Workflow::getWorkflows() as $workflow) {
+    $options += $workflow->getOptions($grouped = TRUE);
   }
 
-  $form['target_sid'] = array(
+  $form['workflow_options'] = array(
     '#type' => 'select',
     '#title' => t('Target state'),
     '#description' => t('Please select the state that should be assigned when this action runs.'),
@@ -105,7 +118,7 @@ function workflow_vbo_given_state_action_form($context) {
     '#options' => $options,
     );
 
-  $form['force'] = array(
+  $form['workflow_force'] = array(
     '#type' => 'checkbox',
     '#title' => t('Force transition'),
     '#description' => t('If this box is checked, the new state will be assigned even if workflow ' .
@@ -131,11 +144,12 @@ function workflow_vbo_given_state_action_form($context) {
  * @see workflow_vbo_given_state_action_form()
  */
 function workflow_vbo_given_state_action_submit($form_id, $form_state) {
-  if ($state = workflow_get_workflow_states_by_sid($form_state['values']['target_sid'])) {
+  $new_sid = $form_state['values']['workflow_options'];
+  if ($state = WorkflowState::load($new_sid)) {
     return array(
-      'target_sid' => $form_state['values']['target_sid'],
-      'state_name' => check_plain($state->state),
-      'force' => $form_state['values']['force'],
+      'target_sid' => $state->sid,
+      'state_name' => check_plain($state->getName()),
+      'force' => $form_state['values']['workflow_force'],
       'workflow_comment' => $form_state['values']['workflow_comment'],
       );
   }
