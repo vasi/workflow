@@ -916,7 +916,7 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
  */
 function workflow_get_workflow_by_sid($sid) {
   return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s
-    INNER JOIN {workflows} w ON w.wid=s.wid ",
+    INNER JOIN {workflows} w ON w.wid=s.wid WHERE sid = :sid ",
     array(':sid' => $sid))->fetchObject();
 }
 
