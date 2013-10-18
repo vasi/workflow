@@ -358,7 +358,6 @@ function workflow_admin_ui_breadcrumbs($workflow, $extra = NULL) {
  *   HTML form and permissions table.
  */
 function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
-dpm(__FUNCTION__);
   $form = array();
   // If we don't have a workflow by this point, we need to go back
   // to creating one at admin/config/workflow/workflow/add
@@ -483,7 +482,6 @@ dpm(__FUNCTION__);
  * @see workflow_edit_form()
  */
 function theme_workflow_admin_ui_edit_form($variables) {
-dpm(__FUNCTION__);
   $output = '';
 
   $form = $variables['form'];
@@ -492,7 +490,6 @@ dpm(__FUNCTION__);
   // If we don't have a workflow here, we need to go back to admin.
   if ($workflow) {
     drupal_set_title(t('Edit workflow %name', array('%name' => $workflow->getName())), PASS_THROUGH);
-dpm($form);
 
     $output .= drupal_render_children($form);
     return $output;
