@@ -227,3 +227,4 @@ Issue #2019345 by johnv: Added workflow_revert now uses classes.
 Issue #2019345 by johnv: Added workflow_search_api now uses classes.
 Issue #2019345 by johnv: Added workflow_vbo now uses classes.
 Issue #2019345 by johnv: Added workflow.install now uses classes.
+Issue #2019345 by johnv: Fixed error in WorkflowTransition->IsAllowed().

@@ -62,13 +62,12 @@ class WorkflowTransition {
   public function isAllowed($force) {
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
-    $new_state = new WorkflowState($new_sid);
+    $old_state = new WorkflowState($old_sid);
 
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
-    $options = $force ? $new_state->getWorkflow()->getOptions()
-                      : $new_state->getOptions($this->entity_type, $this->entity, $force);
-
+    $options = $force ? $old_state->getWorkflow()->getOptions()
+                      : $old_state->getOptions($this->entity_type, $this->entity, $force);
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array('%old_sid' => $old_sid, '%new_sid' => $new_sid, );
       return $error_message = t('The transition from %old_sid to %new_sid is not allowed.', $t_args);
