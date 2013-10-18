@@ -11,10 +11,10 @@ class WorkflowState {
 
   public $sid = 0;
   public $wid = 0;
-  private $weight = 0; 
+  public $weight = 0; 
   private $sysid = 0; 
-  private $state; // @todo: rename to 'label'.
-  public $status;
+  private $state = ''; // @todo: rename to 'label'.
+  public $status = 1;
   private $workflow = NULL; 
 
   public function __construct($sid = 0, $wid = 0) {
@@ -42,6 +42,10 @@ class WorkflowState {
   /**
    * Alternative constructor, via a static function.
    */
+  public static function load($sid, $wid = 0) {
+    $states = self::getStates($sid, $wid);
+    return $states[$sid];
+  }
   public static function getState($sid, $wid = 0) {
     $states = self::getStates($sid, $wid);
     return $states[$sid];
@@ -54,9 +58,9 @@ class WorkflowState {
    * @param $reset : an option to refresh all caches.
    * @return       : an array of states.
    * 
-   * @deprecated workflow_get_workflow_states() --> WorkflowState->getStates()
-   * @deprecated workflow_get_workflow_states_all() --> WorkflowState->getStates()
-   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState->getStates($sid)
+   * @deprecated workflow_get_workflow_states() --> WorkflowState::getStates()
+   * @deprecated workflow_get_workflow_states_all() --> WorkflowState::getStates()
+   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState::getStates()
    */
   public static function getStates($sid = 0, $wid = 0, $reset = FALSE) {
     if ($reset) {
@@ -98,6 +102,15 @@ class WorkflowState {
     }
   }
 
+  public static function getStatesByName($name, $wid) {
+    foreach($states = WorkflowState::getStates(0, $wid) as $state) {
+      if ($name != $state->getName()) {
+        unset($states[$state->sid]);
+      }
+    }
+    return $states;
+  }
+
   /*
    * Returns the Workflow object of this State.
    */
@@ -110,6 +123,10 @@ class WorkflowState {
 
   function isActive() {
     return (bool) $this->status;
+  }
+
+  function isCreationState() {
+    return $this->sysid == WORKFLOW_CREATION;
   }
 
   /*
@@ -188,20 +205,24 @@ class WorkflowState {
   function getName() {
     return $this->state;
   }
+  function setName($name) {
+    return $this->state = $name;
+  }
   function value() {
     return $this->sid;
   }
 
   /**
    * Given a sid, delete the state and all associated data.
-   * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->delete()
+   * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->deactivate() + delete()
    */
-  function delete($new_sid = FALSE, $true_delete = FALSE) {
+  function deactivate($new_sid) {
     $sid = $this->sid;
     // Notify interested modules. We notify first to allow access to data before we zap it.
     module_invoke_all('workflow', 'state delete', $sid, NULL, NULL, FALSE);
 
-    // Re-parent any nodes that we don't want to orphan.
+    // Node API: Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
+    // @todo Field API: Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
     if ($new_sid) {
       global $user;
       // A candidate for the batch API.
@@ -236,28 +257,53 @@ class WorkflowState {
       }
     }
 
-    // Delete any lingering node to state values.
+    // Node API: Delete any lingering node to state values.
     workflow_delete_workflow_node_by_sid($sid);
+    // @todo: Field API: Delete any lingering node to state values.
+    //workflow_delete_workflow_field_by_sid($sid);
 
     // Delete the state. -- We don't actually delete, just deactivate.
     // This is a matter up for some debate, to delete or not to delete, since this
     // causes name conflicts for states. In the meantime, we just stick with what we know.
-    if ($true_delete) {
-      db_delete('workflow_states')->condition('sid', $sid)->execute();
-    }
-    else {
-      db_update('workflow_states')->fields(array('status' => 0))->condition('sid', $sid, '=')->execute();
-    }
+    // If you really want to delete the states, use workflow_cleanup module, or delete().
+    $this->active = FALSE;
+    $this->save();
+//    db_update('workflow_states')
+//      ->fields(array('status' => 0))
+//      ->condition('sid', $sid, '=')
+//      ->execute();
 
     // Clear the cache.
     self::$states = array();
   }
 
   /**
+   * Given data, delete from workflow_states.
+   */
+  function delete() {
+    db_delete('workflow_states')
+      ->condition('sid', $this->sid)
+      ->execute();
+  }
+
+  /**
    * Given data, update or insert into workflow_states.
-   * @deprecate: workflow_update_workflow_states() --> WorkflowState->delete()
-   * @todo: implement WorkflowState->save()
+   * @deprecated: workflow_update_workflow_states() --> WorkflowState->save()
    */
   function save() {
+    // Convert all properties to an array, the previous ones, too.
+    $data['sid'] = $this->sid;
+    $data['wid'] = $this->wid;
+    $data['weight'] = $this->weight;
+    $data['sysid'] = $this->sysid;
+    $data['state'] = $this->state;
+    $data['status'] = $this->status;
+
+    if (!empty($this->sid) && count(WorkflowState::load($this->sid)) > 0) {
+      drupal_write_record('workflow_states', $data, 'sid');
+    }
+    else {
+      drupal_write_record('workflow_states', $data);
+    }
   }
 }

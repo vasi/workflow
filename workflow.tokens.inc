@@ -14,16 +14,14 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   $date = REQUEST_TIME;
 
   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])  && !empty($data['node']->nid)) {
-    $entity_type = 'node';
+    $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
     $node = $data['node'];
 
     // Get a list of all possible states for returning state names.
-    $states = workflow_get_workflow_states_all();
-
-    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+    $states = WorkflowState::getStates();
+    if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
       $wid = $workflow->wid;
       $last_history = workflow_get_recent_node_history($node->nid);
-
       if (isset($node->workflow) && !isset($node->workflow_stamp)) {
         // The node is being submitted but the form data has not been saved to the database yet,
         // so we set the token values from the workflow form fields.
@@ -52,8 +50,6 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $sid = $node->workflow;
             $old_sid = $workflow->getCreationSid();
           }
-          $sid = workflow_get_workflow_states_by_sid($sid)->sid;
-          $old_sid = workflow_get_workflow_states_by_sid($old_sid)->sid;
           $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
           $uid = $node->uid;
           $account = user_load($node->uid);
@@ -94,10 +90,10 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
               $replacements[$original] = $sanitize ? check_plain($workflow->name) : $workflow->name;
               break;
             case 'workflow-current-state-name':
-              $replacements[$original] = $sanitize ? check_plain($states[$sid]) : $states[$sid];
+              $replacements[$original] = $sanitize ? check_plain($states[$sid]->getName()) : $states[$sid]->getName();
               break;
             case 'workflow-old-state-name':
-              $replacements[$original] = $sanitize ? check_plain($states[$old_sid]) : $states[$old_sid];
+              $replacements[$original] = $sanitize ? check_plain($states[$old_sid]->getName()) : $states[$old_sid]->getName();
               break;
             case 'workflow-current-state-updating-user-name':
               $name = format_username($account);

@@ -7,6 +7,10 @@
 
 define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
 
+// This include has not been fully tested with Workflow Field and its classes.
+// Therefore we include the file with deprecated functions. 
+module_load_include('inc', 'workflow', 'workflow.deprecated');
+
 /**
  * Workflows are a **faux-exportable** component.
  */
@@ -19,8 +23,9 @@ function workflow_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['workflow'] = 'workflow';
   foreach (Workflow::getWorkflows() as $workflow) {
-    if (in_array($workflow->name, $data)) {
-      $export['features']['workflow'][$workflow->name] = $workflow->name;
+    $name = $workflow->getName();
+    if (in_array($name, $data)) {
+      $export['features']['workflow'][$name] = $name;
     }
   }
   return $export;
@@ -110,7 +115,7 @@ function workflow_update_workflows_full_object($workflow) {
     $workflow->wid = $orig_workflow->wid;
   }
 
-  workflow_update_workflows($workflow, FALSE);
+  workflow_update_workflows($workflow, FALSE); // @todo: deprecated function.
 
   // Cancel out if workflow failed to save.
   if (!isset($workflow->wid) || empty($workflow->wid)) {

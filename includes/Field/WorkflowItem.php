@@ -397,10 +397,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
    * @todo: this function needs to read the correct state. It is incorrect when showing comments on a node page.
    */
   public function getAllowedValues() {
-    $options = array();
-    foreach($this->getCurrentState()->getWorkflow()->getStates() as $state) {
-      $options[$state->value()] = $state->label();
-    }
+    $options = $this->getCurrentState()->getWorkflow()->getOptions();
     return $options;
   }
 

@@ -383,17 +383,12 @@ function workflow_update_7001() {
   module_load_include('module','workflow');
 
   // Get all workflows.
-  $workflows = Workflow::getWorkflows();
-  
-  foreach ($workflows as $workflow) {
+  foreach (Workflow::getWorkflows() as $workflow) {
     // Add the option.
     $workflow->options['watchdog_log'] = 1;
-    
-    // Serialize the options array.
-    $workflow->options = serialize($workflow->options);
-    
+
     // Update the workflow without creating a creation state.
-    workflow_update_workflows($workflow, FALSE);
+    $workflow->save(FALSE);
   }
 }
 
@@ -461,7 +456,7 @@ function workflow_update_7004() {
 
   foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
     $entity_type = $scheduled_transition->entity_type;
-    // Set the correct entity_type. This will always be 'node'. 
+    // Set the correct entity_type. This will always be 'node'.
     $entity_type = empty($entity_type) ? 'node' : $entity_type;
     $entity_id = $scheduled_transition->entity_id;
     $entity = $scheduled_transition->setEntity($entity_type, $entity_id);

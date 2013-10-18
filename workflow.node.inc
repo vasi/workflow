@@ -192,13 +192,8 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  $state_labels = array();
-  foreach ($workflow_states = $workflow->getStates() as $state) {
-    $state_labels[$state->sid] = check_plain($state->label());
-  }
-
   $current_sid = workflow_node_current_state($node);
-  $current_state = $workflow_states[$current_sid];
+  $current_state = WorkflowState::load($current_sid);
   $choices = $current_state->getOptions('node', $node);
 
   // Show current state at the top of the node display.
@@ -210,6 +205,8 @@ function workflow_node_view($node, $view_mode, $langcode) {
     );
 
   if (workflow_show_form($current_sid, $workflow, $choices)) {
+    $state_labels = $workflow->getOptions();
+
     // Show state change form at the bottom of the node display.
     module_load_include('inc', 'workflow', 'workflow.pages');
 

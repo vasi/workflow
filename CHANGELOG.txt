@@ -214,3 +214,16 @@ Issue #2102663 by johnv: Added support for Workflow Field to workflow_rules sub-
 Issue #2111043 by johnv: Moved function workflow_field_choices() to WorkflowState->getOptions().
 Issue #2102663 by johnv: Fixed apparently rules functions must be in main include.
 Issue #2111795 by johnv: Fixed error when adding a Workflow with a name that is a translation of other workflow's name.
+Issue #2112263 by Nancydru: Typo in workflow_get_workflow)by_sid().
+Issue #2019345 by johnv: Fixed accidentally removed includes from workflow.module file.
+Issue #2019345 by johnv: Added extra methods to Workflow objects.
+Issue #2019345 by johnv: Added workflow_admin_ui now uses classes, too.
+Issue #2019345 by johnv: Added workflow.features.inc now includes workflow.deprecated.inc.
+Issue #2019345 by johnv: Added workflow.tokens.inc now uses classes, too.
+Issue #2019345 by johnv: Added extra methods to Workflow objects.
+Issue #2019345 by johnv: Added workflow_access now uses classes, too.
+Issue #2019345 by johnv: Added workflow_node_view now uses classes, too.
+Issue #2019345 by johnv: Added workflow_revert now uses classes.
+Issue #2019345 by johnv: Added workflow_search_api now uses classes.
+Issue #2019345 by johnv: Added workflow_vbo now uses classes.
+Issue #2019345 by johnv: Added workflow.install now uses classes.
