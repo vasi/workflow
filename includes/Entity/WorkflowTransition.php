@@ -17,7 +17,7 @@ class WorkflowTransition {
   // entity data
   public $entity_id;
   public $nid; // @todo D8: remove $nid, use $entity_id; (requires conversion of Views displays.)
-  private $entity; // This is dynamically loaded, in first call to getEntity();
+  private $entity; // This is dynamically loaded. Use WorkflowTransition->getEntity() to fetch this.
   // transition data
   public $old_sid = 0;
   public $new_sid = 0;
@@ -62,12 +62,14 @@ class WorkflowTransition {
   public function isAllowed($force) {
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
+    $entity_type = $this->entity_type;
+    $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $old_state = new WorkflowState($old_sid);
 
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = $force ? $old_state->getWorkflow()->getOptions()
-                      : $old_state->getOptions($this->entity_type, $this->entity, $force);
+                      : $old_state->getOptions($entity_type, $entity, $force);
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array('%old_sid' => $old_sid, '%new_sid' => $new_sid, );
       return $error_message = t('The transition from %old_sid to %new_sid is not allowed.', $t_args);
@@ -98,13 +100,16 @@ class WorkflowTransition {
   public function execute($force = FALSE) {
     global $user;
 
-    $field_name = $this->field_name;
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
+    $entity_type = $this->entity_type;
+    $entity_id = $this->entity_id;
+    $entity = $this->getEntity(); // Entity may not be loaded, yet.
+    $field_name = $this->field_name;
 
     if (!$force) {
       // Make sure this transition is allowed.
-      $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $this->entity, $force, $this->entity_type, $field_name);
+      $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $entity, $force, $entity_type, $field_name);
       // Did anybody veto this choice?
       if (in_array(FALSE, $result)) {
         // If vetoed, quit.
@@ -115,7 +120,7 @@ class WorkflowTransition {
     // Let other modules modify the comment.
     //@todo D8: remove a but last items from $context.
     $context = array(
-      'node' => $this->entity,
+      'node' => $entity,
       'sid' => $new_sid,
       'old_sid' => $old_sid,
       'uid' => $this->uid,
@@ -130,12 +135,12 @@ class WorkflowTransition {
         $this->stamp = REQUEST_TIME;
 
         // @todo D8: remove; this is only for Node API.
-        $this->entity->workflow_stamp = REQUEST_TIME;
-        workflow_update_workflow_node_stamp($this->entity_id, $this->stamp); //@todo: only for Node API
+        $entity->workflow_stamp = REQUEST_TIME;
+        workflow_update_workflow_node_stamp($entity_id, $this->stamp); //@todo: only for Node API
 
-        $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $this->entity, $force, $this->entity_type, $field_name);
+        $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
         $data = array(
-          'nid' => $this->entity_id,
+          'nid' => $entity_id,
           'sid' => $new_sid,
           'old_sid' => $old_sid,
           'uid' => $this->uid,
@@ -143,12 +148,12 @@ class WorkflowTransition {
           'comment' => $this->comment,
           );
         workflow_insert_workflow_node_history($data);
-        unset($this->entity->workflow_comment);  // @todo D8: remove; this line is only for Node API.
-        $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $this->entity, $force, $this->entity_type, $field_name);
+        unset($entity->workflow_comment);  // @todo D8: remove; this line is only for Node API.
+        $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
       }
 
       // Clear any references in the scheduled listing.
-      foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id, $field_name) as $scheduled_transition) {
+      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
         $scheduled_transition->delete();
       }
       return $old_sid;
@@ -172,7 +177,7 @@ class WorkflowTransition {
 
     // Invoke a callback indicating a transition is about to occur.
     // Modules may veto the transition by returning FALSE.
-    $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $this->entity, $force, $this->entity_type, $field_name);
+    $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
 
     // Stop if a module says so.
     if (in_array(FALSE, $result)) {
@@ -189,7 +194,7 @@ class WorkflowTransition {
 
     // Change the state.
     $data = array(
-      'nid' => $this->entity_id,
+      'nid' => $entity_id,
       'sid' => $new_sid,
       'uid' => (isset($node->workflow_uid) ? $node->workflow_uid : $user->uid),
       'stamp' => REQUEST_TIME,
@@ -210,20 +215,20 @@ class WorkflowTransition {
         $message = ($this->isScheduled()) ? 'Scheduled state change of @type %node_title to %state_name executed'
                                           : 'State of @type %node_title set to %state_name';
         $args = array(
-            '@type' => ($type = node_type_get_name($this->entity->type)) ? $type : $this->entity->type,
-            '%node_title' => isset($this->entity->title) ? $this->entity->title : $this->entity->type, //@todo: enable entity API.
+            '@type' => ($type = node_type_get_name($entity->type)) ? $type : $entity->type,
+            '%node_title' => isset($entity->title) ? $entity->title : $entity->type, //@todo: enable entity API.
             '%state_name' => $state->label(),
         );
-        $uri = entity_uri($this->entity_type, $this->entity);
+        $uri = entity_uri($entity_type, $entity);
         watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
       }
     }
 
     // Notify modules that transition has occurred. Action triggers should take place in response to this callback, not the previous one.
-    module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $this->entity, $force, $this->entity_type, $field_name);
+    module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
 
     // Clear any references in the scheduled listing.
-    foreach (WorkflowScheduledTransition::load($this->entity_type, $this->entity_id, $field_name) as $scheduled_transition) {
+    foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
       $scheduled_transition->delete();
     }
 
