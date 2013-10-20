@@ -58,7 +58,7 @@ function workflow_admin_ui_menu() {
     'title' => 'Workflow',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_types_form'),
+    'page arguments' => array('workflow_admin_ui_type_map_form'),
     'description' => 'Allows the creation and assignment of arbitrary workflows to node types.',
     );
 
@@ -118,7 +118,7 @@ function workflow_admin_ui_theme() {
   return array(
     'workflow_admin_ui_transitions_form' => array('render element' => 'form'),
     'workflow_admin_ui_edit_form' => array('render element' => 'form'),
-    'workflow_admin_ui_types_form' => array('render element' => 'form'),
+    'workflow_admin_ui_type_map_form' => array('render element' => 'form'),
     'workflow_admin_ui_overview_form' => array('render element' => 'form'),
   );
 }
@@ -528,7 +528,7 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
  */
 function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   if (isset($form_state['values']['transitions'])) {
-    workflow_update_transitions($form_state['values']['transitions']);
+    _workflow_admin_ui_update_configured_transitions($form_state['values']['transitions']);
   }
 
   $workflow = $form_state['values']['workflow'];
@@ -675,7 +675,7 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
   $name = $workflow->getName();
 
   if (isset($form_state['values']['transitions'])) {
-    workflow_update_transitions($form_state['values']['transitions']);
+    _workflow_admin_ui_update_configured_transitions($form_state['values']['transitions']);
   }
 
   drupal_set_message(t('The workflow was updated.'));
@@ -1100,7 +1100,7 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
  * Form builder. Allow administrator to map workflows to content types
  * and determine placement.
  */
-function workflow_admin_ui_types_form($form) {
+function workflow_admin_ui_type_map_form($form) {
   $form = array();
 
   // Allow modules to insert their own action links.
@@ -1192,7 +1192,7 @@ function workflow_admin_ui_types_form($form) {
 /**
  * Theme the workflow type mapping form.
  */
-function theme_workflow_admin_ui_types_form($variables) {
+function theme_workflow_admin_ui_type_map_form($variables) {
   $output = '';
   $form = $variables['form'];
 
@@ -1225,7 +1225,7 @@ function theme_workflow_admin_ui_types_form($variables) {
  *
  * @see workflow_types_form()
  */
-function workflow_admin_ui_types_form_submit($form, &$form_state) {
+function workflow_admin_ui_type_map_form_submit($form, &$form_state) {
   workflow_admin_ui_types_save($form_state['values']);
 
   drupal_set_message(t('The workflow mapping was saved.'));
@@ -1271,18 +1271,19 @@ function workflow_admin_ui_types_save($form_values) {
     // If this type uses workflow, make sure pre-existing nodes are set
     // to the workflow's creation state.
     if ($form_values[$type]['workflow']) {
-      workflow_initialize_nodes($type, $name);
+      _workflow_node_initialize_nodes($type, $name);
     }
   }
 }
 
 /**
- * Initialize all pre-existing nodes of a type to their first state..
+ * Initialize all pre-existing nodes of a type to their first state.
+ * @todo: adjust _workflow_node_initialize_nodes() to handle Workflow Field.
  *
  * @param $type - node type
  * @param $name - node type name
  */
-function workflow_initialize_nodes($type, $name) {
+function _workflow_node_initialize_nodes($type, $name) {
   // Build the select query.
   // We want all published nodes of this type that don't already have a workflow state.
   $query = db_select('node', 'n');
@@ -1337,7 +1338,7 @@ function workflow_initialize_nodes($type, $name) {
  *   the node author or a user in role 2. The $transitions array should
  *   contain ALL transitions for the workflow.
  */
-function workflow_update_transitions($transitions = array()) {
+function _workflow_admin_ui_update_configured_transitions($transitions = array()) {
   // Empty string is sometimes passed in instead of an array.
   if (!$transitions) {
     return;

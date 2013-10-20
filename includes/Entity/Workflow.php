@@ -163,8 +163,10 @@ class Workflow {
       $state->delete();
     }
 
-    // Delete type map.
-    workflow_delete_workflow_type_map_by_wid($wid);
+    // Delete type map. @todo: move this to hook_workflow of workflownode.module.
+    if (TRUE || module_exists('workflownode')) {
+      workflow_delete_workflow_type_map_by_wid($wid);
+    }
 
     // Delete the workflow.
     db_delete('workflows')->condition('wid', $wid)->execute();
