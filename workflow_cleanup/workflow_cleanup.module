@@ -37,7 +37,6 @@ function workflow_cleanup_theme() {
 function workflow_cleanup_workflow_operations($op, $workflow = NULL, $state = NULL) {
   switch ($op) {
     case 'top_actions':
-      $workflows = workflow_get_workflows();
       $alt = t('Clean up workflow cruft');
       $actions = array(
         'workflow-cleanup' => array(
@@ -65,16 +64,16 @@ function workflow_cleanup_form($form, $form_state) {
 
   // Get all of the states, indexed by sid.
   $states = $orphans = $inactive = array();
-  foreach (workflow_get_workflow_states() as $state) {
-    $states[$state->sid] = $state;
-    // Is it associated with a workflow?
-    if (empty($state->name)) {
-      $orphans[$state->sid] = $state->state;
+
+  foreach($states = WorkflowState::getStates() as $state) {
+    // Does the associated workflow exist?
+    if (!$state->getWorkflow()) {
+      $orphans[$state->sid] = $state->getName();
     }
     else {
-      // Is it associated with a workflow?
-      if (!$state->status) {
-        $inactive[$state->sid] = $state->state;
+      // Is the state still active?
+      if (!$state->isActive()) {
+        $inactive[$state->sid] = $state->getName();
       }
     }
   }
@@ -98,7 +97,7 @@ function workflow_cleanup_form($form, $form_state) {
     '#tree' => TRUE,
     );
 
-  foreach ($orphans as $sid => $state) {
+  foreach ($orphans as $sid => $name) {
     $form['no_workflow'][$sid]['check'] = array(
       '#type' => 'checkbox',
       '#return_value' => $sid,
@@ -106,7 +105,7 @@ function workflow_cleanup_form($form, $form_state) {
 
     $form['no_workflow'][$sid]['name'] = array(
       '#type' => 'markup',
-      '#markup' => check_plain($state),
+      '#markup' => check_plain($name),
       );
   }
 
@@ -117,7 +116,7 @@ function workflow_cleanup_form($form, $form_state) {
     '#tree' => TRUE,
     );
 
-  foreach ($inactive as $sid => $state) {
+  foreach ($inactive as $sid => $name) {
     $form['inactive'][$sid]['check'] = array(
       '#type' => 'checkbox',
       '#return_value' => $sid,
@@ -125,12 +124,12 @@ function workflow_cleanup_form($form, $form_state) {
 
     $form['inactive'][$sid]['name'] = array(
       '#type' => 'markup',
-      '#markup' => check_plain($state),
+      '#markup' => check_plain($name),
       );
 
     $form['inactive'][$sid]['wf'] = array(
       '#type' => 'markup',
-      '#markup' => check_plain($states[$sid]->name),
+      '#markup' => (!empty($sid)) ? check_plain($states[$sid]->getName()) : '',
       );
   }
 
@@ -198,12 +197,12 @@ function workflow_cleanup_form_submit($form, $form_state) {
         $hist_del = db_delete('workflow_node_history')->condition('sid', $sid)->execute();
         if ($hist_del) {
           drupal_set_message(t('@count history records for the "@state" state have been deleted.',
-            array('@state' => $states[$sid]->state, '@count' => $hist_del)));
+            array('@state' => $states[$sid]->getName(), '@count' => $hist_del)));
         }
 
         // Go ahead and delete the state.
         db_delete('workflow_states')->condition('sid', $sid)->execute();
-        drupal_set_message(t('The "@state" state has been deleted.', array('@state' => $states[$sid]->state)));
+        drupal_set_message(t('The "@state" state has been deleted.', array('@state' => $states[$sid]->getName())));
       }
     }
   }
