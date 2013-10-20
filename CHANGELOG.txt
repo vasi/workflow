@@ -229,3 +229,4 @@ Issue #2019345 by johnv: Added workflow_vbo now uses classes.
 Issue #2019345 by johnv: Added workflow.install now uses classes.
 Issue #2019345 by johnv: Fixed error in WorkflowTransition->IsAllowed().
 Issue #2019345 by johnv: Added workflow_views now uses classes.
+Issue #2019345 by johnv: Fixed notice when trying to load not-existing Workflow or State.

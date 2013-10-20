@@ -2,7 +2,7 @@
 /**
  * @file
  * Contains contains per-class functions, that are deprecated.
- * Usage: The new code can be tested, by removing this file-include from workflow.module. 
+ * Usage: The new code can be tested, by removing this file-include from workflow.module.
  */
 
 /**
@@ -20,10 +20,10 @@ function workflow_get_workflows() {
 
 /**
  * Get a specific workflow, wid is a unique ID.
- * @deprecated: workflow_get_workflows_by_wid() --> Workflow::getWorkflow($wid)
+ * @deprecated: workflow_get_workflows_by_wid() --> Workflow::load($wid)
  */
 function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
-  return Workflow::getWorkflow($wid, $reset);
+  return Workflow::load($wid, $reset);
 }
 
 /**
@@ -69,7 +69,7 @@ function workflow_get_creation_state_by_type($type) {
  * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().
  */
 function workflow_delete_workflows_by_wid($wid) {
-  $workflow = Workflow::getWorkflow($wid);
+  $workflow = Workflow::load($wid);
   $workflow->delete();
 }
 

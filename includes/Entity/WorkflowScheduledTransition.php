@@ -64,7 +64,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    */
   public static function load($entity_type, $entity_id, $field_name = '') {
     $results = db_query('SELECT * ' .
-                        'FROM {workflow_scheduled_transition} ' . 
+                        'FROM {workflow_scheduled_transition} ' .
                         'WHERE entity_type = :entity_type ' .
                         'AND   nid = :nid ' .
                         'ORDER BY scheduled ASC ',
@@ -94,7 +94,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     drupal_write_record('workflow_scheduled_transition', $this);
 
     // Get name of state.
-    if ($state = new WorkflowState($this->new_sid)) {
+    if ($state = WorkflowState::load($this->new_sid)) {
       $message = '@entity_title scheduled for state change to %state_name on %scheduled_date';
       $args = array(
           '@entity_type' => $this->entity_type,
@@ -114,7 +114,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    * @deprecated: workflow_delete_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::delete()
    */
   public function delete() {
-    return $this->deleteByNid($this->entity_type, $this->entity_id); 
+    return $this->deleteByNid($this->entity_type, $this->entity_id);
   }
 
   /**
@@ -170,9 +170,9 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   public function isScheduled() {
     return TRUE;
-  } 
+  }
   public function isExecuted() {
     return FALSE;
-  } 
+  }
 
 }

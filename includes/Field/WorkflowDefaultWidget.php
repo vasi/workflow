@@ -84,7 +84,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(), to add the submit button on the Content view page.
     $settings_submit = isset($this->instance['widget']['settings']['submit']) ? TRUE : FALSE;
-    $workflow = new Workflow($this->field['settings']['wid']);
+    $workflow = Workflow::load($this->field['settings']['wid']);
 
     // @todo: Get the current sid for content, comment, preview.
     if (count($items)) {
@@ -94,17 +94,19 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     else {
       // We are on a Content add or Comment add (which do not have a state, yet),
       // or we are viewing existing content, which didn't have a state before.
+      //@todo: why/when would field_get_items returns a result, if $items is already empty?
       $items = field_get_items($entity_type, $entity, $field_name);
       if ($items) {
         $sid = _workflow_get_sid_by_items($items);
       }
-      else {
+    }
+    if (empty($sid)) {
         // Content add page: No valid sid is given, so get the first state.
+        // or a states has been deleted.
         $sid = $workflow->getFirstSid($entity_type, $entity);
       }
-    }
 
-    $state = new WorkflowState($sid);
+    $state = WorkflowState::load($sid);
     $options = $state->getOptions($entity_type, $entity);
 
     // Get the scheduling info. This may change the current $sid on the Form.
@@ -278,7 +280,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   }
 
   /*
-   * Implements workflow_transition() -> WorkflowDefaultWidget::submit() 
+   * Implements workflow_transition() -> WorkflowDefaultWidget::submit()
    * Overrides submit(array $form, array &$form_state).
    * Contains 2 extra parameters for D7
    * @param array $items
@@ -288,7 +290,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    *
    * This is called from function _workflowfield_form_submit($form, &$form_state)
    * It is a replacement of function workflow_transition($node, $new_sid, $force, $field)
-   * It performs the following actions; 
+   * It performs the following actions;
    * - save a scheduled action
    * - update history
    * - restore the normal $items for the field.

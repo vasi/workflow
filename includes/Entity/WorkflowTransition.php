@@ -5,7 +5,7 @@
  * Contains workflow\includes\Entity\WorkflowTransition.
  */
 
-/*
+/**
  * Implements an actual Transition.
  */
 class WorkflowTransition {
@@ -25,6 +25,10 @@ class WorkflowTransition {
   public $uid = 0;
   public $stamp;
   public $comment = '';
+
+  /**
+   * CRUD functions.
+   */
 
   /**
    * Constructor
@@ -51,7 +55,11 @@ class WorkflowTransition {
     $this->new_sid = $this->sid;
   }
 
-  /*
+  /**
+   * Property functions.
+   */
+
+  /**
    * Verifies if the given transition is allowed.
    * - in settings
    * - in permissions
@@ -64,7 +72,7 @@ class WorkflowTransition {
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
-    $old_state = new WorkflowState($old_sid);
+    $old_state = WorkflowState::load($old_sid);
 
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
@@ -209,7 +217,7 @@ class WorkflowTransition {
     }
 
     // Register state change with watchdog.
-    if ($state = WorkflowState::getState($new_sid)) {
+    if ($state = WorkflowState::load($new_sid)) {
       $workflow = $state->getWorkflow();
       if ($workflow->options['watchdog_log']) {
         $message = ($this->isScheduled()) ? 'Scheduled state change of @type %node_title to %state_name executed'
@@ -235,12 +243,12 @@ class WorkflowTransition {
     return $new_sid;
   }
 
-  /*
+  /**
    * Get/Set the Transitions $entity.
    * IF no arguments are provided, the $entity_type and $entity_id must be known upfront.
    *
    * @param string $entity_type
-   *   If setting an $entity, its entity_type, else empty.  
+   *   If setting an $entity, its entity_type, else empty.
    * @param stdClass $entity_id
    *   If setting an $entity, its ID, else empty.
    * @param stdClass $entity
@@ -278,18 +286,18 @@ class WorkflowTransition {
     return ($this->entity_type == 'node') ? $this->nid : entity_id($this->entity_type, $this->entity);
   }
 
-  /*
+  /**
    * Functions, common to the WorkflowTransitions.
    */
 
-  /*
+  /**
    * Returns if this is a Scheduled Transition.
    */
   public function isScheduled() {
     return FALSE;
-  } 
+  }
   public function isExecuted() {
     return NULL;
-  } 
+  }
 
 }

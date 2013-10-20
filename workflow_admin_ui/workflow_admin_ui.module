@@ -233,7 +233,7 @@ function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
  */
 function workflow_admin_ui_delete_form_submit($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
-  if ($form_state['values']['confirm'] == 1 && $workflow = Workflow::getWorkflow($workflow->wid)) {
+  if ($form_state['values']['confirm'] == 1 && $workflow = Workflow::load($workflow->wid)) {
     $name = $workflow->getName();
     $message = 'The workflow %name with all its states was deleted.';
 
@@ -1076,7 +1076,7 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
         }
 
         // Delete the old state without orphaning nodes, move them to the new state.
-        $state = WorkflowState::getState($id);
+        $state = WorkflowState::load($id);
         $state->deactivate($new_sid);
 
         $args = array(

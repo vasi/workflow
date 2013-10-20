@@ -28,7 +28,7 @@ class WorkflowExampleTestCase extends DrupalWebTestCase {
 //    $workflows = Workflow::getWorkflows();
 //    dpm($workflows, "These are the current Workflows in the system.");
     $wid = 1;
-    $workflow = Workflow::getWorkflow($wid);
+    $workflow = Workflow::load($wid);
     $this->assertEqual($workflow->wid, $wid, t('The wid of the Workflow should be the same as we decided.'));
     $workflow = new Workflow($wid);
     $this->assertEqual($workflow->wid, $wid, t('The wid of the Workflow should be the same as we decided.'));

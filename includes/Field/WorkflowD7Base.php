@@ -28,7 +28,6 @@ abstract class WorkflowD7Base {
     // Properties for FieldItem.
     $this->entity = $entity;
     $this->entity_type = $entity_type;
-    
   }
 
   public function getField() {
@@ -70,7 +69,7 @@ abstract class WorkflowD7Base {
   /*	
    * Saves an entity.
    *
-   * Usage: call this externally if the WorkflowItem isn't called from node_save/update itself, 
+   * Usage: call this externally if the WorkflowItem isn't called from node_save/update itself,
    * E.g., from workflow_cron().
    */
   public function entitySave($entity_type, $entity) {

@@ -72,7 +72,7 @@ function workflow_admin_paths_alter(&$paths) {
  * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
  */
 function workflow_load($wid) {
-  return Workflow::getWorkflow($wid);
+  return Workflow::load($wid);
 }
 
 /**
@@ -462,7 +462,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
     $field_name = $field['field_name'];
     if (isset($entity->is_new) && $entity->is_new == TRUE) {
       // A new node.
-      $workflow = Workflow::getWorkflow($field['settings']['wid']);
+      $workflow = Workflow::load($field['settings']['wid']);
       $sid = $workflow->getCreationSid();
     }
     elseif (isset($entity->original)) {
@@ -476,16 +476,24 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
       $items = field_get_items($entity_type, $entity, $field_name);
       $sid = _workflow_get_sid_by_items($items);
     }
+    // No current state. Use creation state.
+    if (empty($sid)) {
+      $workflow = Workflow::load($field['settings']['wid']);
+      $sid = $workflow->getCreationSid();
+    }
+    return $sid;
   }
 
   // Node API: Get current/previous state.
   // There is no nid when creating a node.
   if (!$sid && !empty($entity->nid)) {
+    $entity_type = 'node';
     $state = workflow_get_workflow_node_by_nid($entity->nid);
     if ($state) {
       $sid = $state->sid;
     }
   }
+
   if (!$sid && !empty($entity->type)) {
     // No current state. Use creation state.
     if ($workflow = workflow_get_workflows_by_type($entity->type)) {
@@ -584,7 +592,7 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = '') {
     // Set the cache with a workflow object.
     $map[$entity_type][$entity_bundle] = FALSE;
     if ($wid) {
-      $workflow = new Workflow($wid);
+      $workflow = Workflow::load($wid);
 
       // Load the WorkflowItem on the Workflow, for later reference. 
       $workflow->getWorkflowItem($field_item);
@@ -608,7 +616,7 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
     $data->tab_roles = implode(',', $data->tab_roles);
   }
 
-  if (isset($data->wid) && count(Workflow::getWorkflow($data->wid)) > 0) {
+  if (isset($data->wid) && Workflow::load($data->wid)) {
     drupal_write_record('workflows', $data, 'wid');
   }
   else {
@@ -912,7 +920,7 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
 }
 
 /*
- * @deprecated: workflow_get_workflow_by_sid --> WorkflowState->getWorkflow()
+ * @deprecated: workflow_get_workflow_by_sid --> WorkflowState::load()
  */
 function workflow_get_workflow_by_sid($sid) {
   return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s
@@ -923,7 +931,7 @@ function workflow_get_workflow_by_sid($sid) {
 /**
  * Given a sid, return a state. Sids are a unique id.
  *
- * @deprecated: replaced by WorkflowState::getState($sid)
+ * @deprecated: workflow_get_workflow_states_by_sid($sid) --> WorkflowState::load($sid)
  */
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
   static $sids = array();
@@ -963,7 +971,7 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
  * @deprecated: workflow_delete_workflow_states_by_sid($sid, $new_sid, $true_delete) --> WorkflowState->delete()
  */
 function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_delete = FALSE) {
-  if ($state = WorkflowState::getState($sid)) {
+  if ($state = WorkflowState::load($sid)) {
     $state->delete($new_sid, $true_delete);
   }
 }
@@ -1255,14 +1263,12 @@ function workflow_requirements($phase) {
  */
 function workflow_show_form($sid, $workflow, $choices) {
   $count = count($choices);
-
   // The easiest case first: more then one option: always show form.
   if ($count > 1) {
     return TRUE;
   }
   // Only when in creation phase, one option is sufficient,
   // since the '(creation)' option is not included in $choices.
-  // (First convert the $workflow object of unknown origin to a 'new' Workflow object.)
   if ($sid == $workflow->getCreationSid()) {
     return TRUE;
   }

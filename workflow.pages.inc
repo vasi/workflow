@@ -14,7 +14,7 @@ function workflow_tab_page($node = NULL) {
 
   $entity = $node;
   $entity_type = 'node'; // @todo: add support for other entity types.
-  $entity_bundle = $node->type;  
+  $entity_bundle = $node->type;
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
   $states = $workflow->getStates();
 
@@ -23,7 +23,7 @@ function workflow_tab_page($node = NULL) {
   // Choose a different form, depending if this is a Workflow Node or a Workflow Field.
   // Probably this can be done in hook_forms(), but this is better to maintain.
   if ($workflow_item = $workflow->getWorkflowItem()) {
-    // This is a Workflow Field workflow. 
+    // This is a Workflow Field workflow.
     $current_sid = workflow_node_current_state($entity, $entity_type, $workflow_item->getField());
     $field = $workflow_item->getField();
     $instance = $workflow_item->getInstance();
@@ -34,7 +34,7 @@ function workflow_tab_page($node = NULL) {
     $output = drupal_render($form);
   }
   else {
-    // This is a Workflow Node workflow. 
+    // This is a Workflow Node workflow.
     $current_sid = workflow_node_current_state($entity, $entity_type, $field = array());
     $name = $states[$current_sid]->getName();
     $label = $states[$current_sid]->label();
@@ -64,7 +64,7 @@ function workflow_tab_page($node = NULL) {
     elseif ($history->sid == $current_sid && $history_state->isActive() && !$current_themed) {
       // Theme the current state differently so it stands out.
       $new_state_name = theme('workflow_history_current_state',  array('state_name' => $label,
-                                                                   'state_system_name' => $name, 
+                                                                   'state_system_name' => $name,
                                                                    'sid' => $history->sid));
       // Make a note that we have themed the current state; other times in the history
       // of this node where the node was in this state do not need to be specially themed.
@@ -73,7 +73,7 @@ function workflow_tab_page($node = NULL) {
     elseif (!$history_state->isActive()) {
       // The state has been deleted, but we include it in the history.
       $new_state_name = theme('workflow_deleted_state', array('state_name' => $label,
-                                                          'state_system_name' => $name, 
+                                                          'state_system_name' => $name,
                                                           'sid' => $history->sid));
       $footer_needed = TRUE;
     }
@@ -94,8 +94,8 @@ function workflow_tab_page($node = NULL) {
       $old_state_name = check_plain($label);
     }
     elseif (!$history_state->isActive()) {
-      $old_state_name = theme('workflow_deleted_state', array('state_name' => $label, 
-                                                              'state_system_name' => $name, 
+      $old_state_name = theme('workflow_deleted_state', array('state_name' => $label,
+                                                              'state_system_name' => $name,
                                                               'sid' => $history->old_sid));
       $footer_needed = TRUE;
     }
@@ -213,14 +213,14 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     return;
   }
 
-  // @todo: remove this in a future version. 
+  // @todo: remove this in a future version.
   // This is to support workflow-extensions 7.x-1.0, which still passes a $wid.
   if (is_numeric($workflow)) {
-    $workflow = workflow::getWorkflow($workflow);
+    $workflow = Workflow::load($wid = $workflow);
   }
 
   // This function is only used for Node API, not Field API, hence only 'node'.
-  $state = new WorkflowState($current_sid);
+  $state = WorkflowState::load($current_sid);
   $options = $state->getOptions($entity_type = 'node', $node, $force = FALSE);
 
   // Only build form if user has possible target state(s).

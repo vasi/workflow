@@ -84,9 +84,9 @@ function workflow_node_load($nodes, $types) {
 
 /**
  * Implements hook_node_insert().
- * 
+ *
  * This is executed after saving data to the database.
- * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.  
+ * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.
  */
 function workflow_node_insert($node) {
   // Skip if there are no workflows.
@@ -351,10 +351,10 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Wrapper function for workflow_tab_access after 
+ * Wrapper function for workflow_tab_access after
  * renaming workflow_node_tab_access() to workflow_tab_access(),
  * since *_tab_access() is a Workflow functionality, not Node API.
- * 
+ *
  * @deprecated workflow_node_tab_access(). Is not used anymore.
  */
 function workflow_node_tab_access($node = NULL) {
@@ -396,7 +396,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
 
   if ($state) {
     // This is used in Field API.
-    $workflow = Workflow::getWorkflow($state->wid);
+    $workflow = Workflow::load($state->wid);
     $current_sid = $state->sid;
   }
   else {

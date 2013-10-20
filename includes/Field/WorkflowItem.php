@@ -196,7 +196,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 //  }
 
 /**
- * Do not implement hook_field_presave(), 
+ * Do not implement hook_field_presave(),
  * since $nid is needed, but not yet known at this moment.
  * hook_field_presave() -> FieldItemInterface::preSave()
  */
@@ -212,20 +212,19 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 
 /**
  * Implements hook_field_update() -> FieldItemInterface::update()
- * 
+ *
  * It is called also from hook_field_insert(), since we need $nid to store {workflow_node_history}.
  * We cannot use hook_field_presave(), since $nid is not yet known at that moment.
  *
- * "Contrary to the old D7 hooks, the methods do not receive the parent entity 
- * "or the langcode of the field values as parameters. If needed, those can be accessed 
+ * "Contrary to the old D7 hooks, the methods do not receive the parent entity
+ * "or the langcode of the field values as parameters. If needed, those can be accessed
  * "by the getEntity() and getLangcode() methods on the Field and FieldItem classes.
  *
  */
   public function update(&$items) { // ($entity_type, $entity, $field, $instance, $langcode, &$items) {
     $field_name = $this->field['field_name'];
     $wid = $this->field['settings']['wid'];
-    $new_sid = _workflow_get_sid_by_items($items);
-    $new_state = new WorkflowState($new_sid, $wid);
+    $new_state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
 
     // @todo D8: remove below lines.
     $entity = $this->entity;
@@ -257,7 +256,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       //        wether we are on a comment or a node form.
       //
       // Widget::submit() returns the new value in a 'sane' state.
-      // Save the referenced entity, but only is transition succeeded, and is not scheduled. 
+      // Save the referenced entity, but only is transition succeeded, and is not scheduled.
       $old_sid = _workflow_get_sid_by_items($referenced_entity->{$field_name}['und']);
       $new_sid = _workflow_get_sid_by_items($items);
       if ($old_sid != $new_sid) {
@@ -283,7 +282,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     }
 //        // A 'normal' node add page.
 //        // We should not be here, since we only do inserts after $entity_id is known.
-//        $current_sid = Workflow::getWorkflow($wid)->getCreationSid();
+//        $current_sid = Workflow::load($wid)->getCreationSid();
   }
 
   /**
@@ -295,7 +294,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
   public function getCurrentState() {
     $field_name = $this->field['field_name'];
     $wid = $this->field['settings']['wid'];
-    $workflow = new Workflow($wid);
+    $workflow = Workflow::load($wid);
 
     $options = array();
 
@@ -304,14 +303,14 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     $entity_id = _workflow_get_entity_id($entity_type, $entity);
     if ($entity_id && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
-      // We need to fetch the field value of the original node, and show it on the comment. 
+      // We need to fetch the field value of the original node, and show it on the comment.
 
       $entity_type = 'node'; // Comments only exist on nodes.
       $referenced_entities = entity_load($entity_type, array($entity_id));
       $entity = $referenced_entities[$entity_id];
 
       $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
-      $state = new WorkflowState(_workflow_get_sid_by_items($items), $wid);
+      $state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
       if (!$state) {
         // E.g., the node was created before the field was added: do the same as 'Node Add' page.
         $state = $workflow->getCreationState();
@@ -320,7 +319,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     elseif ($entity_id && $this->entity_type != 'comment') {
       // A 'normal' node edit page.
       $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
-      $state = new WorkflowState($sid = _workflow_get_sid_by_items($items), $wid);
+      $state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
       if (!$state) {
         // E.g., the node was created before the field was added: do the same as 'Node Add' page.
         $state = $workflow->getCreationState();
@@ -386,18 +385,23 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
    * Helper function for list.module formatter.
    *
    * Callback function for the list module formatter.
-   * @see list_allowed_values() : 
-   * "The strings are not safe for output. Keys and values of the array should be
-   * "sanitized through field_filter_xss() before being displayed.
+   * @see list_allowed_values() :
+   *  "The strings are not safe for output. Keys and values of the array should be
+   *  "sanitized through field_filter_xss() before being displayed.
    *
    * @return
-   *   The array of allowed values. Keys of the array are the raw stored values
-   *   (number or text), values of the array are the display labels.
+   *  The array of allowed values. Keys of the array are the raw stored values
+   *  (number or text), values of the array are the display labels.
+   *  It contains all possible values, beause the result is cached, and used for all nodes on a page.
    *
-   * @todo: this function needs to read the correct state. It is incorrect when showing comments on a node page.
+   * @todo: this function getAllowedValues() needs to read the correct state. It is incorrect when showing comments on a node page.
    */
   public function getAllowedValues() {
-    $options = $this->getCurrentState()->getWorkflow()->getOptions();
+    $options = array();
+    // Get all state names, including inactive states.
+    foreach (Workflow::getWorkflows() as $workflow) {
+      $options += $workflow->getOptions($grouped = FALSE);
+    }
     return $options;
   }
 
