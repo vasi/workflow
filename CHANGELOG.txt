@@ -231,3 +231,4 @@ Issue #2019345 by johnv: Fixed error in WorkflowTransition->IsAllowed().
 Issue #2019345 by johnv: Added workflow_views now uses classes.
 Issue #2019345 by johnv: Fixed notice when trying to load not-existing Workflow or State.
 Issue #2019345 by johnv: Added workflow_cleanup now uses WorkflowState class.
+Issue #2019345 by johnv: Moved workflow_state functions to workflow.deprecated.inc, since they are all replaced by Workflow State class.
