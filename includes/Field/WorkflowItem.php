@@ -64,11 +64,18 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     $settings['widget'] += $field_info['workflow']['settings']['widget'];
 
     $wid = $this->field['settings']['wid'];
+
     // Create list of all Workflow types. Include an initial empty value.
+    // Validate each workflow, and generate a message if not complete.
     $workflows = array();
     $workflows[''] = t('- Select a value -');
     foreach (Workflow::getWorkflows() as $workflow) {
-      $workflows[$workflow->wid] = $workflow->name;
+      if ($workflow->validate()) {
+        $workflows[$workflow->wid] = $workflow->name;
+      }
+    }
+    if (count($workflows) == 1) {
+      drupal_set_message(t('You must create at least one workflow before content can be assigned to a workflow.'));
     }
 
     // The allowed_values_functions is used in the formatter from list.module.
@@ -85,7 +92,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       '#default_value' => $wid,
       '#required' => TRUE,
       '#disabled' => $has_data,
-      '#description' => t('Choose the Workflow type.'),
+      '#description' => t('Choose the Workflow type.') . ' ' . t('Maintain workflows ') . l('here', 'admin/config/workflow/workflow') . '.',
     );
 
     // Inform the user of possible states.

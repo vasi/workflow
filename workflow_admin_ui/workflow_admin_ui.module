@@ -1114,38 +1114,14 @@ function workflow_admin_ui_type_map_form($form) {
     '#markup' => theme('links', $links_args),
     );
 
-  $these_workflows = array();
+  // Create list of all Workflow types. Include an initial empty value.
+  // Validate each workflow, and generate a message if not complete.
+  $workflows[0] = t('None');
   foreach (Workflow::getWorkflows() as $workflow) {
-    // Don't allow workflows with no states.
-    $states = $workflow->getStates();
-
-    // There should always be a creation state.
-    if (count($states) == 1) {
-      // That's all, so let's remind them to create some states.
-      drupal_set_message(t('%workflow has no states defined, so it cannot be assigned to content yet.',
-        array('%workflow' => ucwords($workflow->getName()))), 'warning');
-
-      // Skip allowing this workflow.
-      continue;
+    if ($isValid = $workflow->validate()) {
+      $workflows[$workflow->wid] = $workflow->label();
     }
-
-    // Also check for transitions at least out of the creation state.
-    // This always gets at least the "from" state.
-    $transitions = workflow_allowable_transitions($workflow->getCreationSid(), 'to');
-    if (count($transitions) == 1) {
-      // That's all, so let's remind them to create some transitions.
-      drupal_set_message(t('%workflow has no transitions defined, so it cannot be assigned to content yet.',
-        array('%workflow' => ucwords($workflow->getName()))), 'warning');
-
-      // Skip allowing this workflow.
-      continue;
-    }
-
-    // Add this workflow to the allowed list.
-    $these_workflows[$workflow->wid] = $workflow->label();
   }
-
-  $workflows = array(t('None')) + $these_workflows;
   if (count($workflows) == 1) {
     drupal_set_message(t('You must create at least one workflow before content can be assigned to a workflow.'));
     return $form;

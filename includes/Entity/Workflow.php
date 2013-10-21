@@ -173,6 +173,46 @@ class Workflow {
   }
 
   /**
+   * Validate the workflow. Generate a message if not correct.
+   * This function is used on the settings page of 
+   * - Workflow node: workflow_admin_ui_type_map_form()
+   * - Workflow field: WorkflowItem->settingsForm()
+   *
+   * @return
+   *  boolean $isValid
+   */
+  function validate() {
+    $isValid = TRUE;
+
+    // Don't allow workflows with no states. (There should always be a creation state.)
+    $states = $this->getStates();
+    if (count($states) < 2) {
+      // That's all, so let's remind them to create some states.
+      $message = t('%workflow has no states defined, so it cannot be assigned to content yet.',
+        array('%workflow' => ucwords($this->getName())));
+      drupal_set_message($message, 'warning');
+
+      // Skip allowing this workflow.
+      $isValid = FALSE;
+    }
+
+    // Also check for transitions at least out of the creation state.
+    // This always gets at least the "from" state.
+    $transitions = workflow_allowable_transitions($this->getCreationSid(), 'to');
+    if (count($transitions) < 2) {
+      // That's all, so let's remind them to create some transitions.
+      $message = t('%workflow has no transitions defined, so it cannot be assigned to content yet.',
+        array('%workflow' => ucwords($this->getName())));
+      drupal_set_message($message, 'warning');
+
+      // Skip allowing this workflow.
+      $isValid = FALSE;
+    }
+
+    return $isValid;
+  }
+
+  /**
    * Property functions.
    */
 
@@ -187,7 +227,8 @@ class Workflow {
     return $this->creation_sid;
   }
 
-  /* Get the first valid state ID, after the creation state.
+  /**
+   * Get the first valid state ID, after the creation state.
    * Use WorkflowState::getOptions(), because this does a access check.
    */
   function getFirstSid($entity_type, $entity) {
