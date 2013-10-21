@@ -381,10 +381,16 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
         );
   }
 
+  // Determine if the Comment field must be shown.
+  // This does not work if a node type has both Node and Field enabled.
   $determiner = isset($form['#tab']) ? 'comment_log_tab' : 'comment_log_node';
+  $comment_type = 'hidden';
+  if (isset($form['#wf']->options[$determiner])) {
+    $comment_type = $form['#wf']->options[$determiner] ? 'textarea': 'hidden';
+  }
 
   $form['workflow']['workflow_comment'] = array(
-    '#type' => $form['#wf']->options[$determiner] ? 'textarea': 'hidden',
+    '#type' => $comment_type,
     '#title' => t('Workflow comment'),
     '#description' => t('A comment to put in the workflow log.'),
     '#default_value' => $comment,
@@ -487,21 +493,21 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
 
   // Node API: Get current/previous state.
   // There is no nid when creating a node.
+  $entity_type = 'node';
   if (!$sid && !empty($entity->nid)) {
-    $entity_type = 'node';
     $state = workflow_get_workflow_node_by_nid($entity->nid);
     if ($state) {
       $sid = $state->sid;
     }
   }
-
   if (!$sid && !empty($entity->type)) {
     // No current state. Use creation state.
-    if ($workflow = workflow_get_workflows_by_type($entity->type)) {
+    if ($workflow = workflow_get_workflows_by_type($entity->type, $entity_type)) {
       $sid = $workflow->getCreationSid();
     }
   }
   return $sid;
+
 }
 
 function workflow_node_previous_state($node) {
@@ -515,7 +521,8 @@ function workflow_node_previous_state($node) {
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
-    if ($workflow = workflow_get_workflows_by_type($node->type)) {
+    $entity_type = 'node';
+    if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
       $sid = $workflow->getCreationSid();
     }
   }
@@ -565,7 +572,7 @@ function workflow_transition_allowed($tid, $role = NULL) {
  * @return
  *   A Workflow object, or FALSE if no workflow is retrieved.
  */
-function workflow_get_workflows_by_type($entity_bundle, $entity_type = '') {
+function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
   static $map = array();
   $wid = 0;
   $field_item = NULL;
