@@ -64,8 +64,7 @@ function workflow_admin_ui_add_form_validate($form, &$form_state) {
 function workflow_admin_ui_add_form_submit($form, &$form_state) {
   $name = $form_state['values']['wf_name'];
 
-  $workflow = new Workflow();
-  $workflow->name = $name;
+  $workflow = Workflow::create($name);
   $workflow->save();
 
   $args = array(
@@ -89,12 +88,19 @@ function workflow_admin_ui_add_form_submit($form, &$form_state) {
  *
  */
 function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
-  // If we don't have a workflow that goes with this, return to the admin pg.
-  if ($workflow) {
+  // If we don't have a workflow that goes with this, return to the admin page.
+  if (!$workflow) {
+    drupal_goto('admin/config/workflow/workflow');
+  }
+  else {
     // Let's add some breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
 
-    $form['workflow'] = array('#type' => 'value', '#value' => $workflow);
+    $form = array();
+    $form['workflow'] = array(
+      '#type' => 'value',
+      '#value' => $workflow,
+      );
 
     return confirm_form(
       $form,
@@ -105,9 +111,6 @@ function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
       t('Delete ' . $workflow->getName()),   // This seems to get check_plain'ed.
       t('Cancel')
     );
-  }
-  else {
-    drupal_goto('admin/config/workflow/workflow');
   }
 }
 
@@ -122,7 +125,7 @@ function workflow_admin_ui_delete_form_submit($form, &$form_state) {
     $name = $workflow->getName();
     $message = 'The workflow %name with all its states was deleted.';
 
-    $workflow->delete(); //@todo: states must be deleted, too.
+    $workflow->delete();
 
     watchdog('workflow', $message, array('%name' => $name));
     drupal_set_message(t($message, array('%name' => $name)));
@@ -138,9 +141,9 @@ function workflow_admin_ui_delete_form_submit($form, &$form_state) {
  *   The workflow object.
  */
 function workflow_admin_ui_view_permissions_form($workflow) {
-  // If we don't have a workflow at this point, go back to admin pg.
+  // If we don't have a workflow at this point, go back to admin page.
   if ($workflow) {
-    // Place some breadcrumbs.
+    // Let's add some breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
 
     $name = $workflow->getName();
@@ -216,24 +219,28 @@ function theme_workflow_admin_ui_view_permissions_form($variables) {
  * Menu callback. Edit a workflow's properties.
  *
  * @param $wid
- *   The workflow object..
+ *   The workflow object.
  * @return
  *   HTML form and permissions table.
  */
 function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
-  $form = array();
+  $noyes = array(t('No'), t('Yes'));
+
   // If we don't have a workflow by this point, we need to go back
   // to creating one at admin/config/workflow/workflow/add
   // I think the menu loader won't allow this to happen.
   if (!$workflow) {
     drupal_goto('admin/config/workflow/workflow/add');
   }
-    // Create breadcrumbs.
+  else {
+    // Let's add some breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
 
-    $noyes = array(t('No'), t('Yes'));
-
-    $form['workflow'] = array('#type' => 'value', '#value' => $workflow);
+    $form = array();
+    $form['workflow'] = array(
+      '#type' => 'value',
+      '#value' => $workflow,
+      );
 
     $form['basic'] = array(
       '#type' => 'fieldset',
@@ -337,6 +344,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
     $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
     return $form;
+  }
 }
 
 /**
@@ -424,14 +432,15 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
 function workflow_admin_ui_transitions_form($form, $form_state, $workflow) {
   // Make sure we have a workflow.
   if ($workflow) {
-    // Create breadcrumbs.
+    // Let's add some breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
 
     $form = array();
-    $form['workflow'] = array('#type' => 'value', '#value' => $workflow);
-
-    $form['transitions'] = workflow_admin_ui_transition_grid_form($workflow);
-
+    $form['workflow'] = array(
+      '#type' => 'value',
+      '#value' => $workflow,
+      );
+    $form['transitions'] = _workflow_admin_ui_transition_grid_form($workflow);
     $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
     return $form;
@@ -489,12 +498,12 @@ function theme_workflow_admin_ui_transitions_form($variables) {
       $header = array(array('data' => t('From / To') . ' &nbsp;' . WORKFLOW_ARROW));
       $rows = array();
       foreach ($states as $state) {
-        $label = $state->label();
+        $label = check_plain($state->label());
         // Don't allow transition TO (creation).
         if (!$state->isCreationState()) {
-          $header[] = array('data' => check_plain($label));
+          $header[] = array('data' => $label);
         }
-        $row = array(array('data' => check_plain($label)));
+        $row = array(array('data' => $label));
         foreach ($states as $nested_state) {
           if ($nested_state->isCreationState()) {
             // Don't allow transition TO (creation).
@@ -552,7 +561,7 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
  * @param int $wid
  *   The workflow object.
  */
-function workflow_admin_ui_transition_grid_form($workflow) {
+function _workflow_admin_ui_transition_grid_form($workflow) {
   $form = array('#tree' => TRUE);
 
   $roles = workflow_admin_ui_get_roles();
@@ -603,6 +612,7 @@ function workflow_admin_ui_transition_grid_form($workflow) {
  * Replaced by http://drupal.org/node/1367530.
  */
 function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
+  // Let's add some breadcrumbs.
   $bc = array(l(t('Home'), '<front>'));
   $bc[] = l(t('Configuration'), 'admin/config');
   $bc[] = l(t('Workflow'), 'admin/config/workflow');
@@ -613,7 +623,10 @@ function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
 
   $form = array();
   $form['#tree'] = TRUE;
-  $form['workflow'] = array('#type' => 'value', '#value' => $workflow);
+  $form['workflow'] = array(
+    '#type' => 'value',
+    '#value' => $workflow,
+    );
 
   // Allow modules to insert their own workflow operations.
   $links = module_invoke_all('workflow_operations', 'workflow', $workflow);
@@ -631,18 +644,14 @@ function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
   $state_list = array('' => ' ');
   $state_list += $workflow->getOptions();
   // Is this the last state available?
-  $form['#last'] = count($state_list) == 2;
+  $form['#last_mohican'] = count($state_list) == 2;
 
   // Get the state objects as array ($sid => WorkflowState)
   $states = $workflow->getStates($all = TRUE);
   // Dummy object for new state item.
-  $dummy = new WorkflowState();
-  $dummy->wid = $workflow->wid;
+  $dummy = WorkflowState::create($name = '', $wid = $workflow->wid);
   $dummy->weight = 99;
-  $states[0] = $dummy; // Although the index is 0, it is appended at the end.
-
-  // Save the list in the form for later.
-  $form['#workflow_states'] = $states;
+  $states[$dummy->sid] = $dummy; // Although the index is 0, the state is appended at the end of the list.
 
   foreach ($states as $state) {
     // Allow modules to insert state operations.
@@ -800,32 +809,34 @@ function workflow_admin_ui_overview_form_validate($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
   $wid = $workflow->wid;
 
-  // Get the state objects.
-  $states = $form['#workflow_states'];
-
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
   foreach ($form_state['values']['states'] as $sid => $item) {
-    // Wants user to deactivate the state?
-    if (($item['status'] != $item['orig_status']) && ($item['status'] == 0)) {
+    // Reload $state from db, in case the states were changed by anyone else. And it is just as fast.
+    $state = WorkflowState::load($sid);
+
+    // Does user want to deactivate the state (reassign current nodes)?
+    if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
+      $args = array('%state' => $state->getName(),);
+
       // Does that state have nodes in it?
       if ($item['count'] > 0 && empty($item['reassign'])) {
-        if ($form['#last']) {
-          drupal_set_message(t('Since you are deleting the last available workflow state
-          in this workflow, all content items which are in that state will have their
-          workflow state removed.'), 'warning');
+        if ($form['#last_mohican']) {
+          $message = 'Since you are deleting the last available workflow state
+            in this workflow, all content items which are in that state will have their
+            workflow state removed.';
+          drupal_set_message(t($message, $args), 'warning');
         }
         else {
-        form_set_error("states'][$sid]['reassign'",
-          t('The %state state has content; you must reassign the content to another state.',
-            array('%state' => $states[$sid]->getName())));
+          $message = 'The %state state has content; you must reassign the content to another state.';
+          form_set_error("states'][$sid]['reassign'",
+            t($message, $args));
         }
       }
       if (module_exists('workflowfield')) {
-      // @todo: Reassign states for Workflow Field.
-        form_set_error("states'][$sid]['reassign'",
-          t('Deactivating states is not supported yet, when Workflow Field is active.',
-            array('%state' => $states[$sid]->getName())));
+        // @todo: Reassign states for Workflow Field.
+        $message = 'Deactivating state %state for does not reassign Fields of type Workflow with this status.';
+        drupal_set_message(t($message, $args), 'warning');
       }
     }
   }
@@ -838,15 +849,11 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
   // Get the workflow id, then save it for the next round.
   $workflow = $form_state['values']['workflow'];
   $wid = $workflow->wid;
-  $name = $workflow->getName();
-
-  // Get the state objects.
-  $states = $form['#workflow_states'];
 
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
-  foreach ($form_state['values']['states'] as $id => $item) {
-    $item['sid'] = $id;
+  foreach ($form_state['values']['states'] as $sid => $item) {
+    $item['sid'] = $sid;
     $item['wid'] = $wid;
 
     // Is there not a new state name?
@@ -855,38 +862,44 @@ function workflow_admin_ui_overview_form_submit($form, &$form_state) {
       continue;
     }
 
-    // Do they want to deactivate the state?
-    if ($id > 0 && $item['status'] == 0) {
-      // Does that state have nodes in it?
+    // Reload $state from db, in case the states were changed by anyone else. And it is just a s fast.
+    $state = ($sid) ? WorkflowState::load($sid) : WorkflowState::create($name = '', $wid);
+
+    // Does user want to deactivate the state (reassign current nodes)?
+    if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
       if ($item['count'] > 0) {
-        if ($form['#last']) {
-          $new_sid = NULL;
-          drupal_set_message(t('Removing workflow states from content in the %workflow.',
-            array('%workflow' => $name)));
+        $new_sid = $item['reassign'];
+        $new_state = WorkflowState::load($new_sid);
+
+        $args = array(
+          '%workflow' => $workflow->getName(),
+          '%old_state' => $state->getName(),
+          '%new_state' => isset($new_state) ? $new_state->getName() : '',
+          );
+
+        if ($form['#last_mohican']) {
+          $new_sid = NULL; // Do not reassign to new state.
+          $message = 'Removing workflow states from content in the %workflow.';
+          drupal_set_message(t($message, $args));
         }
         else {
           // Prepare the state delete function.
-          $new_sid = $item['reassign'];
-          drupal_set_message(t('Reassigning content from %old_state to %new_state.',
-            array('%old_state' => $states[$id]->getName(), '%new_state' => $states[$new_sid]->getName())));
+          $message = 'Reassigning content from %old_state to %new_state.';
+          drupal_set_message(t($message, $args));
         }
 
         // Delete the old state without orphaning nodes, move them to the new state.
-        $state = WorkflowState::load($id);
         $state->deactivate($new_sid);
 
-        $args = array(
-          '%state' => $states[$id]->getName(),
-          '%workflow' => $name,
-          );
-        watchdog('workflow', 'Deactivated workflow state %state in %workflow.', $args);
-        drupal_set_message(t('The workflow state %state was deleted from %workflow.', $args));
+        $message = 'Deactivated workflow state %old_state in %workflow.';
+        watchdog('workflow', $message, $args);
+        drupal_set_message(t($message, $args));
       }
     }
-    $states[$id]->setName($item['state']);
-    $states[$id]->status = $item['status'];
-    $states[$id]->weight = $item['weight'];
-    $states[$id]->save();
+    $state->setName($item['state']);
+    $state->status = $item['status'];
+    $state->weight = $item['weight'];
+    $state->save();
   }
 
   $form_state['redirect'] = "admin/config/workflow/workflow/$wid";

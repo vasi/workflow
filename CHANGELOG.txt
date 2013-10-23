@@ -237,3 +237,4 @@ Issue #2019345 by johnv: Fixed notice on workflow_tab_form when a node type has 
 Issue #2019345 by johnv: Moved code from workflow_admin_ui to Workflow->validate(), and added this check to Field settings form.
 Issue #2115199 by johnv: Moved pages from workflow_admin_ui.module to workfow_admin_ui.pages.inc, reducing footprint for all-but-these pages.
 Issue #2019345 by johnv: Added a create() function to classes Workflow and WorkflowState.
+Issue #2115199 by johnv: Some cosmetic changes in workfow_admin_ui.pages.inc.
