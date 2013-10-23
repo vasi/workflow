@@ -114,11 +114,9 @@ function workflow_node_update($node) {
   // Skip if there are no workflows.
   if ($workflow = workflow_get_workflows_by_type($node->type)) {
     // Get new state from workflow form, stored in $node->workflow.
-    if (!empty($node->workflow)) {
-      $sid = $node->workflow;
-    }
-    if ($sid) {
-      workflow_transition($node, $sid);
+    $new_sid = isset($node->workflow) ? $node->workflow : 0;
+    if ($new_sid) {
+      workflow_transition($node, $new_sid);
     }
   }
 }
