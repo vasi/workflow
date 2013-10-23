@@ -235,3 +235,4 @@ Issue #2019345 by johnv: Moved workflow_state functions to workflow.deprecated.i
 Issue #2116179 by johnv: Moved workflow_type_map functions to own file workflow.node.type_map.inc.
 Issue #2019345 by johnv: Fixed notice on workflow_tab_form when a node type has both Workflow_node and Workflow_field enabled.
 Issue #2019345 by johnv: Moved code from workflow_admin_ui to Workflow->validate(), and added this check to Field settings form.
+Issue #2115199 by johnv: Moved pages from workflow_admin_ui.module to workfow_admin_ui.pages.inc, reducing footprint for all-but-these pages.
