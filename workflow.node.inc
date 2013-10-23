@@ -202,7 +202,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     '#weight' => -99,
     );
 
-  if (workflow_show_form($current_sid, $workflow, $choices)) {
+  if ($current_state->showWidget($choices)) {
     $state_labels = $workflow->getOptions();
 
     // Show state change form at the bottom of the node display.
@@ -303,27 +303,28 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
-      $current = isset($form_state['values']['workflow']) ?
+      $current_sid = isset($form_state['values']['workflow']) ?
         $form_state['values']['workflow'] : workflow_node_current_state($node);
 
       // If the current node state is not one of the choices, pick first valid choice.
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
-      if (!isset($choices[$current])) {
-        $current = $workflow->getFirstSid('node', $node);
+      if (!isset($choices[$current_sid])) {
+        $current_sid = $workflow->getFirstSid('node', $node);
       }
+      $current_state = WorkflowState::load($current_sid);
 
       // Stop if user has no new target state(s) to choose.
-      if (!workflow_show_form($current, $workflow, $choices)) {
+      if (!$current_state->showWidget($choices)) {
         return;
       }
 
-      $name = t($workflow->name);
+      $label = $workflow->label();
 
       $form['#wf'] = $workflow;
       $form['workflow'] = array(
         '#type' => 'fieldset',
-        '#title' => $name,
+        '#title' => $label,
         '#collapsible' => TRUE,
         '#collapsed' => FALSE,
         '#weight' => 10,
@@ -334,7 +335,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // See if scheduling information is present.
       if (isset($node->workflow_scheduled_timestamp) && isset($node->workflow_scheduled_sid)) {
         // The default value should be the upcoming sid.
-        $current = $node->workflow_scheduled_sid;
+        $current_sid = $node->workflow_scheduled_sid;
         $timestamp = $node->workflow_scheduled_timestamp;
         $comment = $node->workflow_scheduled_comment;
       }
@@ -343,7 +344,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       }
 
      // Include the 'workflow form'. $form is modified by reference.
-      workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current, $choices, $timestamp, $comment);
+      workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
     }
   }
 }

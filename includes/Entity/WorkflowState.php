@@ -256,6 +256,30 @@ class WorkflowState {
   }
 
   /**
+   * Determine if the Workflow Form must be shown. 
+   * If not, a formatter must be shown, since there are no valid options.
+   *
+   * @param $options
+   *   an array with $id => $label options, as determined in WorkflowState->getOptions().
+   * 
+   * @return boolean
+   *   Boolean, TRUE = a form (a.k.a. widget) must be shown; FALSE = no form, a formatter must be shown instead.
+   */
+  function showWidget(array $options) {
+    $count = count($options);
+    // The easiest case first: more then one option: always show form.
+    if ($count > 1) {
+      return TRUE;
+    }
+    // Only when in creation phase, one option is sufficient,
+    // since the '(creation)' option is not included in $choices.
+    if ($this->isCreationState()) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Returns the allowed values for the current state.
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */

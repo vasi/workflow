@@ -96,6 +96,27 @@ function workflow_get_workflow_states_all() {
   return $options;
 }
 
+/*
+ * Determine if the Workflow Form must be shown. 
+ * If not, a formatter must be shown, since there are no valid options.
+ * 
+ * @deprecated workflow_show_form() --> WorkflowState->showWidget()
+ *
+ * @param $sid
+ *   the current state ID.
+ * @param $workflow
+ *   the workflow object (might be derived from $sid).
+ * @param $choices
+ *   an array with $id => $label options, as determined in WorkflowState->getOptions().
+ * 
+ * @return
+ *   Boolean, TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
+ */
+function workflow_show_form($sid, $workflow, $options) {
+  $state = WorkflowState::load($sid);
+  return !$state->showWidget($options);
+}
+
 /**
  * Get all states in the system by content type.
  */

@@ -87,12 +87,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $workflow = Workflow::load($this->field['settings']['wid']);
 
     // @todo: Get the current sid for content, comment, preview.
-    $sid = workflow_node_current_state($entity, $entity_type, $this->field);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $this->field);
 
-    $state = WorkflowState::load($sid);
-    $options = $state->getOptions($entity_type, $entity);
+    $current_state = WorkflowState::load($current_sid);
+    $options = $current_state->getOptions($entity_type, $entity);
 
-    // Get the scheduling info. This may change the current $sid on the Form.
+    // Get the scheduling info. This may change the $current_sid on the Form.
     $scheduled = '0';
     $timestamp = REQUEST_TIME;
     $comment = NULL;
@@ -102,7 +102,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // Technically you could have more than one scheduled, but this will only add the soonest one.
       foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
         $scheduled = '1';
-        $sid = $scheduled_transition->sid;
+        $current_sid = $scheduled_transition->sid;
         $timestamp = $scheduled_transition->scheduled;
         $comment = $scheduled_transition->comment;
         break;
@@ -110,7 +110,9 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // Stop if user has no new target state(s) to choose.
-    if (!workflow_show_form($sid, $workflow, $options)) {
+    // The $current_sid may have changed due to scheduling,
+    // but we use the initial state.
+    if ($scheduled || !$current_state->showWidget($options)) {
       return $element;
     }
 
@@ -131,14 +133,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
-    if (count($options) == 1 && !$state->isCreationState() && $sid <> array_pop($options)) {
+    if (count($options) == 1 && !$current_state->isCreationState() && $current_sid <> array_pop($options)) {
       // Add the State formatter
       // @todo: add real formatter (with title), instead.
-      $state = key($options);
+      $current_state = key($options);
       // $element['workflow'][$label] = array(
       $element['workflow']['workflow_options'] = array(
         '#type' => 'value',
-        '#value' => array($state => $state),
+        '#value' => array($current_state => $current_state),
         );
     }
     else {
@@ -154,7 +156,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#options' => $options,
 //        '#name' => $label,
 //        '#parents' => array('workflow'),
-        '#default_value' => $state->isCreationState() ? array_pop(array_keys($options)) : $sid,
+        '#default_value' => $current_state->isCreationState() ? array_pop(array_keys($options)) : $current_sid,
       );
     }
 

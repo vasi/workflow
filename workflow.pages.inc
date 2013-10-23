@@ -220,16 +220,16 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
   }
 
   // This function is only used for Node API, not Field API, hence only 'node'.
-  $state = WorkflowState::load($current_sid);
-  $options = $state->getOptions($entity_type = 'node', $node, $force = FALSE);
+  $current_state = WorkflowState::load($current_sid);
+  $options = $current_state->getOptions($entity_type = 'node', $node, $force = FALSE);
 
   // Only build form if user has possible target state(s).
-  if (workflow_show_form($current_sid, $workflow, $options)) {
+  if ($current_state->showWidget($options)) {
     // Tell FAPI where this form is.
     form_load_include($form_state, 'inc', 'workflow', 'workflow.pages');
 
     $form['#tab'] = TRUE;
-    $name = t($workflow->name);
+    $label = $workflow->label();
     $form['#wf'] = $workflow;
     $form['#choices'] = $options;
     $form['#node'] = $node; // Added for integration with Field widget.
@@ -253,7 +253,7 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
 
     // Include the same form elements here that are included on a
     // regular node editing page. $form is modified by reference.
-    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $name)), $name, $current_sid, $options, $timestamp, $comment);
+    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $options, $timestamp, $comment);
 
     $form['node'] = array(
       '#type' => 'value',
