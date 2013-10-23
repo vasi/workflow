@@ -31,9 +31,9 @@ function _workflow_rules_rules_node_condition_info() {
           'description' => t('The workflow state moved to.'),
         ),
       ),
-      'base' => '_workflow_rules_workflow_check_transition',
+      'base' => '_workflow_rules_node_check_transition',
       'callbacks' => array(
-        'execute' => '_workflow_rules_workflow_check_transition',
+        'execute' => '_workflow_rules_node_check_transition',
       ),
     ),
     'workflow_check_state' => array(
@@ -52,9 +52,9 @@ function _workflow_rules_rules_node_condition_info() {
           'description' => t('The possible workflow states to compare against.'),
         ),
       ),
-      'base' => '_workflow_rules_workflow_check_state',
+      'base' => '_workflow_rules_node_check_state',
       'callbacks' => array(
-        'execute' => '_workflow_rules_workflow_check_state',
+        'execute' => '_workflow_rules_node_check_state',
       ),
     ),
     'workflow_check_previous_state' => array(
@@ -73,9 +73,9 @@ function _workflow_rules_rules_node_condition_info() {
           'description' => t('The possible workflow states to compare against.'),
         ),
       ),
-      'base' => '_workflow_rules_workflow_check_previous_state',
+      'base' => '_workflow_rules_node_check_previous_state',
       'callbacks' => array(
-        'execute' => '_workflow_rules_workflow_check_previous_state',
+        'execute' => '_workflow_rules_node_check_previous_state',
       ),
     ),
   );

@@ -239,3 +239,4 @@ Issue #2115199 by johnv: Moved pages from workflow_admin_ui.module to workfow_ad
 Issue #2019345 by johnv: Added a create() function to classes Workflow and WorkflowState.
 Issue #2115199 by johnv: Some cosmetic changes in workfow_admin_ui.pages.inc.
 Issue #2019345 by johnv: Fixed notice when updating node in certain circumstances.
+Issue #2019345 by johnv: Changed function names in workflow_rules to reflect they are Node API only.
