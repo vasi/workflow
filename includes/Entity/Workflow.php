@@ -48,13 +48,37 @@ class Workflow {
   }
 
   /**
+   * Creates and returns a new Workflow object.
+   *
+   * $param string $name 
+   *  The name of the new Workflow
+   *
+   * $return Workflow $workflow 
+   *  A new Workflow object
+   *
+   * "New considered harmful".
+   */
+  public static function create($name) {
+    $workflow = new Workflow();
+    $workflow->name = $name;
+    return $workflow;
+  }
+
+  /**
    * Loads a Workflow object from table {workflows}
    * Implements a 'Factory' pattern to get Workflow data from the database, and return objects.
    * The execution of the query instantiates objects and saves them in a static array.
+   *
+   * $param string $wid 
+   *  The ID of the new Workflow
+   *
+   * $return Workflow $workflow 
+   *  A new Workflow object
    */
   public static function load($wid, $reset = FALSE) {
     $workflows = self::getWorkflows($wid, $reset);
-    return isset($workflows[$wid]) ? $workflows[$wid] : NULL;
+    $workflow = isset($workflows[$wid]) ? $workflows[$wid] : NULL;
+    return $workflow;
   }
 
   /**

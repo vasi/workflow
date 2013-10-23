@@ -22,13 +22,19 @@ class WorkflowState {
    */
 
   public function __construct($sid = 0, $wid = 0) {
-    if (empty($sid)) {
+    if (empty($sid) && empty($wid)) {
       // automatic constructor when casting an array or object.
       if (!isset(self::$states[$this->sid])) {
         self::$states[$this->sid] = $this;
       }
     }
+    elseif (empty($sid)) {
+      // Creating an dummy/new state for a workflow.
+      // Do not add to 'cache' self::$tates.
+      	$this->wid = $wid;
+    }
     else {
+      // Fetching an existing state for a workflow.
       if (!isset(self::$states[$sid])) {
         self::$states[$sid] = WorkflowState::load($sid, $wid);
       }
@@ -44,6 +50,19 @@ class WorkflowState {
         $this->workflow = self::$states[$sid]->workflow;
       }
     }
+  }
+
+  /**
+   * Creates and returns a new WorkflowState object.
+   *
+   * $return WorkflowState $state 
+   *  A new WorkflowState object
+   *
+   * "New considered harmful".
+   */
+  public static function create($sid, $wid) {
+    $state = new WorkflowState($sid, $wid);
+    return $state;
   }
 
   /**
@@ -201,12 +220,8 @@ class WorkflowState {
     // This is a matter up for some debate, to delete or not to delete, since this
     // causes name conflicts for states. In the meantime, we just stick with what we know.
     // If you really want to delete the states, use workflow_cleanup module, or delete().
-    $this->active = FALSE;
+    $this->status = FALSE;
     $this->save();
-//    db_update('workflow_states')
-//      ->fields(array('status' => 0))
-//      ->condition('sid', $sid, '=')
-//      ->execute();
 
     // Clear the cache.
     self::$states = array();

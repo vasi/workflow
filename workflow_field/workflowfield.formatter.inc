@@ -44,7 +44,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
     return $list_element;
   }
 
-  $state = new WorkflowState($current_sid);
+  $state = WorkflowState::load($current_sid);
   $options = $state->getOptions($entity_type, $entity, $force = FALSE);
 
   $workflow = $state->getWorkflow();
