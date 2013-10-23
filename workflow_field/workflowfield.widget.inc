@@ -80,29 +80,13 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
       return;
     }
 
+    $field = $context['field'];
     $field_name = $context['field']['field_name'];
     if ($entity_type == 'comment') {
       $entity_type = 'node'; // @todo: Comments are only possible on nodes?
       $entity = $context['form']['#node'];
-      if ($current_sid = _workflow_get_sid_by_items($context['items'])) {
-        // This is a preview: OK
-      }
-      else {
-        // A comment form. Get data from Entity.
-        $items = field_get_items($entity_type, $entity, $field_name);
-        $current_sid = _workflow_get_sid_by_items($items);
-      }
     }
-    elseif ($items = $context['items']) {
-      // A node edit page.
-      $current_sid = _workflow_get_sid_by_items($items);
-    }
-    else {
-      // A node add page.
-      $wid = $context['field']['settings']['wid'];
-      $workflow = Workflow::load($wid);
-      $current_sid = $workflow->getFirstSid($entity_type, $entity);
-    }
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field);
 
     $element['#default_value'] = $current_sid;
   }
@@ -117,8 +101,7 @@ function workflowfield_field_widget_form_submit($form, &$form_state) {
   $entity = $form['#entity'];
   $items[0]['workflow'] = $form_state['values'];
 
-  $old_sid = _workflow_get_sid_by_items($entity->{$field_name}['und']); // @todo: replace by currentState().
-
+  $old_sid = workflow_node_current_state($entity, $entity_type, $field);
   // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
 //  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.

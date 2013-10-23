@@ -35,7 +35,7 @@ function workflow_tab_page($node = NULL) {
   }
   else {
     // This is a Workflow Node workflow.
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field = array());
+    $current_sid = workflow_node_current_state($entity, $entity_type = 'node', $field = array());
     $name = $states[$current_sid]->getName();
     $label = $states[$current_sid]->label();
     $output = theme('workflow_current_state', array('state' => $label,
@@ -83,7 +83,7 @@ function workflow_tab_page($node = NULL) {
     }
 
     $label = $name = MARK_STATE_IS_DELETED;
-    $history_state = $states[$history->old_sid];
+    $history_state = isset($states[$history->old_sid]) ? $states[$history->old_sid] : NULL;
     if ($history_state != NULL) {
       $name = $history_state->getName();
       $label = $history_state->label();

@@ -87,24 +87,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $workflow = Workflow::load($this->field['settings']['wid']);
 
     // @todo: Get the current sid for content, comment, preview.
-    if (count($items)) {
-      // A normal Content edit.
-      $sid = _workflow_get_sid_by_items($items);
-    }
-    else {
-      // We are on a Content add or Comment add (which do not have a state, yet),
-      // or we are viewing existing content, which didn't have a state before.
-      //@todo: why/when would field_get_items returns a result, if $items is already empty?
-      $items = field_get_items($entity_type, $entity, $field_name);
-      if ($items) {
-        $sid = _workflow_get_sid_by_items($items);
-      }
-    }
-    if (empty($sid)) {
-        // Content add page: No valid sid is given, so get the first state.
-        // or a states has been deleted.
-        $sid = $workflow->getFirstSid($entity_type, $entity);
-      }
+    $sid = workflow_node_current_state($entity, $entity_type, $this->field);
 
     $state = WorkflowState::load($sid);
     $options = $state->getOptions($entity_type, $entity);
@@ -128,7 +111,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Stop if user has no new target state(s) to choose.
     if (!workflow_show_form($sid, $workflow, $options)) {
-//dpm('show only formatter for ' . $sid , __FUNCTION__);
       return $element;
     }
 
@@ -147,27 +129,24 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $element['#node'] = $entity;
     $element['#entity'] = $entity;
 
-//dpm(array_pop($options));
-//dpm(array_pop($options));
-    if (count($options) == 1) {
-    // Add the State widget/formatter
-    // @todo: add real formatter, instead.
-    // @todo: TEST THIS USE CASE.
-      // There is no need to show the single choice.
-      // A form choice would be an array with the key of the state.
+    // Decide if we show a widget or a formatter.
+    // There is no need to a widget when the only choice is the current sid.
+    if (count($options) == 1 && !$state->isCreationState() && $sid <> array_pop($options)) {
+      // Add the State formatter
+      // @todo: add real formatter (with title), instead.
       $state = key($options);
-//      $element['workflow'][$label] = array(
+      // $element['workflow'][$label] = array(
       $element['workflow']['workflow_options'] = array(
         '#type' => 'value',
         '#value' => array($state => $state),
         );
     }
     else {
+      // Add the State widget. If we are in CreationState, use a fast alternative for $workflow->getFirstSid()
       // @todo: Q: why are we overwriting 'fieldset' with 'container' ?
       //        A: this is because you'd want the form in a vertical tab, and a fieldset makes no sense there.
       $element['workflow']['#type'] = 'container';
       $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
-
 
       $element['workflow']['workflow_options'] = array(
         '#type' => $this->field['settings']['widget']['options'],
@@ -175,17 +154,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#options' => $options,
 //        '#name' => $label,
 //        '#parents' => array('workflow'),
-        '#default_value' => $sid,
-        );
+        '#default_value' => $state->isCreationState() ? array_pop(array_keys($options)) : $sid,
+      );
     }
 
     // Display scheduling form, but only if entity is being edited and user has
     // permission. State change cannot be scheduled at entity creation because
     // that leaves the entity in the (creation) state.
-    if ($settings_schedule == TRUE
-        // && !(arg(0) == 'node' && arg(1) == 'add') // This is already tackled by checking $entity_id
-        && user_access('schedule workflow transitions')) {
-
+    if ($settings_schedule == TRUE && user_access('schedule workflow transitions')) {
       // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
       if (isset($form['#id']) && $form['#id'] == 'comment-form') {
         // This is already the name for Node API and now also for Comment form.

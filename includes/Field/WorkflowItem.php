@@ -298,59 +298,6 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
 //   public function delete() {
 //  }
 
-  public function getCurrentState() {
-    $field_name = $this->field['field_name'];
-    $wid = $this->field['settings']['wid'];
-    $workflow = Workflow::load($wid);
-
-    $options = array();
-
-    $entity = $this->entity;
-    $entity_type = $this->entity_type;
-    $entity_id = _workflow_get_entity_id($entity_type, $entity);
-    if ($entity_id && $this->entity_type == 'comment') {
-      // This happens when we are on an entity's comment.
-      // We need to fetch the field value of the original node, and show it on the comment.
-
-      $entity_type = 'node'; // Comments only exist on nodes.
-      $referenced_entities = entity_load($entity_type, array($entity_id));
-      $entity = $referenced_entities[$entity_id];
-
-      $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
-      $state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
-      if (!$state) {
-        // E.g., the node was created before the field was added: do the same as 'Node Add' page.
-        $state = $workflow->getCreationState();
-      }
-    }
-    elseif ($entity_id && $this->entity_type != 'comment') {
-      // A 'normal' node edit page.
-      $items = field_get_items($entity_type, $entity, $field_name, $langcode = NULL);
-      $state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
-      if (!$state) {
-        // E.g., the node was created before the field was added: do the same as 'Node Add' page.
-        $state = $workflow->getCreationState();
-      }
-    }
-    elseif (!$entity_id && $entity_type == 'comment') {
-      // not possible: a comment on a non-existent node.
-      $state = NULL;
-    }
-    elseif (!$entity_id && $entity_type != 'comment') {
-      if ($entity) {
-        // A 'normal' node add page.
-        $state = $workflow->getCreationState();
-      }
-      else {
-        // No entity available, we are on the field Settings page - 'default value' field.
-        // This is hidden from the admin, because the default value can be different for every user.
-        $state = NULL;
-      }
-    }
-
-    return $state;
-  }
-
   /*
    * Helper functions for the Field Settings page.
    * Generates a string representation of an array of 'allowed values'.
@@ -409,16 +356,6 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     foreach (Workflow::getWorkflows() as $workflow) {
       $options += $workflow->getOptions($grouped = FALSE);
     }
-    return $options;
-  }
-
-  /**
-   * Callback function for the default Options widgets.
-   */
-  public function getOptions() {
-    $state = $this->getCurrentState();
-    $options = $state->getOptions($this->entity_type, $this->entity, $force = FALSE);
-
     return $options;
   }
 
