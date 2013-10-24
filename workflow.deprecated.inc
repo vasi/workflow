@@ -96,6 +96,39 @@ function workflow_get_workflow_states_all() {
   return $options;
 }
 
+/**
+ * Get the states current user can move to for a given node.
+ * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
+ *
+ * @param object $node
+ *   The node to check.
+ * @param boolean $force
+ *   A switch to enable access to all states (e.g. for Rules)
+ * @param State $state
+ *   The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
+ * @return
+ *   Array of transitions.
+ */
+function workflow_field_choices($node, $force = FALSE, $state = NULL) {
+  $choices = array();
+
+  if (!$node) {
+    // If no node is given, no result (e.g., on a Field settings page)
+    return $choices;
+  }
+
+  if ($state) {
+    // This is used in Field API. A state object is already passed in.
+  }
+  else {
+    // This is used in Node API.
+    $workflow = workflow_get_workflow_type_map_by_type($node->type);
+    $current_sid = workflow_node_current_state($node);
+    $state = WorkflowState::load($current_sid);
+  }
+  return $state->getOptions('node', $node, $force);
+}
+
 /*
  * Determine if the Workflow Form must be shown. 
  * If not, a formatter must be shown, since there are no valid options.

@@ -298,20 +298,21 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
         return;
       }
 
-      $choices = workflow_field_choices($node);
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
       $current_sid = isset($form_state['values']['workflow']) ?
         $form_state['values']['workflow'] : workflow_node_current_state($node);
+      $current_state = WorkflowState::load($current_sid);
+      $choices = $current_state->getOptions('node', $node, $force = FALSE);
 
       // If the current node state is not one of the choices, pick first valid choice.
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
       if (!isset($choices[$current_sid])) {
         $current_sid = $workflow->getFirstSid('node', $node);
+        $current_state = WorkflowState::load($current_sid);
       }
-      $current_state = WorkflowState::load($current_sid);
 
       // Stop if user has no new target state(s) to choose.
       if (!$current_state->showWidget($choices)) {
@@ -357,88 +358,4 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
  */
 function workflow_node_tab_access($node = NULL) {
   return workflow_tab_access($node);
-}
-
-/**
- * Get the states current user can move to for a given node.
- * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
- *
- * @param object $node
- *   The node to check.
- * @param boolean $force
- *   A switch to enable access to all states (e.g. for Rules)
- * @param State $state
- *   The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
- * @return
- *   Array of transitions.
- */
-function workflow_field_choices($node, $force = FALSE, $state = NULL) {
-  global $user;
-
-  static $cache = array(); // Node-specific cache per page load.
-  $sid = isset($state->sid) ? $state->sid : 0;
-  $nid = isset($node->nid) ? $node->nid : 0;
-  $choices = array();
-
-  if (!$node) {
-    // If no node is given, no result (e.g., on a Field settings page)
-    return $choices;
-  }
-
-  if ($nid && isset($cache[$nid][$force][$sid])) {
-    // Do not cache new nodes (for security reasons).
-    // @todo: add support for $entity_type.
-    $choices = $cache[$nid][$force][$sid];
-    return $choices;
-  }
-
-  if ($state) {
-    // This is used in Field API.
-    $workflow = Workflow::load($state->wid);
-    $current_sid = $state->sid;
-  }
-  else {
-    // This is used in Node API.
-    $workflow = workflow_get_workflow_type_map_by_type($node->type);
-    $current_sid = workflow_node_current_state($node);
-  }
-
-  if ($workflow) {
-    $roles = array_keys($user->roles);
-
-    // If user is node author or this is a new page, give the authorship role.
-    if (($user->uid == $node->uid && $node->uid > 0) || (arg(0) == 'node' && arg(1) == 'add')) {
-      $roles += array('author' => 'author');
-    }
-    if ($user->uid == 1 || $force) {
-      // Superuser is special. And Force allows Rules to cause transition.
-      $roles = 'ALL';
-    }
-
-    // Workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
-    // Instead it returns just the allowable data as:
-    // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
-    $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
-
-    // Include current state if it is not the (creation) state.
-    foreach ($transitions as $transition) {
-      if ($transition->sysid != WORKFLOW_CREATION && !$force) {
-        // Invoke a callback indicating that we are collecting state choices. Modules
-        // may veto a choice by returning FALSE. In this case, the choice is
-        // never presented to the user.
-        // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-        $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $node, $field_name = '');
-        // Did anybody veto this choice?
-        if (!in_array(FALSE, $result)) {
-          // If not vetoed, add to list.
-          $choices[$transition->state_id] = check_plain(t($transition->state_name));
-        }
-      }
-    }
-
-    // Save to node-specific cache.
-    $cache[(int)$nid][$force][$sid] = $choices;
-  }
-
-  return $choices;
 }

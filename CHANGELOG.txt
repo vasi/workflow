@@ -244,3 +244,4 @@ Issue #2019345 by johnv: Fixed notice when an existing node does not have a work
 Issue #1036580 by johnv: Fixed error in Workflow Node API on Node View page when another workflow was assigned to node type.
 Issue #2119921 by johnv: Added dependency to Entity API module.
 Issue #2102193 by johnv: Fixed documentation of hook_workflow() in workflow.api.inc
+Issue #2019345 by johnv: Moved workflow_field_choices() to deprecated.inc, since it is completely replaced by WorkflowState->getOptions($node).
