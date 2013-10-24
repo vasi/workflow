@@ -10,22 +10,24 @@
  * NOTE: This hook may reside in the implementing module
  * or in a module.workflow.inc file.
  *
- * @param $op
- *   The current workflow operation: 'transition permitted', 'transition pre' or 'transition post'.
- * @param $old_state
- *   The state ID of the current state.
- * @param $new_state
+ * @param string $op
+ *   The current workflow operation. E.g., 'transition permitted', 'transition pre' or 'transition post'.
+ * @param $id
+ *   The ID of the current state/transition/workflow.
+ * @param $new_sid
  *   The state ID of the new state.
- * @param $node
- *   The node whose workflow state is changing.
- * @param $force
+ * @param object $entity
+ *   The entity whose workflow state is changing.
+ * @param boolean $force
  *   The caller indicated that the transition should be forced. (bool).
  *   This is only available on the "pre" and "post" calls.
- * @param $field
- *   The field definition.
+ * @param string $entity_type
+ *   The entity_type of the entity whose workflow state is changing.
+ * @param string $field_name
+ *   The name of the Workflow Field. Empty in case of Workflow Node.
  *   This is used when saving a state change of a Workflow Field.
  */
-function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE, $field = NULL) {
+function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '') {
   switch ($op) {
     case 'transition permitted':
       // The workflow module does nothing during this operation.
@@ -44,6 +46,18 @@ function hook_workflow($op, $old_state, $new_state, $node, $force = FALSE, $fiel
       break;
 
     case 'transition delete':
+      // A transition is deleted Only the first parameter is used.
+      $tid = $id;
+      break;
+
+    case 'state delete':
+      // Only the first parameter is used.
+      $sid = $id;
+      break;
+
+    case 'workflow delete':
+      // Only the first parameter is used.
+      $wid = $id;
       break;
   }
 }

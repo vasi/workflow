@@ -243,3 +243,4 @@ Issue #2019345 by johnv: Changed function names in workflow_rules to reflect the
 Issue #2019345 by johnv: Fixed notice when an existing node does not have a workflow value yet.
 Issue #1036580 by johnv: Fixed error in Workflow Node API on Node View page when another workflow was assigned to node type.
 Issue #2119921 by johnv: Added dependency to Entity API module.
+Issue #2102193 by johnv: Fixed documentation of hook_workflow() in workflow.api.inc
