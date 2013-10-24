@@ -35,7 +35,6 @@ function workflow_forms($form_id, $args) {
 
 /**
  * Implements hook_node_load().
- * @TODO: Consider replacing with hook_entity_load().
  */
 function workflow_node_load($nodes, $types) {
   // Get which types have workflows associated with them.

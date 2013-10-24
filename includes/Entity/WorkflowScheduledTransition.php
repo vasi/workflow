@@ -30,7 +30,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     elseif ($entity) {
       // When supplying the $entity, the $entity_type musst be known, too.
       $this->entity_type = $entity_type;
-      $this->entity_id = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
+      $this->entity_id = entity_id($entity_type, $entity);
       $this->nid = $this->entity_id;
     }
 

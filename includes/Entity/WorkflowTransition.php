@@ -41,7 +41,7 @@ class WorkflowTransition {
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
     $this->language = ($this->language) ? $this->language : 'und';
     $this->entity = $entity;
-    $this->nid = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
+    $this->nid = entity_id($entity_type, $entity);
 
     $this->old_sid = $old_sid;
     $this->sid = $new_sid;
@@ -220,11 +220,12 @@ class WorkflowTransition {
     if ($state = WorkflowState::load($new_sid)) {
       $workflow = $state->getWorkflow();
       if ($workflow->options['watchdog_log']) {
-        $message = ($this->isScheduled()) ? 'Scheduled state change of @type %node_title to %state_name executed'
-                                          : 'State of @type %node_title set to %state_name';
+        $entity_type_info = entity_get_info($entity_type);
+        $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed'
+                                          : 'State of @type %label set to %state_name';
         $args = array(
-            '@type' => ($type = node_type_get_name($entity->type)) ? $type : $entity->type,
-            '%node_title' => isset($entity->title) ? $entity->title : $entity->type, //@todo: enable entity API.
+            '@type' => $entity_type_info['label'],
+            '%label' => entity_label($entity_type, $entity),
             '%state_name' => $state->label(),
         );
         $uri = entity_uri($entity_type, $entity);
@@ -244,15 +245,7 @@ class WorkflowTransition {
   }
 
   /**
-   * Get/Set the Transitions $entity.
-   * IF no arguments are provided, the $entity_type and $entity_id must be known upfront.
-   *
-   * @param string $entity_type
-   *   If setting an $entity, its entity_type, else empty.
-   * @param stdClass $entity_id
-   *   If setting an $entity, its ID, else empty.
-   * @param stdClass $entity
-   *   If setting an $entity, the object, else empty.
+   * Get the Transitions $entity.
    *
    * @return $entity
    *   The entity, that is added to the Transition.
@@ -262,28 +255,35 @@ class WorkflowTransition {
     if (empty($this->entity)) {
       $entity_type = $this->entity_type;
       $entity_id = $this->entity_id;
-      $this->entity = ($entity_type == 'node') ? node_load($entity_id) : array_shift( entity_load($entity_type, array($entity_id)) );
+      $this->entity = entity_load_single($entity_type, $entity_id);
     }
     return $this->entity;
   }
 
+  /**
+   * Set the Transitions $entity.
+   * IF no arguments are provided, the $entity_type and $entity_id must be known upfront.
+   *
+   * @param string $entity_type
+   *   The entity_type of the given entity.
+   * @param $entity
+   *   The Entity ID or the Entity object, to add to the Transition.
+   *
+   * @return object $entity
+   *   The entity, that is added to the Transition.
+   */
   public function setEntity($entity_type, $entity) {
     if (!is_object($entity)) {
       $entity_id = $entity;
       // Use node API or Entity API to load the object first.
-      $entity = ($entity_type == 'node') ? node_load($entity_id) : array_shift(entity_load($entity_type, array($entity_id)));
+      $entity = entity_load_single($entity_type, $entity_id);
     }
     $this->entity = $entity;
     $this->entity_type = $entity_type;
-    $this->entity_id = ($entity_type == 'node') ? $entity->nid : entity_id($entity_type, $entity);
+    $this->entity_id = entity_id($entity_type, $entity);
     $this->nid = $this->entity_id;
 
     return $this->entity;
-  }
-
-  public function entity_id() {
-    // Only use entity api if necessary.
-    return ($this->entity_type == 'node') ? $this->nid : entity_id($this->entity_type, $this->entity);
   }
 
   /**

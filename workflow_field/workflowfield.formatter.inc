@@ -85,7 +85,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   // Add the form/widget to the formatter, and include the nid in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for the WorkflowDefaultWidget.
-  $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
+  $entity_id = entity_id($entity_type, $entity);
   $element += drupal_get_form(WORKFLOWFIELD_FORM . '_' . $entity_id, $field, $instance, $langcode, $items, $delta, $element);
 
   return $element;

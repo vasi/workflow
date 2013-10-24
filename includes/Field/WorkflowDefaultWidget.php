@@ -67,7 +67,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $field_name = $this->field['field_name'];
     $entity = $this->entity;
     $entity_type = $this->entity_type;
-    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
+    $entity_id = entity_id($entity_type, $entity);
 
     if (!$entity) {
       // If no entity given, do not show a form. E.g., on the field settings page.
@@ -279,7 +279,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $entity_type = $this->entity_type;
     $entity = $this->entity;
-    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
+    $entity_id = entity_id($entity_type, $entity);
     $field = $this->field;
     $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
 
@@ -355,7 +355,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $entity_type = $this->entity_type;
     $entity = $this->entity;
-    $entity_id = isset($entity->nid) ? $entity->nid : entity_id($entity_type, $entity);
+    $entity_id = entity_id($entity_type, $entity);
     $comment = isset($form_data['workflow_comment']) ? $form_data['workflow_comment'] : '';
     $field_name = !empty($this->field) ? $this->field['field_name'] : '';
 

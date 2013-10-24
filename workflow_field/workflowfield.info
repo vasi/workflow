@@ -3,6 +3,7 @@ description = Defines a Workflow field, widget and formatter. THIS VERSION IS NO
 package = Workflow
 core = 7.x
 
+dependencies[] = entity
 dependencies[] = field
 dependencies[] = options
 dependencies[] = workflow

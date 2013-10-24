@@ -236,7 +236,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     // @todo D8: remove below lines.
     $entity = $this->entity;
     $entity_type = $this->entity_type;
-    $entity_id = _workflow_get_entity_id($entity_type, $entity);
+    $entity_id = entity_id($entity_type, $entity);
 
     if (!$entity) {
       // No entity available, we are on the field Settings page - 'default value' field.
@@ -247,10 +247,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
     }
     elseif ($entity_id && $this->entity_type == 'comment') {
       // This happens when we are on an entity's comment.
-      // todo: for now, if nid is set, then it is a node. What happens with other entities?
-      $referenced_entity_type = 'node'; // Comments only exist on nodes.
-      $referenced_entities = entity_load($referenced_entity_type, array($nid));
-      $referenced_entity = $referenced_entities[$nid];
+      $referenced_entity = entity_load_single('node', $nid); // Comments only exist on nodes.
 
       // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
       $form = array();

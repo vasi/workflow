@@ -473,7 +473,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
   static $sids = array();
 
   // Return cached value of $sid.
-  $entity_id = _workflow_get_entity_id($entity_type, $entity);
+  $entity_id = entity_id($entity_type, $entity);
   $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   if (isset($sids[$entity_type][$entity_id][$field_name])) {
     $sid = $sids[$entity_type][$entity_id][$field_name];
@@ -1062,11 +1062,4 @@ function _workflow_get_sid_by_items($items) {
   // On a workflow form widget:
   $sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $sid;
   return $sid;
-}
-
-/**
- * Helper function. Replacement for entity_id(), in case Entity module is not enabled.
- */
-function _workflow_get_entity_id($entity_type, $entity) {
- return $entity_id = ($entity_type == 'node') ? (isset($entity->nid) ? $entity->nid : 0) : entity_id($entity_type, $entity);	
 }

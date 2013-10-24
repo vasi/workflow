@@ -101,10 +101,9 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
 
   if ($entity_type == 'comment') {
     // This happens when we are on an entity's comment.
-    $nid = isset($entity->nid) ? $entity->nid : 0;
-    $referenced_entity_type = 'node'; // Comments only exist on nodes.
-    $referenced_entities = entity_load($referenced_entity_type, array($nid));
-    $referenced_entity = $referenced_entities[$nid];
+    $entity_type = 'node'; // Comments only exist on nodes.
+    $entity_id = entity_id($entity_type, $entity);
+    $referenced_entity = entity_load_single($entity_type, $entity);
 
     // @todo: when changing Workflow via comment, the history is saved twice.
     $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
