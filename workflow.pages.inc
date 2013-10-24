@@ -36,8 +36,10 @@ function workflow_tab_page($node = NULL) {
   else {
     // This is a Workflow Node workflow.
     $current_sid = workflow_node_current_state($entity, $entity_type = 'node', $field = array());
-    $name = $states[$current_sid]->getName();
-    $label = $states[$current_sid]->label();
+
+    // State may not be found if the node type has been assigned a to new workflow.
+    $name = isset ($states[$current_sid]) ? $states[$current_sid]->getName() : '';
+    $label = isset ($states[$current_sid]) ? $states[$current_sid]->label() : '';
     $output = theme('workflow_current_state', array('state' => $label,
                                                     'state_system_name' => $name,
                                                     'sid' => $current_sid));

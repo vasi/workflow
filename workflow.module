@@ -466,7 +466,7 @@ function workflow_get_workflow_options($wid = 0, $grouped = FALSE) {
  *
  * @return $sid
  *   The ID of the current state.
- * @todo: add caching to workflow_node_current_state()
+ * @todo: If you changed the workflow type for a field/node, they never reach the new workflow. see https://drupal.org/node/1036580
  */
 function workflow_node_current_state($entity, $entity_type = 'node', $field = array()) {
   $sid = FALSE;
