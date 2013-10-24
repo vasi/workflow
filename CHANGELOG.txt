@@ -242,3 +242,4 @@ Issue #2019345 by johnv: Fixed notice when updating node in certain circumstance
 Issue #2019345 by johnv: Changed function names in workflow_rules to reflect they are Node API only.
 Issue #2019345 by johnv: Fixed notice when an existing node does not have a workflow value yet.
 Issue #1036580 by johnv: Fixed error in Workflow Node API on Node View page when another workflow was assigned to node type.
+Issue #2119921 by johnv: Added dependency to Entity API module.
