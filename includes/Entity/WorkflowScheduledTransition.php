@@ -13,6 +13,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /*
    * Constructor
+   *
    * @todo: use parent::__construct ?
    */
   public function __construct($entity_type = '', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
@@ -48,17 +49,21 @@ class WorkflowScheduledTransition extends WorkflowTransition {
       drupal_set_message('Wrong call to new WorkflowScheduledTransition()', 'error');
     }
 
-    // fill the 'new' fields correctly. @todo: rename these fields in db table.
+    // Fill the 'new' fields correctly. @todo: rename these fields in db table.
     $this->entity_id = $this->nid;
     $this->new_sid = $this->sid;
   }
 
   /**
    * Given a node, get all scheduled transitions for it.
-   * @param $nid
-   *    The node ID.
-   * @return
-   *    An array of WorkflowScheduledTransitions
+   *
+   * @param $entity_type
+   * @param $entity_id
+   * @param $field_name
+   *  optional
+   *
+   * @return array WorkflowScheduledTransition
+   *  an array of WorkflowScheduledTransitions
    *
    * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
    */
@@ -80,13 +85,16 @@ class WorkflowScheduledTransition extends WorkflowTransition {
   public static function loadBetween($start = 0, $end = REQUEST_TIME) {
     $results = db_query('SELECT * ' .
                         'FROM {workflow_scheduled_transition} ' .
-                        'WHERE scheduled > :start AND scheduled < :end '.
+                        'WHERE scheduled > :start AND scheduled < :end ' .
                         'ORDER BY scheduled ASC',
                         array(':start' => $start, ':end' => $end));
     $result = $results->fetchAll(PDO::FETCH_CLASS, 'WorkflowScheduledTransition');
     return $result;
   }
 
+  /**
+   * Save a scheduled transition.
+   */
   public function save() {
     // Avoid duplicate entries.
     $this->delete();
@@ -97,14 +105,13 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     if ($state = WorkflowState::load($this->new_sid)) {
       $message = '@entity_title scheduled for state change to %state_name on %scheduled_date';
       $args = array(
-          '@entity_type' => $this->entity_type,
-          '@entity_title' => $this->entity->title,
-          '%state_name' => t($state->label()),
-          '%scheduled_date' => format_date($this->scheduled),
+        '@entity_type' => $this->entity_type,
+        '@entity_title' => $this->entity->title,
+        '%state_name' => t($state->label()),
+        '%scheduled_date' => format_date($this->scheduled),
       );
       $uri = entity_uri($this->entity_type, $this->entity);
       watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path'] . '/workflow'));
-
       drupal_set_message(t($message, $args));
     }
   }
@@ -119,7 +126,8 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /**
    * Given a node, delete transitions for it.
-   * Better use delete(), instead of this static function.
+   * 
+   * Caveat: better use delete(), instead of this static function.
    */
   public static function deleteByNid($entity_type, $nid) {
     return db_delete('workflow_scheduled_transition')
@@ -137,11 +145,12 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /*
    * Get the Transition's $field_info.
+   *
    * This is called in hook_cron, to get the $field_info.
    * @todo: read $field_name directly from table.
    */
   public function getWorkflowItem() {
-    $workflowItem = NULL;
+    $workflow_item = NULL;
 
     if (!empty($this->field_name)) {
       // @todo: read $field_name directly from table.
@@ -158,10 +167,10 @@ class WorkflowScheduledTransition extends WorkflowTransition {
         // Set cache.
         $this->field_name = $field_name;
         // Prepare return value.
-        $workflowItem = new WorkflowItem($field_info, $field_instance, $entity_type, $this->getEntity());
+        $workflow_item = new WorkflowItem($field_info, $field_instance, $entity_type, $this->getEntity());
       }
     }
-    return $workflowItem;
+    return $workflow_item;
   }
 
   /*

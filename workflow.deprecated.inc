@@ -52,7 +52,7 @@ function workflow_get_creation_state_by_wid($wid) {
 /**
  * Return the ID of the creation state given a content type.
  *
- * @param $type
+ * @param string $type
  *   The type of the content.
  */
 function workflow_get_creation_state_by_type($type) {
@@ -81,8 +81,8 @@ function workflow_delete_workflows_by_wid($wid) {
 /**
  * Get all active states in the system.
  *
- * @return
- *  An array $id => $name, of all active states.
+ * @return array $options
+ *  a keyed array $id => $name, of all active states.
  * @deprecated: workflow_get_workflow_states_all() --> Workflow::getOptions()
  */
 function workflow_get_workflow_states_all() {
@@ -102,18 +102,19 @@ function workflow_get_workflow_states_all() {
  *
  * @param object $node
  *   The node to check.
- * @param boolean $force
+ * @param bool $force
  *   A switch to enable access to all states (e.g. for Rules)
  * @param State $state
  *   The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
- * @return
+ *
+ * @return array $options
  *   Array of transitions.
  */
 function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   $choices = array();
 
   if (!$node) {
-    // If no node is given, no result (e.g., on a Field settings page)
+    // If no node is given, no result. (e.g., on a Field settings page)
     return $choices;
   }
 
@@ -129,10 +130,10 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   return $state->getOptions('node', $node, $force);
 }
 
-/*
- * Determine if the Workflow Form must be shown. 
+/**
+ * Determine if the Workflow Form must be shown.
  * If not, a formatter must be shown, since there are no valid options.
- * 
+ *
  * @deprecated workflow_show_form() --> WorkflowState->showWidget()
  *
  * @param $sid
@@ -141,7 +142,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  *   the workflow object (might be derived from $sid).
  * @param $choices
  *   an array with $id => $label options, as determined in WorkflowState->getOptions().
- * 
+ *
  * @return
  *   Boolean, TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
  */
@@ -205,7 +206,8 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
   return workflow_get_workflow_states($options);
 }
 
-/*
+/**
+ * Given a sid, return a workflow. Sids are a unique id.
  * @deprecated: workflow_get_workflow_by_sid --> WorkflowState::load()
  */
 function workflow_get_workflow_by_sid($sid) {
@@ -216,7 +218,6 @@ function workflow_get_workflow_by_sid($sid) {
 
 /**
  * Given a sid, return a state. Sids are a unique id.
- *
  * @deprecated: workflow_get_workflow_states_by_sid($sid) --> WorkflowState::load($sid)
  */
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
@@ -237,7 +238,7 @@ function workflow_get_other_states_by_sid($sid) {
   $query = "SELECT sid, state "
     . "FROM {workflow_states} "
     . "WHERE wid = (SELECT wid FROM {workflow_states} WHERE sid = :sid AND status = 1 AND sysid = 0) "
-    ;
+  ;
   return db_query($query, array(':sid' => $sid))->fetchAllKeyed();
 }
 
@@ -248,7 +249,7 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
   $options = array(
     'state' => $state,
     'wid' => $wid,
-    );
+  );
   return workflow_get_workflow_states($options);
 }
 
@@ -304,8 +305,7 @@ function workflow_get_workflow_scheduled_transition_by_between($start = 0, $end 
 }
 
 /**
- * Insert a new scheduled transition.
- * Only one transition at a time (for now).
+ * Insert a new scheduled transition. Only one transition at a time (for now).
  * @deprecated: workflow_insert_workflow_scheduled_transition() --> WorkflowScheduledTransition::save()
  */
 function workflow_insert_workflow_scheduled_transition($data) {

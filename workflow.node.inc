@@ -173,12 +173,6 @@ function workflow_comment_update($comment) {
 
 /**
  * Implements hook_node_view().
- *
- * @param object $node.
- * @param string $view_mode.
- * @param string $langcode.
- *
- * @return renderable content in $node->content array.
  */
 function workflow_node_view($node, $view_mode, $langcode) {
   if (!user_access('show workflow state form') || $node->status == 0) {
@@ -199,7 +193,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   $node->content['workflow_current_state'] = array(
     '#markup' => $markup,
     '#weight' => -99,
-    );
+  );
 
   if ($current_state->showWidget($choices)) {
     $state_labels = $workflow->getOptions();
@@ -232,21 +226,21 @@ function workflow_field_extra_fields() {
           'label' => t('Workflow'),
           'description' => t('Workflow module form'),
           'weight' => 99,    // Default to bottom.
-          ),
         ),
+      ),
       'display' => array(
         'workflow_current_state' => array(
           'label' => t('Workflow: Current State'),
           'description' => t('Current workflow state'),
           'weight' => -99,   // Default to top.
-          ),
+        ),
         'workflow' => array(
           'label' => t('Workflow: State Change Form'),
           'description' => t('The form for controlling workflow state changes.'),
           'weight' => 99,    // Default to bottom.
-          ),
         ),
-      );
+      ),
+    );
   }
 
   return $extra;
@@ -256,7 +250,6 @@ function workflow_field_extra_fields() {
  * Implements hook_form_BASE_FORM_ID_alter().
  *
  * Shows the form only on Node Edit forms.
- *
  */
 function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
   return _workflow_form_alter($form, $form_state, $form_id);
@@ -266,7 +259,6 @@ function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_form_BASE_FORM_ID_alter().
  *
  * Shows the form only on Comment forms.
- *
  */
 function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
   return _workflow_form_alter($form, $form_state, $form_id);
@@ -274,10 +266,12 @@ function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
 
 /**
  * Used to Implement hook_form_alter().
+ *
  * Is now a subfunction of workflow_form_BASE_FORM_ID_alter().
  * This is more performant, since it is called only on form with correct BASE_FORM_ID.
  *
  * @param object &$node
+ *
  * @return array
  *
  * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
@@ -301,15 +295,23 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
-      $current_sid = isset($form_state['values']['workflow']) ?
-        $form_state['values']['workflow'] : workflow_node_current_state($node);
+dpm(__FUNCTION__);
+dpm($form);
+dpm($form_state);
+//      $current_sid = isset($form_state['values']['workflow']) ?
+//        $form_state['values']['workflow'] : workflow_node_current_state($node);
+      $current_sid = !empty($form_state['input']['workflow']) ?
+        $form_state['input']['workflow'] : workflow_node_current_state($node);
+dpm(__FUNCTION__ . ' 1 normal ' . $current_sid);
+
       $current_state = WorkflowState::load($current_sid);
       $choices = $current_state->getOptions('node', $node, $force = FALSE);
-
+dpm($choices);
       // If the current node state is not one of the choices, pick first valid choice.
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
       if (!isset($choices[$current_sid])) {
+dpm(__FUNCTION__ . ' 2 notfound ' . $current_sid);
         $current_sid = $workflow->getFirstSid('node', $node);
         $current_state = WorkflowState::load($current_sid);
       }
@@ -338,12 +340,13 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
         $current_sid = $node->workflow_scheduled_sid;
         $timestamp = $node->workflow_scheduled_timestamp;
         $comment = $node->workflow_scheduled_comment;
+dpm(__FUNCTION__ . ' 3 scheduled ' . $current_sid);
       }
       if (isset($form_state['values']['workflow_comment'])) {
         $comment = $form_state['values']['workflow_comment'];
       }
 
-     // Include the 'workflow form'. $form is modified by reference.
+      // Include the 'workflow form'. $form is modified by reference.
       workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
     }
   }
