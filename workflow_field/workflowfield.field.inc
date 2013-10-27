@@ -17,7 +17,7 @@ function workflowfield_field_info() {
  *
  * Changes the hook_field_settings_form.
  * Fixes some Field settings and Field Instance settings, and makes sure users cannot change it.
- * @todo: perhaps this is core functionality, but these values are only saved 
+ * @todo: perhaps this is core functionality, but these values are only saved
  *        when the site builder explicitly save the instance settings. :-(
  */
 function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
@@ -27,7 +27,7 @@ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state,
     $form['instance']['required']['#default_value'] = 1;
     $form['instance']['required']['#disabled'] = TRUE;
 
-    // User may not set a default value, this is done by the Workflow module, @see WorkflowState->getOptions().
+    // User may not set a default value (this is done by the Workflow module) @see WorkflowState->getOptions().
     $form['instance']['default_value_widget']['#type'] = 'hidden';
     $form['instance']['default_value_widget']['#disabled'] = TRUE;
     unset($form['instance']['default_value_widget']);
@@ -77,11 +77,11 @@ function workflowfield_field_widget_info_alter(&$info) {
 }
 
 /**
- * Do not implement hook_field_presave(), 
+ * Do not implement hook_field_presave(),
  * since $nid is needed, but not yet known at this moment.
  */
-//function workflowfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
-//}
+  // function workflowfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  // }
 
 /**
  * Implements hook_field_insert().
@@ -92,6 +92,7 @@ function workflowfield_field_insert($entity_type, $entity, $field, $instance, $l
 
 /**
  * Implements hook_field_update().
+ *
  * It is called also from hook_field_insert, since we need $nid to store workflow_node_history.
  * We cannot use hook_field_presave, since $nid is not yet known at that moment.
  */
@@ -115,8 +116,8 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
   else {
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
     $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
-//    $widget->setEntity($entity_type, $entity);
-//    $widget->entitySave($entity_type, $entity);
+    // $widget->setEntity($entity_type, $entity);
+    // $widget->entitySave($entity_type, $entity);
   }
 }
 
@@ -125,10 +126,10 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
  *
  * @todo: implement
  */
-//function workflowfield_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
-//  $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
-//  $workflow_field->delete($items);
-//}
+// function workflowfield_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+//   $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
+//   $workflow_field->delete($items);
+// }
 
 /**
  * Implements hook_field_is_empty().
@@ -136,9 +137,8 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
  * The Workflow field is never empty.
  */
 function workflowfield_field_is_empty($item, $field) {
-//  $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
-//  $workflow_field->isEmpty($item);
- 
+  // $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
+  // $workflow_field->isEmpty($item);
   return FALSE;
 }
 
@@ -147,8 +147,8 @@ function workflowfield_field_is_empty($item, $field) {
  *
  * @todo: implement functionality from workflow_node_delete().
  */
-//function workflowfield_field_delete_field($entity_type, $entity, $field, $instance, $langcode, &$items) {
-//}
+// function workflowfield_field_delete_field($entity_type, $entity, $field, $instance, $langcode, &$items) {
+// }
 
 /*
  * Callback function for list.module formatter.
@@ -162,22 +162,11 @@ function workflowfield_allowed_values($field, $instance, $entity_type, $entity) 
 }
 
 /**
- * Callback function for the default Options widgets.
- * Implements hook_options_list().
+ * Callback function for the default Options widgets. Implements hook_options_list().
  * @todo: move to a class.
  */
 function workflowfield_options_list($field, $instance, $entity_type, $entity) {
   $sid = workflow_node_current_state($entity, $entity_type, $field);
   $state = WorkflowState::load($sid);
   return $state->getOptions($entity_type, $entity, $force = FALSE);
-}
-
-/*
- * Start a simpletest.
- */
-function __workflowfield_test() {
-  module_enable(array('simpletest'), $enable_dependencies = TRUE);
-  $wf_webtest = new WorkflowWebTest();
-  $wf_webtest->testWorkflow();
-  $wf_webtest->testWorkflowState();
 }

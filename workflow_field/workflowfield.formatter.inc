@@ -13,7 +13,7 @@
 /**
  * Implements hook_field_formatter_info().
  */
-function Workflowfield_field_formatter_info() {
+function workflowfield_field_formatter_info() {
   return WorkflowDefaultWidget::settings();
 }
 
@@ -80,7 +80,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   $form = array();
   $form_state = array();
   $element += $widget->formElement($items, $delta, $element, $langcode, $form, $form_state);
-*/
+ */
 
   // Add the form/widget to the formatter, and include the nid in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).

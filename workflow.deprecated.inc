@@ -38,7 +38,7 @@ function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
  * Return the ID of the creation state for this workflow.
  * @deprecated: workflow_get_creation_state_by_wid($wid) --> $workflow->getCreationSid().
  *
- * @param $wid
+ * @param mixed $wid
  *   The ID of the workflow.
  */
 function workflow_get_creation_state_by_wid($wid) {
@@ -81,7 +81,7 @@ function workflow_delete_workflows_by_wid($wid) {
 /**
  * Get all active states in the system.
  *
- * @return array $options
+ * @return array
  *  a keyed array $id => $name, of all active states.
  * @deprecated: workflow_get_workflow_states_all() --> Workflow::getOptions()
  */
@@ -101,20 +101,20 @@ function workflow_get_workflow_states_all() {
  * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
  *
  * @param object $node
- *   The node to check.
+ *  The node to check.
  * @param bool $force
- *   A switch to enable access to all states (e.g. for Rules)
+ *  A switch to enable access to all states (e.g. for Rules)
  * @param State $state
- *   The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
+ *  The predetermined state object (v7.x-1.3: new parameter for Workflow Field.)
  *
- * @return array $options
- *   Array of transitions.
+ * @return array
+ *  Array of transitions.
  */
 function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   $choices = array();
 
   if (!$node) {
-    // If no node is given, no result. (e.g., on a Field settings page)
+    // If no node is given, no result. (e.g., on a Field settings page.)
     return $choices;
   }
 
@@ -136,17 +136,17 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  *
  * @deprecated workflow_show_form() --> WorkflowState->showWidget()
  *
- * @param $sid
+ * @param mixed $sid
  *   the current state ID.
- * @param $workflow
+ * @param Workflow $workflow
  *   the workflow object (might be derived from $sid).
- * @param $choices
+ * @param array $options
  *   an array with $id => $label options, as determined in WorkflowState->getOptions().
  *
- * @return
- *   Boolean, TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
+ * @return bool $show_widget
+ *   TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
  */
-function workflow_show_form($sid, $workflow, $options) {
+function workflow_show_form($sid, $workflow, array $options) {
   $state = WorkflowState::load($sid);
   return !$state->showWidget($options);
 }

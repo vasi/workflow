@@ -13,7 +13,7 @@ function workflow_search_api_entity_property_info_alter(&$info) {
     'label' => t('Workflow state name'),
     'sanitized' => TRUE,
     'getter callback' => 'workflow_search_api_property_workflow_state_getter_callback',
-    );
+  );
 }
 
 /**

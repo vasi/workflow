@@ -5,8 +5,6 @@ core = 7.x
 
 dependencies[] = entity
 
-files[] = workflow.pages.inc
-
 files[] = includes/Entity/Workflow.php
 files[] = includes/Entity/WorkflowState.php
 files[] = includes/Entity/WorkflowTransition.php

@@ -49,7 +49,7 @@ function workflowfield_field_schema($field) {
         'default' => 0,
         'disp-width' => '11',
       ),
-*/
+ */
     );
 
   return array(

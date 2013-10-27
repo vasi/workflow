@@ -77,5 +77,6 @@ return;
     $this->assertTrue(in_array('goto2', $events), t('The machine should return a list of available events.'));
     $this->assertTrue(in_array('goto3', $events), t('The machine should return a list of available events.'));
   }
-*/
+ */
+
 }

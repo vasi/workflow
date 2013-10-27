@@ -271,8 +271,8 @@ function workflow_schema() {
         'description' => 'The {workflow_states}.sid this transition started as.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE, '
-        default' => 0,
+        'not null' => TRUE,
+        'default' => 0,
         'disp-width' => '10',
       ),
       'sid' => array(
@@ -380,7 +380,7 @@ function workflow_update_7001() {
   // Not all module functions are available from within a hook_update_N() function.
   // In order to call a function from your mymodule.module or an include file,
   // you need to explicitly load that file first.
-  module_load_include('module','workflow');
+  module_load_include('module', 'workflow');
 
   // Get all workflows.
   foreach (Workflow::getWorkflows() as $workflow) {
@@ -452,7 +452,7 @@ function workflow_update_7004() {
   // Not all module functions are available from within a hook_update_N() function.
   // In order to call a function from your mymodule.module or an include file,
   // you need to explicitly load that file first.
-  module_load_include('module','workflow');
+  module_load_include('module', 'workflow');
 
   foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
     $entity_type = $scheduled_transition->entity_type;
@@ -465,7 +465,7 @@ function workflow_update_7004() {
 
     if ($entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       // All missing data is set upon loading/constructing the ScheduledTransition.
-      if($workflow_item = $workflow->getWorkflowItem()) {
+      if ($workflow_item = $workflow->getWorkflowItem()) {
         // Field API. The field name is set explicitely.
         $instance = $workflow_item->getInstance();
         $scheduled_transition->field_name = $instance['field_name'];

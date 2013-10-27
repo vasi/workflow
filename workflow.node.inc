@@ -295,10 +295,12 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
-      $current_sid = isset($form_state['values']['workflow']) ?
-        $form_state['values']['workflow'] : workflow_node_current_state($node);
-//      $current_sid = !empty($form_state['input']['workflow']) ?
-//        $form_state['input']['workflow'] : workflow_node_current_state($node);
+//      $current_sid = isset($form_state['values']['workflow']) ?
+//        $form_state['values']['workflow'] : workflow_node_current_state($node);
+      $current_sid = !empty($form_state['input']['workflow']) ?
+        $form_state['input']['workflow'] : workflow_node_current_state($node);
+//dpm(__FUNCTION__ . $current_sid);
+//dpm($form_state['input']);
 
       $current_state = WorkflowState::load($current_sid);
       $choices = $current_state->getOptions('node', $node, $force = FALSE);
