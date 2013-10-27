@@ -246,3 +246,4 @@ Issue #2119921 by johnv: Added dependency to Entity API module.
 Issue #2102193 by johnv: Fixed documentation of hook_workflow() in workflow.api.inc
 Issue #2019345 by johnv: Moved workflow_field_choices() to deprecated.inc, since it is completely replaced by WorkflowState->getOptions($node).
 Issue #2019345 by johnv: Fixed messages from PAReview.sh.
+Issue #2119921 by johnv: Moved workflow_node db functions to workflow.node.inc file.

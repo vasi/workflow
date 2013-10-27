@@ -107,6 +107,44 @@ function workflow_node_insert($node) {
 }
 
 /**
+ * Implements hook_node_view().
+ */
+function workflow_node_view($node, $view_mode, $langcode) {
+  if (!user_access('show workflow state form') || $node->status == 0) {
+    return;
+  }
+
+  if (!$workflow = workflow_get_workflows_by_type($node->type)) {
+    return;
+  }
+
+  $current_sid = workflow_node_current_state($node);
+  $current_state = WorkflowState::load($current_sid);
+  $choices = $current_state->getOptions('node', $node);
+
+  // Show current state at the top of the node display.
+  $markup = theme('workflow_current_state', array('state' => $current_state->label(), 'state_system_name' => $current_state->getName(), 'sid' => $current_state->sid));
+
+  $node->content['workflow_current_state'] = array(
+    '#markup' => $markup,
+    '#weight' => -99,
+  );
+
+  if ($current_state->showWidget($choices)) {
+    $state_labels = $workflow->getOptions();
+
+    // Show state change form at the bottom of the node display.
+    module_load_include('inc', 'workflow', 'workflow.pages');
+
+    // By including the nid in the form id.
+    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
+    $form['#weight'] = 99;
+
+    $node->content['workflow'] = $form;
+  }
+}
+
+/**
  * Implements hook_node_update().
  */
 function workflow_node_update($node) {
@@ -168,44 +206,6 @@ function workflow_comment_update($comment) {
       $node->workflow_scheduled_hour = $comment->workflow_scheduled_hour;
     }
     workflow_transition($node, $sid);
-  }
-}
-
-/**
- * Implements hook_node_view().
- */
-function workflow_node_view($node, $view_mode, $langcode) {
-  if (!user_access('show workflow state form') || $node->status == 0) {
-    return;
-  }
-
-  if (!$workflow = workflow_get_workflows_by_type($node->type)) {
-    return;
-  }
-
-  $current_sid = workflow_node_current_state($node);
-  $current_state = WorkflowState::load($current_sid);
-  $choices = $current_state->getOptions('node', $node);
-
-  // Show current state at the top of the node display.
-  $markup = theme('workflow_current_state', array('state' => $current_state->label(), 'state_system_name' => $current_state->getName(), 'sid' => $current_state->sid));
-
-  $node->content['workflow_current_state'] = array(
-    '#markup' => $markup,
-    '#weight' => -99,
-  );
-
-  if ($current_state->showWidget($choices)) {
-    $state_labels = $workflow->getOptions();
-
-    // Show state change form at the bottom of the node display.
-    module_load_include('inc', 'workflow', 'workflow.pages');
-
-    // By including the nid in the form id.
-    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
-    $form['#weight'] = 99;
-
-    $node->content['workflow'] = $form;
   }
 }
 
@@ -357,4 +357,78 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
  */
 function workflow_node_tab_access($node = NULL) {
   return workflow_tab_access($node);
+}
+
+/**
+ * Functions related to table workflow_node.
+ */
+
+/**
+ * Given a node id, find out what it's current state is. Unique (for now).
+ */
+function workflow_get_workflow_node_by_nid($nid) {
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
+  return $results->fetchObject();
+}
+
+/**
+ * Given a sid, find out the nodes associated.
+ */
+function workflow_get_workflow_node_by_sid($sid) {
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
+  return $results->fetchAll();
+}
+
+/**
+ * Given nid, update the new stamp. This probably can be refactored. Called by workflow_execute_transition().
+ * @TODO refactor into a correct insert / update.
+ */
+function workflow_update_workflow_node_stamp($nid, $new_stamp) {
+  return db_update('workflow_node')->fields(array('stamp' => $new_stamp))->condition('nid', $nid, '=')->execute();
+}
+
+/**
+ * Given data, update the new user account.  Called by user_delete().
+ */
+function workflow_update_workflow_node_uid($uid, $new_uid) {
+  return db_update('workflow_node')->fields(array('uid' => $new_uid))->condition('uid', $uid, '=')->execute();
+}
+
+/**
+ * Given nid, delete associated workflow data.
+ */
+function workflow_delete_workflow_node_by_nid($nid) {
+  return db_delete('workflow_node')->condition('nid', $nid)->execute();
+}
+
+/**
+ * Given sid, delete associated workflow data.
+ */
+function workflow_delete_workflow_node_by_sid($sid) {
+  return db_delete('workflow_node')->condition('sid', $sid)->execute();
+}
+
+/**
+ * Given data, insert the node association.
+ * @todo: Can we split this in 2? First half for Node API, second half for Node + Field API.
+ */
+function workflow_update_workflow_node($data, $old_sid, $comment = NULL) {
+  $data = (object) $data;
+  if (isset($data->nid) && workflow_get_workflow_node_by_nid($data->nid)) {
+    drupal_write_record('workflow_node', $data, 'nid');
+  }
+  else {
+    drupal_write_record('workflow_node', $data);
+  }
+
+  // Write to history for this node.
+  $data = array(
+    'nid' => $data->nid,
+    'old_sid' => $old_sid,
+    'sid' => $data->sid,
+    'uid' => $data->uid,
+    'stamp' => $data->stamp,
+    'comment' => $comment,
+  );
+  workflow_insert_workflow_node_history($data);
 }
