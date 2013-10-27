@@ -285,9 +285,6 @@ function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()
  * @param $comment
  */
 function workflow_node_form(&$form, $form_state, $title, $name, $current, $choices, $timestamp = NULL, $comment = NULL) {
-dpm(__FUNCTION__);
-dpm(debug_backtrace());
-
   // Give form_alters the chance to see the parameters.
   $form['#wf_options'] = array(
     'title' => $title,
@@ -497,7 +494,6 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
 
   // Field API: Get current/previous state.
   if ($field) {
-dpm(__FUNCTION__ . ' field start ');
     if (isset($entity->is_new) && $entity->is_new == TRUE) {
       // A new node.
       $workflow = Workflow::load($field['settings']['wid']);
@@ -521,8 +517,6 @@ dpm(__FUNCTION__ . ' field start ');
     }
   }
   else {
-dpm(__FUNCTION__ . ' Node API ' . $sid);
-dpm($entity);
     // Node API: Get current/previous state.
     // There is no nid when creating a node.
     if (!$sid && !empty($entity_id)) {

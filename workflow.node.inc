@@ -295,23 +295,18 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
-dpm(__FUNCTION__);
-dpm($form);
-dpm($form_state);
-//      $current_sid = isset($form_state['values']['workflow']) ?
-//        $form_state['values']['workflow'] : workflow_node_current_state($node);
-      $current_sid = !empty($form_state['input']['workflow']) ?
-        $form_state['input']['workflow'] : workflow_node_current_state($node);
-dpm(__FUNCTION__ . ' 1 normal ' . $current_sid);
+      $current_sid = isset($form_state['values']['workflow']) ?
+        $form_state['values']['workflow'] : workflow_node_current_state($node);
+//      $current_sid = !empty($form_state['input']['workflow']) ?
+//        $form_state['input']['workflow'] : workflow_node_current_state($node);
 
       $current_state = WorkflowState::load($current_sid);
       $choices = $current_state->getOptions('node', $node, $force = FALSE);
-dpm($choices);
+
       // If the current node state is not one of the choices, pick first valid choice.
       // We know all states in $choices are states that user has permission to
       // go to because workflow_field_choices() has already checked that.
       if (!isset($choices[$current_sid])) {
-dpm(__FUNCTION__ . ' 2 notfound ' . $current_sid);
         $current_sid = $workflow->getFirstSid('node', $node);
         $current_state = WorkflowState::load($current_sid);
       }
@@ -340,7 +335,6 @@ dpm(__FUNCTION__ . ' 2 notfound ' . $current_sid);
         $current_sid = $node->workflow_scheduled_sid;
         $timestamp = $node->workflow_scheduled_timestamp;
         $comment = $node->workflow_scheduled_comment;
-dpm(__FUNCTION__ . ' 3 scheduled ' . $current_sid);
       }
       if (isset($form_state['values']['workflow_comment'])) {
         $comment = $form_state['values']['workflow_comment'];
