@@ -33,7 +33,7 @@ function _workflow_rules_rules_field_condition_info() {
     'label' => t('Workflow Field state comparison'),
     'parameter' => array(
       'field' => array(
-        'type' => WORKFLOW_FIELD_PROPERTY_TYPE,
+        'type' => WORKFLOWFIELD_PROPERTY_TYPE,
         'label' => t('Workflow state to compare'),
         'description' => t('The state to be compared. Use "node:" to compare the previous state, use "node-unchanged:" to compare the new state.'),
         'restriction' => 'selector',
@@ -71,7 +71,7 @@ function _workflow_rules_rules_field_action_info() {
 //        'save' => TRUE,
       ),
       'field' => array(
-        'type' => WORKFLOW_FIELD_PROPERTY_TYPE,
+        'type' => WORKFLOWFIELD_PROPERTY_TYPE,
         'label' => t('Workflow field to set'),
         'description' => t('The workflow field to set.'),
         'restriction' => 'selector',

@@ -248,3 +248,4 @@ Issue #2019345 by johnv: Moved workflow_field_choices() to deprecated.inc, since
 Issue #2019345 by johnv: Fixed messages from PAReview.sh.
 Issue #2119921 by johnv: Moved workflow_node db functions to workflow.node.inc file.
 Issue #2119921 by johnv: Moved workflow_requirements() to workflow.install file.
+Issue #2019345 by johnv: Fixed messages from PAReview.sh.
