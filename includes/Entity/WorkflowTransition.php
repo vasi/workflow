@@ -17,7 +17,7 @@ class WorkflowTransition {
   // Entity data.
   public $entity_id;
   public $nid; // @todo D8: remove $nid, use $entity_id. (requires conversion of Views displays.)
-  private $entity; // This is dynamically loaded. Use WorkflowTransition->getEntity() to fetch this.
+  protected $entity; // This is dynamically loaded. Use WorkflowTransition->getEntity() to fetch this.
   // Transition data.
   public $old_sid = 0;
   public $new_sid = 0;
@@ -67,8 +67,8 @@ class WorkflowTransition {
    * - in permissions
    * - by permission hooks, implemented by other modules.
    *
-   * @return string message
-   *  empty if OK, else a message for drupal_set_message.
+   * @return string
+   *  message, empty if OK, else a message for drupal_set_message.
    */
   public function isAllowed($force) {
     $old_sid = $this->old_sid;
@@ -85,20 +85,23 @@ class WorkflowTransition {
         '%old_sid' => $old_sid,
         '%new_sid' => $new_sid,
       );
-      return $error_message = t('The transition from %old_sid to %new_sid is not allowed.', $t_args);
+      $error_message = t('The transition from %old_sid to %new_sid is not allowed.', $t_args);
+
+      return $error_message;
     }
+    return '';
   }
 
-/**
- * Execute a transition (change state of a node).
- * @deprecated: workflow_execute_transition() --> WorkflowTransition::execute().
- *
- * @param $force
- *   If set to TRUE, workflow permissions will be ignored.
- *
- * @return
- *  new state ID. If execution failed, old state ID is returned,
- */
+  /**
+   * Execute a transition (change state of a node).
+   * @deprecated: workflow_execute_transition() --> WorkflowTransition::execute().
+   *
+   * @param bool $force
+   *   If set to TRUE, workflow permissions will be ignored.
+   *
+   * @return int
+   *  new state ID. If execution failed, old state ID is returned,
+   */
   public function execute($force = FALSE) {
     global $user;
 
@@ -138,7 +141,7 @@ class WorkflowTransition {
 
         // @todo D8: remove; this is only for Node API.
         $entity->workflow_stamp = REQUEST_TIME;
-        workflow_update_workflow_node_stamp($entity_id, $this->stamp); //@todo: only for Node API
+        workflow_update_workflow_node_stamp($entity_id, $this->stamp); // @todo: only for Node API
 
         $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
         $data = array(
@@ -256,7 +259,7 @@ class WorkflowTransition {
   /**
    * Get the Transitions $entity.
    *
-   * @return object $entity
+   * @return object
    *   The entity, that is added to the Transition.
    */
   public function getEntity() {
@@ -273,11 +276,12 @@ class WorkflowTransition {
    * Set the Transitions $entity.
    *
    * @param $entity_type
+   *  the entity type of the entity.
    * @param $entity
-   *  The Entity ID or the Entity object, to add to the Transition.
+   *  the Entity ID or the Entity object, to add to the Transition.
    *
    * @return object $entity
-   *   The entity, that is added to the Transition.
+   *  the entity, that is added to the Transition.
    */
   public function setEntity($entity_type, $entity) {
     if (!is_object($entity)) {

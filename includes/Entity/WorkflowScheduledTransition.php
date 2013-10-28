@@ -5,13 +5,13 @@
  * Contains workflow\includes\Entity\WorkflowScheduledTransition.
  */
 
-/*
+/**
  * Implements a scheduled transition, as shown on Workflow form.
  */
 class WorkflowScheduledTransition extends WorkflowTransition {
   public $scheduled; // @todo: replace by $stamp;
 
-  /*
+  /**
    * Constructor
    *
    * @todo: use parent::__construct ?
@@ -62,7 +62,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    * @param $field_name
    *  optional
    *
-   * @return array WorkflowScheduledTransition
+   * @return array
    *  an array of WorkflowScheduledTransitions
    *
    * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
@@ -107,7 +107,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
       $args = array(
         '@entity_type' => $this->entity_type,
         '@entity_title' => $this->entity->title,
-        '%state_name' => t($state->label()),
+        '%state_name' => $state->label(),
         '%scheduled_date' => format_date($this->scheduled),
       );
       $uri = entity_uri($this->entity_type, $this->entity);
@@ -126,7 +126,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /**
    * Given a node, delete transitions for it.
-   * 
+   *
    * Caveat: better use delete(), instead of this static function.
    */
   public static function deleteByNid($entity_type, $nid) {
@@ -135,7 +135,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
            ->execute();
   }
 
-  /*
+  /**
    * If a scheduled transition has no comment, a default comment is added before executing it.
    */
   public function addDefaultComment() {
@@ -143,7 +143,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
                        array('@uid' => $this->uid));
   }
 
-  /*
+  /**
    * Get the Transition's $field_info.
    *
    * This is called in hook_cron, to get the $field_info.
@@ -173,7 +173,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     return $workflow_item;
   }
 
-  /*
+  /**
    * Functions, common to the WorkflowTransitions.
    */
 
