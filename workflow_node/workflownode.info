@@ -1,0 +1,6 @@
+name = Workflow Node
+description = Adds a Workflow to nodes.
+package = Workflow
+core = 7.x
+
+dependencies[] = workflow

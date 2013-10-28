@@ -521,3 +521,10 @@ function workflow_update_7004() {
     }
   }
 }
+
+/**
+ * Enable Workflow Node module. See https:\/\/drupal.org\/node\/2122541
+ */
+function workflow_update_7005() {
+  module_enable(array('workflownode'));
+}

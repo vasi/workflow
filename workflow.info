@@ -1,5 +1,5 @@
-name = Workflow
-description = "Allows the creation and assignment of arbitrary workflows to node types."
+name = Workflow API
+description = Workflow API. (Enable Workflow Node or Workflow Field to add arbitrary workflows to entities.)
 package = Workflow
 core = 7.x
 

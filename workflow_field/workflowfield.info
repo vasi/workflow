@@ -1,5 +1,5 @@
-name = Workflow field
-description = Defines a Workflow field, widget and formatter. THIS VERSION IS NOT SUITED FOR PRODUCTION SITES.
+name = Workflow Field
+description = Defines a Workflow field, widget and formatter.
 package = Workflow
 core = 7.x
 
