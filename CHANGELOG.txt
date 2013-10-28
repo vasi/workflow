@@ -249,3 +249,5 @@ Issue #2019345 by johnv: Fixed messages from PAReview.sh.
 Issue #2119921 by johnv: Moved workflow_node db functions to workflow.node.inc file.
 Issue #2119921 by johnv: Moved workflow_requirements() to workflow.install file.
 Issue #2019345 by johnv: Fixed messages from PAReview.sh.
+Issue #2122541 by johnv: Added new submodule Workflow Node.
+Issue #2122541 by johnv: Moved workflow_node-specific code from WorkflowState::deactivate() to hook workflownode_workflow('state delete').

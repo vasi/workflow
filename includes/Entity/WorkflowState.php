@@ -193,34 +193,17 @@ class WorkflowState {
    * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->deactivate() + delete()
    */
   public function deactivate($new_sid) {
-    $sid = $this->sid;
-    // Notify interested modules. We notify first to allow access to data before we zap it.
-    module_invoke_all('workflow', 'state delete', $sid, NULL, NULL, FALSE);
+    $current_sid = $this->sid;
 
-    // Node API: Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
-    // @todo Field API: Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
-    if ($new_sid) {
-      global $user;
-      // A candidate for the batch API.
-      // @TODO: Future updates should seriously consider setting this with batch.
-      $node = new stdClass();
-      $node->workflow_stamp = REQUEST_TIME;
-      foreach (workflow_get_workflow_node_by_sid($sid) as $data) {
-        $node->nid = $data->nid;
-        $node->workflow = $sid;
-        $data = array(
-          'nid' => $node->nid,
-          'sid' => $new_sid,
-          'uid' => $user->uid,
-          'stamp' => $node->workflow_stamp,
-        );
-        workflow_update_workflow_node($data, $sid, t('Previous state deleted'));
-      }
-    }
+    // Notify interested modules. We notify first to allow access to data before we zap it.
+    // E.g., Node API (@todo Field API):
+    // - re-parents any nodes that we don't want to orphan, whilst deactivating a State.
+    // - delete any lingering node to state values.
+    module_invoke_all('workflow', 'state delete', $current_sid, $new_sid, NULL, FALSE);
 
     // Find out which transitions this state is involved in.
     $preexisting = array();
-    foreach (workflow_get_workflow_transitions_by_sid_involved($sid) as $data) {
+    foreach (workflow_get_workflow_transitions_by_sid_involved($current_sid) as $data) {
       $preexisting[$data->sid][$data->target_sid] = TRUE;
     }
 
@@ -232,11 +215,6 @@ class WorkflowState {
         }
       }
     }
-
-    // Node API: Delete any lingering node to state values.
-    workflow_delete_workflow_node_by_sid($sid);
-    // @todo: Field API: Delete any lingering node to state values.
-    // workflow_delete_workflow_field_by_sid($sid);
 
     // Delete the state. -- We don't actually delete, just deactivate.
     // This is a matter up for some debate, to delete or not to delete, since this
