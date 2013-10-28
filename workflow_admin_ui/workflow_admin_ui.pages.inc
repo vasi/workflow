@@ -146,9 +146,7 @@ function workflow_admin_ui_view_permissions_form($workflow) {
     // Let's add some breadcrumbs.
     workflow_admin_ui_breadcrumbs($workflow);
 
-    $name = $workflow->getName();
     $all = array();
-
     $roles = workflow_admin_ui_get_roles();
     foreach ($roles as $role => $value) {
       $all[$role]['name'] = $value;
@@ -460,7 +458,7 @@ function workflow_admin_ui_transitions_form_validate($form, $form_state) {
   $creation_state = $workflow->getCreationState();
   $creation_sid = $creation_state->sid;
   if (isset($form_state['values']['transitions'][$creation_sid]) && is_array($form_state['values']['transitions'][$creation_sid])) {
-    foreach ($form_state['values']['transitions'][$creation_sid] as $to => $roles) {
+    foreach ($form_state['values']['transitions'][$creation_sid] as $roles) {
       if ($roles['author']) {
         $author_has_permission = TRUE;
         break;
@@ -484,7 +482,6 @@ function theme_workflow_admin_ui_transitions_form($variables) {
   $form = $variables['form'];
 
   $workflow = $form['workflow']['#value'];
-  $wid = $workflow->wid;
   $name = $workflow->getName();
 
   // If we don't have a workflow here, we need to go back to admin.
@@ -544,7 +541,6 @@ function theme_workflow_admin_ui_transitions_form($variables) {
 function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
   $workflow = $form['workflow']['#value'];
   $wid = $workflow->wid;
-  $name = $workflow->getName();
 
   if (isset($form_state['values']['transitions'])) {
     _workflow_admin_ui_update_configured_transitions($form_state['values']['transitions']);
@@ -691,7 +687,7 @@ function workflow_admin_ui_overview_form($form, $form_state, $workflow) {
 
       'count' => array(
         '#type' => 'value',
-        '#value' => count(workflow_get_workflow_node_by_sid($state->sid)),
+        '#value' => function_exists('workflow_get_workflow_node_by_sid') ? count(workflow_get_workflow_node_by_sid($state->sid)) : 0,
         ),
 
       'ops' => array(
@@ -807,7 +803,6 @@ function theme_workflow_admin_ui_overview_form($variables) {
 function workflow_admin_ui_overview_form_validate($form, &$form_state) {
   // Get the workflow id.
   $workflow = $form_state['values']['workflow'];
-  $wid = $workflow->wid;
 
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
@@ -817,7 +812,7 @@ function workflow_admin_ui_overview_form_validate($form, &$form_state) {
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
-      $args = array('%state' => $state->getName(),);
+      $args = array('%state' => $state->getName(), );
 
       // Does that state have nodes in it?
       if ($item['count'] > 0 && empty($item['reassign'])) {
@@ -917,17 +912,17 @@ function workflow_admin_ui_type_map_form($form) {
   $links_args = array(
     'links' => $links,
     'attributes' => array('class' => array('inline', 'action-links')),
-    );
+  );
   $form['action-links'] = array(
     '#type' => 'markup',
     '#markup' => theme('links', $links_args),
-    );
+  );
 
   // Create list of all Workflow types. Include an initial empty value.
   // Validate each workflow, and generate a message if not complete.
   $workflows[0] = t('None');
   foreach (Workflow::getWorkflows() as $workflow) {
-    if ($isValid = $workflow->validate()) {
+    if ($is_valid = $workflow->validate()) {
       $workflows[$workflow->wid] = $workflow->label();
     }
   }
@@ -944,32 +939,32 @@ function workflow_admin_ui_type_map_form($form) {
     '#title' => '<h3>' . t('Content Type Mapping') . '</h3>',
     '#markup' => t('Each content type may have a separate workflow. The form for changing workflow state can be '
       . 'displayed when editing a node, editing a comment for a node, or both.'),
-    );
+  );
 
   $placement_options = array(
-        'node' => t('Post'),
-        'comment' => t('Comment'),
-        );
+    'node' => t('Post'),
+    'comment' => t('Comment'),
+  );
 
   foreach (node_type_get_names() as $type => $name) {
     $form[$type]['workflow'] = array(
       '#type' => 'select',
       '#options' => $workflows,
       '#default_value' => isset($type_map[$type]) ? $type_map[$type] : 0,
-      );
+    );
 
     $form[$type]['placement'] = array(
       '#type' => 'checkboxes',
       '#options' => $placement_options,
       '#default_value' => variable_get('workflow_' . $type, array()),
-      );
+    );
   }
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save workflow mapping'),
     '#weight' => 100,
-    );
+  );
 
   return $form;
 }
