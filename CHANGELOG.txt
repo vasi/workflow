@@ -252,4 +252,4 @@ Issue #2019345 by johnv: Fixed messages from PAReview.sh.
 Issue #2122541 by johnv: Added new submodule Workflow Node.
 Issue #2122541 by johnv: Moved workflow_node-specific code from WorkflowState::deactivate() to hook workflownode_workflow('state delete').
 Issue #2122541 by johnv: Changed call to workflow_node specific function in worflow_admin_ui.
-Issue #2019345 by johnv: Fixed messages from PAReview.sh in WorkflowTransition.
+Issue #2019345 by johnv: Fixed error when adding node after PAreview.
