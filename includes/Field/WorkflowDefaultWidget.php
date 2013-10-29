@@ -115,7 +115,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Stop if user has no new target state(s) to choose.
     // The $current_sid may have changed due to scheduling,
     // but we use the initial state.
-    if ($scheduled || !$current_state->showWidget($options)) {
+    if (!$scheduled && !$current_state->showWidget($options)) {
       return $element;
     }
 
@@ -157,8 +157,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#type' => $this->field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
-//        '#name' => $label,
-//        '#parents' => array('workflow'),
+        // '#name' => $label,
+        // '#parents' => array('workflow'),
         '#default_value' => $current_state->isCreationState() ? array_pop(array_keys($options)) : $current_sid,
       );
     }
@@ -195,8 +195,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#prefix' => '<div style="margin-left: 1em;">',
         '#suffix' => '</div>',
         '#states' => array(
-//          'visible' => array(':input[name="workflow_scheduled"]' => array('value' => '1')),
-//          'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => '0')),
+          // 'visible' => array(':input[name="workflow_scheduled"]' => array('value' => '1')),
+          // 'invisible' => array(':input[name="workflow_scheduled"]' => array('value' => '0')),
           'visible' => array(':input[name="' . $element_name . '"]' => array('value' => '1')),
           'invisible' => array(':input[name="' . $element_name . '"]' => array('value' => '0')),
         ),
@@ -261,15 +261,20 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
   }
 
   /**
-   * Implements workflow_transition() -> WorkflowDefaultWidget::submit()
+   * Implements workflow_transition() -> WorkflowDefaultWidget::submit().
    *
    * Overrides submit(array $form, array &$form_state).
    * Contains 2 extra parameters for D7
    *
+   * @param array $form
+   * @param array $form_state
    * @param array $items
    *   The value of the field.
-   * @param array $force
-   *   A boolean. TRUE if all access must be overridden, e.g., for Rules.
+   * @param bool $force
+   *   TRUE if all access must be overridden, e.g., for Rules.
+   *
+   * @return
+   *  If update succeeded, the new State Id. Else, the old Id is returned.
    *
    * This is called from function _workflowfield_form_submit($form, &$form_state)
    * It is a replacement of function workflow_transition($node, $new_sid, $force, $field)
@@ -288,7 +293,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Massage the items, depending on the type of widget.
     // @todo: use MassageFormValues($values, $form, $form_state).
-    $old_sid = workflow_node_current_state($entity, $entity_type, $field); // Todo : entity support.
+    $old_sid = workflow_node_current_state($entity, $entity_type, $field);
     $new_sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $items[0]['value'];
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
 

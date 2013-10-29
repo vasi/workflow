@@ -114,7 +114,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  if (!$workflow = workflow_get_workflows_by_type($node->type)) {
+  if (!workflow_get_workflow_type_map_by_type($node->type);
     return;
   }
 
@@ -131,6 +131,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   );
 
   if ($current_state->showWidget($choices)) {
+    $workflow = $current_state->getWorkflow();
     $state_labels = $workflow->getOptions();
 
     // Show state change form at the bottom of the node display.
