@@ -38,18 +38,36 @@ class WorkflowTransition {
    * One argument $entity may be passed, only to directly call delete() afterwards.
    */
   public function __construct($entity_type = 'node', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
-    $this->entity_type = ($this->entity_type) ? $this->entity_type : $entity_type;
+    $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
     $this->language = ($this->language) ? $this->language : 'und';
-    $this->entity = $entity;
-    $this->nid = entity_id($entity_type, $entity);
 
-    $this->old_sid = $old_sid;
-    $this->sid = $new_sid;
+    // If constructor is called with new() and arguments.
+    // Load the supplied entity.
+    if ($entity && !$entity_type) {
+      // Not all paramaters are passed programmatically.
+      drupal_set_message('Wrong call to new WorkflowScheduledTransition()', 'error');
+    }
+    elseif ($entity) {
+      // When supplying the $entity, the $entity_type must be known, too.
+      $this->entity = $entity;
+      $this->entity_id = entity_id($entity_type, $entity);
+      $this->nid = $this->entity_id;
+    }
 
-    $this->uid = $uid;
-    $this->stamp = $stamp;
-    $this->comment = $comment;
+    // If constructor is called with new() and arguments.
+    if ($entity && $old_sid && $new_sid && $stamp) {
+      $this->old_sid = $old_sid;
+      $this->sid = $new_sid;
+
+      $this->uid = $uid;
+      $this->scheduled = $stamp;
+      $this->comment = $comment;
+    }
+    elseif ($old_sid || $new_sid || $stamp) {
+      // Not all paramaters are passed programmatically.
+      drupal_set_message('Wrong call to constructor Workflow*Transition()', 'error');
+    }
 
     // Fill the 'new' fields correctly. @todo: rename these fields in db table.
     $this->entity_id = $this->nid;
