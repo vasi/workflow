@@ -254,3 +254,4 @@ Issue #2122541 by johnv: Moved workflow_node-specific code from WorkflowState::d
 Issue #2122541 by johnv: Changed call to workflow_node specific function in worflow_admin_ui.
 Issue #2019345 by johnv: Fixed error when adding node after PAreview.
 Issue #2122541 by johnv: Moved workflow_node-specific code from Workflow::delete() to hook workflownode_workflow('worflow delete').
+Issue #2019345 by johnv: Removed duplication of Workflow*Transition::__construct.
