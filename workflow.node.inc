@@ -114,7 +114,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  if (!workflow_get_workflow_type_map_by_type($node->type);
+  if (!workflow_get_workflow_type_map_by_type($node->type)) {
     return;
   }
 
