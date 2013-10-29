@@ -62,6 +62,7 @@ function workflownode_workflow($op, $id, $new_sid, $entity, $force, $entity_type
     case 'workflow delete':
       // Only the first parameter is used.
       $wid = $id;
+      workflow_delete_workflow_type_map_by_wid($wid);
       break;
   }
 }

@@ -184,17 +184,13 @@ class Workflow {
     $wid = $this->wid;
 
     // Notify any interested modules before we delete the workflow.
+    // E.g., Workflow Node deletes the {workflow_type_map} record.
     module_invoke_all('workflow', 'workflow delete', $wid, NULL, NULL, FALSE);
 
     // Delete associated state (also deletes any associated transitions).
     foreach ($this->getStates($all = TRUE) as $state) {
       $state->deactivate($new_sid = 0);
       $state->delete();
-    }
-
-    // Delete type map. @todo: move this to hook_workflow of workflownode.module.
-    if (TRUE || module_exists('workflownode')) {
-      workflow_delete_workflow_type_map_by_wid($wid);
     }
 
     // Delete the workflow.
