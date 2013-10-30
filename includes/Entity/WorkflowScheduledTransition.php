@@ -9,6 +9,9 @@
  * Implements a scheduled transition, as shown on Workflow form.
  */
 class WorkflowScheduledTransition extends WorkflowTransition {
+  // Table data. The table the class is stored.
+  protected static $table = 'workflow_scheduled_transition';
+
   public $scheduled;
 
   /**
@@ -87,18 +90,37 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    * @deprecated: workflow_delete_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::delete()
    */
   public function delete() {
-    return $this->deleteByNid($this->entity_type, $this->entity_id);
+    return $this->deleteById($this->entity_type, $this->entity_id);
+  }
+
+  public static function deleteMultiple(array $conditions) {
+    return parent::deleteMultiple($conditions, $table = 'workflow_scheduled_transition');
   }
 
   /**
-   * Given a node, delete transitions for it.
-   *
-   * Caveat: better use delete(), instead of this static function.
+   * Given a Entity, delete transitions for it.
+   * @todo: add support for Field.
    */
-  public static function deleteByNid($entity_type, $nid) {
-    return db_delete('workflow_scheduled_transition')
-           ->condition('nid', $nid)
-           ->execute();
+  public static function deleteById($entity_type, $entity_id) {
+    $conditions = array(
+//      'entity_type' => $entity_type,
+      'nid' => $entity_id,
+    );
+   return self::deleteMultiple($conditions);
+  }
+
+  /**
+   * Property functions.
+   */
+
+  /**
+   * Returns the table this class is stored.
+   * 
+   * This is a workaround for protected static $table = <table>
+   * Which did not work for subclasses.
+   */
+  private function getTable() {
+    return $table = 'workflow_scheduled_transition';
   }
 
   /**

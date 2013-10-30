@@ -320,5 +320,40 @@ function workflow_insert_workflow_scheduled_transition($data) {
  *        It is still used in workflow_execute_transition().
  */
 function workflow_delete_workflow_scheduled_transition_by_nid($nid) {
-  return WorkflowScheduledTransition::deleteByNid($nid);
+  return WorkflowScheduledTransition::deleteById('node', $nid);
+}
+
+/**
+ * Deprecated functions related to table {workflow_node_history}.
+ */
+
+/**
+ * Get all recorded history for a node id.
+ *
+ * Since this may return a lot of data, a limit is included to allow for only one result.
+ */
+function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
+  return WorkflowTransition::load('node', $nid, $field_name= '', $limit);
+}
+
+/**
+ * Given data, insert a new history. Always insert.
+ *
+ * @deprecated: workflow_insert_workflow_node_history() --> WorkflowTransition::save()
+ */
+function workflow_insert_workflow_node_history($data) {
+  $data = (object) $data;
+  if (isset($data->hid)) {
+    unset($data->hid);
+  }
+
+  // Check for no transition.
+  if ($data->old_sid == $data->sid) {
+    // Make sure we haven't already inserted history for this update.
+    $last_history = workflow_get_workflow_node_history_by_nid($data->nid, 1);
+    if (isset($last_history) && $last_history->stamp == REQUEST_TIME) {
+      return;
+    }
+  }
+  drupal_write_record('workflow_node_history', $data);
 }

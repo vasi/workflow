@@ -46,25 +46,26 @@ function workflow_node_load($nodes, $types) {
       continue;
     }
 
-    // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
-    // have been standardized to workflow_x, dropping the initial underscore.
-    // Module maintainers integrating with workflow should keep that in mind.
-    $last_history = workflow_get_recent_node_history($node->nid);
-
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $node->workflow_wid = $workflow->wid;
       $node->workflow = $workflow->getCreationSid();
     }
 
+    // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
+    // have been standardized to workflow_x, dropping the initial underscore.
+    // Module maintainers integrating with workflow should keep that in mind.
+    $last_history = workflow_get_recent_node_history($node->nid);
+
     // Nodes that existed before the workflow don't have any history.
-    if ($last_history === FALSE) {
+    if (!$last_history) {
       $node->workflow_stamp = $node->created;
       continue;
     }
     else {
-      $node->workflow = $last_history->sid;
+      $state = $workflow->getState($last_history->new_sid);
+      $node->workflow = $last_history->new_sid;
       $node->workflow_stamp = $last_history->stamp;
-      $node->workflow_state_name = $last_history->state_name;
+      $node->workflow_state_name = ($state) ? $state->getName() : 'unknown state';
     }
 
     // Add scheduling information.
@@ -179,7 +180,7 @@ function workflow_node_delete($node) {
     workflow_insert_workflow_node_history($data);
   }
   // Delete any scheduled transitions for this node.
-  WorkflowScheduledTransition::deleteByNid('node', $node->nid);
+  WorkflowScheduledTransition::deleteById('node', $node->nid);
 }
 
 /**
@@ -284,7 +285,6 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
     // Set node to #node if available or load from nid value.
     $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
     $type = $node->type;
-
     if ($workflow = workflow_get_workflows_by_type($node->type)) {
       $workflow_entities = variable_get('workflow_' . $type, array());
       // Abort if the entity type of the form is not in the list that the user
@@ -300,8 +300,6 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
 //        $form_state['values']['workflow'] : workflow_node_current_state($node);
       $current_sid = !empty($form_state['input']['workflow']) ?
         $form_state['input']['workflow'] : workflow_node_current_state($node);
-//dpm(__FUNCTION__ . $current_sid);
-//dpm($form_state['input']);
 
       $current_state = WorkflowState::load($current_sid);
       $choices = $current_state->getOptions('node', $node, $force = FALSE);
@@ -411,9 +409,8 @@ function workflow_delete_workflow_node_by_sid($sid) {
 
 /**
  * Given data, insert the node association.
- * @todo: Can we split this in 2? First half for Node API, second half for Node + Field API.
  */
-function workflow_update_workflow_node($data, $old_sid, $comment = NULL) {
+function workflow_update_workflow_node($data) {
   $data = (object) $data;
   if (isset($data->nid) && workflow_get_workflow_node_by_nid($data->nid)) {
     drupal_write_record('workflow_node', $data, 'nid');
@@ -421,15 +418,4 @@ function workflow_update_workflow_node($data, $old_sid, $comment = NULL) {
   else {
     drupal_write_record('workflow_node', $data);
   }
-
-  // Write to history for this node.
-  $data = array(
-    'nid' => $data->nid,
-    'old_sid' => $old_sid,
-    'sid' => $data->sid,
-    'uid' => $data->uid,
-    'stamp' => $data->stamp,
-    'comment' => $comment,
-  );
-  workflow_insert_workflow_node_history($data);
 }

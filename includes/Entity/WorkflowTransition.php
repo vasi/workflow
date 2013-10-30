@@ -7,8 +7,14 @@
 
 /**
  * Implements an actual Transition.
+ *
+ * If a transition is executed, the new state is saved in the Field or {workflow_node}.
+ * If a transition is saved, it is saved in table {workflow_history_node}
  */
 class WorkflowTransition {
+  // Table data. The table the class is stored.
+  protected static $table = 'workflow_node_history';
+
   // Field data.
   public $entity_type;
   public $field_name = ''; // @todo: add support for Fields in WorkflowTransition.
@@ -21,7 +27,7 @@ class WorkflowTransition {
   // Transition data.
   public $old_sid = 0;
   public $new_sid = 0;
-  public $sid; // @todo: remove $sid in D8: replaced by $new_sid. (requires conversion of Views displays.)
+  public $sid = 0; // @todo: remove $sid in D8: replaced by $new_sid. (requires conversion of Views displays.)
   public $uid = 0;
   public $stamp;
   public $comment = '';
@@ -75,8 +81,99 @@ class WorkflowTransition {
   }
 
   /**
+   * Given a node, get all transitions for it.
+   *
+   * Since this may return a lot of data, a limit is included to allow for only one result.
+   *
+   * @param $entity_type
+   * @param $entity_id
+   * @param $field_name
+   *  optional
+   *
+   * @return
+   *  an array of WorkflowTransitions
+   *
+   * @deprecate: workflow_get_workflow_node_history_by_nid() --> WorkflowTranstion::load()
+   * @deprecate: workflow_get_recent_node_history() --> WorkflowTranstion::load()
+   * @todo: add support for entity/field.
+   */
+  public static function load($entity_type, $entity_id, $field_name = '', $limit = NULL) {
+    $query = db_select('workflow_node_history', 'h');
+    $query->condition('h.nid', $entity_id);
+    $query->fields('h');
+    // The timestamp is only granular to the second; on a busy site, we need the id.
+    $query->orderBy('h.stamp', 'DESC');
+    $query->orderBy('h.hid', 'DESC');
+    $query->range(0, $limit);
+
+    $result = $query->execute()->fetchAll(PDO::FETCH_CLASS, 'WorkflowTransition');
+    return $result;
+  }
+
+  /**
+   * Insert (no update) a transition.
+   *
+   * @deprecated workflow_insert_workflow_node_history() --> WorkflowTransition::save()
+   */
+  public function save() {
+    if (isset($this->hid)) {
+      unset($this->hid);
+    }
+    $this->stamp = REQUEST_TIME;
+
+    // Check for no transition.
+    if ($this->old_sid == $this->new_sid) {
+      // Make sure we haven't already inserted history for this update.
+      $last_history = workflow_get_recent_node_history($this->entity_id); // @todo add Field support.
+      if ($last_history && $last_history->stamp == REQUEST_TIME) {
+        return;
+      }
+    }
+
+    drupal_write_record('workflow_node_history', $this);
+  }
+
+  /**
+   * Given a Condition, delete transitions for it.
+   * @todo: find a way to make $table automatically set for this class and its subclasses,
+   *  so we do not need to override it.
+   */
+  public static function deleteMultiple(array $conditions, $table = 'workflow_node_history') {
+    if (count($conditions) == 0) {
+      return 0;
+    }
+    $query = db_delete($table);
+    foreach($conditions as $field_name => $value) {
+      $query->condition($field_name, $value);
+    }
+    return $query->execute();
+  }
+
+  /**
+   * Given a Entity, delete transitions for it.
+   * @todo: add support for Field.
+   */
+  public static function deleteById($entity_type, $entity_id) {
+    $conditions = array(
+//      'entity_type' => $entity_type,
+      'nid' => $entity_id,
+    );
+   return self::deleteMultiple($conditions);
+  }
+
+  /**
    * Property functions.
    */
+
+  /**
+   * Returns the table this class is stored.
+   * 
+   * This is a workaround for protected static $table = <table>
+   * Which did not work for subclasses.
+   */
+  private function getTable() {
+    return $table = 'workflow_node_history';
+  }
 
   /**
    * Verifies if the given transition is allowed.
@@ -162,16 +259,10 @@ class WorkflowTransition {
         workflow_update_workflow_node_stamp($entity_id, $this->stamp); // @todo: only for Node API
 
         $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-        $data = array(
-          'nid' => $entity_id,
-          'sid' => $new_sid,
-          'old_sid' => $old_sid,
-          'uid' => $this->uid,
-          'stamp' => $this->stamp,
-          'comment' => $this->comment,
-        );
-        workflow_insert_workflow_node_history($data);
-        unset($entity->workflow_comment);  // @todo D8: remove; this line is only for Node API.
+
+        $this->save();
+
+        unset($entity->workflow_comment); // @todo D8: remove; this line is only for Node API.
         $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
       }
 
@@ -179,7 +270,7 @@ class WorkflowTransition {
       foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
         $scheduled_transition->delete();
       }
-      return $old_sid;
+      return $new_sid;
     }
 
     $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $new_sid);
@@ -223,28 +314,30 @@ class WorkflowTransition {
       return $old_sid;
     }
 
-    // If the node does not have an existing 'workflow' property, save the $old_sid there so it can be logged.
+    // If the node does not have an existing 'workflow' property, save the $old_sid there, so it can be logged.
     // This is only valid for Node API.
     // @todo: why is this set here? It is set again 16 lines down.
     if (!$field_name && !isset($entity->workflow)) {
       $entity->workflow = $old_sid;
     }
 
-    // Change the state.
+    // Change the state for {workflow_node}.
+    // The equivalent for Field API is in WorkflowDefaultWidget::submit. 
     $data = array(
       'nid' => $entity_id,
       'sid' => $new_sid,
       'uid' => (isset($entity->workflow_uid) ? $entity->workflow_uid : $user->uid),
       'stamp' => REQUEST_TIME,
     );
-
-    // Workflow_update_workflow_node places a history comment as well.
-    workflow_update_workflow_node($data, $old_sid, $this->comment);
+    workflow_update_workflow_node($data);
 
     if (!$field_name) {
       // Only for Node API.
       $entity->workflow = $new_sid;
     }
+
+    // Log the transition in {workflow_node_history}.
+    $this->save();
 
     // Register state change with watchdog.
     if ($state = WorkflowState::load($new_sid)) {

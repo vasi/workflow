@@ -14,13 +14,16 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   $date = REQUEST_TIME;
 
   if (($type == 'node' || $type == 'workflow') && !empty($data['node'])  && !empty($data['node']->nid)) {
-    $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
     $node = $data['node'];
+    $entity_id = $node->nid;
+    $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
+    $field_name = ''; // @todo: add support for Field API in workflow_tokens().
 
-    // Get a list of all possible states for returning state names.
-    $states = WorkflowState::getStates();
     if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
+      // Get a list of all possible states for returning state names.
+      $states = WorkflowState::getStates();
       $wid = $workflow->wid;
+
       $last_history = workflow_get_recent_node_history($node->nid);
       if (isset($node->workflow) && !isset($node->workflow_stamp)) {
         // The node is being submitted but the form data has not been saved to the database yet,
@@ -59,19 +62,19 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         else {
           // Sometimes there is no workflow set (edit?).
           if (!isset($node->workflow)) {
-            $node->workflow = $last_history->sid;
+            $node->workflow = $last_history->new_sid;
           }
           // Is a transition in progress?
-          if ($node->workflow != $last_history->sid) {
+          if ($node->workflow != $last_history->new_sid) {
             $sid = $node->workflow;
-            $old_sid = $last_history->sid;
+            $old_sid = $last_history->new_sid;
             $date = $node->workflow_stamp;
             $uid = $node->uid;
             $account = user_load($node->uid);
           }
           else {
             // Not a transition.
-            $sid = $last_history->sid;
+            $sid = $last_history->new_sid;
             $old_sid = $last_history->old_sid;
             $date = $last_history->stamp;
             $uid = $last_history->uid;

@@ -201,6 +201,36 @@ class WorkflowState {
     // - delete any lingering node to state values.
     module_invoke_all('workflow', 'state delete', $current_sid, $new_sid, NULL, FALSE);
 
+    // Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
+    // This is called in WorkflowState::deactivate().
+    if ($new_sid) {
+      global $user;
+      // A candidate for the batch API.
+      // @TODO: Future updates should seriously consider setting this with batch.
+
+      $comment = t('Previous state deleted');
+      foreach (workflow_get_workflow_node_by_sid($current_sid) as $workflow_node) {
+        // @todo: add Field support in 'state delete', by using workflow_node_history or reading current field.
+        $entity_type = 'node';
+        $entity = entity_load_single('node', $workflow_node->nid);
+        $field_name = '';
+        $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+        $new_sid = $transition->execute($force = TRUE);
+        $transition->save();
+
+        // @todo: update the Entity's field in 'state delete'.
+        $data = array(
+          'nid' => $workflow_node->nid,
+          'sid' => $new_sid,
+          'uid' => $user->uid,
+          'stamp' => REQUEST_TIME,
+        );
+        workflow_update_workflow_node($data);
+      }
+    }
+    // Delete any lingering node to state values.
+    workflow_delete_workflow_node_by_sid($current_sid);
+
     // Find out which transitions this state is involved in.
     $preexisting = array();
     foreach (workflow_get_workflow_transitions_by_sid_involved($current_sid) as $data) {

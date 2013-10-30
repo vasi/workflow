@@ -33,30 +33,6 @@ function workflownode_workflow($op, $id, $new_sid, $entity, $force, $entity_type
 
     case 'state delete':
       $current_sid = $id;
-      // Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
-      // This is called in WorkflowState::deactivate().
-      if ($new_sid) {
-        global $user;
-        // A candidate for the batch API.
-        // @TODO: Future updates should seriously consider setting this with batch.
-        $node = new stdClass();
-        $node->workflow_stamp = REQUEST_TIME;
-        foreach (workflow_get_workflow_node_by_sid($current_sid) as $data) {
-          $node->nid = $data->nid;
-          $node->workflow = $current_sid;
-          $data = array(
-            'nid' => $node->nid,
-            'sid' => $new_sid,
-            'uid' => $user->uid,
-            'stamp' => $node->workflow_stamp,
-          );
-          workflow_update_workflow_node($data, $current_sid, t('Previous state deleted'));
-        }
-      }
-
-      // Delete any lingering node to state values.
-      workflow_delete_workflow_node_by_sid($current_sid);
-
       break;
 
     case 'workflow delete':

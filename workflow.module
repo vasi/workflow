@@ -540,10 +540,9 @@ function workflow_node_previous_state($node) {
   $sid = FALSE;
   // There is no nid when creating a node.
   if (!empty($node->nid)) {
-    $sids = array();
-    $sid = -1;
-    $last_history = workflow_get_recent_node_history($node->nid);
-    $sid = !$last_history ? FALSE : $last_history->old_sid;
+    if ($last_transition = workflow_get_recent_node_history($node->nid)) {
+      $sid = $last_transition->old_sid;
+    }
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
@@ -882,7 +881,6 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
   return $transitions;
 }
 
-
 /**
  * Functions related to table workflow_node_history.
  */
@@ -891,34 +889,10 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
  * Get most recent history for a node.
  */
 function workflow_get_recent_node_history($nid) {
-  $results = db_query_range('SELECT h.hid, h.nid, h.old_sid, h.sid, h.uid, h.stamp, h.comment, '
-    . 's.state AS state_name '
-    . 'FROM {workflow_node_history} h '
-    . 'INNER JOIN {workflow_states} s ON s.sid = h.sid '
-    . 'WHERE h.nid = :nid ORDER BY h.stamp DESC', 0, 1, array(':nid' => $nid));
-  return $results->fetchObject();
-}
-
-/**
- * Get all recorded history for a node id.
- *
- * Since this may return a lot of data, a limit is included to allow for only one result.
- */
-function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
-  if (empty($limit)) {
-    $limit = variable_get('workflow_states_per_page', 20);
+  if ($transitions = WorkflowTransition::load('node', $nid, $field_name= '', $limit = 1)) {
+    return array_pop($transitions);
   }
-  $results = db_query_range('SELECT h.hid, h.nid, h.old_sid, h.sid, h.uid, h.stamp, h.comment '
-    . 'FROM {workflow_node_history} h '
-    . 'LEFT JOIN {users} u ON h.uid = u.uid '
-    . 'WHERE nid = :nid '
-    // The timestamp is only granular to the second; on a busy site, we need the id.
-    . 'ORDER BY h.stamp DESC, h.hid DESC ', 0, $limit,
-    array(':nid' => $nid));
-  if ($limit == 1) {
-    return $results->fetchObject();
-  }
-  return $results->fetchAll();
+  return NULL;
 }
 
 /**
@@ -926,26 +900,6 @@ function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
  */
 function workflow_update_workflow_node_history_uid($uid, $new_value) {
   return db_update('workflow_node_history')->fields(array('uid' => $new_value))->condition('uid', $uid, '=')->execute();
-}
-
-/**
- * Given data, insert a new history. Always insert.
- */
-function workflow_insert_workflow_node_history($data) {
-  $data = (object) $data;
-  if (isset($data->hid)) {
-    unset($data->hid);
-  }
-
-  // Check for no transition.
-  if ($data->old_sid == $data->sid) {
-    // Make sure we haven't already inserted history for this update.
-    $last_history = workflow_get_workflow_node_history_by_nid($data->nid, 1);
-    if (isset($last_history) && $last_history->stamp == REQUEST_TIME) {
-      return;
-    }
-  }
-  drupal_write_record('workflow_node_history', $data);
 }
 
 /**
