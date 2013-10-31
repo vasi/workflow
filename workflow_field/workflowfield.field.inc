@@ -102,15 +102,18 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
 
   if ($entity_type == 'comment') {
     // This happens when we are on an entity's comment.
-    $entity_type = 'node'; // Comments only exist on nodes.
-    $entity_id = entity_id($entity_type, $entity);
-    $referenced_entity = entity_load_single($entity_type, $entity);
+    // We save the field of the node. The comment is saved automatically.
+    $referenced_entity_type = 'node'; // Comments only exist on nodes.
+    $referenced_entity_id = $entity->nid;
+    // Load the node again, since the passed node doesn't contain proper 'type' field.
+    $referenced_entity = entity_load_single($referenced_entity_type, $referenced_entity_id);
 
+    // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API. 
     // @todo: when changing Workflow via comment, the history is saved twice.
     $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
     $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
-    // We must save the node, too.
+    // Since we are saving the comment only, we must save the node separately.
     $widget->entitySave($referenced_entity_type, $referenced_entity);
   }
   else {
