@@ -9,10 +9,9 @@
  * Implements a scheduled transition, as shown on Workflow form.
  */
 class WorkflowScheduledTransition extends WorkflowTransition {
-  // Table data. The table the class is stored.
-  protected static $table = 'workflow_scheduled_transition';
-
   public $scheduled;
+  protected $is_scheduled = TRUE;
+  protected $is_executed = FALSE;
 
   /**
    * Constructor
@@ -37,6 +36,9 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
    */
   public static function load($entity_type, $entity_id, $field_name = '') {
+    if (!$entity_id) {
+      return FALSE;
+    }
     $results = db_query('SELECT * ' .
                         'FROM {workflow_scheduled_transition} ' .
                         'WHERE entity_type = :entity_type ' .
@@ -62,9 +64,14 @@ class WorkflowScheduledTransition extends WorkflowTransition {
   }
 
   /**
-   * Save a scheduled transition.
+   * Save a scheduled transition. If the transition is executed, save as logged transition.
    */
   public function save() {
+    // If executed, save as logged transition.
+    if($this->is_executed) {
+      return parent::save();
+    }
+
     // Avoid duplicate entries.
     $this->delete();
     // Save (insert or update) a record to the database based upon the schema.
@@ -114,16 +121,6 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    */
 
   /**
-   * Returns the table this class is stored.
-   * 
-   * This is a workaround for protected static $table = <table>
-   * Which did not work for subclasses.
-   */
-  private function getTable() {
-    return $table = 'workflow_scheduled_transition';
-  }
-
-  /**
    * If a scheduled transition has no comment, a default comment is added before executing it.
    */
   public function addDefaultComment() {
@@ -159,17 +156,6 @@ class WorkflowScheduledTransition extends WorkflowTransition {
       }
     }
     return $workflow_item;
-  }
-
-  /**
-   * Functions, common to the WorkflowTransitions.
-   */
-
-  public function isScheduled() {
-    return TRUE;
-  }
-  public function isExecuted() {
-    return FALSE;
   }
 
 }

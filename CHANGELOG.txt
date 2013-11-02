@@ -258,3 +258,4 @@ Issue #2019345 by johnv: Removed duplication of Workflow*Transition::__construct
 Issue #2019345 by johnv: Fixed duplicate Workflow Form on Node View page.
 Issue #2019345 by johnv: Moved saving of workflow_node_history to WorkflowTransition class.
 Issue #2019345 by johnv: Fixed error when submitting a Workflow Field on a comment.
+Issue #2102405 by johnv: Added Entity support for Workflow Executed Transitions (workflow_node_history).

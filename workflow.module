@@ -536,17 +536,16 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
   return $sid;
 }
 
-function workflow_node_previous_state($node) {
+function workflow_node_previous_state($entity, $entity_type = 'node', $field = array()) {
   $sid = FALSE;
+  $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   // There is no nid when creating a node.
-  if (!empty($node->nid)) {
-    if ($last_transition = workflow_get_recent_node_history($node->nid)) {
-      $sid = $last_transition->old_sid;
-    }
+  if ($last_transition = WorkflowTransition::load($entity_type, entity_id($entity_type, $entity), $field_name, 1)) {
+    $last_transition = array_pop($last_transition);
+    $sid = $last_transition->old_sid;
   }
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
-    $entity_type = 'node';
     if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
       $sid = $workflow->getCreationSid();
     }

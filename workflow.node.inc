@@ -89,7 +89,11 @@ function workflow_node_load($nodes, $types) {
  * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.
  */
 function workflow_node_insert($node) {
-  // Skip if there are no workflows.
+  // Skip if there are no Node API workflows.
+  if (!workflow_get_workflow_type_map_by_type($node->type)) {
+    return;
+  }
+
   if ($workflow = workflow_get_workflows_by_type($node->type)) {
     // Normally, the new state is already set.
     // If the state is not specified, use first valid state.
@@ -111,11 +115,12 @@ function workflow_node_insert($node) {
  * Implements hook_node_view().
  */
 function workflow_node_view($node, $view_mode, $langcode) {
-  if (!user_access('show workflow state form') || $node->status == 0) {
+  // Skip if there are no Node API workflows.
+  if (!workflow_get_workflow_type_map_by_type($node->type)) {
     return;
   }
 
-  if (!workflow_get_workflow_type_map_by_type($node->type)) {
+  if (!user_access('show workflow state form') || $node->status == 0) {
     return;
   }
 
@@ -150,13 +155,15 @@ function workflow_node_view($node, $view_mode, $langcode) {
  * Implements hook_node_update().
  */
 function workflow_node_update($node) {
-  // Skip if there are no workflows.
-  if ($workflow = workflow_get_workflows_by_type($node->type)) {
-    // Get new state from workflow form, stored in $node->workflow.
-    $new_sid = isset($node->workflow) ? $node->workflow : 0;
-    if ($new_sid) {
-      workflow_transition($node, $new_sid);
-    }
+  // Skip if there are no Node API workflows.
+  if (!workflow_get_workflow_type_map_by_type($node->type)) {
+    return;
+  }
+
+  // Get new state from workflow form, stored in $node->workflow.
+  $new_sid = isset($node->workflow) ? $node->workflow : 0;
+  if ($new_sid) {
+    workflow_transition($node, $new_sid);
   }
 }
 

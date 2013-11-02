@@ -328,14 +328,13 @@ class WorkflowState {
 
     $entity_id = entity_id($entity_type, $entity);
     $sid = $this->sid;
-    $workflow = Workflow::load($this->wid);
-
     // Get options from page cache.
     if (isset($cache[$entity_type][$entity_id][$force][$sid])) {
       $options = $cache[$entity_type][$entity_id][$force][$sid];
       return $options;
     }
 
+    $workflow = Workflow::load($this->wid);
     if ($workflow) {
       $roles = array_keys($user->roles);
       // Some entities (like taxonomy_term) do not have a field 'uid'.

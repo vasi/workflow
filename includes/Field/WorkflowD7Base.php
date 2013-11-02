@@ -73,7 +73,7 @@ abstract class WorkflowD7Base {
    * E.g., from workflow_cron().
    */
   public function entitySave($entity_type, $entity) {
-    return ($entity_type == 'node') ? node_save($entity) : entity_save($entity_type, $entity);
+    return entity_save($entity_type, $entity);
   }
 
 }

@@ -12,9 +12,6 @@
  * If a transition is saved, it is saved in table {workflow_history_node}
  */
 class WorkflowTransition {
-  // Table data. The table the class is stored.
-  protected static $table = 'workflow_node_history';
-
   // Field data.
   public $entity_type;
   public $field_name = ''; // @todo: add support for Fields in WorkflowTransition.
@@ -31,6 +28,8 @@ class WorkflowTransition {
   public $uid = 0;
   public $stamp;
   public $comment = '';
+  protected $is_scheduled = FALSE;
+  protected $is_executed = NULL;
 
   /**
    * CRUD functions.
@@ -93,13 +92,18 @@ class WorkflowTransition {
    * @return
    *  an array of WorkflowTransitions
    *
-   * @deprecate: workflow_get_workflow_node_history_by_nid() --> WorkflowTranstion::load()
-   * @deprecate: workflow_get_recent_node_history() --> WorkflowTranstion::load()
+   * @deprecate: workflow_get_workflow_node_history_by_nid() --> WorkflowTransition::load()
+   * @deprecate: workflow_get_recent_node_history() --> WorkflowTransition::load()
    * @todo: add support for entity/field.
    */
   public static function load($entity_type, $entity_id, $field_name = '', $limit = NULL) {
+    if (!$entity_id) {
+      return FALSE;
+    }
     $query = db_select('workflow_node_history', 'h');
+    $query->condition('h.entity_type', $entity_type);
     $query->condition('h.nid', $entity_id);
+    $query->condition('h.field_name', $field_name);
     $query->fields('h');
     // The timestamp is only granular to the second; on a busy site, we need the id.
     $query->orderBy('h.stamp', 'DESC');
@@ -116,15 +120,13 @@ class WorkflowTransition {
    * @deprecated workflow_insert_workflow_node_history() --> WorkflowTransition::save()
    */
   public function save() {
-    if (isset($this->hid)) {
-      unset($this->hid);
-    }
+    unset($this->hid);
     $this->stamp = REQUEST_TIME;
 
     // Check for no transition.
     if ($this->old_sid == $this->new_sid) {
       // Make sure we haven't already inserted history for this update.
-      $last_history = workflow_get_recent_node_history($this->entity_id); // @todo add Field support.
+      $last_history = workflow_get_recent_node_history($this->entity_type, $this->entity_id);
       if ($last_history && $last_history->stamp == REQUEST_TIME) {
         return;
       }
@@ -155,7 +157,7 @@ class WorkflowTransition {
    */
   public static function deleteById($entity_type, $entity_id) {
     $conditions = array(
-//      'entity_type' => $entity_type,
+      'entity_type' => $entity_type,
       'nid' => $entity_id,
     );
    return self::deleteMultiple($conditions);
@@ -164,16 +166,6 @@ class WorkflowTransition {
   /**
    * Property functions.
    */
-
-  /**
-   * Returns the table this class is stored.
-   * 
-   * This is a workaround for protected static $table = <table>
-   * Which did not work for subclasses.
-   */
-  private function getTable() {
-    return $table = 'workflow_node_history';
-  }
 
   /**
    * Verifies if the given transition is allowed.
@@ -337,6 +329,7 @@ class WorkflowTransition {
     }
 
     // Log the transition in {workflow_node_history}.
+    $this->is_executed = TRUE;
     $this->save();
 
     // Register state change with watchdog.
@@ -416,10 +409,10 @@ class WorkflowTransition {
    * Returns if this is a Scheduled Transition.
    */
   public function isScheduled() {
-    return FALSE;
+    return $this->is_scheduled;
   }
   public function isExecuted() {
-    return NULL;
+    return $this->is_executed;
   }
 
 }
