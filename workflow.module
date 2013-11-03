@@ -164,16 +164,14 @@ function workflow_cron() {
   foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
     $entity_type = $scheduled_transition->entity_type;
     $entity = $scheduled_transition->getEntity();
+    $field_name = $scheduled_transition->field_name;
 
     // If user didn't give a comment, create one.
     if (empty($scheduled_transition->comment)) {
       $scheduled_transition->addDefaultComment();
     }
 
-    // A Field API will return a WorkflowItem. A Node API will not.
-    $workflowItem = $scheduled_transition->getWorkflowItem();
-    $field = ($workflowItem) ? $workflowItem->getField() : array() ;
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
     // Make sure transition is still valid; i.e., the node is
     // still in the state it was when the transition was scheduled.
@@ -187,8 +185,7 @@ function workflow_cron() {
       $new_sid = $scheduled_transition->execute($force = TRUE);
 
       if ($field) {
-        // Only in case of Workflow Field API (not for Workflow Node API), do a separate update,
-        // because $workflowItem only works on Node form and Comment form.
+        // Do a separate update, but only in case of Workflow Field API (not for Workflow Node API).
         // @todo: move this to a better place.
         $items[0]['value'] = $new_sid;
         $field_name = $field['field_name'];
@@ -436,9 +433,7 @@ function workflow_execute_transition($entity, $new_sid, $comment = NULL, $force 
     return $old_sid;
   }
 
-  $field = $field_name ? field_info_field($field_name) : array();
-
-  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($entity, $entity_type, $field);
+  $old_sid = ($old_sid) ? $old_sid : workflow_node_current_state($entity, $entity_type, $field_name);
   $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
   $new_sid = $transition->execute($force);
   return $new_sid;
@@ -473,31 +468,29 @@ function workflow_get_workflow_options($wid = 0, $grouped = FALSE) {
  *   The entity to check.
  * @param string $entity_type
  *   The entity_type of the entity to check.
- * @param array $field
- *   The field_info_field() of the field of the entity to check.
+ * @param string $field_name
+ *   The name of the field of the entity to check.
  *
  * @return mixed $sid
  *   The ID of the current state.
  * @todo: If you changed the workflow type for a field/node, they never reach the new workflow. see https://drupal.org/node/1036580
  */
-function workflow_node_current_state($entity, $entity_type = 'node', $field = array()) {
+function workflow_node_current_state($entity, $entity_type = 'node', $field_name = '') {
   $sid = FALSE;
   static $sids = array();
 
   // Return cached value of $sid.
   $entity_id = entity_id($entity_type, $entity);
-  $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   if (isset($sids[$entity_type][$entity_id][$field_name])) {
     $sid = $sids[$entity_type][$entity_id][$field_name];
     return $sid;
   }
 
   // Field API: Get current/previous state.
-  if ($field) {
+  if ($field_name) {
     if (isset($entity->is_new) && $entity->is_new == TRUE) {
-      // A new node.
-      $workflow = Workflow::load($field['settings']['wid']);
-      $sid = $workflow->getCreationSid();
+      // A new node has no sid. Fetch it later.
+      $sid = FALSE;
     }
     elseif (isset($entity->original)) {
       // A changed node.
@@ -512,6 +505,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
     }
     // No current state. Use creation state.
     if (!$sid) {
+      $field = field_info_field($field_name);
       $workflow = Workflow::load($field['settings']['wid']);
       $sid = $workflow->getCreationSid();
     }
@@ -536,11 +530,11 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field = ar
   return $sid;
 }
 
-function workflow_node_previous_state($entity, $entity_type = 'node', $field = array()) {
+function workflow_node_previous_state($entity, $entity_type = 'node', $field_name = '') {
   $sid = FALSE;
-  $field_name = isset($field['field_name']) ? $field['field_name'] : '';
+  $entity_id = entity_id($entity_type, $entity);
   // There is no nid when creating a node.
-  if ($last_transition = WorkflowTransition::load($entity_type, entity_id($entity_type, $entity), $field_name, 1)) {
+  if ($last_transition = WorkflowTransition::load($entity_type, $entity_id, $field_name, 1)) {
     $last_transition = array_pop($last_transition);
     $sid = $last_transition->old_sid;
   }

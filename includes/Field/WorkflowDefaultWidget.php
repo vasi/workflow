@@ -90,7 +90,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $workflow = Workflow::load($this->field['settings']['wid']);
 
     // @todo: Get the current sid for content, comment, preview.
-    $current_sid = workflow_node_current_state($entity, $entity_type, $this->field);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $current_state = WorkflowState::load($current_sid);
     $options = array();
     $options = $current_state->getOptions($entity_type, $entity);
@@ -288,12 +288,11 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity_type = $this->entity_type;
     $entity = $this->entity;
     $entity_id = entity_id($entity_type, $entity);
-    $field = $this->field;
     $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
 
     // Massage the items, depending on the type of widget.
     // @todo: use MassageFormValues($values, $form, $form_state).
-    $old_sid = workflow_node_current_state($entity, $entity_type, $field);
+    $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $new_sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $items[0]['value'];
     $new_items = isset($items[0]['workflow']) ? $items[0]['workflow'] : $items;
 

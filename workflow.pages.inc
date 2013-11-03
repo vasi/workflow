@@ -25,20 +25,23 @@ function workflow_tab_page($node = NULL) {
   // Probably this can be done in hook_forms(), but this is better to maintain.
   if ($workflow_item = $workflow->getWorkflowItem()) {
     // This is a Workflow Field workflow.
-    $current_sid = workflow_node_current_state($entity, $entity_type, $workflow_item->getField());
     $field = $workflow_item->getField();
-    $field_name = $field['field_name'];
     $instance = $workflow_item->getInstance();
     $langcode = NULL;
+    
+    $field_name = $field['field_name'];
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $items[0]['value'] = $current_sid;
+
     $display = array();
+
     $form = workflowfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
     $output = drupal_render($form);
   }
   else {
     // This is a Workflow Node workflow.
-    $current_sid = workflow_node_current_state($entity, $entity_type = 'node', $field = array());
     $field_name = '';
+    $current_sid = workflow_node_current_state($entity, 'node', $field_name);
 
     // State may not be found if the node type has been assigned a to new workflow.
     $name = isset($states[$current_sid]) ? $states[$current_sid]->getName() : '';

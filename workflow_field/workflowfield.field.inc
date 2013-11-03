@@ -169,7 +169,8 @@ function workflowfield_allowed_values($field, $instance, $entity_type, $entity) 
  * @todo: move to a class.
  */
 function workflowfield_options_list($field, $instance, $entity_type, $entity) {
-  $sid = workflow_node_current_state($entity, $entity_type, $field);
+  $field_name = $field['field_name'];
+  $sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $state = WorkflowState::load($sid);
   return $state->getOptions($entity_type, $entity, $force = FALSE);
 }

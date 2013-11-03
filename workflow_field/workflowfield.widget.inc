@@ -86,7 +86,7 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
       $entity_type = 'node'; // @todo: Comments are only possible on nodes?
       $entity = $context['form']['#node'];
     }
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
     $element['#default_value'] = $current_sid;
   }
@@ -101,7 +101,7 @@ function workflowfield_field_widget_form_submit($form, &$form_state) {
   $entity = $form['#entity'];
   $items[0]['workflow'] = $form_state['values'];
 
-  $old_sid = workflow_node_current_state($entity, $entity_type, $field);
+  $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   // Submit the data. $items is reset by reference to normal value, and is magically saved by the field itself.
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
 //  $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.

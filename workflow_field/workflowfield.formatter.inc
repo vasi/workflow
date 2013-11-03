@@ -26,7 +26,7 @@ function workflowfield_field_formatter_info() {
  */
 function workflowfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $field_name = $field['field_name'];
-  $current_sid = workflow_node_current_state($entity, $entity_type, $field);
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
   // First compose the current value with the normal formatter from list.module.
   $list_display = $instance['display']['default'];

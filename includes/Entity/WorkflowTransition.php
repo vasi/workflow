@@ -335,7 +335,7 @@ class WorkflowTransition {
     // Register state change with watchdog.
     if ($state = WorkflowState::load($new_sid)) {
       $workflow = $state->getWorkflow();
-      if ($workflow->options['watchdog_log']) {
+      if (!empty($workflow->options['watchdog_log'])) {
         $entity_type_info = entity_get_info($entity_type);
         $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
         $args = array(
