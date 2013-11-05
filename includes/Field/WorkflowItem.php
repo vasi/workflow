@@ -280,7 +280,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       $new_sid = _workflow_get_sid_by_items($items);
       if ($old_sid != $new_sid) {
         $referenced_entity->{$field_name}['und'] = $items;
-        $this->entitySave($referenced_entity_type, $referenced_entity);
+        workflow_entity_save($referenced_entity_type, $referenced_entity, $field_name, $new_sid);
       }
     }
     elseif ($this->entity_type != 'comment') {

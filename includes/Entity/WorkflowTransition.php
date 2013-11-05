@@ -30,6 +30,7 @@ class WorkflowTransition {
   public $comment = '';
   protected $is_scheduled = FALSE;
   protected $is_executed = NULL;
+  protected $force = NULL;
 
   /**
    * CRUD functions.
@@ -145,7 +146,7 @@ class WorkflowTransition {
       return 0;
     }
     $query = db_delete($table);
-    foreach($conditions as $field_name => $value) {
+    foreach ($conditions as $field_name => $value) {
       $query->condition($field_name, $value);
     }
     return $query->execute();
@@ -160,7 +161,7 @@ class WorkflowTransition {
       'entity_type' => $entity_type,
       'nid' => $entity_id,
     );
-   return self::deleteMultiple($conditions);
+    return self::deleteMultiple($conditions);
   }
 
   /**
@@ -265,17 +266,14 @@ class WorkflowTransition {
       return $new_sid;
     }
 
+    $args = array(
+      '%user' => $user->name,
+      '%old' => $old_sid,
+      '%new' => $new_sid,
+    );
     $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $new_sid);
     if (!$transition && !$force) {
-      watchdog('workflow',
-               'Attempt to go to nonexistent transition (from %old to %new)',
-               array(
-                 '%user' => $user->name,
-                 '%old' => $old_sid,
-                 '%new' => $new_sid,
-               ),
-               WATCHDOG_ERROR
-      );
+      watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
       return $old_sid;
     }
 
@@ -283,15 +281,7 @@ class WorkflowTransition {
     // Check allow-ability of state change if user is not superuser (might be cron).
     if (($user->uid != 1) && !$force) {
       if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
-        watchdog('workflow',
-                 'User %user not allowed to go from state %old to %new',
-                 array(
-                   '%user' => $user->name,
-                   '%old' => $old_sid,
-                   '%new' => $new_sid,
-                 ),
-                 WATCHDOG_NOTICE
-        );
+        watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
         return $old_sid;
       }
     }
@@ -306,25 +296,24 @@ class WorkflowTransition {
       return $old_sid;
     }
 
-    // If the node does not have an existing 'workflow' property, save the $old_sid there, so it can be logged.
+    // Log the new state in {workflow_node_history}.
     // This is only valid for Node API.
-    // @todo: why is this set here? It is set again 16 lines down.
-    if (!$field_name && !isset($entity->workflow)) {
-      $entity->workflow = $old_sid;
-    }
-
-    // Change the state for {workflow_node}.
-    // The equivalent for Field API is in WorkflowDefaultWidget::submit. 
-    $data = array(
-      'nid' => $entity_id,
-      'sid' => $new_sid,
-      'uid' => (isset($entity->workflow_uid) ? $entity->workflow_uid : $user->uid),
-      'stamp' => REQUEST_TIME,
-    );
-    workflow_update_workflow_node($data);
-
     if (!$field_name) {
-      // Only for Node API.
+      // If the node does not have an existing 'workflow' property, save the $old_sid there, so it can be logged.
+      if (!isset($entity->workflow)) {
+        $entity->workflow = $old_sid;
+      }
+
+      // Change the state for {workflow_node}.
+      // The equivalent for Field API is in WorkflowDefaultWidget::submit. 
+      $data = array(
+        'nid' => $entity_id,
+        'sid' => $new_sid,
+        'uid' => (isset($entity->workflow_uid) ? $entity->workflow_uid : $user->uid),
+        'stamp' => REQUEST_TIME,
+      );
+      workflow_update_workflow_node($data);
+
       $entity->workflow = $new_sid;
     }
 
@@ -411,8 +400,22 @@ class WorkflowTransition {
   public function isScheduled() {
     return $this->is_scheduled;
   }
+  public function schedule($schedule = TRUE) {
+    return $this->is_scheduled = $schedule;
+  }
+
   public function isExecuted() {
     return $this->is_executed;
+  }
+
+  /**
+   * A transition may be forced skipping checks.
+   */
+  public function isForced() {
+    return (bool) $this->force;
+  }
+  public function force($force = TRUE) {
+    return $this->force = $force;
   }
 
 }

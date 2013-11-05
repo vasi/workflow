@@ -215,17 +215,8 @@ class WorkflowState {
         $entity = entity_load_single('node', $workflow_node->nid);
         $field_name = '';
         $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
-        $new_sid = $transition->execute($force = TRUE);
-        $transition->save();
-
-        // @todo: update the Entity's field in 'state delete'.
-        $data = array(
-          'nid' => $workflow_node->nid,
-          'sid' => $new_sid,
-          'uid' => $user->uid,
-          'stamp' => REQUEST_TIME,
-        );
-        workflow_update_workflow_node($data);
+        // Excute Transition, invoke 'pre' and 'post' events, save new state in workflow_node, save also in workflow_node_history.
+        $new_sid = $transition->execute($force = TRUE, $update_field = TRUE);
       }
     }
     // Delete any lingering node to state values.
@@ -327,10 +318,10 @@ class WorkflowState {
     }
 
     $entity_id = entity_id($entity_type, $entity);
-    $sid = $this->sid;
+    $current_sid = $this->sid;
     // Get options from page cache.
-    if (isset($cache[$entity_type][$entity_id][$force][$sid])) {
-      $options = $cache[$entity_type][$entity_id][$force][$sid];
+    if (isset($cache[$entity_type][$entity_id][$force][$current_sid])) {
+      $options = $cache[$entity_type][$entity_id][$force][$current_sid];
       return $options;
     }
 
@@ -353,7 +344,7 @@ class WorkflowState {
       // Workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
       // Instead it returns just the allowable data as:
       // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
-      $transitions = workflow_allowable_transitions($sid, 'to', $roles);
+      $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
 
       // Include current state if it is not the (creation) state.
       foreach ($transitions as $transition) {
@@ -362,7 +353,7 @@ class WorkflowState {
           // Modules may veto a choice by returning FALSE.
           // In this case, the choice is never presented to the user.
           // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-          $result = module_invoke_all('workflow', 'transition permitted', $sid, $transition->state_id, $entity, $field_name = '');
+          $result = module_invoke_all('workflow', 'transition permitted', $current_sid, $transition->state_id, $entity, $field_name = '');
           // Did anybody veto this choice?
           if (!in_array(FALSE, $result)) {
             // If not vetoed, add to list.
@@ -372,7 +363,7 @@ class WorkflowState {
       }
 
       // Save to entity-specific cache.
-      $cache[$entity_type][$entity_id][$force][$sid] = $options;
+      $cache[$entity_type][$entity_id][$force][$current_sid] = $options;
     }
 
     return $options;

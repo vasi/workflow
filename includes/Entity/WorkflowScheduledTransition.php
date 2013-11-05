@@ -68,7 +68,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    */
   public function save() {
     // If executed, save as logged transition.
-    if($this->is_executed) {
+    if ($this->is_executed) {
       return parent::save();
     }
 
@@ -113,7 +113,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 //      'entity_type' => $entity_type,
       'nid' => $entity_id,
     );
-   return self::deleteMultiple($conditions);
+    return self::deleteMultiple($conditions);
   }
 
   /**
@@ -124,8 +124,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    * If a scheduled transition has no comment, a default comment is added before executing it.
    */
   public function addDefaultComment() {
-    $this->comment = t('Scheduled by user @uid.',
-                       array('@uid' => $this->uid));
+    $this->comment = t('Scheduled by user @uid.', array('@uid' => $this->uid));
   }
 
   /**

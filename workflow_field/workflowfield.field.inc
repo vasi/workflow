@@ -99,6 +99,7 @@ function workflowfield_field_insert($entity_type, $entity, $field, $instance, $l
 function workflowfield_field_update($entity_type, $entity, array $field, $instance, $langcode, &$items) {
   $form = array();
   $form_state = array();
+  $field_name = $field['field_name'];
 
   if ($entity_type == 'comment') {
     // This happens when we are on an entity's comment.
@@ -110,17 +111,16 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
 
     // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API. 
     // @todo: when changing Workflow via comment, the history is saved twice.
+    // Remember, we don't know if the transition is scheduled or not.
     $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
     $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
     // Since we are saving the comment only, we must save the node separately.
-    $widget->entitySave($referenced_entity_type, $referenced_entity);
+    workflow_entity_save($referenced_entity_type, $referenced_entity, $field_name, 0);
   }
   else {
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
     $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
-    // $widget->setEntity($entity_type, $entity);
-    // $widget->entitySave($entity_type, $entity);
   }
 }
 

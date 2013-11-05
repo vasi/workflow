@@ -176,24 +176,33 @@ function workflow_cron() {
     // Make sure transition is still valid; i.e., the node is
     // still in the state it was when the transition was scheduled.
     if ($current_sid == $scheduled_transition->old_sid) {
-      // Save the user who wanted this.
-      $entity->workflow_uid = $scheduled_transition->uid;
 
       // Do transition. Force it because user who scheduled was checked.
-      // The scheduled transition is also deleted from DB.
+      // The scheduled transition is not scheduled anymore, and is also deleted from DB.
       // A watchdog message is created with the result.
-      $new_sid = $scheduled_transition->execute($force = TRUE);
+      $scheduled_transition->force($force = TRUE);
+      $scheduled_transition->schedule(FALSE);
+      if ($field_name) {
+        $new_sid = $scheduled_transition->new_sid;
+        // Do a separate update to update the field (Workflow Field API)
+        $entity->{$field_name}['und'][0]['transition'] = $scheduled_transition;
+        workflow_entity_save($entity_type, $entity, $field_name, $new_sid);
 
-      if ($field) {
-        // Do a separate update, but only in case of Workflow Field API (not for Workflow Node API).
-        // @todo: move this to a better place.
-        $items[0]['value'] = $new_sid;
-        $field_name = $field['field_name'];
-        $entity->{$field_name}['und'] = $items;
-        $workflowItem->entitySave($entity_type, $entity);
+        // Do not clear cache, since this is done by core upon entity_save.
+        // $clear_cache = TRUE;
+      }
+      else {
+        // Save the user who wanted this.
+        $entity->workflow_uid = $scheduled_transition->uid;
+
+        // For Node API, the node does not need to be saved, since all fields are custom.
+        // OTOH, we need to refresh the cache, which is done by core on entity_save. 
+        $new_sid = $scheduled_transition->execute($force = TRUE);
+        $entity->workflow_transition = $scheduled_transition;
+
+        $clear_cache = TRUE;
       }
 
-      $clear_cache = TRUE;
     }
     else {
       // Node is not in the same state it was when the transition
@@ -260,6 +269,19 @@ function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()
   $items[0]['workflow'] = (array) $entity;
   $items[0]['workflow']['workflow_options'] = $new_sid;
   $widget->submit($form, $form_state, $items, $force);
+}
+
+/*	
+ * Saves an entity.
+ *
+ * Usage: call this externally if the WorkflowItem isn't called from node_save/update itself,
+ * E.g., from workflow_cron().
+ * We do not call entity_save directly, in case some enhancements are necessary.
+ */
+function workflow_entity_save($entity_type, $entity, $field_name, $new_sid) {
+  if ($field_name && $new_sid) {
+  }
+  return entity_save($entity_type, $entity);
 }
 
 /**
