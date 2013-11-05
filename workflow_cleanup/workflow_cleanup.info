@@ -3,3 +3,5 @@ description = "Cleans up Workflow cruft"
 dependencies[] = workflow
 core = 7.x
 package = Workflow
+
+configure = admin/config/workflow/workflow/cleanup
