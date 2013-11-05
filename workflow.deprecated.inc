@@ -64,6 +64,38 @@ function workflow_get_creation_state_by_type($type) {
 }
 
 /**
+ * Given information, update or insert a new workflow. Returns data by ref. (like node_save).
+ *
+ * @deprecated: workflow_update_workflows() --> Workflow->save()
+ */
+function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
+  $data = (object) $data;
+  if (isset($data->tab_roles) && is_array($data->tab_roles)) {
+    $data->tab_roles = implode(',', $data->tab_roles);
+  }
+
+  if (isset($data->wid) && Workflow::load($data->wid)) {
+    drupal_write_record('workflows', $data, 'wid');
+  }
+  else {
+    drupal_write_record('workflows', $data);
+    if ($create_creation_state) {
+      $state_data = array(
+        'wid' => $data->wid,
+        'state' => t('(creation)'),
+        'sysid' => WORKFLOW_CREATION,
+        'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
+        );
+
+      workflow_update_workflow_states($state_data);
+      // @TODO consider adding state data to return here as part of workflow data structure.
+      // That way we could past structs and transitions around as a data object as a whole.
+      // Might make clone easier, but it might be a little hefty for our needs?
+    }
+  }
+}
+
+/**
  * Given a wid, delete the workflow and its data.
  *
  * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().

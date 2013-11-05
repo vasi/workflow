@@ -261,3 +261,4 @@ Issue #2019345 by johnv: Fixed error when submitting a Workflow Field on a comme
 Issue #2102405 by johnv: Added Entity support for Workflow Executed Transitions (workflow_node_history).
 Issue #2019345 by johnv: Changed interface of workflow_node_current_state() for Field API.
 Issue #2128423 by johnv: Moved page code to own file workflow_cleanup.pages.inc.
+Issue #2019345 by johnv: Moved workflow_updates_workflows() to workflow.deprecated.inc.
