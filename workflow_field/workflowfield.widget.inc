@@ -93,19 +93,24 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
 }
 
 function workflowfield_field_widget_form_submit($form, &$form_state) {
+  global $user;
+
+  // Retrieve the data from the form.
   $field = $form_state['values']['workflow_field'];
   $instance = $form_state['values']['workflow_instance'];
   $entity_type = $form['#entity_type'];
-  $field_name = $field['field_name'];
   $entity = $form['#entity'];
+  $field_name = $field['field_name'];
 
-  // Remember: we are on an Entity view page, so we need to save the entity ourselves.
+  // Create a Transition.
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $items[0]['workflow'] = $form_state['values'];
   $new_sid = _workflow_get_sid_by_items($items);
   $comment = $form_state['values']['workflow_comment'];
   if ($comment || $old_sid != $new_sid) {
-    $entity->{$field_name}['und'][0]['workflow'] = $form_state['values'];
-    workflow_entity_save($entity_type, $entity, $field_name, $new_sid);
+    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+
+    // Execute the transition.
+    workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = FALSE);
   }
 }

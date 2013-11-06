@@ -263,3 +263,4 @@ Issue #2019345 by johnv: Changed interface of workflow_node_current_state() for 
 Issue #2128423 by johnv: Moved page code of workflow_cleanup to own file workflow_cleanup.pages.inc.
 Issue #2019345 by johnv: Moved workflow_updates_workflows() to workflow.deprecated.inc.
 Issue #2019345 by johnv: Moved page code of workflow_revert to own file workflow_revert.pages.inc.
+Issue #2019345 by johnv: Changed interface of workfow_execute_transition() while centralizing code for Field API and Node API.

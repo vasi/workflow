@@ -76,11 +76,15 @@ function workflow_delete_workflow_type_map_by_type($type) {
  * Given information, insert a new workflow_type_map. Returns data by ref. (like node_save).
  * @TODO: why is this here instead of the admin_ui?
  */
-function workflow_insert_workflow_type_map(&$data) {
-  $data = (object) $data;
+function workflow_insert_workflow_type_map($node_type, $wid) {
+  $type_map = (object) array(
+    'type' => $node_type,
+    'wid' => $wid,
+  );
+
   // Be sure we have a clean insert. There should never be more than one map for a type.
-  if (isset($data->type)) {
-    workflow_delete_workflow_type_map_by_type($data->type);
+  workflow_delete_workflow_type_map_by_type($type_map->type);
+  if ($type_map->wid) {
+    drupal_write_record('workflow_type_map', $type_map);
   }
-  drupal_write_record('workflow_type_map', $data);
 }

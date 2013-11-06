@@ -162,12 +162,8 @@ function workflow_update_workflows_full_object($workflow) {
   }
   // Then add the node_type mapping.
   foreach ($node_types as $node_type) {
-    $node_type = (object) array(
-      'type' => $node_type,
-      'wid' => $workflow->wid
-    );
     // Insert, nodes only have one workflow. Insert will delete any prior workflow assoc.
-    workflow_insert_workflow_type_map($node_type);
+    workflow_insert_workflow_type_map($node_type, $workflow->wid);
   }
 
   return TRUE;

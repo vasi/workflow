@@ -1,19 +1,22 @@
 <?php
 /**
  * @file
- * Adds an 'Revert' link to the first workflow history row.
+ * Contains 'workflow_revert' page.
  */
 
 /**
  * Menu callback to do the revert function.
+ *
+ * @todo: you can revert to an inactive state and to creation state.
+ * @todo: add support for Field in workflow_revert.
  */
 function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
 
   if (drupal_valid_token($_GET['token'], 'workflow_revert ' . $sid)) {
     $state = WorkflowState::load($sid);
 
-    $entity_type = 'node';
-    $node = node_load($nid);
+    $entity_type = 'node'; //@todo: adapt workflow_revert_form() for Entity.
+    $node = entity_load_single($entity_type, $nid);
 
     $args['#sid'] = $sid;
     $args['#nid'] = $nid;
@@ -37,19 +40,26 @@ function workflow_revert_form($form, $form_state, $nid = NULL, $sid = NULL) {
 }
 
 function workflow_revert_form_submit($form, $form_state) {
-  $sid = $form['#sid'];
+  global $user;
+
+  $new_sid = $form['#sid'];
   $nid = $form['#nid'];
-  $node = $form['#node'];
+  $entity = $form['#node'];
+  $entity_type = 'node';
+  $field_name = '';
   $comment = t('State reverted.');
   
   // If Rules is available, signal the reversion.
   if (module_exists('rules')) {
-    rules_invoke_event('workflow_state_reverted', $node);
+    rules_invoke_event('workflow_state_reverted', $entity);
   }
 
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+
   // Force the transition because it's probably not valid.
-  //@todo: use WorkflowTransition->execute() in workflow_revert.
-  workflow_execute_transition($node, $sid, $comment, TRUE);
+  workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
+
   drupal_set_message($comment);
 
   drupal_goto('node/' . $form['#nid'] . '/workflow');

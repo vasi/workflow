@@ -235,6 +235,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
   /**
    * Implements hook_field_update() -> FieldItemInterface::update().
    *
+   * @todo: in course of time, this is not used anymore... 
    * It is called also from hook_field_insert(), since we need $nid to store {workflow_node_history}.
    * We cannot use hook_field_presave(), since $nid is not yet known at that moment.
    *
@@ -243,6 +244,8 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
    * "by the getEntity() and getLangcode() methods on the Field and FieldItem classes.
    */
   public function update(&$items) { // ($entity_type, $entity, $field, $instance, $langcode, &$items) {
+
+    // @todo: apparentlly, in course of time, this is not used anymore. Restore or remove. 
     $field_name = $this->field['field_name'];
     $wid = $this->field['settings']['wid'];
     $new_state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
@@ -280,7 +283,7 @@ class WorkflowItem extends WorkflowD7Base { // D8: extends ConfigFieldItemBase i
       $new_sid = _workflow_get_sid_by_items($items);
       if ($old_sid != $new_sid) {
         $referenced_entity->{$field_name}['und'] = $items;
-        workflow_entity_save($referenced_entity_type, $referenced_entity, $field_name, $new_sid);
+        entity_save($referenced_entity_type, $referenced_entity);
       }
     }
     elseif ($this->entity_type != 'comment') {

@@ -93,6 +93,7 @@ function workflowfield_field_insert($entity_type, $entity, $field, $instance, $l
 /**
  * Implements hook_field_update().
  *
+ * It is the D7-wrapper for D8-style WorkflowDefaultWidget::submit.
  * It is called also from hook_field_insert, since we need $nid to store workflow_node_history.
  * We cannot use hook_field_presave, since $nid is not yet known at that moment.
  */
@@ -116,7 +117,7 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
     $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
     // Since we are saving the comment only, we must save the node separately.
-    workflow_entity_save($referenced_entity_type, $referenced_entity, $field_name, 0);
+    entity_save($referenced_entity_type, $referenced_entity);
   }
   else {
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
