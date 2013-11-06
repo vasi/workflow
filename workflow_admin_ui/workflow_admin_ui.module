@@ -8,7 +8,7 @@
  * We're moving workflow in a API direction, so UI and the like - out.
  */
 
-define('WORKFLOW_ARROW', '&#8594;');
+define('WORKFLOW_ADMIN_UI_ARROW', '&#8594;');
 
 /**
  * Implements hook_help().
@@ -51,17 +51,17 @@ function workflow_admin_ui_menu() {
     'file' => 'workflow_admin_ui.pages.inc',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_type_map_form'),
+    'page arguments' => array('workflow_admin_ui_overview_page'),
     'description' => 'Allows the creation and assignment of arbitrary workflows to node types.',
-    );
+  );
 
   $items['admin/config/workflow/workflow/%workflow'] = array(
     'file' => 'workflow_admin_ui.pages.inc',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_overview_form', 4),
+    'page arguments' => array('workflow_admin_ui_states_form', 4),
     'type' => MENU_CALLBACK,
-    );
+  );
 
   $items['admin/config/workflow/workflow/add'] = array(
     'file' => 'workflow_admin_ui.pages.inc',
@@ -69,7 +69,7 @@ function workflow_admin_ui_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workflow_admin_ui_add_form'),
     'type' => MENU_CALLBACK,
-    );
+  );
 
   $items['admin/config/workflow/workflow/edit/%workflow'] = array(
     'title' => 'Edit',
@@ -78,7 +78,7 @@ function workflow_admin_ui_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workflow_admin_ui_edit_form', 5),
     'type' => MENU_CALLBACK,
-    );
+  );
 
   $items["admin/config/workflow/workflow/delete/%workflow"] = array(
     'title' => 'Delete',
@@ -87,7 +87,7 @@ function workflow_admin_ui_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workflow_admin_ui_delete_form',5),
     'type' => MENU_CALLBACK,
-    );
+  );
 
   $items["admin/config/workflow/workflow/transitions/%workflow"] = array(
     'title' => 'Transitions',
@@ -96,7 +96,7 @@ function workflow_admin_ui_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workflow_admin_ui_transitions_form',5),
     'type' => MENU_CALLBACK,
-    );
+   );
 
   $items["admin/config/workflow/workflow/perm_summary/%workflow"] = array(
     'title' => 'Permission Summary',
@@ -105,7 +105,7 @@ function workflow_admin_ui_menu() {
     'page callback' => 'workflow_admin_ui_view_permissions_form',
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
-    );
+  );
 
   return $items;
 }
@@ -115,10 +115,11 @@ function workflow_admin_ui_menu() {
  */
 function workflow_admin_ui_theme() {
   return array(
+    'workflow_admin_ui_overview_page' => array('render element' => 'form'),
+    'workflow_admin_ui_type_map_form' => array('render element' => 'form'),
     'workflow_admin_ui_transitions_form' => array('render element' => 'form'),
     'workflow_admin_ui_edit_form' => array('render element' => 'form'),
-    'workflow_admin_ui_type_map_form' => array('render element' => 'form'),
-    'workflow_admin_ui_overview_form' => array('render element' => 'form'),
+    'workflow_admin_ui_states_form' => array('render element' => 'form'),
   );
 }
 
@@ -176,8 +177,8 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
           // @TODO: It might be more sane to go to the "settings" page.
           'href' => 'admin/config/workflow/workflow/add',
           'attributes' => array('alt' => $alt, 'title' => $alt),
-          ),
-        );
+        ),
+      );
       foreach (Workflow::getWorkflows() as $workflow) {
         $name = $workflow->getName();
         $wid = $workflow->wid;
@@ -186,7 +187,7 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
           'title' => $workflow->label(),
           'href' => "admin/config/workflow/workflow/$wid",
           'attributes' => array('alt' => $alt, 'title' => $alt),
-          );
+        );
       }
 
       return $actions;
@@ -199,26 +200,26 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
           'title' => t('Settings'),
           'href' => "admin/config/workflow/workflow/edit/$wid",
           'attributes' => array('alt' => t('Edit the @wf settings', array('@wf' => $name))),
-          ),
+        ),
 
         'workflow_transitions' => array(
           'title' => t('Transitions'),
           'href' => "admin/config/workflow/workflow/transitions/$wid",
           'attributes' => array('alt' => t('Edit the @wf transitions', array('@wf' => $name))),
-          ),
+        ),
 
         'workflow_permission_summary' => array(
           'title' => t('Summary'),
           'href' => "admin/config/workflow/workflow/perm_summary/$wid",
           'attributes' => array('alt' => t('See a summary of the @wf transitions', array('@wf' => $name))),
-          ),
+        ),
 
-        'workflow_overview_delete' => array(
+        'workflow_delete' => array(
           'title' => t('Delete'),
           'href' => "admin/config/workflow/workflow/delete/$wid",
           'attributes' => array('alt' => t('Delete the @wf workflow', array('@wf' => $name))),
-          ),
-        );
+        ),
+      );
 
       foreach ($actions as $name => $link) {
         $actions[$name]['attributes']['title'] = $actions[$name]['attributes']['alt'];
@@ -244,84 +245,6 @@ function workflow_admin_ui_get_roles() {
     }
   }
   return $roles;
-}
-
-/**
- * Save mapping of workflow to node type. E.g., the story node type is using the Foo workflow.
- *
- * @param $form_state['values']
- */
-function workflow_admin_ui_types_save($form_values) {
-  // Empty the table and the variables so that types no longer under workflow go away.
-  //@todo: it is possible to switch to new workflow for node_type, leaving nodes are stuck in old workflow.
-  workflow_delete_workflow_type_map_all();
-
-  $node_types = node_type_get_names();
-  foreach ($node_types as $node_type => $name) {
-    $wid = $form_values[$node_type]['workflow'];
-    variable_del('workflow_' . $node_type);
-    if ($wid) {
-      workflow_insert_workflow_type_map($node_type, $wid);
-      variable_set('workflow_' . $node_type, array_keys(array_filter(($form_values[$node_type]['placement']))));
-
-      // If this type uses workflow, make sure pre-existing nodes are set
-      // to the workflow's creation state.
-      if ($form_values[$node_type]['workflow']) {
-        _workflow_node_initialize_nodes('node', $node_type, '', $wid);
-      }
-    }
-  }
-}
-
-/**
- * Initialize all pre-existing nodes of a type to their first state.
- * @todo: adjust _workflow_node_initialize_nodes() to handle Workflow Field.
- *
- * @param $node_type - node type
- */
-function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, $wid) {
-  global $user;
-
-  // ATM, only nodes are supported.
-  $entity_type = 'node';
-  $field_name = '';
-
-  // Build the select query.
-  // We want all published nodes of this type that don't already have a workflow state.
-  $query = db_select('node', 'n');
-  $query->leftJoin('workflow_node', 'wn', 'wn.nid = n.nid');
-  // Add the fields.
-  $query->addField('n', 'nid');
-  // Add conditions.
-  $query->condition('n.type', $node_type);
-  $query->condition('n.status', 1);
-  $query->isNull('wn.sid');
-
-  $nids = $query->execute()->fetchCol();
-
-  $how_many = count($nids);
-  if ($how_many == 0) {
-    return;
-  }
-  $comment = t('Pre-existing content set to initial state.');
-
-  $workflow = Workflow::load($wid);
-  $creation_sid = $workflow->getCreationSid();
-
-  // Load them all up.
-  $nodes = node_load_multiple($nids);
-  foreach ($nodes as $entity) {
-    // Get the initial state for this entity.
-    // Due to permissions, it might be different for each.
-    $new_sid = $workflow->getFirstSid($entity_type, $entity);
-
-    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $creation_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
-
-    // Force it to transition to the first state and get a history record.
-    workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
-  }
-
-  drupal_set_message(t('!count @type nodes have been initialized.', array('@type' => node_type_get_name($node_type), '!count' => $how_many)));
 }
 
 /**
