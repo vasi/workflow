@@ -688,7 +688,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
 
       'count' => array(
         '#type' => 'value',
-        '#value' => function_exists('workflow_get_workflow_node_by_sid') ? count(workflow_get_workflow_node_by_sid($state->sid)) : 0,
+        '#value' => count(workflow_get_workflow_node_by_sid($state->sid)),
       ),
 
       'ops' => array(
@@ -921,6 +921,7 @@ function workflow_admin_ui_overview_page($form) {
     '#markup' => theme('links', $links_args),
   );
 
+  // Add a form with the type map, which is only valid for Workflow Node API.
   if (module_exists('workflownode')) {
     module_load_include('inc', 'workflow_admin_ui', 'workflow_admin_ui.type_map.page');
     $type_map_form = array();

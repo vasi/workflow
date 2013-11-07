@@ -10,9 +10,8 @@ define('WORKFLOW_DELETION', 0);
 
 // Include the hooks for the 'conventional' (version D5/D6/D7.1) Node API.
 // @todo: make this optional when only Field API is used. (version D7.2/D8)
-module_load_include('inc', 'workflow', 'workflow.node');
-module_load_include('inc', 'workflow', 'workflow.node.type_map');
-module_load_include('inc', 'workflow', 'workflow.deprecated');
+//module_load_include('inc', 'workflow', 'workflow.node');
+//module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
  * Implements hook_permission().
@@ -423,9 +422,10 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
     // Do a separate update to update the field (Workflow Field API)
     // This will call hook_field_update() and WorkflowFieldDefaultWidget::submit().
     $entity->{$field_name}['und'][0]['transition'] = $transition;
-    // @todo: perhaps use field_attach_save, for better performance, and not change node properties.
+    // @todo: perhaps use field_attach_update, for better performance, and not change node properties.
     // @todo: if transition is scheduled or new_sid == old_sid and no comment, proceed as if no $field_name.
     entity_save($entity_type, $entity);
+    // field_attach_update($entity_type, $entity);
   }
   else {
     // Save the user who wanted this.
@@ -598,7 +598,7 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
 
   if (!isset($map[$entity_type][$entity_bundle])) {
     // Check the Node API first: Get $wid.
-    $type_map = workflow_get_workflow_type_map_by_type($entity_bundle);
+    $type_map = function_exists('workflow_get_workflow_type_map_by_type') ? workflow_get_workflow_type_map_by_type($entity_bundle) : NULL;
     if ($type_map) {
       // Get the workflow by wid.
       $wid = $type_map->wid;
@@ -860,6 +860,68 @@ function workflow_get_recent_node_history($nid) {
  */
 function workflow_update_workflow_node_history_uid($uid, $new_value) {
   return db_update('workflow_node_history')->fields(array('uid' => $new_value))->condition('uid', $uid, '=')->execute();
+}
+
+/**
+ * Functions related to table workflow_node.
+ */
+
+/**
+ * Given a node id, find out what it's current state is. Unique (for now).
+ */
+function workflow_get_workflow_node_by_nid($nid) {
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
+  return $results->fetchObject();
+}
+
+/**
+ * Given a sid, find out the nodes associated.
+ */
+function workflow_get_workflow_node_by_sid($sid) {
+  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
+  return $results->fetchAll();
+}
+
+/**
+ * Given nid, update the new stamp. This probably can be refactored. Called by workflow_execute_transition().
+ * @TODO refactor into a correct insert / update.
+ */
+function workflow_update_workflow_node_stamp($nid, $new_stamp) {
+  return db_update('workflow_node')->fields(array('stamp' => $new_stamp))->condition('nid', $nid, '=')->execute();
+}
+
+/**
+ * Given data, update the new user account.  Called by user_delete().
+ */
+function workflow_update_workflow_node_uid($uid, $new_uid) {
+  return db_update('workflow_node')->fields(array('uid' => $new_uid))->condition('uid', $uid, '=')->execute();
+}
+
+/**
+ * Given nid, delete associated workflow data.
+ */
+function workflow_delete_workflow_node_by_nid($nid) {
+  return db_delete('workflow_node')->condition('nid', $nid)->execute();
+}
+
+/**
+ * Given sid, delete associated workflow data.
+ */
+function workflow_delete_workflow_node_by_sid($sid) {
+  return db_delete('workflow_node')->condition('sid', $sid)->execute();
+}
+
+/**
+ * Given data, insert the node association.
+ */
+function workflow_update_workflow_node($data) {
+  $data = (object) $data;
+  if (isset($data->nid) && workflow_get_workflow_node_by_nid($data->nid)) {
+    drupal_write_record('workflow_node', $data, 'nid');
+  }
+  else {
+    drupal_write_record('workflow_node', $data);
+  }
 }
 
 /**

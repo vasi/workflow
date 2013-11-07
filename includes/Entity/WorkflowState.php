@@ -217,6 +217,7 @@ class WorkflowState {
 
     // Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
     // This is called in WorkflowState::deactivate().
+    // @todo: reparent Workflow Field, whilst deactivating a state.
     if ($new_sid) {
       global $user;
       // A candidate for the batch API.
@@ -230,7 +231,8 @@ class WorkflowState {
         $field_name = '';
         $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
         // Excute Transition, invoke 'pre' and 'post' events, save new state in workflow_node, save also in workflow_node_history.
-        $new_sid = $transition->execute($force = TRUE, $update_field = TRUE);
+        // For Workflow Node, only {workflow_node} and {workflow_node_history} are updated. For Field, also the Entity itself.
+        $new_sid = workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
       }
     }
     // Delete any lingering node to state values.

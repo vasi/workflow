@@ -129,6 +129,17 @@ function workflow_get_workflow_states_all() {
 }
 
 /**
+ * Wrapper function for workflow_tab_access after
+ * renaming workflow_node_tab_access() to workflow_tab_access(),
+ * since *_tab_access() is a Workflow functionality, not Node API.
+ *
+ * @deprecated workflow_node_tab_access(). Is not used anymore.
+ */
+function workflow_node_tab_access($node = NULL) {
+  return workflow_tab_access($node);
+}
+
+/**
  * Get the states current user can move to for a given node.
  * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
  *

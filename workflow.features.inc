@@ -10,6 +10,8 @@ define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
 // This include has not been fully tested with Workflow Field and its classes.
 // Therefore we include the file with deprecated functions. 
 module_load_include('inc', 'workflow', 'workflow.deprecated');
+// Even if workflow Node is not enabled, Features may use Node API's type_maps.
+module_load_include('inc', 'workflow', 'workflow.node.type_map');
 
 /**
  * Workflows are a **faux-exportable** component.

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Node specific functions, remnants of nodeapi.
+ * Node specific hooks and functions, remnants of nodeapi.
  */
 
 /**
@@ -351,78 +351,5 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       // Include the 'workflow form'. $form is modified by reference.
       workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
     }
-  }
-}
-
-/**
- * Wrapper function for workflow_tab_access after
- * renaming workflow_node_tab_access() to workflow_tab_access(),
- * since *_tab_access() is a Workflow functionality, not Node API.
- *
- * @deprecated workflow_node_tab_access(). Is not used anymore.
- */
-function workflow_node_tab_access($node = NULL) {
-  return workflow_tab_access($node);
-}
-
-/**
- * Functions related to table workflow_node.
- */
-
-/**
- * Given a node id, find out what it's current state is. Unique (for now).
- */
-function workflow_get_workflow_node_by_nid($nid) {
-  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
-  return $results->fetchObject();
-}
-
-/**
- * Given a sid, find out the nodes associated.
- */
-function workflow_get_workflow_node_by_sid($sid) {
-  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
-  return $results->fetchAll();
-}
-
-/**
- * Given nid, update the new stamp. This probably can be refactored. Called by workflow_execute_transition().
- * @TODO refactor into a correct insert / update.
- */
-function workflow_update_workflow_node_stamp($nid, $new_stamp) {
-  return db_update('workflow_node')->fields(array('stamp' => $new_stamp))->condition('nid', $nid, '=')->execute();
-}
-
-/**
- * Given data, update the new user account.  Called by user_delete().
- */
-function workflow_update_workflow_node_uid($uid, $new_uid) {
-  return db_update('workflow_node')->fields(array('uid' => $new_uid))->condition('uid', $uid, '=')->execute();
-}
-
-/**
- * Given nid, delete associated workflow data.
- */
-function workflow_delete_workflow_node_by_nid($nid) {
-  return db_delete('workflow_node')->condition('nid', $nid)->execute();
-}
-
-/**
- * Given sid, delete associated workflow data.
- */
-function workflow_delete_workflow_node_by_sid($sid) {
-  return db_delete('workflow_node')->condition('sid', $sid)->execute();
-}
-
-/**
- * Given data, insert the node association.
- */
-function workflow_update_workflow_node($data) {
-  $data = (object) $data;
-  if (isset($data->nid) && workflow_get_workflow_node_by_nid($data->nid)) {
-    drupal_write_record('workflow_node', $data, 'nid');
-  }
-  else {
-    drupal_write_record('workflow_node', $data);
   }
 }

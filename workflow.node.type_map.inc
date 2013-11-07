@@ -24,7 +24,6 @@ function workflow_get_workflow_type_map() {
  * ALERT: If a node type is *not* mapped to a workflow it will be listed as wid 0.
  * Hence, we filter out the non-mapped results.
  *
- * @todo: remove in a future (D8) version. This function is deprecated in favor of
  * @see workflow_get_workflows_by_type()
  */
 function workflow_get_workflow_type_map_by_type($type) {
