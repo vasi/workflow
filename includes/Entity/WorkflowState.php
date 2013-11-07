@@ -24,7 +24,7 @@ class WorkflowState {
   /**
    * Constructor.
    */
-  public function __construct($sid = 0, $wid = 0) {
+  protected function __construct($wid = 0, $sid = 0) {
     if (empty($sid) && empty($wid)) {
       // Automatic constructor when casting an array or object.
       if (!isset(self::$states[$this->sid])) {
@@ -58,13 +58,23 @@ class WorkflowState {
   /**
    * Creates and returns a new WorkflowState object.
    *
-   * $return WorkflowState $state 
-   *  A new WorkflowState object
+   * @param $wid
+   *  The Workflow ID for which a new State is created.
+   * @param $name
+   *  The name of the new State. If '(creation)', a CreationState is generated.
+   *
+   * @return WorkflowState
+   *  A new WorkflowState object.
    *
    * "New considered harmful".
    */
-  public static function create($sid, $wid) {
-    $state = new WorkflowState($sid, $wid);
+  public static function create($wid, $name = '') {
+    $state = new WorkflowState($wid);
+    $state->state = $name;
+    if ($name == '(creation)') {
+      $state->sysid = WORKFLOW_CREATION;
+      $state->weight = WORKFLOW_CREATION_DEFAULT_WEIGHT;
+    }
     return $state;
   }
 
@@ -159,6 +169,8 @@ class WorkflowState {
    * @deprecated: workflow_update_workflow_states() --> WorkflowState->save()
    */
   public function save() {
+    $sid = $this->sid;
+
     // Convert all properties to an array, the previous ones, too.
     $data['sid'] = $this->sid;
     $data['wid'] = $this->wid;
@@ -167,12 +179,14 @@ class WorkflowState {
     $data['state'] = $this->state;
     $data['status'] = $this->status;
 
-    if (!empty($this->sid) && count(WorkflowState::load($this->sid)) > 0) {
+    if (!empty($this->sid) && count(WorkflowState::load($sid)) > 0) {
       drupal_write_record('workflow_states', $data, 'sid');
     }
     else {
       drupal_write_record('workflow_states', $data);
     }
+    // Update the page cache.
+    self::$states[$sid] = $this;
   }
 
   /**

@@ -146,9 +146,10 @@ class Workflow {
    * Given information, update or insert a new workflow.
    *
    * @deprecated: workflow_update_workflows() --> Workflow->save()
-   * @todo: implement Workflow->save()
    */
   public function save($create_creation_state = TRUE) {
+    $wid = $this->wid;
+
     if (isset($this->tab_roles) && is_array($this->tab_roles)) {
       $this->tab_roles = implode(',', $this->tab_roles);
     }
@@ -156,22 +157,18 @@ class Workflow {
       $this->options = serialize($this->options);
     }
 
-    if (($this->wid > 0) && Workflow::load($this->wid)) {
+    if (($wid > 0) && Workflow::load($wid)) {
       drupal_write_record('workflows', $this, 'wid');
     }
     else {
       drupal_write_record('workflows', $this);
       if ($create_creation_state) {
-        $state_data = array(
-          'wid' => $this->wid,
-          'state' => t('(creation)'),
-          'sysid' => WORKFLOW_CREATION,
-          'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
-        );
-
-        workflow_update_workflow_states($state_data);
+        $creation_state = $this->getCreationState();
+        $creation_state->save();
       }
     }
+    // Update the page cache.
+    self::$workflows[$wid] = $this;
   }
 
   /**
@@ -247,6 +244,9 @@ class Workflow {
   public function getCreationState() {
     if (!isset($this->creation_state)) {
       $this->creation_state = WorkflowState::load($this->creation_sid);
+    }
+    if (!$this->creation_state) {
+      $this->creation_state = WorkflowState::create($this->wid, '(creation)');
     }
     return $this->creation_state;
   }

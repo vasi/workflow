@@ -645,7 +645,8 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
   // Get the state objects as array ($sid => WorkflowState)
   $states = $workflow->getStates($all = TRUE);
   // Dummy object for new state item.
-  $dummy = WorkflowState::create($name = '', $wid = $workflow->wid);
+  $wid = $workflow->wid;
+  $dummy = WorkflowState::create($wid);
   $dummy->weight = 99;
   $states[$dummy->sid] = $dummy; // Although the index is 0, the state is appended at the end of the list.
 
@@ -858,7 +859,7 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
     }
 
     // Reload $state from db, in case the states were changed by anyone else. And it is just as fast.
-    $state = ($sid) ? WorkflowState::load($sid) : WorkflowState::create($name = '', $wid);
+    $state = ($sid) ? WorkflowState::load($sid) : WorkflowState::create($wid);
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
