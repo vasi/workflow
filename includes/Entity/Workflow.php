@@ -26,7 +26,7 @@ class Workflow {
    * Constructor.
    * The execution of the query instantiates objects and saves them in a static array.
    */
-  public function __construct($wid = 0) {
+  protected function __construct($wid = 0) {
     if (!$wid) {
       // automatic constructor when casting an array or object.
       if (!is_array($this->options)) {

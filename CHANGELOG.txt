@@ -272,3 +272,4 @@ Issue #2019345 by johnv: Moved some code in workflow.module.
 Issue #2019345 by johnv: Fixed workflow_revert now supports all entity types and field names.
 Issue #2019345 by johnv: Changed theme_workflow_history_table to add proper 'Operations column' to history table.
 Issue #2019345 by johnv: Updated workfow_rules to reflect latest code. Still only supports 'node'.
+Issue #2019345 by johnv: Changed constructor of Workflow to be protected.
