@@ -31,18 +31,32 @@ function workflow_permission() {
 
 /**
  * Implements hook_menu().
+ * 
+ * @todo: add Workflow History Tab for every $entity_type, not only user, node, term.
  */
 function workflow_menu() {
-  $items['node/%node/workflow'] = array(
+  $menu_item = array(
     'title' => 'Workflow',
     'type' => MENU_LOCAL_TASK,
     'file' => 'workflow.pages.inc',
-    'access callback' => 'workflow_tab_access',
-    'access arguments' => array(1),
     'page callback' => 'workflow_tab_page',
-    'page arguments' => array(1),
+    'access callback' => 'workflow_tab_access',
     'weight' => 2,
   );
+
+  $items['node/%node/workflow'] = $menu_item + array(
+    'access arguments' => array('node', 1),
+    'page arguments' => array('node', 1),
+  );
+  $items['user/%user/workflow'] = $menu_item + array(
+    'access arguments' => array('user', 1),
+    'page arguments' => array('user', 1),
+  );
+  $items['taxonomy/term/%taxonomy_term/workflow'] = $menu_item + array(
+    'access arguments' => array('taxonomy_term', 2),
+    'page arguments' => array('taxonomy_term', 2),
+  );
+
   return $items;
 }
 
@@ -60,11 +74,15 @@ function workflow_hook_info() {
 /**
  * Implements hook_admin_paths_alter().
  *
- * If node edits are done in admin mode, then workflow will be too.
+ * If node edits are done in admin mode, then workflow history tab will be too.
+ * @todo: add support for every $entity_type.
  */
 function workflow_admin_paths_alter(&$paths) {
   if (isset($path['node/*/edit'])) {
     $path['node/*/workflow'] = $path['node/*/edit'];
+  }
+  if (isset($path['user/*/edit'])) {
+    $path['user/*/workflow'] = $path['user/*/edit'];
   }
 }
 
@@ -81,33 +99,32 @@ function workflow_load($wid) {
 /**
  * Menu access control callback. Determine access to Workflow tab.
  *
- * @todo: this function is called several times per page. (for every menu path/menu trail)
- *        Use a page cache.
  */
-function workflow_tab_access($node = NULL) {
+function workflow_tab_access($entity_type, $entity) {
   global $user;
   static $access = array();
-  $entity_type = 'node'; // @todo: support entity API in workflow_tab_access().
-  $node_type = $node->type;
 
-  if ($workflow = workflow_get_workflows_by_type($node_type, $entity_type)) {
-    $nid = isset($node->nid) ? $node->nid : 0; // New nodes do not have a nid.
-    if (isset($access[$user->uid][$nid])) {
-      return $access[$user->uid][$nid];
-    }
+  // $figure out the $entity's bundle and id.
+  list($id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
 
+  if (isset($access[$user->uid][$entity_type][$id])) {
+    return $access[$user->uid][$entity_type][$id];
+  }
+
+  if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
     $roles = array_keys($user->roles);
-    if ($node->uid == $user->uid) {
+    // Some entities, do not have a uid.
+    if (isset($entity->uid) && $entity->uid == $user->uid) {
       $roles = array_merge(array('author'), $roles);
     }
     $allowed_roles = $workflow->tab_roles ? explode(',', $workflow->tab_roles) : array();
     if (user_access('administer nodes') || array_intersect($roles, $allowed_roles)) {
-      $access[$user->uid][$nid] = TRUE;
+      $access[$user->uid][$entity_type][$id] = TRUE;
     }
     else {
-      $access[$user->uid][$nid] = FALSE;
+      $access[$user->uid][$entity_type][$id] = FALSE;
     }
-    return $access[$user->uid][$nid];
+    return $access[$user->uid][$entity_type][$id];
   }
   return FALSE;
 }

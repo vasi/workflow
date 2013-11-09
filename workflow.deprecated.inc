@@ -129,14 +129,15 @@ function workflow_get_workflow_states_all() {
 }
 
 /**
- * Wrapper function for workflow_tab_access after
- * renaming workflow_node_tab_access() to workflow_tab_access(),
- * since *_tab_access() is a Workflow functionality, not Node API.
+ * Menu access control callback. Determine access to Workflow tab.
  *
- * @deprecated workflow_node_tab_access(). Is not used anymore.
+ * @deprecated workflow_node_tab_access() --> workflow_tab_access().
  */
 function workflow_node_tab_access($node = NULL) {
-  return workflow_tab_access($node);
+  if ($node == NULL) {
+    return FALSE;
+  } 
+  return workflow_tab_access('node', $node);
 }
 
 /**

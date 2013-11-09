@@ -9,13 +9,11 @@ define('MARK_STATE_IS_DELETED', '*');
 /**
  * Menu callback. Display workflow summary of a node.
  */
-function workflow_tab_page($node = NULL) {
-  drupal_set_title($node->title);
+function workflow_tab_page($entity_type, $entity = NULL) {
+  drupal_set_title(entity_label($entity_type, $entity));
 
-  $entity = $node;
-  $entity_id = $node->nid;
-  $entity_type = 'node'; // @todo: add support for other entity types.
-  $entity_bundle = $node->type;
+  // $figure out the $entity's bundle and id.
+  list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
   $states = $workflow->getStates();
 
@@ -41,15 +39,15 @@ function workflow_tab_page($node = NULL) {
   else {
     // This is a Workflow Node workflow.
     $field_name = '';
-    $current_sid = workflow_node_current_state($entity, 'node', $field_name);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
-    // State may not be found if the node type has been assigned a to new workflow.
+    // State may not be found if the node type was re-assigned a to new/other workflow.
     $name = isset($states[$current_sid]) ? $states[$current_sid]->getName() : '';
     $label = isset($states[$current_sid]) ? $states[$current_sid]->label() : '';
     $output = theme('workflow_current_state', array('state' => $label,
                                                     'state_system_name' => $name,
                                                     'sid' => $current_sid));
-    $form = drupal_get_form('workflow_tab_form', $node, $workflow, $states, $current_sid);
+    $form = drupal_get_form('workflow_tab_form', $entity, $workflow, $states, $current_sid);
     $output .= drupal_render($form);
   }
 
@@ -218,8 +216,9 @@ function theme_workflow_deleted_state($variables) {
  *   Form definition array.
  */
 function workflow_tab_form($form, $form_state, $node, $workflow, $states, $current_sid) {
+  // N.B. This function is only used for Node API, not Field API.
   // Let's make sure we should be here.
-  if (workflow_tab_access($node) === FALSE) {
+  if (workflow_tab_access('node', $node) === FALSE) {
     return;
   }
 
