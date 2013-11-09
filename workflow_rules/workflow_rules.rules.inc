@@ -15,18 +15,24 @@ module_load_include('inc', 'workflow_rules', 'workflow_rules.field');
 
 /**
  * Implements hook_rules_event_info().
+ *
+ * @todo: add support for any entity type in hook_rules_event_info.
  */
 function workflow_rules_rules_event_info() {
+  $label = t('updated content');
+  // Add variables for the 'node' type.
+  $node_variables = rules_events_node_variables($label, TRUE);
+
   $events = array(
     'workflow_state_changed' => array(
       'group' => t('Workflow'),
       'label' => t('Workflow state has changed'),
-      'variables' => rules_events_node_variables(t('updated content'), TRUE),
+      'variables' => $node_variables,
     ),
     'workflow_comment_added' => array(
       'group' => t('Workflow'),
       'label' => t('Workflow comment was added, but state did not change'),
-      'variables' => rules_events_node_variables(t('updated content'), TRUE),
+      'variables' => $node_variables,
     ),
   );
   return $events;
@@ -37,7 +43,7 @@ function workflow_rules_rules_event_info() {
  */
 function workflow_rules_rules_condition_info() {
   $conditions = array();
-  if (TRUE || module_exists('workflownode')) {
+  if (module_exists('workflownode')) {
     $conditions += _workflow_rules_rules_node_condition_info();
   }
   if (module_exists('workflowfield')) {
@@ -51,7 +57,7 @@ function workflow_rules_rules_condition_info() {
  */
 function workflow_rules_rules_action_info() {
   $actions = array();
-  if (TRUE || module_exists('workflownode')) {
+  if (module_exists('workflownode')) {
     $actions += _workflow_rules_rules_node_action_info();
   }
   if (module_exists('workflowfield')) {
@@ -116,8 +122,8 @@ function _workflow_rules_workflow_check_given_state($sid, array $sids) {
  *  a RulesCondition->settings array.
  */
 function _workflow_rules_node_check_transition($node, array $old_sids, array $new_sids, array $condition) {
-  $old_sid = workflow_node_previous_state($node);
-  $new_sid = workflow_node_current_state($node);
+  $old_sid = workflow_node_previous_state($node, 'node');
+  $new_sid = workflow_node_current_state($node, 'node');
 
   return _workflow_rules_workflow_check_given_state($old_sid, $old_sids) &&
          _workflow_rules_workflow_check_given_state($new_sid, $new_sids);
@@ -132,7 +138,7 @@ function _workflow_rules_node_check_transition($node, array $old_sids, array $ne
  *  an array of sids to meet the condition.
  */
 function _workflow_rules_node_check_state($node, $sids) {
-  $sid = workflow_node_current_state($node);
+  $sid = workflow_node_current_state($node, 'node');
   return _workflow_rules_workflow_check_given_state($sid, $sids);
 }
 
@@ -140,7 +146,7 @@ function _workflow_rules_node_check_state($node, $sids) {
  * Condition implementation: check previous state.
  */
 function _workflow_rules_node_check_previous_state($node, $sids) {
-  $sid = workflow_node_previous_state($node);
+  $sid = workflow_node_previous_state($node, 'node');
   return _workflow_rules_workflow_check_given_state($sid, $sids);
 }
 
@@ -163,21 +169,20 @@ function _workflow_rules_node_set_state($node, $sids, $comment = NULL) {
 function _workflow_rules_field_set_state($entity, $field, $sids, $comment = NULL, array $settings = array()) {
   global $user;
 
-  $force = TRUE; // "ignoring current user permission."
   // Select the last state on the list.
   $new_sid = array_pop($sids);
 
   // This is a poorman's effort to convert a token into a field name.
   $token = isset($settings['field:select']) ? $settings['field:select'] : '';
   $field_name = _workflow_rules_token_replace($token);
-  $field = field_info_field($field_name);
   $instance = array();
-  if ($field && isset($entity->{$field_name})) {
+  if ($field_name && isset($entity->{$field_name})) {
     $entity_type = 'node'; // @todo: add Entity support in workflow_rules.
-    $entity_id = $entity->nid;
+    $entity_id = entity_id($entity_type, $entity);
 
-    $old_sid = workflow_node_current_state($entity, $entity_type, $field); // Todo : entity support.
+    $old_sid = workflow_node_current_state($entity, $entity_type, $field_name); // Todo : entity support.
     $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+    $transition->force($force = TRUE); // "ignoring current user permission."
     if ($error = $transition->isAllowed($force)) {
       drupal_set_message($error, 'error');
       $sid = 0;
