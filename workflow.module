@@ -157,6 +157,7 @@ function workflow_theme() {
     ),
     'workflow_history_table' => array(
       'variables' => array(
+        'header' => array(),
         'rows' => array(),
         'footer' => NULL,
       ),

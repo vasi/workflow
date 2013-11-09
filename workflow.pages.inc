@@ -114,6 +114,8 @@ function workflow_tab_page($entity_type, $entity = NULL) {
 
     $variables = array(
         'transition' => $history, // @todo D8: pass this WorkflowTransition as only variable. It contains everything.
+        'extra' => '',
+
         'history' => $history,  // @todo D8: remove, as this is the same as 'transition'.
         'old_sid' => $history->old_sid, // @todo D8: remove this redundant property.
         'sid' => $history->new_sid, // @todo D8: remove this redundant property.
@@ -134,9 +136,12 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   $last = count($rows) - 1;
   $rows[$last]['class'][] = 'last';
 
+  $header = array(t('Date'), t('Old State'), t('New State'), t('By'), t('Comment'));
+  $header[] = array('data' => t('Operations'));
+
   // Only display the table if there's anything in it.
   if ($rows) {
-    $output .= theme('workflow_history_table', array('rows' => $rows, 'footer' => !empty($footer_needed)));
+    $output .= theme('workflow_history_table', array('header' => $header, 'rows' => $rows, 'footer' => !empty($footer_needed)));
     $output .= theme('pager', array('tags' => variable_get('workflow_states_per_page', 20)));
   }
   return $output;
@@ -161,13 +166,10 @@ function theme_workflow_history_table_row($variables) {
       array('data' => $state_name, 'class' => array('state-name')),
       array('data' => theme('username', array('account' => $account)), 'class' => array('user-name')),
       array('data' => filter_xss($transition->comment), 'class' => array('log-comment')),
-      ),
-    'class' => array('workflow_history_row'),
-    );
-
-  if (!empty($variables['extra'])) {
-    $row['data'][] = $variables['extra'];
-  }
+      $variables['extra'],
+    ),
+  'class' => array('workflow_history_row'),
+  );
 
   return $row;
 }
@@ -176,10 +178,24 @@ function theme_workflow_history_table_row($variables) {
  * Theme entire workflow history table.
  */
 function theme_workflow_history_table($variables) {
+  $header = $variables['header'];
   $rows = $variables['rows'];
   $footer = $variables['footer'];
-  $headers = array(t('Date'), t('Old State'), t('New State'), t('By'), t('Comment'));
-  $output = theme('table', array('header' => $headers, 'rows' => $rows, 'caption' => t('Workflow History')));
+  $extra_column = 5;
+
+  // Remove the Operations column if none are added.
+  $empty = TRUE;
+  foreach ($rows as $row) {
+    $empty &= empty($row['data'][$extra_column]);
+  }
+  if ($empty) {
+    foreach ($rows as &$row) {
+      unset($row['data'][$extra_column]);
+      unset($header[$extra_column]);
+    }
+  }
+
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'caption' => t('Workflow History')));
   if ($footer) {
     $output .= MARK_STATE_IS_DELETED . ' ' . t('State is no longer available.');
   }

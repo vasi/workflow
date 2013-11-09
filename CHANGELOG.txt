@@ -269,3 +269,5 @@ Issue #2019345 by johnv: Moved code to WorkflowState::create() to hide State spe
 Issue #2019345 by johnv: Removed dependency on workflow.node.inc in common code.
 Issue #2102405 by johnv: Changed interface of workflow_tab_access, workflow_tab_page to be $entity_type resistent.
 Issue #2019345 by johnv: Moved some code in workflow.module.
+Issue #2019345 by johnv: Fixed workflow_revert now supports all entity types and field names.
+Issue #2019345 by johnv: Changed theme_workflow_history_table to add proper 'Operations column' to history table.
