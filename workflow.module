@@ -14,6 +14,16 @@ define('WORKFLOW_DELETION', 0);
 //module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
+ * Menu wild card loader {wildcard_name}_load for '%workflow'.
+ *
+ * Used by add-on modules, such as workflow_admin_ui.
+ * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
+ */
+function workflow_load($wid) {
+  return Workflow::load($wid);
+}
+
+/**
  * Implements hook_permission().
  */
 function workflow_permission() {
@@ -61,17 +71,6 @@ function workflow_menu() {
 }
 
 /**
- * Implements hook_hook_info().
- *
- * Allow adopters to place their hook implementations in either
- * their main module or in a module.workflow.inc file.
- */
-function workflow_hook_info() {
-  $hooks['workflow'] = array('group' => 'workflow');
-  return $hooks;
-}
-
-/**
  * Implements hook_admin_paths_alter().
  *
  * If node edits are done in admin mode, then workflow history tab will be too.
@@ -84,16 +83,6 @@ function workflow_admin_paths_alter(&$paths) {
   if (isset($path['user/*/edit'])) {
     $path['user/*/workflow'] = $path['user/*/edit'];
   }
-}
-
-/**
- * Menu wild card loader {wildcard_name}_load for '%workflow'.
- *
- * Used by add-on modules, such as workflow_admin_ui.
- * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
- */
-function workflow_load($wid) {
-  return Workflow::load($wid);
 }
 
 /**
@@ -127,6 +116,31 @@ function workflow_tab_access($entity_type, $entity) {
     return $access[$user->uid][$entity_type][$id];
   }
   return FALSE;
+}
+
+/**
+ * Implements hook_hook_info().
+ *
+ * Allow adopters to place their hook implementations in either
+ * their main module or in a module.workflow.inc file.
+ */
+function workflow_hook_info() {
+  $hooks['workflow'] = array('group' => 'workflow');
+  return $hooks;
+}
+
+/**
+ * Implements hook_features_api().
+ */
+function workflow_features_api() {
+  return array(
+    'workflow' => array(
+      'name' => t('Workflow'),
+      'file' => drupal_get_path('module', 'workflow') . '/workflow.features.inc',
+      'default_hook' => 'workflow_default_workflows',
+      'feature_source' => TRUE,
+    ),
+  );
 }
 
 /**
@@ -225,20 +239,6 @@ function workflow_user_delete($account) {
   // ALERT: This may cause previously non-anon posts to suddenly be accessible to anon.
   workflow_update_workflow_node_uid($account->uid, 0);
   workflow_update_workflow_node_history_uid($account->uid, 0);
-}
-
-/**
- * Implements hook_features_api().
- */
-function workflow_features_api() {
-  return array(
-    'workflow' => array(
-      'name' => t('Workflow'),
-      'file' => drupal_get_path('module', 'workflow') . '/workflow.features.inc',
-      'default_hook' => 'workflow_default_workflows',
-      'feature_source' => TRUE,
-    ),
-  );
 }
 
 /**
