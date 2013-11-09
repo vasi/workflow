@@ -43,7 +43,7 @@ class WorkflowTransition {
    * All arguments must be passed, when creating an object programmatically.
    * One argument $entity may be passed, only to directly call delete() afterwards.
    */
-  public function __construct($entity_type = 'node', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
+  public function __construct($entity_type = '', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
     $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
     $this->language = ($this->language) ? $this->language : 'und';

@@ -66,7 +66,8 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
 /**
  * Implements hook_workflow_history_alter().
  * 
- * Add an 'undo' operation for the most recent history change.
+ * Allow other modules to add Operations to the most recent history change.
+ * E.g., Workflow Revert implements an 'undo' operation.
  *
  * @param array $variables
  *   The current workflow history information as an array.
@@ -75,6 +76,7 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
  *   'sid' - The state ID of the current state.
  *   'state_name' - The state name of the current state.
  *   'history' - The row from the workflow_node_history table.
+ *   'transition' - a WorkflowTransition object, containing all of the above.
  *
  * If you want to add additional data, such as an operation link,
  * place it in the 'extra' value.
@@ -82,4 +84,7 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
 function hook_workflow_history_alter(array &$variables) {
   // The Workflow module does nothing with this hook.
   // For an example implementation, see the Workflow Revert add-on.
+  $options = array();
+  $path = '<front>';
+  $variables['extra'] = l('My new operation: go to frontpage', path, $options);
 }
