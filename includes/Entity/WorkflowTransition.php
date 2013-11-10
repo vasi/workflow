@@ -222,7 +222,7 @@ class WorkflowTransition {
 
     if (!$force) {
       // Make sure this transition is allowed.
-      $result = module_invoke_all('workflow', 'transition permitted', $new_sid, $old_sid, $entity, $force, $entity_type, $field_name);
+      $result = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
       // Did anybody veto this choice?
       if (in_array(FALSE, $result)) {
         // If vetoed, quit.
