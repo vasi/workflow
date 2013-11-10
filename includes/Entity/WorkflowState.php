@@ -208,12 +208,13 @@ class WorkflowState {
    */
   public function deactivate($new_sid) {
     $current_sid = $this->sid;
+    $force = TRUE;
 
     // Notify interested modules. We notify first to allow access to data before we zap it.
     // E.g., Node API (@todo Field API):
     // - re-parents any nodes that we don't want to orphan, whilst deactivating a State.
     // - delete any lingering node to state values.
-    module_invoke_all('workflow', 'state delete', $current_sid, $new_sid, NULL, FALSE);
+    module_invoke_all('workflow', 'state delete', $current_sid, $new_sid, NULL, $force);
 
     // Re-parent any nodes that we don't want to orphan, whilst deactivating a State.
     // This is called in WorkflowState::deactivate().
@@ -230,9 +231,10 @@ class WorkflowState {
         $entity = entity_load_single('node', $workflow_node->nid);
         $field_name = '';
         $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+        $transition->force($force); 
         // Excute Transition, invoke 'pre' and 'post' events, save new state in workflow_node, save also in workflow_node_history.
         // For Workflow Node, only {workflow_node} and {workflow_node_history} are updated. For Field, also the Entity itself.
-        $new_sid = workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
+        $new_sid = workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force);
       }
     }
     // Delete any lingering node to state values.

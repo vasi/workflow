@@ -274,3 +274,4 @@ Issue #2019345 by johnv: Changed theme_workflow_history_table to add proper 'Ope
 Issue #2019345 by johnv: Updated workfow_rules to reflect latest code. Still only supports 'node'.
 Issue #2019345 by johnv: Changed constructor of Workflow to be protected.
 Issue #2102193 by johnv: Changed call to 'hook_workflow', 'transition permitted' - arguments were swapped.
+Issue #2019345 by johnv: Fixed 'force' parameter in call to hook_workflow.
