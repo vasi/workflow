@@ -72,7 +72,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   $element['workflow_instance'] = array('#type' => 'value', '#value' => $instance);
 
   // Make sure the Submit button is added to the form.
-  $instance['widget']['settings']['submit'] = TRUE;
+  $instance['widget']['settings']['submit_function'] = 'workflowfield_field_widget_form_submit';
 
 /*
   // This is a wrapper function for the 'workflow form' Widget. $form is modified by reference.
@@ -84,9 +84,10 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
 
   // Add the form/widget to the formatter, and include the nid in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
-  // Ultimately, this is a wrapper for the WorkflowDefaultWidget.
+  // Ultimately, this is a wrapper for WorkflowDefaultWidget.
   $entity_id = entity_id($entity_type, $entity);
-  $element += drupal_get_form(WORKFLOWFIELD_FORM . '_' . $entity_id, $field, $instance, $langcode, $items, $delta, $element);
+
+  $element += drupal_get_form(WORKFLOWFIELD_FORM . '_' . $entity_type . '_' . $entity_id . '_' . $field['id'], $field, $instance, $langcode, $items, $delta, $element);
 
   return $element;
 }

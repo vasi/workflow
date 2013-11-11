@@ -92,6 +92,12 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
   }
 }
 
+/**
+ * Submit callback function for the DefaultWidget.
+ *
+ * We cannot use the DefaultWidget::submit function,
+ * since we are not in Edit mode and have to save the node ourselves.
+ */
 function workflowfield_field_widget_form_submit($form, &$form_state) {
   global $user;
 
@@ -102,14 +108,16 @@ function workflowfield_field_widget_form_submit($form, &$form_state) {
   $entity = $form['#entity'];
   $field_name = $field['field_name'];
 
-  // Create a Transition.
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $items = array();
   $items[0]['workflow'] = $form_state['values'];
-  $new_sid = _workflow_get_sid_by_items($items);
-  $comment = $form_state['values']['workflow_comment'];
-  if ($comment || $old_sid != $new_sid) {
-    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
 
+  // Create a Transition. The Widget knows if it is scheduled. 
+  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+  $transition = $widget->getTransition($old_sid, $items);
+  $new_sid = $transition->new_sid;
+
+  if (!empty($comment) || $old_sid != $new_sid) {
     // Execute the transition.
     workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = FALSE);
   }

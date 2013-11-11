@@ -210,7 +210,7 @@ class Workflow {
     $states = $this->getStates();
     if (count($states) < 2) {
       // That's all, so let's remind them to create some states.
-      $message = t('%workflow has no states defined, so it cannot be assigned to content yet.',
+      $message = t('Workflow %workflow has no states defined, so it cannot be assigned to content yet.',
         array('%workflow' => ucwords($this->getName())));
       drupal_set_message($message, 'warning');
 
@@ -223,7 +223,7 @@ class Workflow {
     $transitions = workflow_allowable_transitions($this->getCreationSid(), 'to');
     if (count($transitions) < 2) {
       // That's all, so let's remind them to create some transitions.
-      $message = t('%workflow has no transitions defined, so it cannot be assigned to content yet.',
+      $message = t('Workflow %workflow has no transitions defined, so it cannot be assigned to content yet.',
         array('%workflow' => ucwords($this->getName())));
       drupal_set_message($message, 'warning');
 
