@@ -277,3 +277,4 @@ Issue #2102193 by johnv: Changed call to 'hook_workflow', 'transition permitted'
 Issue #2019345 by johnv: Fixed 'force' parameter in call to hook_workflow.
 Issue #2019345 by johnv: Added some love to the Workflow Form: less space for schedule block.
 Issue #2019345 by johnv: Added some love to the Workflow Form.
+Issue #2019345 by johnv: Added some Node/Field API dependent flow logic.

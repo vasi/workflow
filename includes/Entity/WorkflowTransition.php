@@ -247,15 +247,17 @@ class WorkflowTransition {
       if ($this->comment) {
         $this->stamp = REQUEST_TIME;
 
-        // @todo D8: remove; this is only for Node API.
-        $entity->workflow_stamp = REQUEST_TIME;
-        workflow_update_workflow_node_stamp($entity_id, $this->stamp); // @todo: only for Node API
-
+        if (!$field_name) { // @todo D8: remove; this is only for Node API.
+          $entity->workflow_stamp = REQUEST_TIME;
+          workflow_update_workflow_node_stamp($entity_id, $this->stamp);
+        }
         $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
 
         $this->save();
 
-        unset($entity->workflow_comment); // @todo D8: remove; this line is only for Node API.
+        if (!$field_name) { // @todo D8: remove; this is only for Node API.
+          unset($entity->workflow_comment); // @todo D8: remove; this line is only for Node API.
+        }
         $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
       }
 
