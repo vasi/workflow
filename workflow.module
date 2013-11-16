@@ -247,32 +247,6 @@ function workflow_user_delete($account) {
  */
 
 /**
- * Validate target state and either execute a transition immediately or schedule
- * a transition to be executed later by cron.
- *
- * @deprecated: workflow_transition --> WorkflowDefaultWidget::submit()
- *
- * @param object $entity
- * @param string $new_sid
- *   An integer; the target state ID.
- * @param bool $force
- *   Allows bypassing permissions, primarily for Rules.
- * @param array $field
- *   The field structure for the operation.
- */
-function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()) {
-  $entity_type = 'node'; // Entity support is in workflow_transition --> WorkflowDefaultWidget::submit()
-  // @todo: do not use widget:submit directly, use workflow_entity_save instead.
-  $widget = new WorkflowDefaultWidget($field, $instance = array(), $entity_type, $entity);
-  $form = array();
-  $form_state = array();
-  $items = array();
-  $items[0]['workflow'] = (array) $entity;
-  $items[0]['workflow']['workflow_options'] = $new_sid;
-  $widget->submit($form, $form_state, $items, $force);
-}
-
-/**
  * Form builder. Add form widgets for workflow change to $form.
  *
  * This builder is factored out of workflow_form_alter() because
@@ -412,6 +386,64 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
   );
 }
 
+function workflow_transition_form(&$form, &$form_state, $field, $instance, $entity_type, $entity) {
+  $instance['widget']['settings']['submit_function'] = 'workflow_save_transition';
+  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+
+  $items = array();
+  $delta = 0;
+  $element = array();
+  $langcode = 'und';
+  $form += $widget->formElement($items, $delta, $element, $langcode, $form, $form_state);
+
+  return $form;
+}
+
+/**
+ * Submit callback function for the Workflow Form / DefaultWidget.
+ *
+ * Validate target state and either save a transition immediately or schedule
+ * a transition to be executed later by cron.
+ *
+ */
+function workflow_save_transition($form, &$form_state) {
+  // Retrieve the data from the form.
+  $field = $form_state['values']['workflow_field'];
+  $field_name = $field['field_name'];
+  $instance = $form_state['values']['workflow_instance'];
+  $entity_type = $form['#entity_type'];
+  $entity = $form['#entity'];
+
+  // Create a Transition. The Widget knows if it is scheduled. 
+  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
+
+  $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $items[0]['workflow'] = $form_state['values'];
+  $transition = $widget->getTransition($old_sid, $items);
+
+  if ($field_name) {
+    // Save the entity, but only if we were not in edit mode.
+    if ($entity->changed != REQUEST_TIME) {
+      // Save $entity, but only if sid has changed.
+      // Use field_attach_update for this? Save always?  
+//      $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
+//      $entity->{$field_name}['und'][0]['value'] = $new_sid;
+      $entity->{$field_name}['und'][0]['workflow'] = $form_state['values'];
+      entity_save($entity_type, $entity);
+    }
+    else {
+      // We were in edit mode. No need to save the entity explicitly.
+      $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
+    }
+  }
+  else {
+    // For a Node API form, only contrib fields need to be filled.
+    // No updating of the node itself.
+    // (unless we need to record the stamp.)
+    $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
+  }
+}
+
 /**
  * Execute a transition (change state of a node), from outside the node, e.g., workflow_cron().
  *
@@ -432,7 +464,7 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  */
 function workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = FALSE) {
   if ($force) {
-    $new_sid = $transition->force($force);
+    $transition->force($force);
   }
 
   if ($field_name) {
@@ -446,9 +478,6 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
     // field_attach_update($entity_type, $entity);
   }
   else {
-    // Save the user who wanted this.
-    $entity->workflow_uid = $transition->uid;
-
     // For Node API, the node does not need to be saved, since all fields are custom.
     // OTOH, we may need to refresh the cache, which is done by core on entity_save. 
     $new_sid = $transition->execute($force = TRUE);
@@ -629,7 +658,7 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
         if ($field['type'] == 'workflow') {
           $wid = $field['settings']['wid'];
           // @todo: $entity_bundle should be part of the WorkflowItem constructor, too.
-          $field_item = new WorkflowItem($field, $instance, $entity_type, NULL);
+          $field_item = new WorkflowItem($field, $instance);
         }
       }
     }

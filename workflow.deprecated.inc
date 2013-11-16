@@ -196,6 +196,32 @@ function workflow_show_form($sid, $workflow, array $options) {
 }
 
 /**
+ * Validate target state and either execute a transition immediately or schedule
+ * a transition to be executed later by cron.
+ *
+ * @deprecated: workflow_transition --> WorkflowDefaultWidget::submit()
+ *
+ * @param object $entity
+ * @param string $new_sid
+ *   An integer; the target state ID.
+ * @param bool $force
+ *   Allows bypassing permissions, primarily for Rules.
+ * @param array $field
+ *   The field structure for the operation.
+ */
+function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()) {
+  $entity_type = 'node'; // Entity support is in workflow_transition --> WorkflowDefaultWidget::submit()
+  // @todo: do not use widget:submit directly, use workflow_entity_save instead.
+  $widget = new WorkflowDefaultWidget($field, $instance = array(), $entity_type, $entity);
+  $form = array();
+  $form_state = array();
+  $items = array();
+  $items[0]['workflow'] = (array) $entity;
+  $items[0]['workflow']['workflow_options'] = $new_sid;
+  $widget->submit($form, $form_state, $items, $force);
+}
+
+/**
  * Get all states in the system by content type.
  */
 function workflow_get_workflow_states_by_type($type) {

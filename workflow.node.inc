@@ -70,7 +70,7 @@ function workflow_node_load($nodes, $types) {
 
     // Add scheduling information.
     // Technically you could have more than one scheduled, but this will only add the soonest one.
-    foreach (WorkflowScheduledTransition::load('node', $node->nid) as $scheduled_transition) {
+    foreach (WorkflowScheduledTransition::load('node', $node->nid, $field_name = '') as $scheduled_transition) {
       // Add the scheduled_transition as an object.
       $node->workflow_scheduled_transition = $scheduled_transition;
       // @todo: remove the separate '$node->workflow_scheduled' properties.
@@ -138,12 +138,12 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
   if ($current_state->showWidget($choices)) {
     $workflow = $current_state->getWorkflow();
-    $state_labels = $workflow->getOptions();
 
     // Show state change form at the bottom of the node display.
     module_load_include('inc', 'workflow', 'workflow.pages');
 
     // By including the nid in the form id.
+    $state_labels = $workflow->getOptions();
     $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
     $form['#weight'] = 99;
 

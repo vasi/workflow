@@ -30,7 +30,6 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field_name = $field['field_name'];
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $items[0]['value'] = $current_sid;
-
     $display = array();
 
     $form = workflowfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
@@ -47,13 +46,28 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $output = theme('workflow_current_state', array('state' => $label,
                                                     'state_system_name' => $name,
                                                     'sid' => $current_sid));
-    $form = drupal_get_form('workflow_tab_form', $entity, $workflow, $states, $current_sid);
+
+    // Emulate a Field API interface.
+    $field = array();
+    $field['field_name'] = '';
+    $field['settings']['wid'] = $workflow->wid;
+    $field['settings']['widget'] = $workflow->options;
+    $field['settings']['widget']['options'] = 'radios';
+    $field['settings']['widget']['comment'] = $workflow->options['comment_log_tab']; // vs. ['comment_log_node']; 
+    $field['settings']['widget']['current_status'] = TRUE;
+
+    $instance = array();
+    $instance['widget']['setting'] = $workflow->options;
+//    $form = drupal_get_form('workflow_tab_form', $entity, $workflow, $states, $current_sid);
+    $form = drupal_get_form('workflow_transition_form', $field, $instance, $entity_type, $entity);
     $output .= drupal_render($form);
   }
 
   // Show the history table.
   $rows = array();
   $current_themed = FALSE;
+  $field_name = isset($field['field_name']) ? $field['field_name'] : '';
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $limit = variable_get('workflow_states_per_page', 20);
   foreach (WorkflowTransition::load($entity_type, $entity_id, $field_name, $limit) as $history) {
     $old_state_name = $new_state_name = '';
@@ -113,16 +127,16 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     }
 
     $variables = array(
-        'transition' => $history, // @todo D8: pass this WorkflowTransition as only variable. It contains everything.
-        'extra' => '',
+      'transition' => $history, // @todo D8: pass this WorkflowTransition as only variable. It contains everything.
+      'extra' => '',
 
-        'history' => $history,  // @todo D8: remove, as this is the same as 'transition'.
-        'old_sid' => $history->old_sid, // @todo D8: remove this redundant property.
-        'sid' => $history->new_sid, // @todo D8: remove this redundant property.
-        'uid' => $history->uid, // @todo D8: remove this redundant property.
-        'old_state_name' => $old_state_name,
-        'state_name' => $new_state_name,
-        );
+      'history' => $history,  // @todo D8: remove, as this is the same as 'transition'.
+      'old_sid' => $history->old_sid, // @todo D8: remove this redundant property.
+      'sid' => $history->new_sid, // @todo D8: remove this redundant property.
+      'uid' => $history->uid, // @todo D8: remove this redundant property.
+      'old_state_name' => $old_state_name,
+      'state_name' => $new_state_name,
+    );
 
     // Allow other modules to modify the row.
     // $todo D8: pass only a $transition object.
@@ -142,7 +156,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   // Only display the table if there's anything in it.
   if ($rows) {
     $output .= theme('workflow_history_table', array('header' => $header, 'rows' => $rows, 'footer' => !empty($footer_needed)));
-    $output .= theme('pager', array('tags' => variable_get('workflow_states_per_page', 20)));
+    $output .= theme('pager', array('tags' => $limit));
   }
   return $output;
 }
@@ -279,7 +293,6 @@ function workflow_tab_form($form, $form_state, $node, $workflow, $states, $curre
     // Include the same form elements here that are included on a
     // regular node editing page. $form is modified by reference.
     workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $options, $timestamp, $comment);
-
     $form['node'] = array(
       '#type' => 'value',
       '#value' => $node,
