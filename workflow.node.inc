@@ -18,22 +18,6 @@ function theme_workflow_current_state($variables) {
 }
 
 /**
- * Implements hook_forms().
- *
- * Allows the workflow tab form to be repeated multiple times on a page.
- * See http://drupal.org/node/1970846.
- * This is for Workflow Node. Workflow_field implements the same hook again.
- */
-function workflow_forms($form_id, $args) {
-  $forms = array();
-
-  if (strpos($form_id, 'workflow_tab_form_') !== FALSE) {
-    $forms[$form_id] = array('callback' => 'workflow_tab_form');
-  }
-  return $forms;
-}
-
-/**
  * Implements hook_node_load().
  */
 function workflow_node_load($nodes, $types) {
@@ -115,6 +99,8 @@ function workflow_node_insert($node) {
  * Implements hook_node_view().
  */
 function workflow_node_view($node, $view_mode, $langcode) {
+  $entity_type = 'node'; // This hook is only for nodes.
+
   // Skip if there are no Node API workflows.
   if (!workflow_get_workflow_type_map_by_type($node->type)) {
     return;
@@ -126,25 +112,41 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
   $current_sid = workflow_node_current_state($node);
   $current_state = WorkflowState::load($current_sid);
-  $choices = $current_state->getOptions('node', $node);
 
   // Show current state at the top of the node display.
-  $markup = theme('workflow_current_state', array('state' => $current_state->label(), 'state_system_name' => $current_state->getName(), 'sid' => $current_state->sid));
+  // State may not be found if the node type was re-assigned a to new/other workflow.
+  $markup = theme('workflow_current_state', array('state' => $current_state->label(),
+                                                  'state_system_name' => $current_state->getName(),
+                                                  'sid' => $current_state->sid));
 
   $node->content['workflow_current_state'] = array(
     '#markup' => $markup,
     '#weight' => -99,
   );
 
+  $choices = $current_state->getOptions($entity_type, $node);
   if ($current_state->showWidget($choices)) {
     $workflow = $current_state->getWorkflow();
 
-    // Show state change form at the bottom of the node display.
-    module_load_include('inc', 'workflow', 'workflow.pages');
+//    // Show state change form at the bottom of the node display.
+//    module_load_include('inc', 'workflow', 'workflow.pages');
 
-    // By including the nid in the form id.
-    $state_labels = $workflow->getOptions();
-    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
+    // Emulate a Field API interface.
+    $field = array();
+    $field['field_name'] = '';
+    $field['settings']['wid'] = $workflow->wid;
+    $field['settings']['widget'] = $workflow->options;
+    $field['settings']['widget']['options'] = 'radios';
+    $field['settings']['widget']['comment'] = $workflow->options['comment_log_node']; // vs. ['comment_log_tab']; 
+    $field['settings']['widget']['current_status'] = FALSE;
+
+    $instance = array();
+    $instance['widget']['setting'] = $workflow->options;
+
+//    // By including the nid in the form id.
+//    $state_labels = $workflow->getOptions();
+//    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
+    $form = drupal_get_form('workflow_transition_form_$node->nid', $field, $instance, $entity_type, $node);
     $form['#weight'] = 99;
 
     $node->content['workflow'] = $form;

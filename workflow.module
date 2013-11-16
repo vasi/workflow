@@ -247,6 +247,21 @@ function workflow_user_delete($account) {
  */
 
 /**
+ * Implements hook_forms().
+ *
+ * Allows the workflow tab form to be repeated multiple times on a page.
+ * See http://drupal.org/node/1970846.
+ */
+function workflow_forms($form_id, $args) {
+  $forms = array();
+
+  if (strpos($form_id, 'workflow_transition_form_') !== FALSE) {
+    $forms[$form_id] = array('callback' => 'workflow_transition_form');
+  }
+  return $forms;
+}
+
+/**
  * Form builder. Add form widgets for workflow change to $form.
  *
  * This builder is factored out of workflow_form_alter() because

@@ -15,7 +15,6 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   // $figure out the $entity's bundle and id.
   list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
-  $states = $workflow->getStates();
 
   // Show the current state and the Workflow form to allow state changing.
   // (But only show form if we are not at the terminal state.)
@@ -39,13 +38,11 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     // This is a Workflow Node workflow.
     $field_name = '';
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+    $current_state = WorkflowState::load($current_sid);
 
-    // State may not be found if the node type was re-assigned a to new/other workflow.
-    $name = isset($states[$current_sid]) ? $states[$current_sid]->getName() : '';
-    $label = isset($states[$current_sid]) ? $states[$current_sid]->label() : '';
-    $output = theme('workflow_current_state', array('state' => $label,
-                                                    'state_system_name' => $name,
-                                                    'sid' => $current_sid));
+    $output = theme('workflow_current_state', array('state' => $current_state->label(),
+                                                    'state_system_name' => $current_state->getName(),
+                                                    'sid' => $current_state->sid));
 
     // Emulate a Field API interface.
     $field = array();
