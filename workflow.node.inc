@@ -143,9 +143,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     $instance = array();
     $instance['widget']['setting'] = $workflow->options;
 
-//    // By including the nid in the form id.
-//    $state_labels = $workflow->getOptions();
-//    $form = drupal_get_form("workflow_tab_form_$node->nid", $node, $workflow, $state_labels, $current_sid);
+    // By including the nid in the form id.
     $form = drupal_get_form('workflow_transition_form_$node->nid', $field, $instance, $entity_type, $node);
     $form['#weight'] = 99;
 
