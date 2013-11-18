@@ -129,7 +129,7 @@ function workflow_actions_workflow($op, $old_state, $new_state, $entity, $force 
     case 'transition post':
       // A transition has occurred; fire off actions associated with this transition.
       if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($old_state, $new_state)) {
-        $hook = 'workflow-' . $entitytype . '-' . $entity->type . '-' . $transition->tid;
+        $hook = 'workflow-' . $entity_type . '-' . $entity->type . '-' . $transition->tid;
 
         $aids = trigger_get_assigned_actions($hook);
         if ($aids) {
