@@ -130,6 +130,10 @@ function workflow_node_update($node) {
   }
 
   // Retrieve the data from the form.
+  if (!isset($node->workflow_field)) {
+    // For this type_map, user does not want a form here. 
+    return;
+  }
   $form_state['values']['workflow_field'] = $node->workflow_field;
   $form_state['values']['workflow_instance'] = $node->workflow_instance;
   $form['#entity_type'] = 'node';
@@ -176,7 +180,6 @@ function workflow_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function workflow_comment_update($comment) {
-dpm(__FUNCTION__ . ' todo');
   if (isset($comment->workflow)) {
     $node = node_load($comment->nid);
     $sid = $comment->workflow;
