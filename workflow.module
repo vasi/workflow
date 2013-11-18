@@ -405,7 +405,9 @@ function workflow_node_form(&$form, $form_state, $title, $name, $current, $choic
  * Form builder. Allow workflow state change and scheduling from workflow tab.
  */
 function workflow_transition_form(&$form, &$form_state, $field, $instance, $entity_type, $entity) {
-  $instance['widget']['settings']['submit_function'] = 'workflow_save_transition';
+  if (!isset ($instance['widget']['settings']['submit_function']) ) {
+    $instance['widget']['settings']['submit_function'] = 'workflow_save_transition';
+  }
   $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
 
   $items = array();

@@ -38,6 +38,7 @@ function workflow_node_load($nodes, $types) {
     // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
     // have been standardized to workflow_x, dropping the initial underscore.
     // Module maintainers integrating with workflow should keep that in mind.
+    // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591. 
     $last_history = workflow_get_recent_node_history($node->nid);
 
     // Nodes that existed before the workflow don't have any history.
@@ -50,47 +51,6 @@ function workflow_node_load($nodes, $types) {
       $node->workflow = $last_history->new_sid;
       $node->workflow_stamp = $last_history->stamp;
       $node->workflow_state_name = ($state) ? $state->getName() : 'unknown state';
-    }
-
-    // Add scheduling information.
-    // Technically you could have more than one scheduled, but this will only add the soonest one.
-    foreach (WorkflowScheduledTransition::load('node', $node->nid, $field_name = '') as $scheduled_transition) {
-      // Add the scheduled_transition as an object.
-      $node->workflow_scheduled_transition = $scheduled_transition;
-      // @todo: remove the separate '$node->workflow_scheduled' properties.
-      $node->workflow_scheduled_sid = $scheduled_transition->sid;
-      $node->workflow_scheduled_timestamp = $scheduled_transition->scheduled;
-      $node->workflow_scheduled_comment = $scheduled_transition->comment;
-      break;
-    }
-  }
-}
-
-/**
- * Implements hook_node_insert().
- *
- * This is executed after saving data to the database.
- * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.
- */
-function workflow_node_insert($node) {
-  // Skip if there are no Node API workflows.
-  if (!workflow_get_workflow_type_map_by_type($node->type)) {
-    return;
-  }
-
-  if ($workflow = workflow_get_workflows_by_type($node->type)) {
-    // Normally, the new state is already set.
-    // If the state is not specified, use first valid state.
-    // For example, a new node must move from (creation) to some
-    // initial state.
-    if (empty($node->workflow)) {
-      $new_sid = $workflow->getFirstSid('node', $node);
-    }
-    else {
-      $new_sid = $node->workflow;
-    }
-    if ($new_sid) {
-      workflow_transition($node, $new_sid);
     }
   }
 }
@@ -137,11 +97,10 @@ function workflow_node_view($node, $view_mode, $langcode) {
     $field['settings']['wid'] = $workflow->wid;
     $field['settings']['widget'] = $workflow->options;
     $field['settings']['widget']['options'] = 'radios';
-    $field['settings']['widget']['comment'] = $workflow->options['comment_log_node']; // vs. ['comment_log_tab']; 
+    $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
     $field['settings']['widget']['current_status'] = FALSE;
 
     $instance = array();
-    $instance['widget']['setting'] = $workflow->options;
 
     // By including the nid in the form id.
     $form = drupal_get_form('workflow_transition_form_$node->nid', $field, $instance, $entity_type, $node);
@@ -149,6 +108,16 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
     $node->content['workflow'] = $form;
   }
+}
+
+/**
+ * Implements hook_node_insert().
+ *
+ * This is executed after saving data to the database.
+ * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.
+ */
+function workflow_node_insert($node) {
+  return workflow_node_update($node);
 }
 
 /**
@@ -160,11 +129,17 @@ function workflow_node_update($node) {
     return;
   }
 
-  // Get new state from workflow form, stored in $node->workflow.
-  $new_sid = isset($node->workflow) ? $node->workflow : 0;
-  if ($new_sid) {
-    workflow_transition($node, $new_sid);
-  }
+  // Retrieve the data from the form.
+  $form_state['values']['workflow_field'] = $node->workflow_field;
+  $form_state['values']['workflow_instance'] = $node->workflow_instance;
+  $form['#entity_type'] = 'node';
+  $form['#entity'] = $node;
+
+  // For some reason, the Workflow Form does not return the form in an 'workflow' element.
+  // @todo: correct this, or filter on 'workflow' elements.
+  $form_state['values'] = (array) $node;
+
+  workflow_save_transition($form, $form_state);
 }
 
 /**
@@ -201,6 +176,7 @@ function workflow_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function workflow_comment_update($comment) {
+dpm(__FUNCTION__ . ' todo');
   if (isset($comment->workflow)) {
     $node = node_load($comment->nid);
     $sid = $comment->workflow;
@@ -214,6 +190,7 @@ function workflow_comment_update($comment) {
     if (isset($comment->workflow_scheduled_hour)) {
       $node->workflow_scheduled_hour = $comment->workflow_scheduled_hour;
     }
+// todo replace this.
     workflow_transition($node, $sid);
   }
 }
@@ -286,20 +263,25 @@ function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
  * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
  */
 function _workflow_form_alter(&$form, &$form_state, $form_id) {
-  // Ignore all forms except comment forms and node editing forms.
-  if ((isset($form['#node']) && $form_id == 'comment_node_' . $form['#node']->type . '_form')
-    || (isset($form['#node']->type) && isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id)) {
     // Set node to #node if available or load from nid value.
-    $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
-    $type = $node->type;
-    if ($workflow = workflow_get_workflows_by_type($node->type)) {
-      $workflow_entities = variable_get('workflow_' . $type, array());
-      // Abort if the entity type of the form is not in the list that the user
-      // wants to display the workflow form on.
-      if (!in_array($form['#entity_type'], $workflow_entities)) {
-        return;
-      }
+  $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
+  $bundle = $node->type;
+  $entity= $node;
+  $entity_type = 'node';
 
+  // Skip if there are no Node API workflows.
+  if (!workflow_get_workflow_type_map_by_type($bundle)) {
+    return;
+  }
+  if ($workflow = workflow_get_workflows_by_type($bundle)) {
+    $workflow_entities = variable_get('workflow_' . $bundle, array());
+    // Abort if the entity type of the form is not in the list that the user
+    // wants to display the workflow form on.
+    if (!in_array($form['#entity_type'], $workflow_entities)) {
+      return;
+    }
+
+/*
       // If this is a preview, the current state should come from
       // the form values, not the node, as the user may have changed
       // the state.
@@ -347,9 +329,24 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       if (isset($form_state['values']['workflow_comment'])) {
         $comment = $form_state['values']['workflow_comment'];
       }
+*/
 
-      // Include the 'workflow form'. $form is modified by reference.
-      workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
-    }
+    // Emulate a Field API interface.
+    $field = array();
+    $field['field_name'] = '';
+    $field['settings']['wid'] = $workflow->wid;
+    $field['settings']['widget'] = $workflow->options;
+    $field['settings']['widget']['options'] = 'radios';
+    $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
+    $field['settings']['widget']['current_status'] = TRUE;
+
+    $instance = array();
+    $instance['widget']['settings'] = $workflow->options;
+    // Do not include the default 'Update Workflow' button, since we are already in an Edit form.
+    $instance['widget']['settings']['submit_function'] = '';
+
+    // Include the 'workflow form'. $form is modified by reference.
+//    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
+    workflow_transition_form($form, $form_state, $field, $instance, $entity_type, $entity);
   }
 }

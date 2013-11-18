@@ -110,13 +110,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       }
     }
 
-    // Stop if user has no new target state(s) to choose.
-    // The $current_sid may have changed due to scheduling,
-    // but we use the initial state.
-    if (!$scheduled && !$current_state->showWidget($options)) {
-      return $element;
-    }
-
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
     $form_id = $form_state['build_info']['form_id'];
     $element_scheduled_name = 'workflow_scheduled_' . $form_id;
@@ -126,13 +119,10 @@ $element_options_name = 'workflow_options';
 $elt_state_name = 'workflow_scheduled_' . $form_id;
 
     $label = $workflow->label();
-    $element['workflow'] = array(
-      '#type' => 'fieldset',
-      '#title' => $label,
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-      // '#weight' => 10,
-    );
+
+    // Prepare a wrapper. This might be a fieldset.
+    $element['workflow']['#type'] = 'container';
+    $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
     // Save the current value of the node in the form, for later Workflow-module specific references.
     $element['workflow']['#node'] = $entity;
@@ -148,23 +138,26 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
 
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
-    if (count($options) == 1 && !$current_state->isCreationState() && $current_sid <> array_pop($options)) {
-      // Add the State formatter.
-      // @todo: add real formatter (with title), instead.
-      $current_state = key($options);
-      // $element['workflow'][$label] = array(
-      $element['workflow'][$element_options_name] = array(
-        '#type' => 'value',
-        '#value' => array($current_state => $current_state),
-      );
+    if (!$current_state->showWidget($options)) {
+      if (!$field_name) {
+        // Add the State formatter.
+        // @todo: add real formatter (with title), instead.
+        $markup = theme('workflow_current_state', array('state' => $current_state->label(),
+                                                      'state_system_name' => $current_state->getName(),
+                                                      'sid' => $current_state->sid));
+        $element['workflow'][$element_options_name] = array(
+          '#type' => 'item',
+          // '#title' => t('Current state'),
+          '#markup' => $markup,
+        );
+      }
+      else {
+        // @todo. use field_view_field.
+      }
+      return $element;
     }
     else {
       // Add the State widget. If we are in CreationState, use a fast alternative for $workflow->getFirstSid()
-      // @todo: Q: why are we overwriting 'fieldset' with 'container' ?
-      //        A: this is because you'd want the form in a vertical tab, and a fieldset makes no sense there.
-      $element['workflow']['#type'] = 'container';
-      $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
-
       $element['workflow'][$element_options_name] = array(
         '#type' => $this->field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
@@ -260,7 +253,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
 
     // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(),
     // to add the submit button on the Content view page and the Workflow history tab.
-    if (isset($this->instance['widget']['settings']['submit_function'])) {
+    if (!empty($this->instance['widget']['settings']['submit_function'])) {
       // Add a submit button, but only on Entity View and History page.
       $element['workflow']['submit'] = array(
         '#type' => 'submit',
@@ -377,6 +370,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     $field_name = !empty($this->field) ? $this->field['field_name'] : '';
 
     if (isset($items[0]['transition'])) {
+      // a complete transition was already passed on. 
       $transition = $items[0]['transition'];
     }
     else {
@@ -400,8 +394,12 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       elseif (isset($items[0]['workflow']['workflow_options'])) {
         $new_sid = $items[0]['workflow']['workflow_options'];
       }
-      else {
+      elseif (isset($items[0]['value'])) {
         $new_sid = $items[0]['value'];
+      }
+      else {
+        // This may happen if only 1 option is left, and a formatter is shown.
+        $new_sid = $old_sid;
       }
 
       // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.

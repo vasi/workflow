@@ -54,7 +54,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field['settings']['widget']['current_status'] = TRUE;
 
     $instance = array();
-    $instance['widget']['setting'] = $workflow->options;
+
     $form = drupal_get_form('workflow_transition_form', $field, $instance, $entity_type, $entity);
     $output .= drupal_render($form);
   }
