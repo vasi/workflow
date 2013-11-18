@@ -35,7 +35,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
    *
    * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
    */
-  public static function load($entity_type, $entity_id, $field_name = '') {
+  public static function load($entity_type, $entity_id, $field_name = '', $limit = NULL) {
     if (!$entity_id) {
       return FALSE;
     }
@@ -100,7 +100,8 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     return $this->deleteById($this->entity_type, $this->entity_id);
   }
 
-  public static function deleteMultiple(array $conditions) {
+  public static function deleteMultiple(array $conditions, $table = 'dummy') {
+    // The $table argument is to adhere to the parent::deleteMultiple interface. It must not be changeable.
     return parent::deleteMultiple($conditions, $table = 'workflow_scheduled_transition');
   }
 
