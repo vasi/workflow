@@ -78,10 +78,10 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // Capture settings to format the form/widget.
-    $settings_title_as_name = $this->field['settings']['widget']['name_as_title'];
+    $settings_title_as_name = !empty($this->field['settings']['widget']['name_as_title']);
     // The schedule cannot be shown on a Content add page.
-    $settings_schedule = $this->field['settings']['widget']['schedule'] && $entity_id;
-    $settings_schedule_timezone = $this->field['settings']['widget']['schedule_timezone'];
+    $settings_schedule = !empty($this->field['settings']['widget']['schedule']) && $entity_id;
+    $settings_schedule_timezone = !empty($this->field['settings']['widget']['schedule_timezone']);
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $this->field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
 
@@ -133,7 +133,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     $element['workflow_field'] = array('#type' => 'value', '#value' => $this->field);
     $element['workflow_instance'] = array('#type' => 'value', '#value' => $this->instance);
 
-    // Save the form_id, so the form values can be retrieved in submit function. 
+    // Save the form_id, so the form values can be retrieved in submit function.
     $element['workflow']['form_id'] = array('#type' => 'value', '#value' => $form_id);
 
     // Decide if we show a widget or a formatter.
@@ -204,7 +204,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       $element['workflow']['workflow_scheduled_date_time'] = array(
         '#type' => 'fieldset',
         '#title' => t('At'),
-        '#attributes' => array('class' => array('container-inline')), 
+        '#attributes' => array('class' => array('container-inline')),
         '#prefix' => '<div style="margin-left: 1em;">',
         '#suffix' => '</div>',
         '#states' => array(
@@ -224,8 +224,8 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
         '#title' => t('Time'),
-        '#maxlength'=> 5,
-        '#size'=> 6,
+        '#maxlength' => 5,
+        '#size' => 6,
         '#default_value' => $scheduled ? $hours : '00:00',
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
@@ -236,7 +236,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_help'] = array(
         '#type' => 'item',
-        '#prefix' => '<br>',
+        '#prefix' => '<br />',
         '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
           If no time is included, the default will be midnight on the specified date.
           The current time is: @time.', array('@time' => format_date(REQUEST_TIME, 'custom', 'H:i', $timezone))
@@ -279,8 +279,8 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
    * @param bool $force
    *   TRUE if all access must be overridden, e.g., for Rules.
    *
-   * @return
-   *  If update succeeded, the new State Id. Else, the old Id is returned.
+   * @return int
+   *   If update succeeded, the new State Id. Else, the old Id is returned.
    *
    * This is called from function _workflowfield_form_submit($form, &$form_state)
    * It is a replacement of function workflow_transition($node, $new_sid, $force, $field)
@@ -293,14 +293,14 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
   public function submit(array $form, array &$form_state, array &$items, $force = FALSE) {
     $entity_type = $this->entity_type;
     $entity = $this->entity;
-    $entity_id = entity_id($entity_type, $entity);
+    // $entity_id = entity_id($entity_type, $entity);
     $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
 
     // Extract the data from $items, depending on the type of widget.
     // @todo D8: use MassageFormValues($values, $form, $form_state).
     $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $transition = $this->getTransition($old_sid, $items);
-    $force = $force || $transition->isForced(); 
+    $force = $force || $transition->isForced();
     $new_sid = $transition->new_sid;
 
     if (!$transition) {
@@ -311,6 +311,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     elseif ($error = $transition->isAllowed($force)) {
       drupal_set_message($error, 'error');
     }
+
     elseif (!$transition->isScheduled()) {
       // Now the data is captured in the Transition, and before calling the Execution,
       // restore the default values for Workflow Field.
@@ -366,11 +367,11 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
 
     $entity_type = $this->entity_type;
     $entity = $this->entity;
-    $entity_id = entity_id($entity_type, $entity);
+    // $entity_id = entity_id($entity_type, $entity);
     $field_name = !empty($this->field) ? $this->field['field_name'] : '';
 
     if (isset($items[0]['transition'])) {
-      // a complete transition was already passed on. 
+      // a complete transition was already passed on.
       $transition = $items[0]['transition'];
     }
     else {
@@ -427,8 +428,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
           . ' '
           . $schedule['workflow_scheduled_hour']
           . ' '
-          . $schedule['workflow_scheduled_timezone']
-        ;
+          . $schedule['workflow_scheduled_timezone'];
 
         if ($stamp = strtotime($scheduled_date_time)) {
           $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
