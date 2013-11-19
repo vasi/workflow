@@ -124,21 +124,16 @@ function workflow_node_insert($node) {
  * Implements hook_node_update().
  */
 function workflow_node_update($node) {
-  // Skip if there are no Node API workflows.
-  if (!workflow_get_workflow_type_map_by_type($node->type)) {
+  // Retrieve the data from the form.
+  if (!isset($node->workflow_field)) {
+    // For this type_map, user did not want a form here. 
     return;
   }
 
-  // Retrieve the data from the form.
-  if (!isset($node->workflow_field)) {
-    // For this type_map, user does not want a form here. 
-    return;
-  }
   $form_state['values']['workflow_field'] = $node->workflow_field;
   $form_state['values']['workflow_instance'] = $node->workflow_instance;
   $form['#entity_type'] = 'node';
   $form['#entity'] = $node;
-
   // For some reason, the Workflow Form does not return the form in an 'workflow' element.
   // @todo: correct this, or filter on 'workflow' elements.
   $form_state['values'] = (array) $node;
@@ -180,22 +175,23 @@ function workflow_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function workflow_comment_update($comment) {
-  if (isset($comment->workflow)) {
-    $node = node_load($comment->nid);
-    $sid = $comment->workflow;
-    $node->workflow_comment = $comment->workflow_comment;
-    if (isset($comment->workflow_scheduled)) {
-      $node->workflow_scheduled = $comment->workflow_scheduled;
-    }
-    if (isset($comment->workflow_scheduled_date)) {
-      $node->workflow_scheduled_date = $comment->workflow_scheduled_date;
-    }
-    if (isset($comment->workflow_scheduled_hour)) {
-      $node->workflow_scheduled_hour = $comment->workflow_scheduled_hour;
-    }
-// todo replace this.
-    workflow_transition($node, $sid);
+  // Retrieve the data from the form.
+  if (!isset($comment->workflow_field)) {
+    // For this type_map, user did not want a form here. 
+    return;
   }
+
+  $node = node_load($comment->nid);
+
+  $form_state['values']['workflow_field'] = $comment->workflow_field;
+  $form_state['values']['workflow_instance'] = $comment->workflow_instance;
+  $form['#entity_type'] = 'node';
+  $form['#entity'] = $node;
+  // For some reason, the Workflow Form does not return the form in an 'workflow' element.
+  // @todo: correct this, or filter on 'workflow' elements.
+  $form_state['values'] = (array) $comment;
+
+  workflow_save_transition($form, $form_state);
 }
 
 /**
