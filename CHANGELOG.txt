@@ -287,3 +287,4 @@ Issue #2137149 by johnv: Changed Node Edit page to show workflow_transition_form
 Issue #2019345 by johnv: Fixed notices on WorkflowDefaultWidget.
 Issue #2137149 by johnv: Changed Node Comment form to show workflow_transition_form instead of workflow_node_form.
 Issue #2137149 by johnv: Changed code to use workflow_state_formatter to show Current State on any form.
+Issue #2137149 by johnv: Removed workflow_node_form: use workflow_transition_form instead.
