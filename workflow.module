@@ -8,11 +8,6 @@ define('WORKFLOW_CREATION', 1);
 define('WORKFLOW_CREATION_DEFAULT_WEIGHT', -50);
 define('WORKFLOW_DELETION', 0);
 
-// Include the hooks for the 'conventional' (version D5/D6/D7.1) Node API.
-// @todo: make this optional when only Field API is used. (version D7.2/D8)
-//module_load_include('inc', 'workflow', 'workflow.node');
-//module_load_include('inc', 'workflow', 'workflow.deprecated');
-
 /**
  * Menu wild card loader {wildcard_name}_load for '%workflow'.
  *
@@ -420,6 +415,39 @@ function workflow_transition_form(&$form, &$form_state, $field, $instance, $enti
 }
 
 /**
+ * Creates a form element to show the current value of a Workflow state.
+ */
+function workflow_state_formatter($entity_type, $entity, $field = array(), $instance = array()) {
+  $field_name = isset($field['field_name']) ? $field['field_name'] : '';
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  if ($field_name) {
+    // This is a Workflow Field workflow. Use the Field API field view.
+    $field_name = $field['field_name'];
+
+    // Add the 'current value' formatter for this field.
+    $list_display = $instance['display']['default'];
+    $list_display['type'] = 'list_default';
+    $langcode = NULL;
+    $list_element = field_view_field($entity_type, $entity, $field_name, $list_display, $langcode);
+    // Make sure the current value is before the form. (which has weight = 0.005)
+    $list_element['#weight'] = 0;
+    return $list_element;
+  }
+  else {
+    // This is a Workflow Node workflow.
+    $current_state = WorkflowState::load($current_sid);
+    $output = theme('workflow_current_state', array('state' => $current_state->label(),
+                                                    'state_system_name' => $current_state->getName(),
+                                                    'sid' => $current_state->sid));
+    return array(
+      '#type' => 'item',
+      // '#title' => t('Current state'),
+      '#markup' => $output,
+    );
+  }
+}
+
+/**
  * Submit callback function for the Workflow Form / DefaultWidget.
  *
  * Validate target state and either save a transition immediately or schedule
@@ -446,8 +474,6 @@ function workflow_save_transition($form, &$form_state) {
     if ($entity->changed != REQUEST_TIME) {
       // Save $entity, but only if sid has changed.
       // Use field_attach_update for this? Save always?  
-//      $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
-//      $entity->{$field_name}['und'][0]['value'] = $new_sid;
       $entity->{$field_name}['und'][0]['workflow'] = $form_state['values'];
       entity_save($entity_type, $entity);
     }

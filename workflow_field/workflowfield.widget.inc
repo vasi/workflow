@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines a Workflow field, widget (sfrom options.module) and formatter (from list field).
+ * Defines a Workflow field, widget (from options.module) and formatter (from list field).
  * All hooks are wrapper functions for a D8-style WorkflowDefaultWidget object.
  */
 
@@ -95,30 +95,7 @@ function workflowfield_field_widget_form_alter(&$element, &$form_state, $context
 /**
  * Submit callback function for the DefaultWidget.
  *
- * We cannot use the DefaultWidget::submit function,
- * since we are not in Edit mode and have to save the node ourselves.
+ * This is not used. Use workflow_save_transition() instead.
  */
-function workflowfield_field_widget_form_submit($form, &$form_state) {
-  global $user;
-
-  // Retrieve the data from the form.
-  $field = $form_state['values']['workflow_field'];
-  $instance = $form_state['values']['workflow_instance'];
-  $entity_type = $form['#entity_type'];
-  $entity = $form['#entity'];
-  $field_name = $field['field_name'];
-
-  $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-  $items = array();
-  $items[0]['workflow'] = $form_state['values'];
-
-  // Create a Transition. The Widget knows if it is scheduled. 
-  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-  $transition = $widget->getTransition($old_sid, $items);
-  $new_sid = $transition->new_sid;
-
-  if (!empty($comment) || $old_sid != $new_sid) {
-    // Execute the transition.
-    workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = FALSE);
-  }
-}
+//function workflowfield_field_widget_form_submit($form, &$form_state) {
+//}

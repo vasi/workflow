@@ -30,10 +30,7 @@ function workflow_node_load($nodes, $types) {
       continue;
     }
 
-    if ($workflow = workflow_get_workflows_by_type($node->type)) {
-      $node->workflow_wid = $workflow->wid;
-      $node->workflow = $workflow->getCreationSid();
-    }
+    $workflow = workflow_get_workflows_by_type($node->type);
 
     // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
     // have been standardized to workflow_x, dropping the initial underscore.
@@ -43,8 +40,8 @@ function workflow_node_load($nodes, $types) {
 
     // Nodes that existed before the workflow don't have any history.
     if (!$last_history) {
+      $node->workflow = $workflow->getCreationSid();
       $node->workflow_stamp = $node->created;
-      continue;
     }
     else {
       $state = $workflow->getState($last_history->new_sid);
@@ -74,15 +71,8 @@ function workflow_node_view($node, $view_mode, $langcode) {
   $current_state = WorkflowState::load($current_sid);
 
   // Show current state at the top of the node display.
-  // State may not be found if the node type was re-assigned a to new/other workflow.
-  $markup = theme('workflow_current_state', array('state' => $current_state->label(),
-                                                  'state_system_name' => $current_state->getName(),
-                                                  'sid' => $current_state->sid));
-
-  $node->content['workflow_current_state'] = array(
-    '#markup' => $markup,
-    '#weight' => -99,
-  );
+  $node->content['workflow_current_state'] = workflow_state_formatter($entity_type, $node);
+  $node->content['workflow_current_state']['#weight'] = -99;
 
   $choices = $current_state->getOptions($entity_type, $node);
   if ($current_state->showWidget($choices)) {
@@ -279,34 +269,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
     if (!in_array($form['#entity_type'], $workflow_entities)) {
       return;
     }
-
 /*
-      // If this is a preview, the current state should come from
-      // the form values, not the node, as the user may have changed
-      // the state.
-//      $current_sid = isset($form_state['values']['workflow']) ?
-//        $form_state['values']['workflow'] : workflow_node_current_state($node);
-      $current_sid = !empty($form_state['input']['workflow']) ?
-        $form_state['input']['workflow'] : workflow_node_current_state($node);
-
-      $current_state = WorkflowState::load($current_sid);
-      $choices = $current_state->getOptions('node', $node, $force = FALSE);
-
-      // If the current node state is not one of the choices, pick first valid choice.
-      // We know all states in $choices are states that user has permission to
-      // go to because workflow_field_choices() has already checked that.
-      if (!isset($choices[$current_sid])) {
-        $current_sid = $workflow->getFirstSid('node', $node);
-        $current_state = WorkflowState::load($current_sid);
-      }
-
-      // Stop if user has no new target state(s) to choose.
-      if (!$current_state->showWidget($choices)) {
-        return;
-      }
-
-      $label = $workflow->label();
-
       $form['#wf'] = $workflow;
       $form['workflow'] = array(
         '#type' => 'fieldset',
@@ -315,21 +278,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
         '#collapsed' => FALSE,
         '#weight' => 10,
       );
-
-      $timestamp = NULL;
-      $comment = NULL;
-      // See if scheduling information is present.
-      if (isset($node->workflow_scheduled_timestamp) && isset($node->workflow_scheduled_sid)) {
-        // The default value should be the upcoming sid.
-        $current_sid = $node->workflow_scheduled_sid;
-        $timestamp = $node->workflow_scheduled_timestamp;
-        $comment = $node->workflow_scheduled_comment;
-      }
-      if (isset($form_state['values']['workflow_comment'])) {
-        $comment = $form_state['values']['workflow_comment'];
-      }
 */
-
     // Emulate a Field API interface.
     $field = array();
     $field['field_name'] = '';

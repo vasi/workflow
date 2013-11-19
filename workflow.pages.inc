@@ -14,6 +14,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
 
   // $figure out the $entity's bundle and id.
   list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+  $entity_id = entity_id($entity_type, $entity);
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
 
   // Show the current state and the Workflow form to allow state changing.
@@ -24,29 +25,13 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     // This is a Workflow Field workflow.
     $field = $workflow_item->getField();
     $instance = $workflow_item->getInstance();
-    $langcode = NULL;
-    
-    $field_name = $field['field_name'];
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-    $items[0]['value'] = $current_sid;
-    $display = array();
-
-    $form = workflowfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
-    $output = drupal_render($form);
   }
   else {
     // This is a Workflow Node workflow.
-    $field_name = '';
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-    $current_state = WorkflowState::load($current_sid);
-
-    $output = theme('workflow_current_state', array('state' => $current_state->label(),
-                                                    'state_system_name' => $current_state->getName(),
-                                                    'sid' => $current_state->sid));
-
     // Emulate a Field API interface.
     $field = array();
     $field['field_name'] = '';
+    $field['id'] = 0;
     $field['settings']['wid'] = $workflow->wid;
     $field['settings']['widget'] = $workflow->options;
     $field['settings']['widget']['options'] = 'radios';
@@ -54,10 +39,14 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field['settings']['widget']['current_status'] = TRUE;
 
     $instance = array();
-
-    $form = drupal_get_form('workflow_transition_form', $field, $instance, $entity_type, $entity);
-    $output .= drupal_render($form);
   }
+  // Add the form/widget to the formatter, and include the nid and field_id in the form id,
+  // to allow multiple forms per page (in listings, with hook_forms() ).
+  // Ultimately, this is a wrapper for WorkflowDefaultWidget.
+  $field_id = $field['id'];
+  $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
+  $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
+  $output = drupal_render($form);
 
   // Show the history table.
   $rows = array();

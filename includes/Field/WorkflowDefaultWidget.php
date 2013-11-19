@@ -68,6 +68,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    */
   public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
     $field_name = $this->field['field_name'];
+    $field = $this->instance;
+    $instance = $this->instance;
     $entity = $this->entity;
     $entity_type = $this->entity_type;
     $entity_id = entity_id($entity_type, $entity);
@@ -139,21 +141,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
     if (!$current_state->showWidget($options)) {
-      if (!$field_name) {
-        // Add the State formatter.
-        // @todo: add real formatter (with title), instead.
-        $markup = theme('workflow_current_state', array('state' => $current_state->label(),
-                                                      'state_system_name' => $current_state->getName(),
-                                                      'sid' => $current_state->sid));
-        $element['workflow'][$element_options_name] = array(
-          '#type' => 'item',
-          // '#title' => t('Current state'),
-          '#markup' => $markup,
-        );
-      }
-      else {
-        // @todo. use field_view_field.
-      }
+      $element['workflow'][$element_options_name] = workflow_state_formatter($entity_type, $entity, $field, $instance);
       return $element;
     }
     else {
@@ -251,7 +239,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       '#rows' => 2,
     );
 
-    // The 'add submit' setting is explicitely set by workflowfield_field_formatter_view(),
+    // The 'add submit' can explicitely set by workflowfield_field_formatter_view(),
     // to add the submit button on the Content view page and the Workflow history tab.
     if (!empty($this->instance['widget']['settings']['submit_function'])) {
       // Add a submit button, but only on Entity View and History page.
