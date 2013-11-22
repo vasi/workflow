@@ -93,7 +93,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     $instance = array();
 
     // By including the nid in the form id.
-    $form = drupal_get_form('workflow_transition_form_$node->nid', $field, $instance, $entity_type, $node);
+    $form = drupal_get_form('workflow_transition_form_' . $node->nid, $field, $instance, $entity_type, $node);
     $form['#weight'] = 99;
 
     $node->content['workflow'] = $form;
@@ -252,7 +252,7 @@ function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
  * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
  */
 function _workflow_form_alter(&$form, &$form_state, $form_id) {
-    // Set node to #node if available or load from nid value.
+  // Set node to #node if available or load from nid value.
   $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
   $bundle = $node->type;
   $entity= $node;

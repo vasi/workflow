@@ -127,13 +127,11 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
     // Save the current value of the node in the form, for later Workflow-module specific references.
-    $element['workflow']['#node'] = $entity;
-    $element['workflow']['#entity'] = $entity;
-    $element['#node'] = $entity;
-    $element['#entity'] = $entity;
-    $element['#entity_type'] = $entity_type;
-    $element['workflow_field'] = array('#type' => 'value', '#value' => $this->field);
-    $element['workflow_instance'] = array('#type' => 'value', '#value' => $this->instance);
+    // We add prefix, since #tree == FALSE.
+    $element['workflow']['workflow_entity'] = array('#type' => 'value', '#value' => $this->entity);
+    $element['workflow']['workflow_entity_type'] = array('#type' => 'value', '#value' => $this->entity_type);
+    $element['workflow']['workflow_field'] = array('#type' => 'value', '#value' => $this->field);
+    $element['workflow']['workflow_instance'] = array('#type' => 'value', '#value' => $this->instance);
 
     // Save the form_id, so the form values can be retrieved in submit function.
     $element['workflow']['form_id'] = array('#type' => 'value', '#value' => $form_id);

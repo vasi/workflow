@@ -317,17 +317,13 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
 function workflow_save_transition($form, &$form_state) {
   // Retrieve the data from the form.
   $field = $form_state['values']['workflow_field'];
-  $field_name = $field['field_name'];
   $instance = $form_state['values']['workflow_instance'];
-  $entity_type = $form['#entity_type'];
-  $entity = $form['#entity'];
+  $entity_type = $form_state['values']['workflow_entity_type'];
+  $entity = $form_state['values']['workflow_entity'];
 
-  // Create a Transition. The Widget knows if it is scheduled. 
-  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-
+  $field_name = $field['field_name'];
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $items[0]['workflow'] = $form_state['values'];
-  $transition = $widget->getTransition($old_sid, $items);
 
   if ($field_name) {
     // Save the entity, but only if we were not in edit mode.
@@ -339,6 +335,8 @@ function workflow_save_transition($form, &$form_state) {
     }
     else {
       // We were in edit mode. No need to save the entity explicitly.
+      // Create a Transition. The Widget knows if it is scheduled. 
+      $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
       $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
     }
   }
@@ -346,6 +344,8 @@ function workflow_save_transition($form, &$form_state) {
     // For a Node API form, only contrib fields need to be filled.
     // No updating of the node itself.
     // (unless we need to record the stamp.)
+    // Create a Transition. The Widget knows if it is scheduled. 
+    $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
     $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
   }
 }
