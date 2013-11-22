@@ -292,3 +292,5 @@ Issue #2019345 by johnv: Fixed enable changing nodes on front page.
 Issue #2019345 by johnv: Fixed expand schedule block when +1 forms on a page.
 Issue #2120451 by Kirsten Pol: Fixed superfluous sort when loading workflow_history_node.
 Issue #212429 by johnv: Fixed do not revert to deleted, disabled, same state in workflow_revert.
+
+Since 7.x-2.0-beta1
