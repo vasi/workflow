@@ -290,3 +290,4 @@ Issue #2137149 by johnv: Changed code to use workflow_state_formatter to show Cu
 Issue #2137149 by johnv: Removed workflow_node_form: use workflow_transition_form instead.
 Issue #2019345 by johnv: Fixed enable changing nodes on front page.
 Issue #2019345 by johnv: Fixed expand schedule block when +1 forms on a page.
+Issue #2120451 by Kirsten Pol: Fixed superfluous sort when loading workflow_history_node.

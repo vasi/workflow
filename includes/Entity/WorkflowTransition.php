@@ -107,7 +107,7 @@ class WorkflowTransition {
     $query->condition('h.field_name', $field_name);
     $query->fields('h');
     // The timestamp is only granular to the second; on a busy site, we need the id.
-    $query->orderBy('h.stamp', 'DESC');
+    // $query->orderBy('h.stamp', 'DESC');
     $query->orderBy('h.hid', 'DESC');
     $query->range(0, $limit);
 
