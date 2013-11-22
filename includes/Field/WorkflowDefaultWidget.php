@@ -179,12 +179,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
         ),
         '#default_value' => $scheduled,
         '#attributes' => array(
-  //       '#name' => $element_scheduled_name,
-          'name' => $element_scheduled_name,
-//   '#name' => $elt_state_name,
-//   'name' => $elt_state_name,
-//  '#name' => 'workflow_scheduled',
-//  'name' => 'workflow_scheduled',
+          'id' => 'scheduled_' .  $form_id,
         ),
       );
       $element['workflow']['workflow_scheduled_date_time'] = array(
@@ -194,9 +189,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
         '#prefix' => '<div style="margin-left: 1em;">',
         '#suffix' => '</div>',
         '#states' => array(
-//          'visible' => array(':input[name="workflow_scheduled"]' => array('value' => '1')),
-          'visible' => array(':input[name="' . $element_scheduled_name . '"]' => array('value' => '1')),
-//          'visible' => array(':input[name="' . $elt_state_name . '"]' => array('value' => '1')),
+          'visible' => array(':input[id="' . 'scheduled_' .  $form_id . '"]' => array('value' => '1')),
         ),
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_date'] = array(
