@@ -220,27 +220,6 @@ class WorkflowTransition {
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
-    if (!$force) {
-      // Make sure this transition is allowed.
-      $result = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-      // Did anybody veto this choice?
-      if (in_array(FALSE, $result)) {
-        // If vetoed, quit.
-        return $old_sid;
-      }
-    }
-
-    // Let other modules modify the comment.
-    // @todo D8: remove a but last items from $context.
-    $context = array(
-      'node' => $entity,
-      'sid' => $new_sid,
-      'old_sid' => $old_sid,
-      'uid' => $this->uid,
-      'transition' => $this,
-    );
-    drupal_alter('workflow_comment', $this->comment, $context);
-
     if ($old_sid == $new_sid) {
       // Stop if not going to a different state.
       // Write comment into history though.
@@ -267,6 +246,28 @@ class WorkflowTransition {
       }
       return $new_sid;
     }
+
+    if (!$force) {
+      // Make sure this transition is allowed.
+      $result = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      // Did anybody veto this choice?
+      if (in_array(FALSE, $result)) {
+        // If vetoed, quit.
+        return $old_sid;
+      }
+    }
+
+    // Let other modules modify the comment.
+    // @todo D8: remove all but last items from $context.
+    $context = array(
+      'node' => $entity,
+      'sid' => $new_sid,
+      'old_sid' => $old_sid,
+      'uid' => $this->uid,
+      'transition' => $this,
+    );
+    drupal_alter('workflow_comment', $this->comment, $context);
+
 
     $args = array(
       '%user' => $user->name,
