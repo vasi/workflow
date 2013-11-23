@@ -297,3 +297,4 @@ Since 7.x-2.0-beta1
 Issue #2141763 by johnv: Fixed avoid calling hook_worflow when saving an Entity and state has not changed.
 Issue #1408398 by johnv: Fixed incorrect field type for 'sid' in table workflow_access.
 Issue #2142659 by johnv: Changed path of workflow_access, to be in sync with other submodules.
+Issue #2142677 by johnv: Changed location of workflow_access Admin UI page to own file.
