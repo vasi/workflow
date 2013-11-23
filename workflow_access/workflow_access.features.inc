@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Workflow_access records are a **faux-exportable** component.
  */
 
@@ -39,7 +40,7 @@ SQL;
 function workflow_access_features_export_options() {
   $workflows = array();
   foreach (Workflow::getWorkflows() as $workflow) {
-    $workflows[$workflow->getName()] = t('workflow access configuration for: ') . $workflow->getName();
+    $workflows[$workflow->getName()] = t('workflow access configuration for: @label', array('@label' => $workflow->getName()));
   }
 
   return $workflows;

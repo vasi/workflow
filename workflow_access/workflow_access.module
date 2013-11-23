@@ -10,11 +10,11 @@
 function workflow_access_menu() {
   $items = array();
 
-  $items["admin/config/workflow/access/%workflow"] = array(
+  $items["admin/config/workflow/workflow/access/%workflow"] = array(
     'title' => 'Access',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_access_form', 4),
+    'page arguments' => array('workflow_access_form', 5),
     'type' => MENU_CALLBACK,
     );
 
@@ -45,8 +45,6 @@ function workflow_access_node_access_records($node) {
   //@todo: read history or field instead of workflow_node, to read current status.
   if ($workflow_node = workflow_get_workflow_node_by_nid($node->nid)) {
     $sid = $workflow_node->sid;
-    // @todo: since we only use sid, the next line is superfluous.
-    $state = WorkflowState::load($workflow_node->sid);
     foreach (workflow_access_get_workflow_access_by_sid($sid) as $grant) {
       $grants[] = array(
         'realm' => ($grant->rid == -1) ? 'workflow_access_owner' : 'workflow_access',
@@ -90,7 +88,7 @@ function workflow_access_workflow_operations($op, $workflow = NULL, $state = NUL
       $actions = array(
         'workflow_access_form' => array(
           'title' => t('Access'),
-          'href' => "admin/config/workflow/access/$workflow->wid",
+          'href' => "admin/config/workflow/workflow/access/$workflow->wid",
           'attributes' => array('alt' => $alt, 'title' => $alt),
           ),
         );
@@ -160,7 +158,7 @@ function workflow_access_form($form, $form_state, $workflow) {
     // TODO better tables using a #theme function instead of direct #prefixing
     $form[$state->sid] = array(
       '#type' => 'fieldset',
-      '#title' => $state->label(),
+      '#title' => check_plain($state->label()),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#tree' => TRUE,
@@ -304,7 +302,7 @@ function workflow_access_form_alter(&$form, &$form_state, $form_id) {
           . ' '
           . l(t('Read the manual.'), 'https://api.drupal.org/api/drupal/modules!node!node.api.php/function/hook_node_access_records/7'),
         );
-       
+
       $form['#submit'][] = 'workflow_access_priority_submit';
       return;
   }
