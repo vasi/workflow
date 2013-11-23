@@ -355,7 +355,7 @@ class WorkflowState {
       // - Some entities (e.g, taxonomy_term) do not have a uid.
       // - If 'anonymous' is the author, don't allow access to History Tab,
       //   since anyone can access it, and it will be published in Search engines. 
-      elseif (TRUE || isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
+      elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
         $roles = array_merge(array('author'), $roles);
       }
 
