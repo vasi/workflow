@@ -346,16 +346,21 @@ class WorkflowState {
     $workflow = Workflow::load($this->wid);
     if ($workflow) {
       $roles = array_keys($user->roles);
-      // Some entities (like taxonomy_term) do not have a field 'uid'.
-      if (!isset($entity->uid)) {
-        // $entity->uid = $user->uid;
+
+      // If this is a new page, give the authorship role.
+      if (!$entity_id) {
+        $roles = array_merge(array('author'), $roles);
       }
-      // If user is node author or this is a new page, give the authorship role.
-      if (!$entity_id || (!empty($entity->uid) && $user->uid == $entity->uid)) {
-        $roles += array('author' => 'author');
+      // Add 'author' role to user if user is author of this entity.
+      // - Some entities (e.g, taxonomy_term) do not have a uid.
+      // - If 'anonymous' is the author, don't allow access to History Tab,
+      //   since anyone can access it, and it will be published in Search engines. 
+      elseif (TRUE || isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
+        $roles = array_merge(array('author'), $roles);
       }
+
+      // Superuser is special. And $force allows Rules to cause transition.
       if ($user->uid == 1 || $force) {
-        // Superuser is special. And Force allows Rules to cause transition.
         $roles = 'ALL';
       }
 

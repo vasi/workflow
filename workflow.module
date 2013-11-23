@@ -89,26 +89,36 @@ function workflow_tab_access($entity_type, $entity) {
   static $access = array();
 
   // $figure out the $entity's bundle and id.
-  list($id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+  list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
 
-  if (isset($access[$user->uid][$entity_type][$id])) {
-    return $access[$user->uid][$entity_type][$id];
+  if (isset($access[$user->uid][$entity_type][$entity_id])) {
+    return $access[$user->uid][$entity_type][$entity_id];
   }
 
   if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
+    // Get the roles of the user.
     $roles = array_keys($user->roles);
-    // Some entities, do not have a uid.
-    if (isset($entity->uid) && $entity->uid == $user->uid) {
+
+    // If this is a new page, give the authorship role.
+    if (!$entity_id) {
       $roles = array_merge(array('author'), $roles);
     }
+    // Add 'author' role to user if user is author of this entity.
+    // N.B.1: Some entities (e.g, taxonomy_term) do not have a uid.
+    // N.B.2: If 'anonymous' is the author, don't allow access to History Tab,
+    // since anyone can access it, and it will be published in Search engines. 
+    elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
+      $roles = array_merge(array('author'), $roles);
+    }
+
     $allowed_roles = $workflow->tab_roles ? explode(',', $workflow->tab_roles) : array();
     if (user_access('administer nodes') || array_intersect($roles, $allowed_roles)) {
-      $access[$user->uid][$entity_type][$id] = TRUE;
+      $access[$user->uid][$entity_type][$entity_id] = TRUE;
     }
     else {
-      $access[$user->uid][$entity_type][$id] = FALSE;
+      $access[$user->uid][$entity_type][$entity_id] = FALSE;
     }
-    return $access[$user->uid][$entity_type][$id];
+    return $access[$user->uid][$entity_type][$entity_id];
   }
   return FALSE;
 }
