@@ -295,3 +295,4 @@ Issue #212429 by johnv: Fixed do not revert to deleted, disabled, same state in 
 
 Since 7.x-2.0-beta1
 Issue #2141763 by johnv: Fixed avoid calling hook_worflow when saving an Entity and state has not changed.
+Issue #1408398 by johnv: Fixed incorrect field type for 'sid' in table workflow_access.
