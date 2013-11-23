@@ -43,13 +43,17 @@ function workflow_access_node_grants($account, $op) {
  */
 function workflow_access_node_access_records($node) {
   $grants = array();
-  //@todo: read history or field instead of workflow_node, to read current status.
-  if ($workflow_node = workflow_get_workflow_node_by_nid($node->nid)) {
-    $sid = $workflow_node->sid;
-    foreach (workflow_access_get_workflow_access_by_sid($sid) as $grant) {
+
+  if($current_sid = workflow_node_current_state($node)) {
+    // Get 'author' of this entity.
+    // - Some entities (e.g, taxonomy_term) do not have a uid.
+    // Anonymous ($uid == 0) author is not allowed for role 'author' (== -1).
+    $uid = isset($entity->uid) ? $entity->uid : 0;
+
+    foreach (workflow_access_get_workflow_access_by_sid($current_sid) as $grant) {
       $grants[] = array(
-        'realm' => ($grant->rid == -1) ? 'workflow_access_owner' : 'workflow_access',
-        'gid' => ($grant->rid == -1) ? $node->uid : $grant->rid,
+        'realm' => ($uid > 0 && $grant->rid == -1) ? 'workflow_access_owner' : 'workflow_access',
+        'gid' => ($uid > 0 && $grant->rid == -1) ? $node->uid : $grant->rid,
         'grant_view' => $grant->grant_view,
         'grant_update' => $grant->grant_update,
         'grant_delete' => $grant->grant_delete,

@@ -80,3 +80,10 @@ function workflow_access_update_7001() {
   db_add_primary_key('workflow_access', array('sid', 'rid', ));
   db_add_index('workflow_access', 'rid', array('rid'));
 }
+
+/**
+ * Force rebuild of node access.
+ */
+function workflow_access_update_7002() {
+  node_access_needs_rebuild(TRUE);
+}
