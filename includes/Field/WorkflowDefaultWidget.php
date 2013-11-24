@@ -58,10 +58,10 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * {@inheritdoc}
    *
    * Be careful: this widget may be shown in very different places. Test carefully!!
-   *  - On a node add/edit page
-   *  - On a node preview page
-   *  - On a node view page
-   *  - On a node 'workflow history' tab
+   *  - On a entity add/edit page
+   *  - On a entity preview page
+   *  - On a entity view page
+   *  - On a entity 'workflow history' tab
    *  - On a comment display, in the comment history
    *  - On a comment form, below the comment history
    * @todo D8: change "array $items" to "FieldInterface $items"
@@ -89,11 +89,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $workflow = Workflow::load($this->field['settings']['wid']);
 
-    // @todo: Get the current sid for content, comment, preview.
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $current_state = WorkflowState::load($current_sid);
     $options = array();
     $options = $current_state->getOptions($entity_type, $entity);
+    // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
+    $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
 
     // Get the scheduling info. This may change the $current_sid on the Form.
     $scheduled = '0';
@@ -136,6 +137,9 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     // Save the form_id, so the form values can be retrieved in submit function.
     $element['workflow']['form_id'] = array('#type' => 'value', '#value' => $form_id);
 
+    // First of all, we add the default value in the place were normal fields
+    // have it. This is to cater for 'preview' of the entity.
+    $element['#default_value'] = $default_value;
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
     if (!$current_state->showWidget($options)) {
@@ -143,14 +147,13 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       return $element;
     }
     else {
-      // Add the State widget. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
       $element['workflow'][$element_options_name] = array(
         '#type' => $this->field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
         // '#name' => $label,
         // '#parents' => array('workflow'),
-        '#default_value' => $current_state->isCreationState() ? key($options) : $current_sid,
+        '#default_value' => $default_value,
       );
     }
 

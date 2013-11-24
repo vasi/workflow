@@ -301,3 +301,4 @@ Issue #2142677 by johnv: Changed location of workflow_access Admin UI page to ow
 Issue #0437874 by hefox, johnv, e.a.: Fixed hide workflow tab and 'author' transitions for anonymous users on nodes with anonymous author.
 Issue #0437874 by hefox, johnv, e.a.: Fixed access grants in workflow_access for anonymous users on nodes with anonymous author.
 Issue #2019345 by johnv: Fixed in create form, Widget should show the first option, not the last.
+Issue #2121765 by johnv: Fixed show correct state in preview mode.
