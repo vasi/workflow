@@ -143,14 +143,14 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       return $element;
     }
     else {
-      // Add the State widget. If we are in CreationState, use a fast alternative for $workflow->getFirstSid()
+      // Add the State widget. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
       $element['workflow'][$element_options_name] = array(
         '#type' => $this->field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
         // '#name' => $label,
         // '#parents' => array('workflow'),
-        '#default_value' => $current_state->isCreationState() ? array_pop(array_keys($options)) : $current_sid,
+        '#default_value' => $current_state->isCreationState() ? key($options) : $current_sid,
       );
     }
 
