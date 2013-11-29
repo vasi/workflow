@@ -275,12 +275,11 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
   public function submit(array $form, array &$form_state, array &$items, $force = FALSE) {
     $entity_type = $this->entity_type;
     $entity = $this->entity;
-    // $entity_id = entity_id($entity_type, $entity);
     $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
 
     // Extract the data from $items, depending on the type of widget.
     // @todo D8: use MassageFormValues($values, $form, $form_state).
-    $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+    $old_sid = workflow_node_previous_state($entity, $entity_type, $field_name);
     $transition = $this->getTransition($old_sid, $items);
     $force = $force || $transition->isForced();
     $new_sid = $transition->new_sid;
@@ -293,7 +292,6 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     elseif ($error = $transition->isAllowed($force)) {
       drupal_set_message($error, 'error');
     }
-
     elseif (!$transition->isScheduled()) {
       // Now the data is captured in the Transition, and before calling the Execution,
       // restore the default values for Workflow Field.
@@ -368,7 +366,6 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
         $element_scheduled_name = 'workflow_scheduled';
         $element_options_name = 'workflow_options';
       }
-
       $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
 //      $new_sid = isset($items[0]['workflow'][$element_options_name]) ? $items[0]['workflow'][$element_options_name] : $items[0]['value'];
       if (isset($items[0]['workflow'][$element_options_name])) {

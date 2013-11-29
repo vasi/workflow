@@ -304,3 +304,4 @@ Issue #2019345 by johnv: Fixed in create form, Widget should show the first opti
 Issue #2121765 by johnv: Fixed show correct state in preview mode.
 Issue #2137219 by johnv: Fixed warning for workflow_actions.
 Issue #2146411 by johnv: Reverted cache for workflow_node_current_state.
+Issue #2137149 by johnv: Fixed double code in Transition->exectute().
