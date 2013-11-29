@@ -115,11 +115,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
     $form_id = $form_state['build_info']['form_id'];
-    $element_scheduled_name = 'workflow_scheduled_' . $form_id;
-    $element_options_name = 'workflow_options_' . $form_id;
-$element_scheduled_name = 'workflow_scheduled';
-$element_options_name = 'workflow_options';
-$elt_state_name = 'workflow_scheduled_' . $form_id;
 
     $label = $workflow->label();
 
@@ -143,11 +138,11 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
     if (!$current_state->showWidget($options)) {
-      $element['workflow'][$element_options_name] = workflow_state_formatter($entity_type, $entity, $field, $instance);
+      $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
       return $element;
     }
     else {
-      $element['workflow'][$element_options_name] = array(
+      $element['workflow']['workflow_sid'] = array(
         '#type' => $this->field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
@@ -172,8 +167,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
       $timezones = drupal_map_assoc(timezone_identifiers_list());
       $hours = format_date($timestamp, 'custom', 'H:i', $timezone);
 
-//      $element['workflow']['workflow_scheduled'] = array(
-      $element['workflow'][$element_scheduled_name] = array(
+      $element['workflow']['workflow_scheduled'] = array(
         '#type' => 'radios',
         '#title' => t('Schedule'),
         '#options' => array(
@@ -357,22 +351,10 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
     else {
       // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
       $form_id = isset($items[0]['workflow']['form_id']) ? $items[0]['workflow']['form_id'] : '';
-      if ($form_id) {
-        $element_scheduled_name = 'workflow_scheduled_' . $form_id;
-        $element_options_name = 'workflow_options_' . $form_id;
-      }
-      else {
-        // Backwards compatibility.
-        $element_scheduled_name = 'workflow_scheduled';
-        $element_options_name = 'workflow_options';
-      }
       $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
-//      $new_sid = isset($items[0]['workflow'][$element_options_name]) ? $items[0]['workflow'][$element_options_name] : $items[0]['value'];
-      if (isset($items[0]['workflow'][$element_options_name])) {
-        $new_sid = $items[0]['workflow'][$element_options_name];
-      }
-      elseif (isset($items[0]['workflow']['workflow_options'])) {
-        $new_sid = $items[0]['workflow']['workflow_options'];
+
+      if (isset($items[0]['workflow']['workflow_sid'])) {
+        $new_sid = $items[0]['workflow']['workflow_sid'];
       }
       elseif (isset($items[0]['value'])) {
         $new_sid = $items[0]['value'];
@@ -384,8 +366,7 @@ $elt_state_name = 'workflow_scheduled_' . $form_id;
 
       // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
       // We check both variants, for Node API and Field API, for backwards compatibility.
-      $scheduled = (isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0) ||
-                   (isset($items[0]['workflow'][$element_scheduled_name]) ? $items[0]['workflow'][$element_scheduled_name] : 0);
+      $scheduled = (isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0);
 
       if (!$scheduled) {
         $stamp = REQUEST_TIME;

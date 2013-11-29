@@ -193,7 +193,7 @@ function _workflow_rules_field_set_state($entity, $field, $sids, $comment = NULL
     // Save the entity, but not through entity_save(), since this will check permissions again and trigger rules.
     if ($sid == $new_sid) {
       $entity->{$field_name}['und'] = array();
-      $entity->{$field_name}['und'][0]['workflow']['workflow_options'] = $new_sid;
+      $entity->{$field_name}['und'][0]['workflow']['workflow_sid'] = $new_sid;
       $entity->{$field_name}['und'][0]['workflow']['workflow_comment'] = $comment;
       field_attach_update($entity_type, $entity);
     }

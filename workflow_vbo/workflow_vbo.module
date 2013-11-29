@@ -115,7 +115,7 @@ function workflow_vbo_given_state_action_form(array $context) {
     $options += $workflow->getOptions($grouped = TRUE);
   }
 
-  $form['workflow_options'] = array(
+  $form['workflow_sid'] = array(
     '#type' => 'select',
     '#title' => t('Target state'),
     '#description' => t('Please select the state that should be assigned when this action runs.'),
@@ -148,7 +148,7 @@ function workflow_vbo_given_state_action_form(array $context) {
  * @see workflow_vbo_given_state_action_form()
  */
 function workflow_vbo_given_state_action_submit($form_id, $form_state) {
-  $new_sid = $form_state['values']['workflow_options'];
+  $new_sid = $form_state['values']['workflow_sid'];
   if ($state = WorkflowState::load($new_sid)) {
     return array(
       'target_sid' => $state->sid,

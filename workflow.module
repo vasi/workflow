@@ -906,6 +906,6 @@ function _workflow_get_sid_by_items($items) {
   // On a normal widget:
   $sid = isset($items[0]['value']) ? $items[0]['value'] : 0;
   // On a workflow form widget:
-  $sid = isset($items[0]['workflow']['workflow_options']) ? $items[0]['workflow']['workflow_options'] : $sid;
+  $sid = isset($items[0]['workflow']['workflow_sid']) ? $items[0]['workflow']['workflow_sid'] : $sid;
   return $sid;
 }

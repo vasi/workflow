@@ -217,7 +217,7 @@ function workflow_transition($entity, $new_sid, $force = FALSE, $field = array()
   $form_state = array();
   $items = array();
   $items[0]['workflow'] = (array) $entity;
-  $items[0]['workflow']['workflow_options'] = $new_sid;
+  $items[0]['workflow']['workflow_sid'] = $new_sid;
   $widget->submit($form, $form_state, $items, $force);
 }
 
