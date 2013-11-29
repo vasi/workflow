@@ -306,3 +306,4 @@ Issue #2137219 by johnv: Fixed warning for workflow_actions.
 Issue #2146411 by johnv: Reverted cache for workflow_node_current_state.
 Issue #2137149 by johnv: Fixed double code in Transition->execute().
 Issue #2146411 by johnv: Fixed workflow_node_previous_state.
+Issue #2065799 by johnv: Added WorkflowState->count() to count nodes per State.

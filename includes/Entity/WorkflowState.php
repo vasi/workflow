@@ -393,6 +393,41 @@ class WorkflowState {
   }
 
   /**
+   * Returns the number of entities with this state.
+   *
+   * @return integer
+   *  counted number.
+   * @todo: add $options, to select on entity type, etc.
+   */
+  public function count() {
+    $sid = $this->sid;
+    // Get the number for Workflow Node.
+    $result = db_select('workflow_node', 'wn')
+      ->fields('wn')
+      ->condition('sid', $sid,'=')
+      ->execute();
+    $count = $result->rowCount();
+
+    // Get the numbers for Workflow Field.
+    $fields = field_info_field_map();
+    foreach($fields as $field_name => $field_map) {
+      if ($field_map['type'] == 'workflow') {
+        $query = new EntityFieldQuery();
+        $query
+          ->fieldCondition($field_name, 'value', $sid, '=')
+          //->entityCondition('bundle', 'article')
+          // ->addMetaData('account', user_load(1)) // Run the query as user 1.
+          ->count(); // We only need the count.
+
+        $result = $query->execute();
+        $count += $result;
+      }
+    }
+
+    return $count;
+  }
+
+  /**
    * Mimics Entity API functions.
    */
   public function label($langcode = NULL) {

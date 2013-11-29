@@ -687,7 +687,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
 
       'count' => array(
         '#type' => 'value',
-        '#value' => count(workflow_get_workflow_node_by_sid($state->sid)),
+        '#value' => $state->count(),
       ),
 
       'ops' => array(
