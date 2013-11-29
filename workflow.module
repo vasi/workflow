@@ -457,11 +457,11 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
       // A new node has no sid. Fetch it later.
       $sid = FALSE;
     }
-    elseif (isset($entity->original)) {
-      // A changed node.
-      $items = isset($entity->original->{$field_name}['und']) ? $entity->original->{$field_name}['und'] : NULL;
-      $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
-    }
+//    elseif (isset($entity->original)) {
+//      // A changed node.
+//      $items = isset($entity->original->{$field_name}['und']) ? $entity->original->{$field_name}['und'] : NULL;
+//      $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
+//    }
     else {
       // A normal node, on Node view page / Workflow history tab.
       $items = isset($entity->{$field_name}['und']) ? $entity->{$field_name}['und'] : NULL;
@@ -491,12 +491,20 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
 
 function workflow_node_previous_state($entity, $entity_type = 'node', $field_name = '') {
   $sid = FALSE;
+  // Get Id. Is empty when creating a node.
   $entity_id = entity_id($entity_type, $entity);
-  // There is no nid when creating a node.
-  if ($last_transition = WorkflowTransition::load($entity_type, $entity_id, $field_name, 1)) {
+
+  if ($field_name && isset($entity->original)) {
+    // A changed node.
+    $items = isset($entity->original->{$field_name}['und']) ? $entity->original->{$field_name}['und'] : NULL;
+    $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
+  }
+
+  if (!$sid && $last_transition = WorkflowTransition::load($entity_type, $entity_id, $field_name, 1)) {
     $last_transition = array_pop($last_transition);
     $sid = $last_transition->old_sid;
   }
+
   if (!$sid && !empty($node->type)) {
     // No current state. Use creation state.
     if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
