@@ -122,8 +122,9 @@ function _workflow_rules_workflow_check_given_state($sid, array $sids) {
  *  a RulesCondition->settings array.
  */
 function _workflow_rules_node_check_transition($node, array $old_sids, array $new_sids, array $condition) {
-  $old_sid = workflow_node_previous_state($node, 'node');
-  $new_sid = workflow_node_current_state($node, 'node');
+ $last_transition = array_pop(WorkflowTransition::load('node', $node->nid, '', 1));
+ $old_sid = $last_transition->old_sid;
+ $new_sid = $last_transition->new_sid;
 
   return _workflow_rules_workflow_check_given_state($old_sid, $old_sids) &&
          _workflow_rules_workflow_check_given_state($new_sid, $new_sids);
@@ -146,7 +147,9 @@ function _workflow_rules_node_check_state($node, $sids) {
  * Condition implementation: check previous state.
  */
 function _workflow_rules_node_check_previous_state($node, $sids) {
-  $sid = workflow_node_previous_state($node, 'node');
+  // $sid = workflow_node_previous_state($node, 'node');
+  $last_transition = array_pop(WorkflowTransition::load('node', $node->nid, '', 1));
+  $sid = $last_transition->old_sid;
   return _workflow_rules_workflow_check_given_state($sid, $sids);
 }
 

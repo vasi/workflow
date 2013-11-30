@@ -502,12 +502,12 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
 
   if (!$sid && $last_transition = WorkflowTransition::load($entity_type, $entity_id, $field_name, 1)) {
     $last_transition = array_pop($last_transition);
-    $sid = $last_transition->old_sid;
+    $sid = $last_transition->new_sid;
   }
 
-  if (!$sid && !empty($node->type)) {
+  if (!$sid && !empty($entity->type)) {
     // No current state. Use creation state.
-    if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
+    if ($workflow = workflow_get_workflows_by_type($entity->type, $entity_type)) {
       $sid = $workflow->getCreationSid();
     }
   }
