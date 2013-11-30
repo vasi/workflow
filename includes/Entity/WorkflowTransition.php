@@ -70,7 +70,7 @@ class WorkflowTransition {
       $this->stamp = $stamp;
       $this->comment = $comment;
     }
-    if ($old_sid || $new_sid) {
+    if (!$old_sid || !$new_sid) {
       // Not all paramaters are passed programmatically.
       drupal_set_message(
         t('Wrong call to constructor Workflow*Transition(@old_sid to @new_sid)', array('@old_sid' => $old_sid, '@new_sid' => $new_sid)),
@@ -185,11 +185,13 @@ class WorkflowTransition {
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
-    $old_state = WorkflowState::load($old_sid);
 
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
-    $options = $force ? $old_state->getWorkflow()->getOptions() : $old_state->getOptions($entity_type, $entity, $force);
+    $options = array();
+    if ($old_state = WorkflowState::load($old_sid)) {
+      $options = $force ? $old_state->getWorkflow()->getOptions() : $old_state->getOptions($entity_type, $entity, $force);
+    }
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array(
         '%old_sid' => $old_sid,

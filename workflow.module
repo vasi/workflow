@@ -504,10 +504,16 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
     $last_transition = array_pop($last_transition);
     $sid = $last_transition->new_sid;
   }
-
-  if (!$sid && !empty($entity->type)) {
+  if (!$sid) {
+    // Figure out the $entity's bundle and Id. Id is empty on node create.
+    if (!empty($entity->type)) {
+      $entity_bundle = $entity->type;
+    }
+    else {
+      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+    }
     // No current state. Use creation state.
-    if ($workflow = workflow_get_workflows_by_type($entity->type, $entity_type)) {
+    if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       $sid = $workflow->getCreationSid();
     }
   }

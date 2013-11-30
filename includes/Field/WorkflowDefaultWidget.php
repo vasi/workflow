@@ -398,7 +398,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         }
       }
     }
-dpm($transition);
     return $transition;
   }
 
