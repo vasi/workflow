@@ -291,7 +291,7 @@ class Workflow {
     $states = WorkflowState::getStates($this->wid);
     if (!$all) {
       foreach ($states as $state) {
-        if (!$state->isActive() && !$state->isCreationState()) {
+        if (!$state->isActive() || $state->isCreationState()) {
           unset($states[$state->sid]);
         }
       }
@@ -318,13 +318,15 @@ class Workflow {
    * @param bool $grouped
    *   Indicates if the value must be grouped per workflow.
    *   This influence the rendering of the select_list options.
+   * @param bool $all
+   *   Indicates to return all (TRUE) or active (FALSE) states of a workflow.
    *
    * @return array $options
    *   All states in a Workflow, as an array of $key => $label.
    */
-  public function getOptions($grouped = FALSE) {
+  public function getOptions($grouped = FALSE, $all = FALSE) {
     $options = array();
-    foreach ($this->getStates() as $state) {
+    foreach ($this->getStates($all) as $state) {
       $options[$state->value()] = check_plain($state->label());
     }
     if ($grouped) {
