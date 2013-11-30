@@ -22,11 +22,15 @@ function workflow_views_permission() {
 
 /**
  * Implements hook_views_api().
+ *
+ * @todo D8: remove hook_views_api. See [#1875596]
  */
 function workflow_views_views_api() {
   return array(
-    'api' => 2,
-    'path' => drupal_get_path('module', 'workflow_views') . '/includes',
+    'api' => 3,
+    // The views.inc files are already in the root directory,
+    // as required in D8.
+    // 'path' => drupal_get_path('module', 'workflow_views'),
   );
 }
 
