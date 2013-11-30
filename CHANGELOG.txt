@@ -310,3 +310,4 @@ Issue #2065799 by johnv: Added WorkflowState->count() to count nodes per State.
 Issue #2137149 by johnv: Changed 'workflow_options' to 'workflow_sid' in workflow_transition_form().
 Issue #2146411 by johnv: Fixed old&new state in Rules integration.
 Issue #2137149 by johnv: Fixed contructor of WorkflowTransition.
+Issue #2137149 by johnv: Added README.txt for Workflow_rules.
