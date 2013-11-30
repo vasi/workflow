@@ -275,6 +275,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // @todo D8: use MassageFormValues($values, $form, $form_state).
     $old_sid = workflow_node_previous_state($entity, $entity_type, $field_name);
     $transition = $this->getTransition($old_sid, $items);
+
     $force = $force || $transition->isForced();
     $new_sid = $transition->new_sid;
 
@@ -369,8 +370,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $scheduled = (isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0);
 
       if (!$scheduled) {
-        $stamp = REQUEST_TIME;
-        $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+        $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
       }
       else {
         // Schedule the time to change the state.
@@ -391,13 +391,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           . $schedule['workflow_scheduled_timezone'];
 
         if ($stamp = strtotime($scheduled_date_time)) {
-          $transition = new WorkflowScheduledTransition($this->entity_type, $this->entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+          $transition = new WorkflowScheduledTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
         }
         else {
           $transition = NULL;
         }
       }
     }
+dpm($transition);
     return $transition;
   }
 

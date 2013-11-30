@@ -62,17 +62,19 @@ class WorkflowTransition {
     }
 
     // If constructor is called with new() and arguments.
-    if ($entity && $old_sid && $new_sid && $stamp) {
+    if ($entity && $old_sid && $new_sid) {
       $this->old_sid = $old_sid;
       $this->sid = $new_sid;
 
       $this->uid = $uid;
-      $this->scheduled = $stamp;
+      $this->stamp = $stamp;
       $this->comment = $comment;
     }
-    elseif ($old_sid || $new_sid || $stamp) {
+    if ($old_sid || $new_sid) {
       // Not all paramaters are passed programmatically.
-      drupal_set_message('Wrong call to constructor Workflow*Transition()', 'error');
+      drupal_set_message(
+        t('Wrong call to constructor Workflow*Transition(@old_sid to @new_sid)', array('@old_sid' => $old_sid, '@new_sid' => $new_sid)),
+        'error');
     }
 
     // Fill the 'new' fields correctly. @todo: rename these fields in db table.
