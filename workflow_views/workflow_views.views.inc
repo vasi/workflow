@@ -18,7 +18,7 @@
  */
 function workflow_views_views_data() {
   // Workflow states.
-  $data['workflow_states']['table']['group']  = t('Workflow');
+  $data['workflow_states']['table']['group'] = t('Workflow states');
   $data['workflow_states']['table']['join'] = array(
     'node' => array(
       'field' => 'sid',
@@ -45,7 +45,7 @@ function workflow_views_views_data() {
   // Workflow node.
   // Only use when 'Workflow Node' is active. Use separate title.
   if (module_exists('workflownode')) {
-    $data['workflow_node']['table']['group']  = t('Workflow node');
+    $data['workflow_node']['table']['group'] = t('Workflow node');
     $data['workflow_node']['table']['join'] = array(
       'node' => array(
         'field' => 'nid',
@@ -111,33 +111,8 @@ function workflow_views_views_data() {
     );
   }
 
-  $data['workflow_node_current']['table']['group']  = t('Workflow current');
-  // Explain how this table joins to others.
-  $data['workflow_node_current']['table']['join'] = array(
-    'node' => array(
-      'table' => 'workflow_node_history',
-      'field' => 'nid',
-      'left_table' => 'workflow_node',
-      'left_field' => 'nid',
-      'extra' => 'workflow_node.stamp = workflow_node_current.stamp AND workflow_node.nid = workflow_node_current.nid',
-    ),
-  );
-  // Workflow node current comment.
-  $data['workflow_node_current']['comment'] = array(
-    'title' => t('Current comment'),
-    'help' => t('The comment describing why the node was moved from the last state to the current state.'),
-    'field' => array(
-      'handler' => 'views_handler_field_xss',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_string',
-      'numeric' => TRUE,
-    ),
-  );
-
   // Workflow scheduled transition.
-  $data['workflow_scheduled_transition']['table']['group']  = t('Workflow schedule');
+  $data['workflow_scheduled_transition']['table']['group'] = t('Workflow schedule');
   $data['workflow_scheduled_transition']['table']['join'] = array(
     'node' => array(
       'field' => 'nid',
@@ -186,7 +161,7 @@ function workflow_views_views_data() {
   );
 
   // Workflow node history.
-  $data['workflow_node_history']['table']['group']  = t('Workflow history');
+  $data['workflow_node_history']['table']['group'] = t('Workflow history');
   $data['workflow_node_history']['table']['join'] = array(
     'node' => array(
       'field' => 'nid',
@@ -219,8 +194,8 @@ function workflow_views_views_data() {
     ),
   );
   $data['workflow_node_history']['stamp'] = array(
-    'title' => t('Previous time'),
-    'help' => t('The time at which the node moved from one state to another.'),
+    'title' => t('Time'),
+    'help' => t('The time of a state change.'),
     'field' => array(
       'handler' => 'views_handler_field_date',
       'click sortable' => TRUE,
@@ -234,8 +209,8 @@ function workflow_views_views_data() {
     ),
   );
   $data['workflow_node_history']['comment'] = array(
-    'title' => t('Previous comment'),
-    'help' => t('A comment describing why the node was moved from one state to another in the past.'),
+    'title' => t('Comment'),
+    'help' => t('The comment describing why the the state change was done.'),
     'field' => array(
       'handler' => 'views_handler_field_xss',
       'click sortable' => TRUE,
@@ -246,15 +221,15 @@ function workflow_views_views_data() {
     ),
   );
   $data['workflow_node_history']['uid'] = array(
-    'title' => t('Previous comment author'),
-    'help' => t('The author of a comment describing why the node was moved from one state to another in the past.'),
+    'title' => t('Previous user'),
+    'help' => t('The user that executed a state change.'),
     'field' => array(
       'handler' => 'workflow_views_handler_field_username',
       'click sortable' => TRUE,
     ),
     'relationship' => array(
       'title' => t('Author'),
-      'help' => t("The User ID of the comment's author."),
+      'help' => t("The User ID of the state change."),
       'base' => 'users',
       'base field' => 'uid',
       'handler' => 'views_handler_relationship',
@@ -267,6 +242,42 @@ function workflow_views_views_data() {
       'handler' => 'views_handler_filter_user_name',
     ),
   );
+
+  // Information about the last state transition.
+  // This mostly the same as 'workflow_node_history', so just copy it
+  // and change the titles.
+  // DO not use the realtionship to {workflow_node}, but directly to {node}
+  $data['workflow_node_current'] = $data['workflow_node_history'];
+  $data['workflow_node_current']['table']['group'] = t('Workflow current');
+  // Explain how this table joins to others.
+  $data['workflow_node_current']['table']['join'] = array(
+    // For reference, the relationship used in Workflow versions below 7.x-2.x
+    // 'node' => array(
+    //   'table' => 'workflow_node_history',
+    //   'field' => 'nid',
+    //   'left_table' => 'workflow_node',
+    //   'left_field' => 'nid',
+    //   'extra' => 'workflow_node.stamp = workflow_node_current.stamp AND workflow_node.nid = workflow_node_current.nid',
+    // ),
+    'node' => array(
+      'table' => 'workflow_node_history',
+      'field' => 'hid',
+      'left_table' => 'node',
+      'left_field' => 'nid',
+      // Do not use the default 'views_join', but add a subquery. 
+      'handler' => 'views_join_subquery',
+      'left_query' => "  SELECT max(hid) FROM {workflow_node_history} where nid = node.nid and sid != old_sid ",
+    ),
+  );
+  $data['workflow_node_current']['sid']['title'] = t('Current state');
+  $data['workflow_node_current']['sid']['help'] = t('The current state, from the last state change.');
+  $data['workflow_node_current']['old_sid']['title'] = t('Previous state');
+  $data['workflow_node_current']['old_sid']['help'] = t('The previous state, from the last state change.');
+  $data['workflow_node_current']['stamp']['title'] = t('Time of last state change.');
+  $data['workflow_node_current']['stamp']['help'] = t('The time of the last state change.');
+  $data['workflow_node_current']['comment']['title'] = t('Current comment');
+  $data['workflow_node_current']['uid']['title'] = t('Current user');
+
   return $data;
 }
 
