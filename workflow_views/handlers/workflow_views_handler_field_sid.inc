@@ -18,8 +18,13 @@ class workflow_views_handler_field_sid extends views_handler_field {
   function options_form(&$form, &$form_state) {
     $form['value'] = array(
       '#title' => t('Display value'),
-      '#description' => t('If checked, row field value will be displayed.'),
-      '#type' => 'checkbox',
+      '#description' => t('Determines how the state will be displayed.'),
+      '#type' => 'select',
+      '#options' => array(
+        '0' => 'State name',
+        '1' => 'State value',  // keep this value for backwards compatibility.
+        'count' => 'Count number of entities with this state',
+      ),
       '#default_value' => $this->options['value'],
     );
     parent::options_form($form, $form_state);
@@ -27,8 +32,12 @@ class workflow_views_handler_field_sid extends views_handler_field {
 
   function render($values) {
     $sid = $values->{$this->field_alias};
-    if ($this->options['value']) {
+    if ($this->options['value'] == '1') {
       return (empty($sid)) ? NULL : $sid;
+    }
+    elseif ($this->options['value'] == 'count') {
+      $state = WorkflowState::load($sid);
+      return (empty($sid)) ? 0 : $state->count();
     }
     else {
       return workflow_get_sid_label($sid);
