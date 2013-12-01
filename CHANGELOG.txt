@@ -315,3 +315,4 @@ Issue #2115671 by johnv: Changed workflow_views to Views 3 API structure.
 Issue #2019345 by johnv: Fixed selection of Options in Workflow object.
 Issue #658880 by johnv: Added filter on CreationState and Workflow in worklow_views_handler_filter_sid.
 Issue #2137149 by johnv: Fixed constructor of WorkflowTransition.
+Issue #1021126 by johnv: Fixed 'Workflow: state' Views Filter doesn't handle nodes without a workflow state.

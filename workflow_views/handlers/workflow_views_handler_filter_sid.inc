@@ -29,6 +29,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       $count = count($workflows);
       if ($count > 1) {
         $states += array('' => t('No state'));
+        $states += array('ANY' => t('A state'));
         $grouped = TRUE;
       }
 
@@ -85,20 +86,26 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
     }
 
     $this->ensure_my_table();
-    // $placeholder = !empty($this->definition['numeric']) ? '%d' : "'%s'";
     if (count($value) == 1) {
-      $this->operator = ($this->operator == 'in') ? '= ' : '!= ';
-      // $in = !empty($this->definition['numeric']) ? '%d' : "'%s'";
-    }
-
-    if ($this->operator == 'empty' || $this->operator == 'not empty') {
-      $value = NULL;
-      if ($this->operator == 'empty') {
-        $this->operator = "IS NULL";
+      if (current($value) == '') {
+        $value = NULL;
+        $this->operator = ($this->operator == 'in') ? 'IS NULL' : 'IS NOT NULL';
+      }
+      elseif (current($value) == 'ANY') {
+        $value = NULL;
+        $this->operator = ($this->operator == 'in') ? 'IS NOT NULL' : 'IS NULL';
       }
       else {
-        $this->operator = "IS NOT NULL";
+        $this->operator = ($this->operator == 'in') ? '= ' : '!= ';
       }
+    }
+    if ($this->operator == 'empty') {
+      $value = NULL;
+      $this->operator = 'IS NULL';
+    }
+    elseif ($this->operator == 'not empty') {
+      $value = NULL;
+      $this->operator = 'IS NOT NULL';
     }
 
     $this->query->add_where($this->options['group'], $this->table_alias . '.' . $this->real_field, $value, $this->operator);
