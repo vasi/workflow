@@ -45,7 +45,7 @@ function workflow_views_views_data() {
   // Workflow node.
   // Only use when 'Workflow Node' is active. Use separate title.
   if (module_exists('workflownode')) {
-    $data['workflow_node']['table']['group']  = t('Workflow Node');
+    $data['workflow_node']['table']['group']  = t('Workflow node');
     $data['workflow_node']['table']['join'] = array(
       'node' => array(
         'field' => 'nid',
@@ -111,7 +111,7 @@ function workflow_views_views_data() {
     );
   }
 
-  $data['workflow_node_current']['table']['group']  = t('Workflow');
+  $data['workflow_node_current']['table']['group']  = t('Workflow current');
   // Explain how this table joins to others.
   $data['workflow_node_current']['table']['join'] = array(
     'node' => array(
@@ -135,8 +135,9 @@ function workflow_views_views_data() {
       'numeric' => TRUE,
     ),
   );
+
   // Workflow scheduled transition.
-  $data['workflow_scheduled_transition']['table']['group']  = t('Workflow');
+  $data['workflow_scheduled_transition']['table']['group']  = t('Workflow schedule');
   $data['workflow_scheduled_transition']['table']['join'] = array(
     'node' => array(
       'field' => 'nid',
@@ -185,7 +186,7 @@ function workflow_views_views_data() {
   );
 
   // Workflow node history.
-  $data['workflow_node_history']['table']['group']  = t('Workflow');
+  $data['workflow_node_history']['table']['group']  = t('Workflow history');
   $data['workflow_node_history']['table']['join'] = array(
     'node' => array(
       'field' => 'nid',
@@ -194,8 +195,20 @@ function workflow_views_views_data() {
     ),
   );
   $data['workflow_node_history']['sid'] = array(
-    'title' => t('Previous state'),
-    'help' => t('A workflow state that the node was in previously.'),
+    'title' => t('New state'),
+    'help' => t('The new state in a transition. (For the latest transition, this is the current state.)'),
+    'field' => array(
+      'handler' => 'workflow_views_handler_field_sid',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'workflow_views_handler_filter_sid',
+      'numeric' => TRUE,
+    ),
+  );
+  $data['workflow_node_history']['old_sid'] = array(
+    'title' => t('Old state'),
+    'help' => t('The old (previous) state in a transition.'),
     'field' => array(
       'handler' => 'workflow_views_handler_field_sid',
       'click sortable' => TRUE,
