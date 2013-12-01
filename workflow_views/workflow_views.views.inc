@@ -43,70 +43,73 @@ function workflow_views_views_data() {
   );
 
   // Workflow node.
-  $data['workflow_node']['table']['group']  = t('Workflow');
-  $data['workflow_node']['table']['join'] = array(
-    'node' => array(
-      'field' => 'nid',
-      'left_table' => 'node',
-      'left_field' => 'nid',
-    ),
-  );
-  $data['workflow_node']['sid'] = array(
-    'title' => t('Current state'),
-    'help' => t('The current workflow state that the node is in.'),
-    'field' => array(
-      'handler' => 'workflow_views_handler_field_sid',
-      'click sortable' => TRUE,
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_numeric',
-      'click sortable' => TRUE,
-      'numeric' => TRUE,
-      'name table' => 'workflow_states',
-      'name field' => 'state',
-    ),
-    'filter' => array(
-      'handler' => 'workflow_views_handler_filter_sid',
-      'numeric' => TRUE,
-    ),
-  );
-  $data['workflow_node']['stamp'] = array(
-    'title' => t('Current time'),
-    'help' => t('The time at which the node moved to the current state.'),
-    'field' => array(
-      'handler' => 'views_handler_field_date',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_date',
-      'numeric' => TRUE,
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort_date',
-    ),
-  );
-  $data['workflow_node']['uid'] = array(
-    'title' => t('Last changed user'),
-    'help' => t('The user who performed the last state change.'),
-    'relationship' => array(
-      'base' => 'users',
-      'base field' => 'uid',
-      'handler' => 'views_handler_relationship',
-      'label' => t('User'),
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_user_uid',
-      'click sortable' => TRUE,
-      'name table' => 'workflow_node',
-      'name field' => 'uid',
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter_user_name',
-      'numeric' => TRUE,
-      'name table' => 'workflow_node',
-      'name field' => 'uid',
-    ),
-  );
+  // Only use when 'Workflow Node' is active. Use separate title.
+  if (module_exists('workflownode')) {
+    $data['workflow_node']['table']['group']  = t('Workflow Node');
+    $data['workflow_node']['table']['join'] = array(
+      'node' => array(
+        'field' => 'nid',
+        'left_table' => 'node',
+        'left_field' => 'nid',
+      ),
+    );
+    $data['workflow_node']['sid'] = array(
+      'title' => t('Current state'),
+      'help' => t('The current workflow state that the node is in.'),
+      'field' => array(
+        'handler' => 'workflow_views_handler_field_sid',
+        'click sortable' => TRUE,
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_numeric',
+        'click sortable' => TRUE,
+        'numeric' => TRUE,
+        'name table' => 'workflow_states',
+        'name field' => 'state',
+      ),
+      'filter' => array(
+        'handler' => 'workflow_views_handler_filter_sid',
+        'numeric' => TRUE,
+      ),
+    );
+    $data['workflow_node']['stamp'] = array(
+      'title' => t('Current time'),
+      'help' => t('The time at which the node moved to the current state.'),
+      'field' => array(
+        'handler' => 'views_handler_field_date',
+        'click sortable' => TRUE,
+      ),
+      'filter' => array(
+        'handler' => 'views_handler_filter_date',
+        'numeric' => TRUE,
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort_date',
+      ),
+    );
+    $data['workflow_node']['uid'] = array(
+      'title' => t('Last changed user'),
+      'help' => t('The user who performed the last state change.'),
+      'relationship' => array(
+        'base' => 'users',
+        'base field' => 'uid',
+        'handler' => 'views_handler_relationship',
+        'label' => t('User'),
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_user_uid',
+        'click sortable' => TRUE,
+        'name table' => 'workflow_node',
+        'name field' => 'uid',
+      ),
+      'filter' => array(
+        'handler' => 'views_handler_filter_user_name',
+        'numeric' => TRUE,
+        'name table' => 'workflow_node',
+        'name field' => 'uid',
+      ),
+    );
+  }
 
   $data['workflow_node_current']['table']['group']  = t('Workflow');
   // Explain how this table joins to others.

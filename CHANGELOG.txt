@@ -316,3 +316,4 @@ Issue #2019345 by johnv: Fixed selection of Options in Workflow object.
 Issue #658880 by johnv: Added filter on CreationState and Workflow in worklow_views_handler_filter_sid.
 Issue #2137149 by johnv: Fixed constructor of WorkflowTransition.
 Issue #1021126 by johnv: Fixed 'Workflow: state' Views Filter doesn't handle nodes without a workflow state.
+Issue #2147511 by johnv: Removed Views filters/fields/etc for {workflow_node} when module Worflow Node disabled.
