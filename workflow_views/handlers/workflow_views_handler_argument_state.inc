@@ -18,7 +18,7 @@ class views_handler_argument_workflow_state extends views_handler_argument {
    * of the workflow state.
    */
   function summary_name($data) {
-    return _workflow_views_get_workflow_state_name($data->{$this->name_alias});
+    return workflow_get_sid_label($data->{$this->name_alias});
   }
 
   /**
@@ -26,6 +26,6 @@ class views_handler_argument_workflow_state extends views_handler_argument {
    * workflow state.
    */
   function title() {
-    return _workflow_views_get_workflow_state_name($this->argument);
+    return workflow_get_sid_label($this->argument);
   }
 }

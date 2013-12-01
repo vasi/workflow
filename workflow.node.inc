@@ -40,14 +40,16 @@ function workflow_node_load($nodes, $types) {
 
     // Nodes that existed before the workflow don't have any history.
     if (!$last_history) {
-      $node->workflow = $workflow->getCreationSid();
+      $sid = $workflow->getCreationSid();
+      $node->workflow = $sid;
       $node->workflow_stamp = $node->created;
     }
     else {
-      $state = $workflow->getState($last_history->new_sid);
-      $node->workflow = $last_history->new_sid;
+      $sid = $last_history->new_sid;
+      $state = $workflow->getState($sid);
+      $node->workflow = $sid;
       $node->workflow_stamp = $last_history->stamp;
-      $node->workflow_state_name = ($state) ? $state->getName() : 'unknown state';
+      $node->workflow_state_name = workflow_get_sid_label($sid);
     }
   }
 }

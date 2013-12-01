@@ -306,9 +306,9 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
   else {
     // This is a Workflow Node workflow.
     $current_state = WorkflowState::load($current_sid);
-    $output = theme('workflow_current_state', array('state' => $current_state->label(),
+    $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
                                                     'state_system_name' => $current_state->getName(),
-                                                    'sid' => $current_state->sid));
+                                                    'sid' => $current_sid));
     return array(
       '#type' => 'item',
       // '#title' => t('Current state'),
@@ -402,6 +402,11 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
   return $new_sid;
 }
 
+
+/**
+ * Functions to be used in non-OO modules, like workflow_rules, workflow_views.
+ */
+
 /**
  * Get an options list for workflow states (to show in a widget).
  *
@@ -422,6 +427,22 @@ function workflow_get_workflow_options($wid = 0, $grouped = FALSE) {
     $options += $workflow->getOptions($grouped);
   }
   return $options;
+}
+
+/**
+ * Helper function, to get the label of a given state.
+ */
+function workflow_get_sid_label($sid) {
+  if (empty($sid)) {
+    $output = t('No state');
+  }
+  elseif ($state = WorkflowState::load($sid)) {
+    $output = $state->label();
+  }
+  else {
+    $output = t('Unknown state');
+  }
+  return $output;
 }
 
 /**

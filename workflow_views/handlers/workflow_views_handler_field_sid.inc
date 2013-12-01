@@ -31,7 +31,7 @@ class workflow_views_handler_field_sid extends views_handler_field {
       return (empty($sid)) ? NULL : $sid;
     }
     else {
-      return _workflow_views_get_workflow_state_name($sid);
+      return workflow_get_sid_label($sid);
     }
   }
 }

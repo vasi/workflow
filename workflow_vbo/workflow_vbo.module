@@ -149,10 +149,10 @@ function workflow_vbo_given_state_action_form(array $context) {
  */
 function workflow_vbo_given_state_action_submit($form_id, $form_state) {
   $new_sid = $form_state['values']['workflow_sid'];
-  if ($state = WorkflowState::load($new_sid)) {
+  if ($new_sid) {
     return array(
-      'target_sid' => $state->sid,
-      'state_name' => check_plain($state->getName()),
+      'target_sid' => $new_sid,
+      'state_name' => workflow_get_sid_label($new_sid),
       'force' => $form_state['values']['workflow_force'],
       'workflow_comment' => $form_state['values']['workflow_comment'],
     );
