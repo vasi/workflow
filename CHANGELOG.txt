@@ -319,3 +319,4 @@ Issue #1021126 by johnv: Fixed 'Workflow: state' Views Filter doesn't handle nod
 Issue #2147511 by johnv: Removed Views filters/fields/etc for {workflow_node} when module Worflow Node disabled.
 Issue #2147535 by johnv: Added Views filter and field for 'Transition: old sid', to complent existing 'new sid'.
 Issue #2147535 by johnv: Added More Views filter/field/sort for 'Workflow: current transition'.
+Issue #2147673 by johnv: Marked 'workflow: states' field and sort as deprecated: should be implemented using a relationship.

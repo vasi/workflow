@@ -18,29 +18,33 @@
  */
 function workflow_views_views_data() {
   // Workflow states.
-  $data['workflow_states']['table']['group'] = t('Workflow states');
-  $data['workflow_states']['table']['join'] = array(
-    'node' => array(
-      'field' => 'sid',
-      'left_table' => 'workflow_node',
-      'left_field' => 'sid',
-    ),
-  );
-  $data['workflow_states']['weight'] = array(
-    'title' => t('State weight'),
-    'help' => t('The weight of the current workflow state that the node is in.'),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
-    ),
-  );
-  $data['workflow_states']['state'] = array(
-    'title' => t('Current state name'),
-    'help' => t('The readable name of the workflow state that the node is in. (Less efficient, use only when click-sorting by state name.)'),
-    'field' => array(
-      'handler' => 'workflow_views_handler_field_state',
-      'click sortable' => TRUE,
-    ),
-  );
+  // @todo: implement this as a proper relationship (like 'user').
+  //        to support Workflow Field, do not use workflow_node
+  if (module_exists('workflownode')) {
+    $data['workflow_states']['table']['group'] = t('Workflow states (deprecated)');
+    $data['workflow_states']['table']['join'] = array(
+      'node' => array(
+        'field' => 'sid',
+        'left_table' => 'workflow_node',
+        'left_field' => 'sid',
+      ),
+    );
+    $data['workflow_states']['weight'] = array(
+      'title' => t('State weight'),
+      'help' => t('The weight of the current workflow state that the node is in.'),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    );
+    $data['workflow_states']['state'] = array(
+      'title' => t('Current state name'),
+      'help' => t('The readable name of the workflow state that the node is in. (Less efficient, use only when click-sorting by state name.)'),
+      'field' => array(
+        'handler' => 'workflow_views_handler_field_state',
+        'click sortable' => TRUE,
+      ),
+    );
+  }
 
   // Workflow node.
   // Only use when 'Workflow Node' is active. Use separate title.
