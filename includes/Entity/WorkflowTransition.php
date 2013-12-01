@@ -61,8 +61,11 @@ class WorkflowTransition {
       $this->nid = $this->entity_id;
     }
 
-    // If constructor is called with new() and arguments.
-    if ($entity && $old_sid && $new_sid) {
+    if (!$entity && !$old_sid && !$new_sid) {
+      // If constructor is called without arguments, e.g., loading from db.
+    }
+    elseif ($entity && $old_sid && $new_sid) {
+      // If constructor is called with new() and arguments.
       $this->old_sid = $old_sid;
       $this->sid = $new_sid;
 
@@ -70,7 +73,7 @@ class WorkflowTransition {
       $this->stamp = $stamp;
       $this->comment = $comment;
     }
-    if (!$old_sid || !$new_sid) {
+    elseif (!$old_sid || !$new_sid) {
       // Not all paramaters are passed programmatically.
       drupal_set_message(
         t('Wrong call to constructor Workflow*Transition(@old_sid to @new_sid)', array('@old_sid' => $old_sid, '@new_sid' => $new_sid)),
