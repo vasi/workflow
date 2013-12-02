@@ -444,6 +444,23 @@ function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FA
 }
 
 /**
+ * Get an options list for workflows (to show in a widget).
+ *
+ * To be used in non-OO modules.
+ *
+ * @return array $options
+ *   An array of $wid => workflow->label().
+ */
+function workflow_get_workflow_names() {
+  $options = array();
+  foreach (Workflow::getWorkflows() as $workflow) {
+    $options[$workflow->wid] = $workflow->label();
+  }
+
+  return $options;
+}
+
+/**
  * Helper function, to get the label of a given state.
  */
 function workflow_get_sid_label($sid) {

@@ -7,9 +7,7 @@
 
 define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
 
-// This include has not been fully tested with Workflow Field and its classes.
-// Therefore we include the file with deprecated functions. 
-module_load_include('inc', 'workflow', 'workflow.deprecated');
+// @todo: This include has not been fully tested with Workflow Field and its classes.
 // Even if workflow Node is not enabled, Features may use Node API's type_maps.
 module_load_include('inc', 'workflow', 'workflow.node.type_map');
 
@@ -18,15 +16,25 @@ module_load_include('inc', 'workflow', 'workflow.node.type_map');
  */
 
 /**
+ * Implements hook_features_export_options().
+ *
+ * Generates the options to choose from.
+ * Using $wid as key. Result is used by hook_featues_export().
+ */
+function workflow_features_export_options() {
+  return workflow_get_workflow_names();
+}
+
+/**
  * Implements hook_features_export().
  */
 function workflow_features_export($data, &$export, $module_name = '') {
   // fontyourface_default_fonts integration is provided by Features.
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['workflow'] = 'workflow';
-  foreach (Workflow::getWorkflows() as $workflow) {
-    $name = $workflow->getName();
-    if (in_array($name, $data)) {
+  foreach ($data as $wid) {
+    if ($workflow = Workflow::load($wid)) {
+      $name = $workflow->getName(); 
       $export['features']['workflow'][$name] = $name;
     }
   }
@@ -56,18 +64,6 @@ function workflow_features_export_render($module, $data) {
   $code[] = '  return $workflows;';
   $code = implode("\n", $code);
   return array('workflow_default_workflows' => $code);
-}
-
-/**
- * Implements hook_features_export_options().
- */
-function workflow_features_export_options() {
-  $workflows = array();
-  foreach (Workflow::getWorkflows() as $workflow) {
-    $name = $workflow->getName();
-    $workflows[$name] = $name;
-  }
-  return $workflows;
 }
 
 /**
