@@ -24,6 +24,8 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       $all = $this->options['expose']['workflow_include_all'];
 
       $states = array();
+      // Count the workflows to determine grouping.
+      // Even if $wid is not set, we may only have 1 workflow.  
       $grouped = FALSE;
       $workflows = Workflow::getWorkflows($wid);
       $count = count($workflows);
@@ -33,10 +35,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
         $grouped = TRUE;
       }
 
-      foreach ($workflows as $workflow) {
-        // Only show the workflow name if more then 1 workflows exist.
-        $states += $workflow->getOptions($grouped, $all);
-      }
+      $states += workflow_get_workflow_state_names($wid, $grouped, $all);
       $this->value_options = $states;
     }
     return $this->value_options;

@@ -637,7 +637,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
   // Build select options for reassigning states.
   // We put a blank state first for validation.
   $state_list = array('' => ' ');
-  $state_list += $workflow->getOptions();
+  $state_list += workflow_get_workflow_state_names($workflow->wid, $grouped = FALSE, $all = FALSE);
   // Is this the last state available?
   $form['#last_mohican'] = count($state_list) == 2;
 

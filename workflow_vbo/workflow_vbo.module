@@ -111,9 +111,7 @@ function workflow_vbo_given_state_action_form(array $context) {
 
   // @todo: prevent choosing a state from an illegal Workflow.
   // Get all states, only where active.
-  foreach (Workflow::getWorkflows() as $workflow) {
-    $options += $workflow->getOptions($grouped = TRUE);
-  }
+  $options = workflow_get_workflow_state_names(0, $grouped = TRUE, $all = FALSE);
 
   $form['workflow_sid'] = array(
     '#type' => 'select',

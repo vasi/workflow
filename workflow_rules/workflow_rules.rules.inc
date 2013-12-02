@@ -91,7 +91,7 @@ function _workflow_rules_workflow_get_options($data) {
   $wid = !empty($field) ? $field['settings']['wid'] : 0 ;
 
   $options['ANY'] = 'ANY state';
-  $options += workflow_get_workflow_options($wid, $grouped = TRUE);
+  $options += workflow_get_workflow_state_names($wid, $grouped = TRUE);
   return $options;
 }
 

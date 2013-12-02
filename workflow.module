@@ -417,15 +417,29 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
  * @param bool $grouped
  *   Indicates if the value must be grouped per workflow.
  *   This influence the rendering of the select_list options.
+ * @param bool $all
+ *   Indicates to return all (TRUE) or active (FALSE) states of a workflow.
  *
  * @return array $options
  *   An array of $sid => state->label(), grouped per Workfllow.
  */
-function workflow_get_workflow_options($wid = 0, $grouped = FALSE) {
+function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE) {
   $options = array();
   foreach (Workflow::getWorkflows($wid) as $workflow) {
-    $options += $workflow->getOptions($grouped);
+    $workflow_options = array();
+    foreach ($workflow->getStates($all) as $state) {
+      $workflow_options[$state->value()] = check_plain($state->label());
+    }
+
+    if (!$grouped) {
+      $options += $workflow_options;
+    }
+    else {
+      // Make a group for each Workflow.
+      $options[$workflow->label()] = $workflow_options;
+    }
   }
+
   return $options;
 }
 

@@ -118,14 +118,8 @@ function workflow_delete_workflows_by_wid($wid) {
  * @deprecated: workflow_get_workflow_states_all() --> Workflow::getOptions()
  */
 function workflow_get_workflow_states_all() {
-  $options = array();
-
   // Get all states, only where active.
-  foreach (Workflow::getWorkflows() as $workflow) {
-    $options += $workflow->getOptions($grouped = FALSE);
-  }
-
-  return $options;
+  return workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE);
 }
 
 /**

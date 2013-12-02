@@ -193,7 +193,12 @@ class WorkflowTransition {
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = array();
     if ($old_state = WorkflowState::load($old_sid)) {
-      $options = $force ? $old_state->getWorkflow()->getOptions() : $old_state->getOptions($entity_type, $entity, $force);
+      if ($force) {
+        $options = workflow_get_workflow_state_names($old_state->wid, $grouped = FALSE, $all = FALSE);
+      }
+      else {
+        $options = $old_state->getOptions($entity_type, $entity, $force);
+      }
     }
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array(
