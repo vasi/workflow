@@ -642,7 +642,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
   $form['#last_mohican'] = count($state_list) == 2;
 
   // Get the state objects as array ($sid => WorkflowState)
-  $states = $workflow->getStates($all = 'CREATION');
+  $states = $workflow->getStates($all = TRUE);
   // Dummy object for new state item.
   $wid = $workflow->wid;
   $dummy = WorkflowState::create($wid);
