@@ -194,6 +194,8 @@ function workflow_get_workflows_full_object($name) {
     foreach ($active_states as $sid => $state) {
       // We're going to look everything up by the start state, not state involved, to avoid dupes.
       foreach (workflow_get_workflow_transitions_by_sid($sid, $options) as $transition) {
+        // Clone so we can modify it independently of cached copy in workflow_get_workflow_transitions_by_sid()
+        $transition = clone $transition;
         // And to get the target state (by name) we need to look it up too.
         $target_state = workflow_get_workflow_states_by_sid($transition->target_sid);
         $transition->state = $state;

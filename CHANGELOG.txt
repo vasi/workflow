@@ -327,3 +327,4 @@ Issue #2019345 by johnv: Fixed workflow_get_states() in workflow_admin_ui.
 Issue #1589254 by fedia.io1: Fixed Rename D6 hook_features_export_rebuild() to D7 hook_features_rebuild().
 Issue #2019345 by johnv: Renamed Workflow->getOptions() to workflow_get_state_names().
 Issue #2019345 by johnv: Fixed workflow.features.inc helper functions.
+Issue #2124915 by fedia.io1, Liam Mitchell: Fixed Transition's target_state and roles aren't exported with features.
