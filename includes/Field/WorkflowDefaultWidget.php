@@ -67,12 +67,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * @todo D8: change "array $items" to "FieldInterface $items"
    */
   public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
-    $field_name = $this->field['field_name'];
-    $field = $this->instance;
+    $field = $this->field;
     $instance = $this->instance;
     $entity = $this->entity;
     $entity_type = $this->entity_type;
     $entity_id = entity_id($entity_type, $entity);
+    $field_name = $field['field_name'];
 
     if (!$entity) {
       // If no entity given, do not show a form. E.g., on the field settings page.
@@ -80,14 +80,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // Capture settings to format the form/widget.
-    $settings_title_as_name = !empty($this->field['settings']['widget']['name_as_title']);
+    $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
     // The schedule cannot be shown on a Content add page.
-    $settings_schedule = !empty($this->field['settings']['widget']['schedule']) && $entity_id;
-    $settings_schedule_timezone = !empty($this->field['settings']['widget']['schedule_timezone']);
+    $settings_schedule = !empty($field['settings']['widget']['schedule']) && $entity_id;
+    $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
     // Show comment, when both Field and Instance allow this.
-    $settings_comment = $this->field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
-
-    $workflow = Workflow::load($this->field['settings']['wid']);
+    $settings_comment = $field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
 
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $current_state = WorkflowState::load($current_sid);
@@ -116,7 +114,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
     $form_id = $form_state['build_info']['form_id'];
 
-    $label = $workflow->label();
+    $label = workflow_get_wid_label($field['settings']['wid']);
 
     // Prepare a wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container';
@@ -126,8 +124,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // We add prefix, since #tree == FALSE.
     $element['workflow']['workflow_entity'] = array('#type' => 'value', '#value' => $this->entity);
     $element['workflow']['workflow_entity_type'] = array('#type' => 'value', '#value' => $this->entity_type);
-    $element['workflow']['workflow_field'] = array('#type' => 'value', '#value' => $this->field);
-    $element['workflow']['workflow_instance'] = array('#type' => 'value', '#value' => $this->instance);
+    $element['workflow']['workflow_field'] = array('#type' => 'value', '#value' => $field);
+    $element['workflow']['workflow_instance'] = array('#type' => 'value', '#value' => $instance);
 
     // Save the form_id, so the form values can be retrieved in submit function.
     $element['workflow']['form_id'] = array('#type' => 'value', '#value' => $form_id);
@@ -143,7 +141,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
     else {
       $element['workflow']['workflow_sid'] = array(
-        '#type' => $this->field['settings']['widget']['options'],
+        '#type' => $field['settings']['widget']['options'],
         '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
         '#options' => $options,
         // '#name' => $label,
@@ -229,13 +227,13 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // The 'add submit' can explicitely set by workflowfield_field_formatter_view(),
     // to add the submit button on the Content view page and the Workflow history tab.
-    if (!empty($this->instance['widget']['settings']['submit_function'])) {
+    if (!empty($instance['widget']['settings']['submit_function'])) {
       // Add a submit button, but only on Entity View and History page.
       $element['workflow']['submit'] = array(
         '#type' => 'submit',
         '#value' => t('Update workflow'),
         '#executes_submit_callback' => TRUE,
-        '#submit' => array($this->instance['widget']['settings']['submit_function']),
+        '#submit' => array($instance['widget']['settings']['submit_function']),
       );
     }
 

@@ -322,3 +322,4 @@ Issue #2147535 by johnv: Added More Views filter/field/sort for 'Workflow: curre
 Issue #2147673 by johnv: Marked 'workflow: states' field and sort as deprecated: should be implemented using a relationship.
 Issue #2019345 by johnv: Renamed _workflow_view_workflow_get_state_name() to workflow_get_sid_label().
 Issue #2130783 by johnv: Added formatter 'count entities with this state' to 'Workflow: state' Views Field.
+Issue #2019345 by johnv: Added workflow_get_wid_label().

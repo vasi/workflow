@@ -446,6 +446,22 @@ function workflow_get_sid_label($sid) {
 }
 
 /**
+ * Helper function, to get the label of a given state.
+ */
+function workflow_get_wid_label($wid) {
+  if (empty($wid)) {
+    $output = t('No workflow');
+  }
+  elseif ($workflow = Workflow::load($wid)) {
+    $output = $workflow->label();
+  }
+  else {
+    $output = t('Unknown workflow');
+  }
+  return $output;
+}
+
+/**
  * Get the current state ID of a given node.
  *
  * @param object $entity
