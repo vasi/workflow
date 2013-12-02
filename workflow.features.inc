@@ -82,9 +82,9 @@ function workflow_features_revert($module) {
 }
 
 /**
- * Implements hook_features_export_rebuild().
+ * Implements hook_features_rebuild().
  */
-function workflow_features_export_rebuild($module) {
+function workflow_features_rebuild($module) {
   workflow_features_revert($module);
 }
 
