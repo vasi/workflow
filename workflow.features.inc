@@ -72,7 +72,14 @@ function workflow_features_export_render($module, $data) {
 function workflow_features_revert($module) {
   // Including the features inc to make sure this function is available during install of a Features module.
   module_load_include('inc', 'features', 'features.export');
-  foreach (features_get_default('workflow', $module) as $key => $workflow) {
+
+  // The return value might not be an array, E.g., whilst workflow itself is being reverted.
+  $default_workflows = features_get_default('workflow', $module);
+  if (!is_array($default_workflows)) {
+    $default_workflows = array();
+  }
+
+  foreach ($default_workflows as $key => $workflow) {
     workflow_update_workflows_full_object($workflow);
   }
 }
