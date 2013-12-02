@@ -487,12 +487,7 @@ function theme_workflow_admin_ui_transitions_form($variables) {
   if ($workflow) {
     drupal_set_title(t('Edit workflow %name transitions', array('%name' => $name)), PASS_THROUGH);
 
-    $states = $workflow->getStates($all = TRUE);
-    foreach ($states as $state) {
-      if (!$state->isActive()) {
-        unset($states[$state->sid]);
-      }
-    }
+    $states = $workflow->getStates($all = 'CREATION');
     if ($states) {
       $roles = workflow_admin_ui_get_roles();
 
@@ -566,12 +561,7 @@ function _workflow_admin_ui_transition_grid_form($workflow) {
 
   $roles = workflow_admin_ui_get_roles();
 
-  $states = $workflow->getStates($all = TRUE);
-  foreach ($states as $state) {
-    if (!$state->isActive()) {
-      unset($states[$state->sid]);
-    }
-  }
+  $states = $workflow->getStates($all = 'CREATION');
   if (!$states) {
     $form['error'] = array(
       '#type' => 'markup',
@@ -652,7 +642,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
   $form['#last_mohican'] = count($state_list) == 2;
 
   // Get the state objects as array ($sid => WorkflowState)
-  $states = $workflow->getStates($all = TRUE);
+  $states = $workflow->getStates($all = 'CREATION');
   // Dummy object for new state item.
   $wid = $workflow->wid;
   $dummy = WorkflowState::create($wid);

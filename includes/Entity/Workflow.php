@@ -206,9 +206,9 @@ class Workflow {
   public function validate() {
     $is_valid = TRUE;
 
-    // Don't allow workflows with no states. (There should always be a creation state.)
-    $states = $this->getStates();
-    if (count($states) < 2) {
+    // Don't allow workflows with no states. There should always be a creation state.
+    $states = $this->getStates($all = FALSE);
+    if (count($states) < 1) {
       // That's all, so let's remind them to create some states.
       $message = t('Workflow %workflow has no states defined, so it cannot be assigned to content yet.',
         array('%workflow' => ucwords($this->getName())));
@@ -281,17 +281,26 @@ class Workflow {
   /**
    * Gets all states for a given workflow.
    *
-   * @param bool $all
-   *   Indicates to return all (TRUE) or active (FALSE) states of a workflow.
+   * @param mixed $all
+   *   Indicates to which states to return.
+   *   - TRUE = all, including Creation and Inactive;
+   *   - FALSE = only Active states, not Creation;
+   *   - 'CREATION' = only Active states, including Creation. 
    *
    * @return array $states
    *   An array of WorkflowState objects.
    */
   public function getStates($all = FALSE) {
     $states = WorkflowState::getStates($this->wid);
-    if (!$all) {
+    if ($all !== TRUE) {
       foreach ($states as $state) {
-        if (!$state->isActive() || $state->isCreationState()) {
+        if (($all == FALSE) && $state->isCreationState()) {
+          unset($states[$state->sid]);
+        }
+        elseif (($all === FALSE) && !$state->isActive()) {
+          unset($states[$state->sid]);
+        }
+        elseif (($all == 'CREATION') && !$state->isActive()) {
           unset($states[$state->sid]);
         }
       }

@@ -33,7 +33,7 @@ function workflow_access_form($form, $form_state, $workflow) {
   $rids['-1'] = t('author');
 
   // Add a table for every workflow state.
-  foreach ($workflow->getStates() as $state) {
+  foreach ($workflow->getStates($all = TRUE) as $state) {
     if ($state->isCreationState()) {
       // No need to set perms on creation.
       continue;
