@@ -28,10 +28,10 @@ function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
 
 /**
  * Get a specific workflow, name is a unique ID.
- * @deprecated: workflow_get_workflows_by_name() --> Workflow::getWorkflowByName($name)
+ * @deprecated: workflow_get_workflows_by_name() --> Workflow::loadByName($name)
  */
-function workflow_get_workflows_by_name($name, $unserialize_options = FALSE) {
-  return Workflow::getWorkflowByName($name, $unserialize_options);
+function workflow_get_workflows_by_name($name) {
+  return Workflow::loadByName($name);
 }
 
 /**

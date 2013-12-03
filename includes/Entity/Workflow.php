@@ -96,17 +96,11 @@ class Workflow {
   /**
    * Implements a 'Factory' pattern to get Workflow objects from the database.
    *
-   * This is only called by CRUD functions in workflow.features.inc
-   * More than likely in prep for an import / export action.
-   * Therefore we don't want to fiddle with the response.
-   * @deprecated: workflow_get_workflows_by_name() --> Workflow::getWorkflowByName($name)
+   * @deprecated: workflow_get_workflows_by_name() --> Workflow::loadByName($name)
    */
-  public static function getWorkflowByName($name, $unserialize_options = FALSE) {
+  public static function loadByName($name) {
     foreach ($workflows = self::getWorkflows() as $workflow) {
       if ($name == $workflow->getName()) {
-        if (!$unserialize_options) {
-          $workflow->options = serialize($workflow->options);
-        }
         return $workflow;
       }
     }

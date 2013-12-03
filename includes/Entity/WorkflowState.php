@@ -154,13 +154,13 @@ class WorkflowState {
    *
    * May return more then one State, since a name is not (yet) an UUID.
    */
-  public static function getStatesByName($name, $wid) {
-    foreach ($states = WorkflowState::getStates($wid) as $state) {
-      if ($name != $state->getName()) {
-        unset($states[$state->sid]);
+  public static function loadByName($name, $wid) {
+    foreach ($states = self::getStates($wid) as $state) {
+      if ($name == $state->getName()) {
+        return $state;
       }
     }
-    return $states;
+    return NULL;
   }
 
   /**

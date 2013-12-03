@@ -331,3 +331,4 @@ Issue #2124915 by fedia.io1, Liam Mitchell: Fixed Transition's target_state and 
 Issue #2126867 by slite: Fixed Reverting features causes warning.
 Issue #2147781 by zihong0: Fixed error, due to typo in workflow_acces.module.
 Issue #2144817 by zihong0: Fixed PHP 5.3/5.4 'Warning: Parameter 1' in workflow_transition_form().
+Issue #2019345 by johnv: Renamed Workflow*->get*ByName() to Workflow*->loadByName().
