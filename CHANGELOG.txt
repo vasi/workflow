@@ -329,3 +329,4 @@ Issue #2019345 by johnv: Renamed Workflow->getOptions() to workflow_get_state_na
 Issue #2019345 by johnv: Fixed workflow.features.inc helper functions.
 Issue #2124915 by fedia.io1, Liam Mitchell: Fixed Transition's target_state and roles aren't exported with features.
 Issue #2126867 by slite: Fixed Reverting features causes warning.
+Issue #2147781 by zihong0: Fixed error, due to typo in workflow_acces.module.
