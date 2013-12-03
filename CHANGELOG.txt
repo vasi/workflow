@@ -334,3 +334,4 @@ Issue #2144817 by zihong0: Fixed PHP 5.3/5.4 'Warning: Parameter 1' in workflow_
 Issue #2019345 by johnv: Renamed Workflow*->get*ByName() to Workflow*->loadByName().
 Issue #2124915 by johnv: Fixed transfer transitions with Features.
 Issue #2148851 by johnv: Fixed transfer 'tab_roles' using machine names with Features.
+Issue #2148851 by brad.bulger, johnv: Fixed warning in Tokens when an old_state is deleted.
