@@ -123,8 +123,9 @@ function workflow_update_workflows_full_object($workflow_data) {
     $workflow = Workflow::create($name);
   }
   unset($workflow->tab_roles);
+  // Roles are exported by rolename, so need to translate to RID.
+  $workflow->tab_roles = !empty($workflow_data->tab_roles) ? _workflow_roles_to_rids($workflow_data->tab_roles) : '';
   unset($workflow->options);
-  $workflow->tab_roles = $workflow_data->tab_roles;
   $workflow->options = $workflow_data->options;
 
   $workflow->save(FALSE);
@@ -198,8 +199,12 @@ function workflow_update_workflows_full_object($workflow_data) {
  */
 function workflow_get_workflows_full_object($name) {
   $workflow = NULL;
+
   if ($workflow = Workflow::loadByName($name)) {
-    // First, add the active states for workflow, an array of sub-objects.
+    // Translate to role names so works cross install.
+    $workflow->tab_roles = !empty($workflow->tab_roles) ? _workflow_rids_to_roles($workflow->tab_roles) : '';
+
+    // Add the active states for workflow, an array of sub-objects.
     // Add only the active ones and 'creation'.
     foreach ($workflow->getStates(TRUE) as $sid => $state) {
       // Remove what we don't need to export.
