@@ -180,8 +180,8 @@ class WorkflowTransition {
    * - in permissions
    * - by permission hooks, implemented by other modules.
    *
-   * @return string
-   *  message, empty if OK, else a message for drupal_set_message.
+   * @return bool
+   *  TRUE if OK, else FALSE.
    */
   public function isAllowed($force) {
     $old_sid = $this->old_sid;
@@ -193,23 +193,18 @@ class WorkflowTransition {
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = array();
     if ($old_state = WorkflowState::load($old_sid)) {
-      if ($force) {
-        $options = workflow_get_workflow_state_names($old_state->wid, $grouped = FALSE, $all = FALSE);
-      }
-      else {
-        $options = $old_state->getOptions($entity_type, $entity, $force);
-      }
+      $options = $old_state->getOptions($entity_type, $entity, $force);
     }
     if (!array_key_exists($new_sid, $options)) {
       $t_args = array(
         '%old_sid' => $old_sid,
         '%new_sid' => $new_sid,
       );
-      $error_message = t('The transition from %old_sid to %new_sid is not allowed.', $t_args);
-
-      return $error_message;
+      drupal_set_message(t('The transition from %old_sid to %new_sid is not allowed.', $t_args), 'error');
+      return FALSE;
     }
-    return '';
+
+    return TRUE;
   }
 
   /**
@@ -236,6 +231,11 @@ class WorkflowTransition {
     $state_changed = ($old_sid != $new_sid);
 
     if ($state_changed) {
+      if (!$transition->isAllowed($force)) {
+        // If incorrect, quit.
+        return $old_sid;
+      }
+
       // State has changed. Do some checks upfront.
       if (!$force) {
         // Make sure this transition is allowed.
