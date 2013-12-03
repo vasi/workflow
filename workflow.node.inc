@@ -296,7 +296,6 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
     $instance['widget']['settings']['submit_function'] = '';
 
     // Include the 'workflow form'. $form is modified by reference.
-//    workflow_node_form($form, $form_state, t('Change !name state', array('!name' => $label)), $label, $current_sid, $choices, $timestamp, $comment);
-    workflow_transition_form($form, $form_state, $field, $instance, $entity_type, $entity);
+    $form = workflow_transition_form($form, $form_state, $field, $instance, $entity_type, $entity);
   }
 }

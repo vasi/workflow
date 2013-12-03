@@ -269,7 +269,7 @@ function workflow_forms($form_id, $args) {
 /**
  * Form builder. Allow workflow state change and scheduling from workflow tab.
  */
-function workflow_transition_form(&$form, &$form_state, $field, $instance, $entity_type, $entity) {
+function workflow_transition_form($form, &$form_state, $field, $instance, $entity_type, $entity) {
   if (!isset ($instance['widget']['settings']['submit_function']) ) {
     $instance['widget']['settings']['submit_function'] = 'workflow_save_transition';
   }
