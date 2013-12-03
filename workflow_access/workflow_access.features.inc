@@ -84,7 +84,7 @@ function workflow_access_features_export_render($module_name, $data, $export = N
   // For each selected workflow, fetch all related workflow access records
   // we want to put into code.
   foreach ($data as $workflow_name) {
-    $workflow = Workflow::getWorkflowByName($workflow_name);
+    $workflow = Workflow::loadByName($workflow_name);
     if ($workflow) {
       $states = $workflow->getStates($all = TRUE);
       if ($states) {
@@ -122,7 +122,7 @@ function workflow_access_features_rebuild($module) {
   // retrieve the workflow ids
   $wids = array();
   foreach ($workflow_access_records as $workflow_name => $state) {
-    $workflow = Workflow::getWorkflowByName($workflow_name);
+    $workflow = Workflow::loadByName($workflow_name);
     $wids[$workflow_name] = $workflow->wid;
   }
 
@@ -140,20 +140,18 @@ function workflow_access_features_rebuild($module) {
   // workflow_name[state_name][role_name] => array(grant_name => 0|1, ...)
   foreach ($workflow_access_records as $workflow_name => $states) {
     foreach ($states as $state_name => $records) {
-      $state = WorkflowState::getStatesByName($state_name, $wids[$workflow_name]);
-      if (is_array($state)) {
-        $state = array_pop($state);
-      }
-      foreach ($records as $rname => $record) {
-        $record['sid'] = (is_array($state)) ? $state[0]->sid : $state->sid;
-        if ($rname == WORKFLOW_FEATURES_AUTHOR_NAME) {
-          $record['rid'] = -1;
+      if ($state = WorkflowState::loadByName($state_name, $wids[$workflow_name])) {
+        foreach ($records as $rname => $record) {
+          $record['sid'] = ($state) ? $state->sid : $state->sid;
+          if ($rname == WORKFLOW_FEATURES_AUTHOR_NAME) {
+            $record['rid'] = -1;
+          }
+          else {
+            $role = user_role_load_by_name($rname);
+            $record['rid'] = $role->rid;
+          }
+          workflow_access_insert_workflow_access_by_sid($record);
         }
-        else {
-          $role = user_role_load_by_name($rname);
-          $record['rid'] = $role->rid;
-        }
-        workflow_access_insert_workflow_access_by_sid($record);
       }
     }
   }
