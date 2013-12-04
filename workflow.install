@@ -548,17 +548,25 @@ function workflow_update_7004() {
   module_load_include('module', 'workflow');
 
   foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
-    $entity_type = $scheduled_transition->entity_type;
     // Set the correct entity_type. This will always be 'node'.
-    $entity_type = empty($entity_type) ? 'node' : $entity_type;
+    // But to be sure, better filter on it.
     $entity_id = $scheduled_transition->entity_id;
-    $entity = $scheduled_transition->setEntity($entity_type, $entity_id);
-    // When testing, we got Comments in the table.
+    $entity_type = $scheduled_transition->entity_type;
+    $entity_type = empty($entity_type) ? 'node' : $entity_type;
+    $entity = node_load($entity_id);
+    // When testing, we got Comments in the scheduled_transition table.
     // They should not be there, and do not have type set.
     $entity_bundle = isset($entity->type) ? $entity->type : '';
 
-    if ($entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
-      // All missing data is set upon load/construct of ScheduledTransition.
+    if ($entity_type == 'node' && $entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
+      // Save the original, since we're changing the key and cannot update. 
+      $old_transaction = clone $scheduled_transition;
+      $old_transaction->delete();
+
+      // Set missing field.
+      // All other missing data is set upon load/construct of ScheduledTransition.
+      $scheduled_transition->entity_type = $entity_type;
+
       if ($workflow_item = $workflow->getWorkflowItem()) {
         // Field API. The field name is set explicitely.
         $instance = $workflow_item->getInstance();
