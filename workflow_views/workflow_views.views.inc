@@ -258,8 +258,6 @@ function workflow_views_views_data() {
     );
   }
 
-dpm($data);
-
   return $data;
 }
 
