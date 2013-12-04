@@ -15,8 +15,6 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /**
    * Constructor
-   *
-   * @todo: use parent::__construct ?
    */
   public function __construct($entity_type = '', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $scheduled = 0, $comment = '') {
     parent::__construct($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp = 0, $comment);
@@ -107,7 +105,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
   }
 
   /**
-   * Given a Entity, delete transitions for it.
+   * Given an Entity, delete transitions for it.
    * @todo: add support for Field.
    */
   public static function deleteById($entity_type, $entity_id) {
