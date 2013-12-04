@@ -344,3 +344,4 @@ Issue #2149451 by hckurniawan: Fixed PHP Warnings in Drupal's core install.inc i
 Issue #2124429 by johnv: Removed obsolete code comment in workflow_revert.
 Issue #2019345 by johnv: Removed obsolete code comment in Workflow* classes.
 Issue #2149595 by johnv: Fixed Scheduled transitions are invisible, after upgrade to 7.x-2.0-beta2.
+Issue #2149671 by johnv: Added dependency on Workflow Node for workflow_search_api.
