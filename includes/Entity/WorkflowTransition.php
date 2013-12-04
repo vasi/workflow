@@ -231,7 +231,7 @@ class WorkflowTransition {
     $state_changed = ($old_sid != $new_sid);
 
     if ($state_changed) {
-      if (!$transition->isAllowed($force)) {
+      if (!$this->isAllowed($force)) {
         // If incorrect, quit.
         return $old_sid;
       }
