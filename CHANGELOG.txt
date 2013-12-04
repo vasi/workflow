@@ -341,3 +341,4 @@ Issue #2149027 by johnv: Fixed warning in workflow.rules.inc for PHP5.3/PHP5.4.
 Issue #2149121 by johnv: Restructured workflow_views_views_data().
 Issue #2149223 by johnv: Moved calls to Transition->isAllowed() into Transition->execute(), removing duplicate code.
 Issue #2149451 by hckurniawan: Fixed PHP Warnings in Drupal's core install.inc in distribution.
+Issue #2124429 by johnv: Remoced obsolete code comment in workflow_revert.
