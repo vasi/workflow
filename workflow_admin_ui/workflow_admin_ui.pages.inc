@@ -69,9 +69,10 @@ function workflow_admin_ui_add_form_submit($form, &$form_state) {
 
   $args = array(
     '%name' => $name,
+    '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid), 
   );
   watchdog('workflow', 'Created workflow %name', $args);
-  drupal_set_message( t('The workflow %name was created. You should set the options for your workflow.', $args), 'status');
+  drupal_set_message( t('The workflow %name was created. Please maintain the options.', $args), 'status');
 
   // The workflow ID is now generated upon save().
   $wid = $workflow->wid;
@@ -711,16 +712,6 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
     }
   }
 
-  $form['instructions'] = array(
-    '#type' => 'markup',
-    '#markup' => '<p>' . t('You may enter a new state name in the empty space.
-      Check the "Active" box to make it effective. You may also drag it to the appropriate position.') . '</p>'
-      . '<p>' . t('A state not marked as active will not be shown as available in the workflow settings.') . '</p>'
-      . '<p>' . t('If you wish to inactivate a state that has content (i.e. count is not zero),
-        then you need to select a state to which to reassign that content.') . '</p>'
-  );
-
-
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array( '#type' => 'submit', '#value' => t('Save Changes'));
 
@@ -741,6 +732,7 @@ function theme_workflow_admin_ui_states_form($variables) {
       t('Reassign'),
       t('Count'),
       array('data' => t('Operations'), 'class' => 'state-ops'),
+      t('Sys ID'),
     ),
     'attributes' => array('id' => $table_id, 'style' => 'width: auto;'),
   );
@@ -942,7 +934,7 @@ function theme_workflow_admin_ui_overview_page($variables) {
 
   if (module_exists('workflownode')) {
     // Add the type_map maintenance form.
-    $output .= theme_workflow_admin_type_map_form($variables);
+    $output .= theme_workflow_admin_ui_type_map_form($variables);
     unset($form['type_map']);
   }
 

@@ -348,3 +348,4 @@ Issue #2149671 by johnv: Added dependency on Workflow Node for workflow_search_a
 Issue #2152425 by Propaganistas: Fixed error in WorkflowD7Base::__construct() when using custom entities.
 Issue #2019345 by johnv: Fixed workflow_revert now supports $entity_types and $field_name in hook 'transition permitted'.
 Issue #2153915 by johnv: Fixed incorrect allowed choices with $force == TRUE and hook 'transition permitted'.
+Issue #2019345 by johnv: Fixed flow logic, help texts, warnings of workflow_admin_ui.
