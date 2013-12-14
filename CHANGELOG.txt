@@ -350,3 +350,4 @@ Issue #2019345 by johnv: Fixed workflow_revert now supports $entity_types and $f
 Issue #2153915 by johnv: Fixed incorrect allowed choices with $force == TRUE and hook 'transition permitted'.
 Issue #2019345 by johnv: Fixed flow logic, help texts, warnings of workflow_admin_ui.
 Issue #2019345 by johnv: Fixed return array in Workflwo*Transition::load().
+Issue #934078 by johnv: Added ability to bulk schedule in workflow_vbo, re-using standard workflow form.

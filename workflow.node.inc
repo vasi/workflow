@@ -126,7 +126,7 @@ function workflow_node_update($node) {
   $form_state['values']['workflow_instance'] = $node->workflow_instance;
   $form['#entity_type'] = 'node';
   $form['#entity'] = $node;
-  // For some reason, the Workflow Form does not return the form in an 'workflow' element.
+  // For some reason, the Workflow Form does not return the form in a 'workflow' element.
   // @todo: correct this, or filter on 'workflow' elements.
   $form_state['values'] = (array) $node;
 

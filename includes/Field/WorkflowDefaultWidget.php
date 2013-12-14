@@ -74,25 +74,42 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity_id = entity_id($entity_type, $entity);
     $field_name = $field['field_name'];
 
-    if (!$entity) {
-      // If no entity given, do not show a form. E.g., on the field settings page.
-      return $element;
-    }
+    $wid = $field['settings']['wid'];
+    $workflow_label = workflow_get_wid_label($wid);
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
-    // The schedule cannot be shown on a Content add page.
-    $settings_schedule = !empty($field['settings']['widget']['schedule']) && $entity_id;
+    // The schedule can be hidden via field settings,
+    // and cannot be shown on a Content add page (no $entity_id),
+    // but can be shown on a VBO page (no entity).
+    $settings_schedule = !empty($field['settings']['widget']['schedule'])
+                      && !($entity && !$entity_id);
     $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
+
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
 
-    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-    $current_state = WorkflowState::load($current_sid);
     $options = array();
-    $options = $current_state->getOptions($entity_type, $entity);
-    // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
-    $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
+    if (!$entity) {
+      // Sometimes, no entity is given, E.g., on the Field settings page, VBO form.
+      // If so, show all options for the given workflow(s).
+
+      // Set 'grouped' option. This is only valid for select list.
+      $grouped = $field['settings']['widget']['options'] == 'select'; // 'radios';
+
+      $options = workflow_get_workflow_state_names($wid, $grouped, $all = FALSE);
+      $show_widget = TRUE;
+      $default_value = '0';
+    }
+    else {
+      $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+      $current_state = WorkflowState::load($current_sid);
+      // $grouped = TRUE; // Grouped options only makes sense for multiple workflows.
+      $options = $current_state->getOptions($entity_type, $entity);
+      $show_widget = $current_state->showWidget($options);
+      // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
+      $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
+    }
 
     // Get the scheduling info. This may change the $current_sid on the Form.
     $scheduled = '0';
@@ -114,8 +131,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
     $form_id = $form_state['build_info']['form_id'];
 
-    $label = workflow_get_wid_label($field['settings']['wid']);
-
     // Prepare a wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container';
     $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
@@ -135,16 +150,16 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $element['#default_value'] = $default_value;
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
-    if (!$current_state->showWidget($options)) {
+    if (!$show_widget) {
       $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
       return $element;
     }
     else {
       $element['workflow']['workflow_sid'] = array(
         '#type' => $field['settings']['widget']['options'],
-        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $label)) : '',
+        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
         '#options' => $options,
-        // '#name' => $label,
+        // '#name' => $workflow_label,
         // '#parents' => array('workflow'),
         '#default_value' => $default_value,
       );

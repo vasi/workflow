@@ -8,6 +8,8 @@ define('WORKFLOW_CREATION', 1);
 define('WORKFLOW_CREATION_DEFAULT_WEIGHT', -50);
 define('WORKFLOW_DELETION', 0);
 
+//module_load_include('inc', 'workflow', 'workflow.entity');
+
 /**
  * Menu wild card loader {wildcard_name}_load for '%workflow'.
  *
@@ -286,11 +288,20 @@ function workflow_transition_form($form, &$form_state, $field, $instance, $entit
 
 /**
  * Creates a form element to show the current value of a Workflow state.
+ *
+ * @return array
+ *   Form element, resembling the formatter of List module.
+ *   If state 0 is given, return an empty form element.
  */
 function workflow_state_formatter($entity_type, $entity, $field = array(), $instance = array()) {
+  $list_element = array();
+
   $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-  if ($field_name) {
+  if (!$current_sid) {
+    $list_element = array();
+  }
+  elseif ($field_name) {
     // This is a Workflow Field workflow. Use the Field API field view.
     $field_name = $field['field_name'];
 
@@ -301,7 +312,6 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
     $list_element = field_view_field($entity_type, $entity, $field_name, $list_display, $langcode);
     // Make sure the current value is before the form. (which has weight = 0.005)
     $list_element['#weight'] = 0;
-    return $list_element;
   }
   else {
     // This is a Workflow Node workflow.
@@ -309,12 +319,13 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
     $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
                                                     'state_system_name' => $current_state->getName(),
                                                     'sid' => $current_sid));
-    return array(
+    $list_element =  array(
       '#type' => 'item',
       // '#title' => t('Current state'),
       '#markup' => $output,
     );
   }
+  return $list_element;
 }
 
 /**
@@ -332,6 +343,7 @@ function workflow_save_transition($form, &$form_state) {
   $entity = $form_state['values']['workflow_entity'];
 
   $field_name = $field['field_name'];
+
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $items[0]['workflow'] = $form_state['values'];
 
@@ -504,6 +516,9 @@ function workflow_get_wid_label($wid) {
  *
  * @return mixed $sid
  *   The ID of the current state.
+ *
+ * There is no need to use a page cache.
+ * The performance is OK, and the cache gives prolems when using Rules.
  */
 function workflow_node_current_state($entity, $entity_type = 'node', $field_name = '') {
   $sid = FALSE;
@@ -511,16 +526,11 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
 
   $entity_id = entity_id($entity_type, $entity);
 
-// There is no need to use a page cache.
-// The performance is OK, and it gives prolems when using Rules.
-  // // Return cached value of $sid.
-  // if (isset($sids[$entity_type][$entity_id][$field_name])) {
-  //   $sid = $sids[$entity_type][$entity_id][$field_name];
-  //   return $sid;
-  // }
-
-  // Field API: Get current/previous state.
-  if ($field_name) {
+  if (!$entity) {
+    $sid = FALSE;
+  }
+  elseif ($field_name) {
+    // Field API: Get current/previous state.
     if (isset($entity->is_new) && $entity->is_new == TRUE) {
       // A new node has no sid. Fetch it later.
       $sid = FALSE;
@@ -553,7 +563,6 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
     }
   }
 
-  // $sids[$entity_type][$entity_id][$field_name] = $sid;
   return $sid;
 }
 
@@ -877,6 +886,7 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
       || $sid == $transition->state_id // Include current state for same-state transitions.
       || workflow_transition_allowed($transition->tid, $roles)) {
       $transitions[] = $transition;
+      // $transitions[$transition->tid] = $transition; //@todo
     }
   }
   return $transitions;
