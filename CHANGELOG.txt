@@ -355,3 +355,4 @@ Issue #2019345 by johnv: Renamed workflow_save_transition() to workflow_transiti
 Issue #2153529 by johnv: Fixed PDO exception upon node_save().
 Issue #934078 by johnv: Fixed ability force a bulk state change workflow_vbo, re-using standard workflow form.
 Issue #2156737 by johnv: Fixed error when entering an invalid time in the workflow form.
+Issue #410538 by johnv: Added Views 'workflow' link, analog to the existing 'edit' link.
