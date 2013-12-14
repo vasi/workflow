@@ -103,7 +103,7 @@ function workflow_vbo_given_state_action($node, array $context) {
   $form_state['values']['workflow_comment'] = $comment;
 
   // Submit the transition.
-  workflow_save_transition($form, $form_state);
+  workflow_transition_form_submit($form, $form_state);
 }
 
 /**

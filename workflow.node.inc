@@ -130,7 +130,7 @@ function workflow_node_update($node) {
   // @todo: correct this, or filter on 'workflow' elements.
   $form_state['values'] = (array) $node;
 
-  workflow_save_transition($form, $form_state);
+  workflow_transition_form_submit($form, $form_state);
 }
 
 /**
@@ -183,7 +183,7 @@ function workflow_comment_update($comment) {
   // @todo: correct this, or filter on 'workflow' elements.
   $form_state['values'] = (array) $comment;
 
-  workflow_save_transition($form, $form_state);
+  workflow_transition_form_submit($form, $form_state);
 }
 
 /**
