@@ -93,14 +93,14 @@ function workflow_vbo_given_state_action($node, array $context) {
 
   // Parse the $comment variables.
   $new_sid = $form_state['input']['workflow_sid'];
-  $comment_string = $form_state['values']['workflow_comment'];
+  $comment_string = $form_state['input']['workflow_comment'];
   $comment = t($comment_string, array(
       '%title' => check_plain($node->title),
       '%state' => workflow_get_sid_label($new_sid),
       '%user' => theme('username', array('account' => $user)),
     )
   );
-  $form_state['values']['workflow_comment'] = $comment;
+  $form_state['input']['workflow_comment'] = $comment;
 
   // Submit the transition.
   workflow_transition_form_submit($form, $form_state);
@@ -205,17 +205,8 @@ function workflow_vbo_given_state_action_submit($form, $form_state) {
     return;
   }
 
-  // Copy form 'input' to 'values'...
-  $field = $form_state['values']['workflow_field'];
-  $instance = $form_state['values']['workflow_instance'];
-  $entity_type = $form_state['values']['workflow_entity_type'];
-  $form_state['values'] = $form_state['input'];
-  $form_state['values']['workflow_field'] = $field;
-  $form_state['values']['workflow_instance'] = $instance;
-  $form_state['values']['workflow_entity_type'] = $entity_type;
-
   return array(
-    'force' => $form_state['values']['workflow_force'],
+    'force' => $form_state['input']['workflow_force'],
     'form' => $form,
     'form_state' => $form_state,
   );

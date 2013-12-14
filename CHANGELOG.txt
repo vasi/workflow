@@ -352,3 +352,4 @@ Issue #2019345 by johnv: Fixed flow logic, help texts, warnings of workflow_admi
 Issue #2019345 by johnv: Fixed return array in Workflwo*Transition::load().
 Issue #934078 by johnv: Added ability to bulk schedule in workflow_vbo, re-using standard workflow form.
 Issue #2019345 by johnv: Renamed workflow_save_transition() to workflow_transition_form_submit().
+Issue #2153529 by johnv: Fixed PDO exception upon node_save().

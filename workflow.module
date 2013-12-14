@@ -345,14 +345,14 @@ function workflow_transition_form_submit($form, &$form_state) {
   $field_name = $field['field_name'];
 
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-  $items[0]['workflow'] = $form_state['values'];
+  $items[0]['workflow'] = $form_state['input'];
 
   if ($field_name) {
     // Save the entity, but only if we were not in edit mode.
     if ($entity->changed != REQUEST_TIME) {
       // Save $entity, but only if sid has changed.
       // Use field_attach_update for this? Save always?  
-      $entity->{$field_name}['und'][0]['workflow'] = $form_state['values'];
+      $entity->{$field_name}['und'][0]['workflow'] = $form_state['input'];
       entity_save($entity_type, $entity);
     }
     else {
