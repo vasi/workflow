@@ -654,6 +654,16 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
     // Allow modules to insert state operations.
     $state_links = module_invoke_all('workflow_operations', 'state', $workflow, $state);
 
+    // Make it impossible to reassign to the same state that is disabled.
+    if ($state->isCreationState() || !$state->sid) {
+      $current_state = array();
+      $current_state_list = array();
+    }
+    else {
+      $current_state = array($state->sid => $state_list[$state->sid]);
+      $current_state_list = array_diff($state_list, $current_state);
+    }
+
     $form['states'][$state->sid] = array(
       'state' => array(
         '#type' => 'textfield',
@@ -683,7 +693,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
 
       'reassign' => array(
         '#type' => 'select',
-        '#options' => $state_list,
+        '#options' => $current_state_list,
       ),
 
       'count' => array(
@@ -708,6 +718,11 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
       $form['states'][$state->sid]['sysid']['#value'] = 1;
       $form['states'][$state->sid]['state']['#disabled'] = TRUE;
       $form['states'][$state->sid]['status']['#disabled'] = TRUE;
+      $form['states'][$state->sid]['reassign']['#type'] = 'hidden';
+      $form['states'][$state->sid]['reassign']['#disabled'] = TRUE;
+    }
+    if (!$state->sid) {
+      $form['states'][$state->sid]['reassign']['#type'] = 'hidden';
       $form['states'][$state->sid]['reassign']['#disabled'] = TRUE;
     }
   }
