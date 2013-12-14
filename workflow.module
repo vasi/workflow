@@ -347,6 +347,10 @@ function workflow_transition_form_submit($form, &$form_state) {
   $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $items[0]['workflow'] = $form_state['input'];
 
+  // Determine is the transition is forced.
+  // This can be set by VBO in an additiona form element.
+  $force = isset($form_state['input']['workflow_force']) ? $form_state['input']['workflow_force'] : FALSE;
+
   if ($field_name) {
     // Save the entity, but only if we were not in edit mode.
     if ($entity->changed != REQUEST_TIME) {
@@ -359,7 +363,7 @@ function workflow_transition_form_submit($form, &$form_state) {
       // We were in edit mode. No need to save the entity explicitly.
       // Create a Transition. The Widget knows if it is scheduled. 
       $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-      $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
+      $new_sid = $widget->submit($form, $form_state, $items, $force);
     }
   }
   else {
@@ -368,7 +372,7 @@ function workflow_transition_form_submit($form, &$form_state) {
     // (unless we need to record the stamp.)
     // Create a Transition. The Widget knows if it is scheduled. 
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-    $new_sid = $widget->submit($form, $form_state, $items, $force = FALSE);
+    $new_sid = $widget->submit($form, $form_state, $items, $force);
   }
 }
 
