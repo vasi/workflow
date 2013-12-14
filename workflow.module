@@ -377,6 +377,17 @@ function workflow_transition_form_submit($form, &$form_state) {
 }
 
 /**
+ * Submit callback function for the Workflow Form / DefaultWidget.
+ *
+ * Validate form data.
+ */
+function _workflow_transition_form_validate_time($element, &$form_state) {
+  if (!strtotime($element['#value'])) {
+    form_error($element, t('The time must contain a valid value.'));
+  }
+}
+
+/**
  * Execute a transition (change state of a node), from outside the node, e.g., workflow_cron().
  *
  * This serves as a wrapper function to hide differences between Node API and Field API.

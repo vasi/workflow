@@ -213,9 +213,10 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_hour'] = array(
         '#type' => 'textfield',
         '#title' => t('Time'),
-        '#maxlength' => 5,
+        '#maxlength' => 7,
         '#size' => 6,
         '#default_value' => $scheduled ? $hours : '00:00',
+        '#element_validate' => array('_workflow_transition_form_validate_time'),
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
         '#type' => $settings_schedule_timezone ? 'select' : 'hidden',
@@ -226,7 +227,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_help'] = array(
         '#type' => 'item',
         '#prefix' => '<br />',
-        '#description' => t('Please enter a time in 24 hour (eg. HH:MM) format.
+        '#description' => t('Please enter a time.
           If no time is included, the default will be midnight on the specified date.
           The current time is: @time.', array('@time' => format_date(REQUEST_TIME, 'custom', 'H:i', $timezone))
         ),
@@ -377,10 +378,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         $new_sid = $old_sid;
       }
 
-      // Caveat: for the #states to work in multi-node view, the name is suffixed by unique ID.
-      // We check both variants, for Node API and Field API, for backwards compatibility.
-      $scheduled = (isset($items[0]['workflow']['workflow_scheduled']) ? $items[0]['workflow']['workflow_scheduled'] : 0);
-
+      $scheduled = $items[0]['workflow']['workflow_scheduled'];
       if (!$scheduled) {
         $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
       }
@@ -389,7 +387,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         // If Field Form is used, use plain values;
         // If Node Form is used, use fieldset 'workflow_scheduled_date_time'.
         $schedule = isset($items[0]['workflow']['workflow_scheduled_date_time']) ? $items[0]['workflow']['workflow_scheduled_date_time'] : $items[0]['workflow'];
-        // @todo: add validation/error message on value of 'time'. 
         if (!isset($schedule['workflow_scheduled_hour'])) {
           $schedule['workflow_scheduled_hour'] = '00:00';
         }
