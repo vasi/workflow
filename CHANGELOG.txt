@@ -349,3 +349,4 @@ Issue #2152425 by Propaganistas: Fixed error in WorkflowD7Base::__construct() wh
 Issue #2019345 by johnv: Fixed workflow_revert now supports $entity_types and $field_name in hook 'transition permitted'.
 Issue #2153915 by johnv: Fixed incorrect allowed choices with $force == TRUE and hook 'transition permitted'.
 Issue #2019345 by johnv: Fixed flow logic, help texts, warnings of workflow_admin_ui.
+Issue #2019345 by johnv: Fixed return array in Workflwo*Transition::load().

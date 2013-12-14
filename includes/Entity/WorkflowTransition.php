@@ -103,7 +103,7 @@ class WorkflowTransition {
    */
   public static function load($entity_type, $entity_id, $field_name = '', $limit = NULL) {
     if (!$entity_id) {
-      return FALSE;
+      return array();
     }
     $query = db_select('workflow_node_history', 'h');
     $query->condition('h.entity_type', $entity_type);
