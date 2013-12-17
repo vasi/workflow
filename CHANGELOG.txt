@@ -360,3 +360,4 @@ Issue #2100445 by johnv: Fixed reassigning content to disabled state in workflow
 Issue #2156737 by johnv: Reverted part of patch.
 Issue #2149121 by zihong0: Fixed warnings from workflow_views.
 Issue #2157987 by zihong0: Added admin_summary in Views State filter handler.
+Issue #0658880 by johnv: Fixed warnings and bad behaviour when setting SID filter.
