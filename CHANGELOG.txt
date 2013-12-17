@@ -358,3 +358,4 @@ Issue #2156737 by johnv: Fixed error when entering an invalid time in the workfl
 Issue #410538 by johnv: Added Views 'workflow' link, analog to the existing 'edit' link.
 Issue #2100445 by johnv: Fixed reassigning content to disabled state in workflow_admin_ui.
 Issue #2156737 by johnv: Reverted part of patch.
+Issue #2149121 by zihong0: Fixed warnings from workflow_views.
