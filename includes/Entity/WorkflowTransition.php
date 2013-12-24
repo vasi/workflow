@@ -93,10 +93,10 @@ class WorkflowTransition {
    * @param $entity_type
    * @param $entity_id
    * @param $field_name
-   *  optional
+   *   Optional.
    *
-   * @return
-   *  an array of WorkflowTransitions
+   * @return array
+   *   An array of WorkflowTransitions.
    *
    * @deprecate: workflow_get_workflow_node_history_by_nid() --> WorkflowTransition::load()
    * @deprecate: workflow_get_recent_node_history() --> WorkflowTransition::load()
@@ -130,11 +130,21 @@ class WorkflowTransition {
 
     // Check for no transition.
     if ($this->old_sid == $this->new_sid) {
-      // Make sure we haven't already inserted history for this update.
-      $last_history = workflow_get_recent_node_history($this->entity_type, $this->entity_id);
-      if ($last_history && $last_history->stamp == REQUEST_TIME) {
+      if (!$this->comment) {
+        // Write comment into history though.
         return;
       }
+    }
+
+    // Make sure we haven't already inserted history for this update.
+    $last_history = NULL;
+    if ($transitions = WorkflowTransition::load($this->entity_type, $this->entity_id, $this->field_name, $limit = 1)) {
+      $last_history = array_pop($transitions);
+    }
+    if ($last_history &&
+        $last_history->stamp == REQUEST_TIME &&
+        $last_history->new_sid == $this->new_sid) {
+      return;
     }
 
     drupal_write_record('workflow_node_history', $this);
@@ -175,7 +185,7 @@ class WorkflowTransition {
 
   /**
    * Verifies if the given transition is allowed.
-   * 
+   *
    * - in settings
    * - in permissions
    * - by permission hooks, implemented by other modules.
@@ -229,7 +239,6 @@ class WorkflowTransition {
 
     // Check if the state has changed. If not, we only record the comment.
     $state_changed = ($old_sid != $new_sid);
-
     if ($state_changed) {
       if (!$this->isAllowed($force)) {
         // If incorrect, quit.
@@ -259,17 +268,6 @@ class WorkflowTransition {
     );
     drupal_alter('workflow_comment', $this->comment, $context);
 
-    if (!$state_changed && $this->comment) {
-      // Stop if not going to a different state.
-      // Write comment into history though.
-      $this->stamp = REQUEST_TIME;
-
-      if (!$field_name) { // @todo D8: remove; this is only for Node API.
-        $entity->workflow_stamp = REQUEST_TIME;
-        workflow_update_workflow_node_stamp($entity_id, $this->stamp);
-      }
-    }
-
     // Make sure this transition is valid and allowed for the current user.
     if ($state_changed) {
       $args = array(
@@ -290,28 +288,29 @@ class WorkflowTransition {
           return $old_sid;
         }
       }
+
+      // Invoke a callback indicating a transition is about to occur.
+      // Modules may veto the transition by returning FALSE.
+      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      // Stop if a module says so.
+      if (in_array(FALSE, $result)) {
+        watchdog('workflow', 'Transition vetoed by module.');
+        return $old_sid;
+      }
     }
 
-    // Invoke a callback indicating a transition is about to occur.
-    // Modules may veto the transition by returning FALSE.
-    $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-    // Stop if a module says so.
-    if (in_array(FALSE, $result)) {
-      watchdog('workflow', 'Transition vetoed by module.');
-      return $old_sid;
-    }
-
-    if ($state_changed) {
-      // Log the new state in {workflow_node_history}.
-      // This is only valid for Node API.
-      if (!$field_name) {
-        // If the node does not have an existing 'workflow' property, save the $old_sid there, so it can be logged.
+    // Log the new state in {workflow_node}.
+    // @todo D8: remove; this is only for Node API.
+    if (!$field_name) {
+      if ($state_changed) {
+        // If the node does not have an existing 'workflow' property,
+        // save the $old_sid there, so it can be logged.
         if (!isset($entity->workflow)) {
           $entity->workflow = $old_sid;
         }
 
         // Change the state for {workflow_node}.
-        // The equivalent for Field API is in WorkflowDefaultWidget::submit. 
+        // The equivalent for Field API is in WorkflowDefaultWidget::submit.
         $data = array(
           'nid' => $entity_id,
           'sid' => $new_sid,
@@ -321,6 +320,11 @@ class WorkflowTransition {
         workflow_update_workflow_node($data);
 
         $entity->workflow = $new_sid;
+      }
+      elseif ($this->comment) {
+        // If no state change, but comment, update node stamp.
+        $entity->workflow_stamp = REQUEST_TIME;
+        workflow_update_workflow_node_stamp($this->entity_id, REQUEST_TIME);
       }
     }
 
@@ -352,7 +356,7 @@ class WorkflowTransition {
     }
     else {
       // @todo: we have a problem here, when using Rules, etc: The entity
-      // is not saved here, but only after this call. Alternatives: 
+      // is not saved here, but only after this call. Alternatives:
       // 1. Save the field here explicitely, using field_attach_save;
       // 2. Move the invoke to another place (but there is no entity_postsave());
       // 3. Emulate the new Entity.

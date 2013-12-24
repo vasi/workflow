@@ -51,7 +51,7 @@ Issue #1468810 Timezones in scheduler
 Issue #1426844 by Bastlynn: Adding catch re: propery of last_history object being empty when node is not a workflow content type.
 Issue #1424008 by Bastlynn: Accounting for trying to go to views pg with workflow_views active, but no workflows in system.
 Issue #1400352 by Bastlynn: Fixing an error appearing udner E_STRICT in admin UI re: creating a default object.
-Something got wierd betwen the push/pull for this commit so trying that again.
+Something got weird between the push/pull for this commit so trying that again.
 Issue #1386430 by dylanhuang (patch by dozymoe): Views filter shows unknown when state selected in multi-workflow environment.
 Issue #1386430 by dylanhuang (patch by dozymoe): Views filter shows unknown when state selected in multi-workflow environment.
 Correcting for doubled ,, in install schema.
@@ -365,3 +365,5 @@ Issue #2153529 by johnv: Fixed PDOException when saving new node.
 Issue #2100445 by johnv: Fixed reassigning content to disabled state in workflow_admin_ui -2-.
 Issue #2162333 by johnv: Fixed messages when adding/saving non-nodes with workflow_access enabled.
 Issue #2162333 by johnv: Added message in modules page 'workflow_access works only for nodes'.
+Issue #1212614 by johnv: State is changed twice - only when adding a comment during state change.
+
