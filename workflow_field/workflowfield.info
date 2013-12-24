@@ -1,5 +1,5 @@
 name = Workflow Field
-description = Defines a Workflow field, widget and formatter.
+description = Defines a Workflow field, widget and formatter. (Only use together with Worflow Node for conversion to Workflow Field.)
 package = Workflow
 core = 7.x
 

@@ -366,4 +366,4 @@ Issue #2100445 by johnv: Fixed reassigning content to disabled state in workflow
 Issue #2162333 by johnv: Fixed messages when adding/saving non-nodes with workflow_access enabled.
 Issue #2162333 by johnv: Added message in modules page 'workflow_access works only for nodes'.
 Issue #1212614 by johnv: State is changed twice - only when adding a comment during state change.
-
+Issue #2019345 by johnv: Added notices in info-file for better usage of submodules.
