@@ -364,3 +364,4 @@ Issue #0658880 by johnv: Fixed warnings and bad behaviour when setting SID filte
 Issue #2153529 by johnv: Fixed PDOException when saving new node.
 Issue #2100445 by johnv: Fixed reassigning content to disabled state in workflow_admin_ui -2-.
 Issue #2162333 by johnv: Fixed messages when adding/saving non-nodes with workflow_access enabled.
+Issue #2162333 by johnv: Fixed messages when adding/saving non-nodes with workflow_access enabled -2-.
