@@ -7,6 +7,7 @@ dependencies[] = entity
 
 files[] = includes/Entity/Workflow.php
 files[] = includes/Entity/WorkflowState.php
+files[] = includes/Entity/WorkflowConfigTransition.php
 files[] = includes/Entity/WorkflowTransition.php
 files[] = includes/Entity/WorkflowScheduledTransition.php
 

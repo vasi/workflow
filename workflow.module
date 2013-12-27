@@ -8,7 +8,7 @@ define('WORKFLOW_CREATION', 1);
 define('WORKFLOW_CREATION_DEFAULT_WEIGHT', -50);
 define('WORKFLOW_DELETION', 0);
 
-//module_load_include('inc', 'workflow', 'workflow.entity');
+module_load_include('inc', 'workflow', 'workflow.entity');
 
 /**
  * Menu wild card loader {wildcard_name}_load for '%workflow'.

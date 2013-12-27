@@ -257,6 +257,13 @@ class Workflow {
    */
 
   /**
+   * Create a new state for this workflow.
+   */
+  public function createState($name) {
+    return WorkflowState::create($this->wid, $name);
+  }
+
+  /**
    * Gets the initial state for a newly created entity.
    */
   public function getCreationState() {
@@ -264,7 +271,7 @@ class Workflow {
       $this->creation_state = WorkflowState::load($this->creation_sid);
     }
     if (!$this->creation_state) {
-      $this->creation_state = WorkflowState::create($this->wid, '(creation)');
+      $this->creation_state = $this->createState('(creation)');
     }
     return $this->creation_state;
   }
@@ -329,14 +336,41 @@ class Workflow {
   /**
    * Gets a state for a given workflow.
    *
-   * @param $sid
-   *   A state ID.
+   * @param $key
+   *   A state ID or state Name.
    *
    * @return WorkflowState
    *   A WorkflowState object.
    */
-  public function getState($sid) {
-    return WorkflowState::load($sid, $this->wid);
+  public function getState($key) {
+    if (is_numeric($key)) { 
+      return WorkflowState::load($key, $this->wid);
+    }
+    else {
+      return WorkflowState::loadByName($key, $this->wid);
+    }
+  }
+
+  /**
+   * Creates a Transition for this workflow.
+   */
+  public function createTransition($sid, $target_sid) {
+    if (is_numeric($sid) && is_numeric($target_sid)) {
+      $values['wid'] = $this->wid;
+      $values['sid'] = $sid;
+      $values['target_sid'] = $target_sid;
+    }
+    else {
+      $workflow = $this;
+      $state = $workflow->getState($sid);
+      $target_state = $workflow->getState($target_sid);
+      $values['wid'] = $this->wid;
+      $values['sid'] = $state->sid;
+      $values['target_sid'] = $target_state->sid;
+    }
+
+    $transition = new WorkflowConfigTransition($values);
+    return $transition;
   }
 
   /**

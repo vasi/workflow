@@ -186,6 +186,7 @@ class WorkflowState {
       drupal_write_record('workflow_states', $data);
     }
     // Update the page cache.
+    $this->sid = $sid = $data['sid'];
     self::$states[$sid] = $this;
   }
 
