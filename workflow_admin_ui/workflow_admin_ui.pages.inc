@@ -869,16 +869,16 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
+      $new_sid = $item['reassign'];
+      $new_state = WorkflowState::load($new_sid);
+
+      $args = array(
+        '%workflow' => $workflow->getName(),
+        '%old_state' => $state->getName(),
+        '%new_state' => isset($new_state) ? $new_state->getName() : '',
+      );
+
       if ($item['count'] > 0) {
-        $new_sid = $item['reassign'];
-        $new_state = WorkflowState::load($new_sid);
-
-        $args = array(
-          '%workflow' => $workflow->getName(),
-          '%old_state' => $state->getName(),
-          '%new_state' => isset($new_state) ? $new_state->getName() : '',
-          );
-
         if ($form['#last_mohican']) {
           $new_sid = NULL; // Do not reassign to new state.
           $message = 'Removing workflow states from content in the %workflow.';
