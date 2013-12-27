@@ -6,12 +6,50 @@
  * Contains workflow\includes\Entity\WorkflowConfigTransitionController.
  */
 
+/**
+ * Implements a controller class for WorkflowConfigTransition.
+ *
+ * The 'true' controller class is 'Workflow'.
+ */
 class WorkflowConfigTransitionController extends EntityAPIController {
+
+  // @todo: Set $schema['fields'] ['roles']['serialize'] = TRUE to avoid
+  //        below 'roles' code, but this requires conversion of the data.
+
+  public function load($ids = array(), $conditions = array()) {
+    // Set this explicitely to FALSE, until this is fixed:
+    // Calling $workflow->getTransitions() twice, gives an empty list the second time.
+    $this->cache = FALSE;
+
+    $result = parent::load($ids, $conditions);
+    foreach ($result as &$transition) {
+      if(!$transition->roles) {
+        $transition->roles = array();
+      }
+      else {
+        $transition->roles = explode(',', $transition->roles);
+      }
+    }
+    return $result;
+  }
+
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
+    $workflow = workflow_load($entity->wid);
+    // First check if this transition already exist.
+    $transition = reset($workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid));
+    if ($transition) {
+      $entity->tid = $transition->tid;
+    }
+    if (isset($entity->roles) && !empty($entity->roles)) {
+      $entity->roles = implode(',', $entity->roles);
+    }
+    return parent::save($entity, $transaction);
+  }
 }
 
 
 /**
- * Implements an configurated Transition.
+ * Implements a configurated Transition.
  *
  */
 class WorkflowConfigTransition extends Entity {
@@ -23,8 +61,10 @@ class WorkflowConfigTransition extends Entity {
   public $sid = 0; // @todo D8: remove $sid, use $new_sid. (requires conversion of Views displays.)
   public $target_sid = 0;
   public $roles = array();
-  protected $wid = 0;
-  protected $workflow = NULL;
+
+  // Extra fields.
+  public $wid = 0;
+  // protected $workflow = NULL;
   // protected $is_scheduled = FALSE;
   // protected $is_executed = FALSE;
   // protected $force = NULL;
@@ -42,6 +82,18 @@ class WorkflowConfigTransition extends Entity {
     $entityType = 'WorkflowConfigTransition';
     return parent::__construct($values, $entityType); 
   }
+
+  /**
+   * Permanently deletes the entity.
+   */
+  public function delete() {
+    // Notify any interested modules before we delete, in case there's data needed.
+    // @todo D8: this can be replaced by a hook_entity_delete(?)
+    module_invoke_all('workflow', 'transition delete', $this->tid, NULL, NULL, FALSE);
+
+    return parent::delete();
+  }
+
 
   protected function defaultLabel() {
     return ''; // $this->title;

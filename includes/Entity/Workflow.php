@@ -354,9 +354,8 @@ class Workflow {
   /**
    * Creates a Transition for this workflow.
    */
-  public function createTransition($sid, $target_sid) {
+  public function createTransition($sid, $target_sid, $values = array()) {
     if (is_numeric($sid) && is_numeric($target_sid)) {
-      $values['wid'] = $this->wid;
       $values['sid'] = $sid;
       $values['target_sid'] = $target_sid;
     }
@@ -364,13 +363,67 @@ class Workflow {
       $workflow = $this;
       $state = $workflow->getState($sid);
       $target_state = $workflow->getState($target_sid);
-      $values['wid'] = $this->wid;
       $values['sid'] = $state->sid;
       $values['target_sid'] = $target_state->sid;
     }
 
-    $transition = new WorkflowConfigTransition($values);
+    // First check if this transition already exists.
+    if ($transitions = entity_load('WorkflowConfigTransition', FALSE, $values)) {
+      $transition = reset($transitions);
+    }
+    else {
+      $values['wid'] = $this->wid;
+      $transition = new WorkflowConfigTransition($values);
+    }
+    $transition->wid = $this->wid;
+
     return $transition;
+  }
+
+  /**
+   * Load a Transition for this workflow.
+   */
+  public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
+    $transitions = array();
+    $states = $this->getStates(TRUE);
+    $sid = isset($conditions['sid']) ? $conditions['sid'] : FALSE;
+    $target_sid = isset($conditions['target_sid']) ? $conditions['target_sid'] : FALSE;
+
+    // Get all transitions, and filter for wid, tid, target_tid.
+    $all_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
+
+    foreach($all_transitions as $transition) {
+      $ok = TRUE;
+      if (!isset($states[$transition->sid])) {
+        $ok = FALSE;
+      }
+      if ($sid && $sid != $transition->sid) {
+        $ok = FALSE;
+      }
+      if ($target_sid && $target_sid != $transition->target_sid) {
+        $ok = FALSE;
+      }
+      if ($ok) {
+        $transitions[$transition->tid] = clone $transition;
+      }
+    }
+    return $transitions;
+  }
+
+  public function getTransitionsByTid($tid, $reset = FALSE) {
+    return $this->getTransitions(array($tid), array(), $reset);
+  }
+
+  public function getTransitionsBySid($sid, $reset = FALSE) {
+    return $this->getTransitions(FALSE, array('sid' => $sid), $reset);
+  }
+
+  public function getTransitionsByTargetSid($target_sid, $reset = FALSE) {
+    return $this->getTransitions(FALSE, array('target_sid' => $target_sid), $reset);
+  }
+
+  public function getTransitionsBySidTargetSid($sid, $target_sid, $reset = FALSE) {
+    return $this->getTransitions(FALSE, array('sid' => $sid, 'target_sid' => $target_sid), $reset);
   }
 
   /**

@@ -348,6 +348,146 @@ function workflow_update_workflow_states(&$data) {
 }
 
 /**
+ * Functions related to table workflow_transitions.
+ */
+
+/**
+ * Given a wid get the transitions.
+ *
+ * @deprecated: workflow_get_workflow_transitions_by_wid() ==> Workflow->loadTransitions()
+ */
+function workflow_get_workflow_transitions_by_wid($wid) {
+  static $transitions;
+  if (!isset($transitions[$wid])) {
+    $query = 'SELECT t.tid, t.sid, t.target_sid, t.roles, s1.wid '
+      . 'FROM {workflow_transitions} t '
+      . 'INNER JOIN {workflow_states} s1 ON t.sid=s1.sid '
+      . 'INNER JOIN {workflow_states} s2 ON t.target_sid=s2.sid '
+      . 'WHERE s1.wid = :wid AND s2.wid = :wid';
+    $transitions[$wid] = db_query('SELECT t.*, s1.wid FROM {workflow_transitions} AS t INNER JOIN {workflow_states} AS s1 ON t.sid=s1.sid INNER JOIN {workflow_states} AS s2 ON t.target_sid=s2.sid WHERE s1.wid = :wid AND s2.wid = :wid',
+      array(':wid' => $wid))->fetchAll();
+  }
+  return $transitions[$wid];
+}
+
+/**
+ * Given a tid, get the transition. It is a unique object, only one return.
+ */
+function workflow_get_workflow_transitions_by_tid($tid) {
+  static $transitions;
+  if (!isset($transitions[$tid])) {
+    $transitions[$tid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE tid = :tid',
+      array(':tid' => $tid))->fetchObject();
+  }
+  return $transitions[$tid];
+}
+
+/**
+ * Given a sid, get the transition.
+ */
+function workflow_get_workflow_transitions_by_sid($sid) {
+  static $transitions;
+  if (!isset($transitions[$sid])) {
+    $transitions[$sid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid',
+      array(':sid' => $sid))->fetchAll();
+  }
+  return $transitions[$sid];
+}
+
+/**
+ * Given a target_sid, get the transition.
+ */
+function workflow_get_workflow_transitions_by_target_sid($target_sid) {
+  static $transitions;
+  if (!isset($transitions[$target_sid])) {
+    $transitions[$target_sid] = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE target_sid = :target_sid',
+      array(':target_sid' => $target_sid))->fetchAll();
+  }
+  return $transitions[$target_sid];
+}
+
+/**
+ * Given a sid get any transition involved.
+ */
+function workflow_get_workflow_transitions_by_sid_involved($sid) {
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid OR target_sid = :sid', array(':sid' => $sid));
+  return $results->fetchAll();
+}
+
+/**
+ * Given a role string get any transition involved.
+ */
+function workflow_get_workflow_transitions_by_roles($roles) {
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE roles LIKE :roles', array(':roles' => $roles));
+  return $results->fetchAll();
+}
+
+/**
+ * Given a sid and target_sid, get the transition. This will be unique.
+ *
+ * @deprecated: workflow_get_workflow_transitions_by_sid_target_sid ==> $workflow->getTransitionsBySidTargetSid
+ */
+function workflow_get_workflow_transitions_by_sid_target_sid($sid, $target_sid) {
+  $results = db_query('SELECT tid, sid, target_sid, roles FROM {workflow_transitions} WHERE sid = :sid AND target_sid = :target_sid', array(':sid' => $sid, ':target_sid' => $target_sid));
+  return $results->fetchObject();
+}
+
+/**
+ * Given a tid, delete the transition.
+ * 
+ * @deprecated: workflow_delete_workflow_transitions_by_tid ==> entity_delete($transition)
+ */
+function workflow_delete_workflow_transitions_by_tid($tid) {
+  // Notify any interested modules before we delete, in case there's data needed.
+  module_invoke_all('workflow', 'transition delete', $tid, NULL, NULL, FALSE);
+
+  return db_delete('workflow_transitions')->condition('tid', $tid)->execute();
+}
+
+/**
+ * Given a sid and target_sid, get the transition. This will be unique.
+ */
+function workflow_delete_workflow_transitions_by_roles($roles) {
+  // NOTE: This allows us to send notifications out.
+  foreach (workflow_get_workflow_transitions_by_roles($roles) as $transition) {
+    workflow_delete_workflow_transitions_by_tid($transition->tid);
+  }
+}
+
+/**
+ * Given data, insert or update a workflow_transitions.
+ *
+ * @deprecated: workflow_update_workflow_transitions() ==> entity_save('WorkflowConfigTransition', $transition)
+ */
+function workflow_update_workflow_transitions(&$data) {
+  $data = (object) $data;
+  $transition = workflow_get_workflow_transitions_by_sid_target_sid($data->sid, $data->target_sid);
+  if ($transition) {
+    $roles = explode(',', $transition->roles);
+    foreach (explode(',', $data->roles) as $role) {
+      if (array_search($role, $roles) === FALSE) {
+        $roles[] = $role;
+      }
+    }
+    $transition->roles = implode(',', $roles);
+    drupal_write_record('workflow_transitions', $transition, 'tid');
+    $data = $transition;
+  }
+  else {
+    drupal_write_record('workflow_transitions', $data);
+  }
+}
+
+/**
+ * Given a tid and new roles, update them.
+ * @todo - this should be refactored out, and the update made a full actual update.
+ */
+function workflow_update_workflow_transitions_roles($tid, $roles) {
+  return db_update('workflow_transitions')->fields(array('roles' => implode(',', $roles)))->condition('tid', $tid, '=')->execute();
+}
+
+
+/**
  * Deprecated functions related to table {workflow_scheduled_transition}.
  * These are replaced by methods of class WorkflowScheduledTransition.
  */

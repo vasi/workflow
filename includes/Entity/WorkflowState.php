@@ -241,19 +241,13 @@ class WorkflowState {
     // Delete any lingering node to state values.
     workflow_delete_workflow_node_by_sid($current_sid);
 
-    // Find out which transitions this state is involved in.
-    $preexisting = array();
-    foreach (workflow_get_workflow_transitions_by_sid_involved($current_sid) as $data) {
-      $preexisting[$data->sid][$data->target_sid] = TRUE;
+    // Delete the transitions this state is involved in.
+    $workflow = Workflow::load($this->wid);
+    foreach ($transitions = $workflow->getTransitionsBySid($current_sid) as $transition) {
+      $transition->delete();
     }
-
-    // Delete the transitions.
-    foreach ($preexisting as $from => $array) {
-      foreach (array_keys($array) as $target_id) {
-        if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($from, $target_id)) {
-          workflow_delete_workflow_transitions_by_tid($transition->tid);
-        }
-      }
+    foreach ($transitions = $workflow->getTransitionsByTargetSid($current_sid) as $transition) {
+      $transition->delete();
     }
 
     // Delete the state. -- We don't actually delete, just deactivate.

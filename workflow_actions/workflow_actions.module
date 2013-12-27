@@ -69,12 +69,12 @@ function workflow_actions_trigger_info() {
 
   // Create a trigger for each possible combination.
   foreach ($workflows as $wid => $workflow) {
-    foreach ($wts = workflow_get_workflow_transitions_by_wid($wid) as $wt) {
-      $state = $states[$wt->sid];
+    foreach ($workflow->getTransitions() as $transition) {
+      $state = $states[$transition->sid];
       if (!$state->isActive()) {
         continue;
       }
-      $creation_flag = $states[$wt->sid]->isCreationState();
+      $creation_flag = $states[$transition->sid]->isCreationState();
       // Add hook for Node API.
       if (isset($type_map[$wid])) {
         foreach ($type_map[$wid] as $type_bundle) {
@@ -83,10 +83,10 @@ function workflow_actions_trigger_info() {
              '@entity_type' => $type_bundle['entity_type'],
              '%bundle' => $type_bundle['bundle'],
              '%state' => $state->label(),
-              '%target_state' => $states[$wt->target_sid]->label(),
+              '%target_state' => $states[$transition->target_sid]->label(),
             )
           );
-          $pseudohooks['workflow-' . $type_bundle['entity_type'] .'-'. $type_bundle['bundle'] . '-' . $wt->tid] = array(
+          $pseudohooks['workflow-' . $type_bundle['entity_type'] .'-'. $type_bundle['bundle'] . '-' . $transition->tid] = array(
             'label' => $label,
             'workflow_creation_state' => $creation_flag,
           );
@@ -117,18 +117,20 @@ function workflow_actions_trigger_info() {
  *
  * @param string $op
  *   The current workflow operation: 'transition pre' or 'transition post'.
- * @param int $old_state
+ * @param int $old_sid
  *   The state ID of the current state.
- * @param int $new_state
+ * @param int $new_sid
  *   The state ID of the new state.
  * @param object $entity
  *   The node whose workflow state is changing.
  */
-function workflow_actions_workflow($op, $old_state, $new_state, $entity, $force = FALSE, $entity_type = 'node') {
+function workflow_actions_workflow($op, $old_sid, $new_sid, $entity, $force = FALSE, $entity_type = 'node', $field_name = '') {
   switch ($op) {
     case 'transition post':
       // A transition has occurred; fire off actions associated with this transition.
-      if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($old_state, $new_state)) {
+      $old_state = WorkflowState::load($old_sid);
+      $workflow = $old_state->getWorkflow();
+      if ($transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid))) {
         $hook = 'workflow-' . $entity_type . '-' . $entity->type . '-' . $transition->tid;
 
         $aids = trigger_get_assigned_actions($hook);
@@ -158,7 +160,9 @@ function workflow_actions_workflow($op, $old_state, $new_state, $entity, $force 
       break;
 
     case 'transition delete':
-      if ($transition = workflow_get_workflow_transitions_by_sid_target_sid($old_state, $new_state)) {
+      $old_state = WorkflowState::load($old_sid);
+      $workflow = $old_state->getWorkflow();
+      if ($transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid))) {
         $actions = workflow_actions_get_actions_by_tid($transition->tid);
         foreach ($actions as $aid) {
           workflow_actions_remove($transition->tid, $aid);

@@ -369,3 +369,4 @@ Issue #1212614 by johnv: State is changed twice - only when adding a comment dur
 Issue #2019345 by johnv: Added notices in info-file for better usage of submodules.
 Issue #2019345 by johnv: Added WorkflowConfigTransition as an Entity for workflow_transitions.
 Issue #2019345 by johnv: Fixed delete transitions even when no content is assigned.
+Issue #2019345 by johnv: Moved workflow_transitions functions to Workflow(ConfigTransition) classes.

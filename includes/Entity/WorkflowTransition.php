@@ -237,6 +237,9 @@ class WorkflowTransition {
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
+    $old_state = WorkflowState::load($old_sid);
+    $workflow = $old_state->getWorkflow();
+
     // Check if the state has changed. If not, we only record the comment.
     $state_changed = ($old_sid != $new_sid);
     if ($state_changed) {
@@ -275,7 +278,7 @@ class WorkflowTransition {
         '%old' => $old_sid,
         '%new' => $new_sid,
       );
-      $transition = workflow_get_workflow_transitions_by_sid_target_sid($old_sid, $new_sid);
+      $transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid));
       if (!$transition && !$force) {
         watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
         return $old_sid;
@@ -334,7 +337,6 @@ class WorkflowTransition {
 
     // Register state change with watchdog.
     if ($state_changed && $state = WorkflowState::load($new_sid)) {
-      $workflow = $state->getWorkflow();
       if (!empty($workflow->options['watchdog_log'])) {
         $entity_type_info = entity_get_info($entity_type);
         $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
