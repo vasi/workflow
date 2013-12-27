@@ -368,3 +368,4 @@ Issue #2162333 by johnv: Added message in modules page 'workflow_access works on
 Issue #1212614 by johnv: State is changed twice - only when adding a comment during state change.
 Issue #2019345 by johnv: Added notices in info-file for better usage of submodules.
 Issue #2019345 by johnv: Added WorkflowConfigTransition as an Entity for workflow_transitions.
+Issue #2019345 by johnv: Fixed delete transitions even when no content is assigned.

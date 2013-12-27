@@ -889,14 +889,13 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
           $message = 'Reassigning content from %old_state to %new_state.';
           drupal_set_message(t($message, $args));
         }
-
-        // Delete the old state without orphaning nodes, move them to the new state.
-        $state->deactivate($new_sid);
-
-        $message = 'Deactivated workflow state %old_state in %workflow.';
-        watchdog('workflow', $message, $args);
-        drupal_set_message(t($message, $args));
       }
+      // Delete the old state without orphaning nodes, move them to the new state.
+      $state->deactivate($new_sid);
+
+      $message = 'Deactivated workflow state %old_state in %workflow.';
+      watchdog('workflow', $message, $args);
+      drupal_set_message(t($message, $args));
     }
     $state->setName($item['state']);
     $state->status = $item['status'];
