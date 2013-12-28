@@ -69,9 +69,12 @@ class WorkflowState {
    * "New considered harmful".
    */
   public static function create($wid, $name = '') {
-    $state = new WorkflowState($wid);
-    $state->state = $name;
-    if ($name == '(creation)') {
+    $state = WorkflowState::loadByName($name, $wid);
+    if (!$state) {
+      $state = new WorkflowState($wid);
+      $state->state = $name;
+    }
+    if ($name == WORKFLOW_CREATION_STATE_NAME) {
       $state->sysid = WORKFLOW_CREATION;
       $state->weight = WORKFLOW_CREATION_DEFAULT_WEIGHT;
     }
@@ -325,12 +328,13 @@ class WorkflowState {
     $options = array();
 
     if (!$entity) {
-      // If no entity is given, no result (e.g., on a Field settings page).
-      $options = array();
-      return $options;
+      // No entity is given, (e.g., on a Field settings page).
+      $entity_id = 'x';
+    }
+    else {
+      $entity_id = entity_id($entity_type, $entity);
     }
 
-    $entity_id = entity_id($entity_type, $entity);
     $current_sid = $this->sid;
     // Get options from page cache.
     if (isset($cache[$entity_type][$entity_id][$force][$current_sid])) {
@@ -340,6 +344,7 @@ class WorkflowState {
 
     $workflow = Workflow::load($this->wid);
     if ($workflow) {
+      // Gather roles, to get the proper permissions.
       $roles = array_keys($user->roles);
 
       if ($user->uid == 1 || $force) {
@@ -358,31 +363,39 @@ class WorkflowState {
         $roles = array_merge(array('author'), $roles);
       }
 
-      // Workflow_allowable_transitions() does not return the entire transition row. Would like it to, but doesn't.
-      // Instead it returns just the allowable data as:
-      // [tid] => 1 [state_id] => 1 [state_name] => (creation) [state_weight] => -50
-      $transitions = workflow_allowable_transitions($current_sid, 'to', $roles);
-
-      // Include current state if it is not the (creation) state.
+      // Set an array with states - they are already properly sorted.
+      // Unfortunately, the transitions are not sorted.
+      // Also, $transitions doess not contain the 'stay on current state' transition.
+      // The object will be replaced with names.
+      $options = $workflow->getStates();
+      $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
       foreach ($transitions as $transition) {
-        if ($transition->sysid != WORKFLOW_CREATION) {
-          // Invoke a callback indicating that we are collecting state choices.
-          // Modules may veto a choice by returning FALSE.
-          // In this case, the choice is never presented to the user.
-          // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-          $permitted = TRUE;
-          if (!$force) {
-            $new_sid = $transition->state_id;
-            $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = ''); // @todo: add $field_name.
-          }
-          // Did anybody veto this choice?
-          if ($permitted !== FALSE) {
-            // If not vetoed, add to list.
-            $options[$transition->state_id] = check_plain(t($transition->state_name));
-          }
+        $new_sid = $transition->target_sid;
+
+        // Invoke a callback indicating that we are collecting state choices.
+        // Modules may veto a choice by returning FALSE.
+        // In this case, the choice is never presented to the user.
+        // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
+        $permitted = TRUE;
+        if (!$force) {
+          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = ''); // @todo: add $field_name.
+        }
+        // Did anybody veto this choice?
+        if ($permitted !== FALSE) {
+          // If not vetoed, add to list (by replacing the object by the name).
+          $target_state = $options[$new_sid];
+          $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
         }
       }
+      // Include current state for same-state transitions (by replacing the object by the name).
+      $options[$current_sid] = check_plain(t($options[$current_sid]->label()));
 
+      // Remove the unpermitted options.
+      foreach ($options as $key => $data) {
+        if (is_object($data) ) {
+          unset ($options[$key]);
+        }
+      }
       // Save to entity-specific cache.
       $cache[$entity_type][$entity_id][$force][$current_sid] = $options;
     }
@@ -408,7 +421,7 @@ class WorkflowState {
 
     // Get the numbers for Workflow Field.
     $fields = field_info_field_map();
-    foreach($fields as $field_name => $field_map) {
+    foreach ($fields as $field_name => $field_map) {
       if ($field_map['type'] == 'workflow') {
         $query = new EntityFieldQuery();
         $query

@@ -82,7 +82,7 @@ function workflow_update_workflows(&$data, $create_creation_state = TRUE) {
     if ($create_creation_state) {
       $state_data = array(
         'wid' => $data->wid,
-        'state' => t('(creation)'),
+        'state' => t(WORKFLOW_CREATION_STATE_NAME),
         'sysid' => WORKFLOW_CREATION,
         'weight' => WORKFLOW_CREATION_DEFAULT_WEIGHT,
         );
@@ -476,6 +476,84 @@ function workflow_update_workflow_transitions(&$data) {
   else {
     drupal_write_record('workflow_transitions', $data);
   }
+}
+
+/**
+ * Get allowable transitions for a given workflow state. Typical use:
+ *
+ * global $user;
+ * $possible = workflow_allowable_transitions($sid, 'to', $user->roles);
+ *
+ * If the state ID corresponded to the state named "Draft", $possible now
+ * contains the states that the current user may move to from the Draft state.
+ *
+ * @param $sid
+ *   The ID of the state in question.
+ * @param $dir
+ *   The direction of the transition: 'to' or 'from' the state denoted by $sid.
+ *   When set to 'to' all the allowable states that may be moved to are
+ *   returned; when set to 'from' all the allowable states that may move to the
+ *   current state are returned.
+ * @param mixed $roles
+ *   Array of ints (and possibly the string 'author') representing the user's
+ *   roles. If the string 'ALL' is passed (instead of an array) the role
+ *   constraint is ignored (this is the default for backwards compatibility).
+ *
+ * @return array
+ *   Associative array of ($sid => $state_name), excluding current state.
+ *
+ * @deprecated: workflow_allowable_transitions() => Workflow::getTransitionsBySid()
+ */
+function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
+  $transitions = array();
+
+  // Main query from transitions table.
+  $query = db_select('workflow_transitions', 't')
+    ->fields('t', array('tid'));
+
+  if ($dir == 'to') {
+    $query->innerJoin('workflow_states', 's', 's.sid = t.target_sid');
+    $query->addField('t', 'target_sid', 'state_id');
+    $query->condition('t.sid', $sid);
+  }
+  else {
+    $query->innerJoin('workflow_states', 's', 's.sid = t.sid');
+    $query->addField('t', 'sid', 'state_id');
+    $query->condition('t.target_sid', $sid);
+  }
+
+  $query->addField('s', 'state', 'state_name');
+  $query->addField('s', 'weight', 'state_weight');
+  $query->addField('s', 'sysid');
+  $query->condition('s.status', 1);
+
+  // Now let's get the current state.
+  $query2 = db_select('workflow_states', 's');
+  $query2->addField('s', 'sid', 'tid');
+  $query2->addField('s', 'sid', 'state_id');
+  $query2->addField('s', 'state', 'state_name');
+  $query2->addField('s', 'weight', 'state_weight');
+  $query2->addField('s', 'sysid');
+  $query2->condition('s.status', 1);
+  $query2->condition('s.sid', $sid);
+
+  $query2->orderBy('state_weight');
+  $query2->orderBy('state_id');
+
+  // Add the union of the two queries.
+  $query->union($query2, 'UNION');
+
+  $results = $query->execute();
+
+  foreach ($results as $transition) {
+    if ($roles == 'ALL'  // Superuser.
+      || $sid == $transition->state_id // Include current state for same-state transitions.
+      || workflow_transition_allowed($transition->tid, $roles)) {
+      $transitions[] = $transition;
+      // $transitions[$transition->tid] = $transition; //@todo
+    }
+  }
+  return $transitions;
 }
 
 /**
