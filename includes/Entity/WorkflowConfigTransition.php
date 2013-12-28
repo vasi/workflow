@@ -116,4 +116,27 @@ class WorkflowConfigTransition extends Entity {
     return isset($this->workflow) ? $this->workflow : Workflow::load($this->wid);
   }
 
+  /**
+   * Verifies if the given transition is allowed.
+   *
+   * - in settings
+   * - in permissions
+   * - by permission hooks, implemented by other modules.
+   *
+   * @return bool
+   *  TRUE if OK, else FALSE.
+   */
+  public function isAllowed($user_roles) {
+    if ($user_roles == 'ALL') {
+      // Superuser.
+      return TRUE;
+    }
+    elseif ($user_roles) {
+      if (!is_array($user_roles)) {
+        $user_roles = array($user_roles);
+      }
+      return array_intersect($user_roles, $this->roles) == TRUE;
+    }
+  }
+
 }

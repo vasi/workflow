@@ -193,11 +193,30 @@ class WorkflowTransition {
    * @return bool
    *  TRUE if OK, else FALSE.
    */
-  public function isAllowed($force) {
+  public function isAllowed($roles, $force) {
+    global $user;
+
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
+
+    // Check allow-ability of state change if user is not superuser (might be cron).
+    if (($user->uid != 1) && !$force) {
+      // Get the WorkflowConfigTransition.
+      // @todo: some day, config_transition can be a parent of entity_transition.
+      $config_transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid));
+      if (!$config_transition) {
+        watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
+        return $old_sid;
+      }
+      elseif (!$force) {
+        $allowed = $transition->isAllowed($roles, $force);
+        if (!allowed) {
+          return FALSE;
+        }
+      }
+    }
 
     // Get all states from the Workflow, or only the valid transitions for this state.
     // WorkflowState::getOptions() will consider all permissions, etc.
@@ -237,18 +256,27 @@ class WorkflowTransition {
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
+    $args = array(
+      '%user' => $user->name,
+      '%old' => $old_sid,
+      '%new' => $new_sid,
+    );
+
     $old_state = WorkflowState::load($old_sid);
     $workflow = $old_state->getWorkflow();
 
     // Check if the state has changed. If not, we only record the comment.
     $state_changed = ($old_sid != $new_sid);
     if ($state_changed) {
-      if (!$this->isAllowed($force)) {
+      // State has changed. Do some checks upfront.
+
+      $roles = array_merge(array_keys($user->roles), array('author'));
+      if (!$this->isAllowed($roles, $force)) {
+        watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
         // If incorrect, quit.
         return $old_sid;
       }
 
-      // State has changed. Do some checks upfront.
       if (!$force) {
         // Make sure this transition is allowed.
         $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
@@ -273,25 +301,6 @@ class WorkflowTransition {
 
     // Make sure this transition is valid and allowed for the current user.
     if ($state_changed) {
-      $args = array(
-        '%user' => $user->name,
-        '%old' => $old_sid,
-        '%new' => $new_sid,
-      );
-      $transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid));
-      if (!$transition && !$force) {
-        watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
-        return $old_sid;
-      }
-
-      // Check allow-ability of state change if user is not superuser (might be cron).
-      if (($user->uid != 1) && !$force) {
-        if (!workflow_transition_allowed($transition->tid, array_merge(array_keys($user->roles), array('author')))) {
-          watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
-          return $old_sid;
-        }
-      }
-
       // Invoke a callback indicating a transition is about to occur.
       // Modules may veto the transition by returning FALSE.
       $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);

@@ -616,29 +616,6 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
 }
 
 /**
- * See if a transition is allowed for a given role.
- *
- * @param int $tid
- *  A transition ID.
- * @param mixed $role
- *  A single role (int or string 'author') or array of roles.
- *
- * @return bool
- *  TRUE if the role is allowed to do the transition.
- */
-function workflow_transition_allowed($tid, $role = NULL) {
-  $transition = reset(entity_load('WorkflowConfigTransition', array($tid)));
-
-  $allowed = $transition->roles;
-  if ($role) {
-    if (!is_array($role)) {
-      $role = array($role);
-    }
-    return array_intersect($role, $allowed) == TRUE;
-  }
-}
-
-/**
  * DB functions. All SQL in workflow.module should be put into its own function and placed here.
  * This encourages good separation of code and reuse of SQL statements. It *also* makes it easy to
  * make schema updates and changes without rummaging through every single inch of code looking for SQL.

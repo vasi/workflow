@@ -342,7 +342,7 @@ class WorkflowState {
       return $options;
     }
 
-    $workflow = Workflow::load($this->wid);
+    $workflow = workflow_load($this->wid);
     if ($workflow) {
       // Gather roles, to get the proper permissions.
       $roles = array_keys($user->roles);
@@ -363,15 +363,16 @@ class WorkflowState {
         $roles = array_merge(array('author'), $roles);
       }
 
-      // Set an array with states - they are already properly sorted.
-      // Unfortunately, the transitions are not sorted.
-      // Also, $transitions doess not contain the 'stay on current state' transition.
+      // Set up an array with states - they are already properly sorted.
+      // Unfortunately, the config_transitions are not sorted.
+      // Also, $transitions does not contain the 'stay on current state' transition.
       // The object will be replaced with names.
       $options = $workflow->getStates();
       $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
       foreach ($transitions as $transition) {
         $new_sid = $transition->target_sid;
 
+        // We now have a list of config_transitions. Check them against the Entity.
         // Invoke a callback indicating that we are collecting state choices.
         // Modules may veto a choice by returning FALSE.
         // In this case, the choice is never presented to the user.

@@ -391,30 +391,29 @@ class Workflow {
    *  $conditions['sid'] : if provided, a 'from' State ID.
    *  $conditions['target_sid'] : if provided, a 'to' state ID.
    *  $conditions['roles'] : if provided, an array of roles, or 'ALL'.
-   *
-   * The transition where 'from' == 'to' is a special case.
    */
   public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
     $transitions = array();
-    $states = $this->getStates('CREATION');
-
-    // Get all transitions. (even from other workflows. :-( )
-    $all_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
+    $states = $this->getStates('CREATION'); // Get valid + creation states.
 
     // Filter on 'from' states, 'to' states, roles.
     $sid = isset($conditions['sid']) ? $conditions['sid'] : FALSE;
     $target_sid = isset($conditions['target_sid']) ? $conditions['target_sid'] : FALSE;
     $roles = isset($conditions['roles']) ? $conditions['roles'] : 'ALL';
 
-    foreach ($all_transitions as $transition) {
-      if (!isset($states[$transition->sid]) // Not a valid transition for this workflow.
-          || ($sid && $sid != $transition->sid) // Not the requested 'from' state.
-          || ($target_sid && $target_sid != $transition->target_sid) // Not the requested 'to' state.
-         ) {
-        // Transition is not allowed, permitted.
+    // Get all transitions. (Even from other workflows. :-( )
+    $config_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
+    foreach ($config_transitions as $transition) {
+      if (!isset($states[$transition->sid])) {
+        // Not a valid transition for this workflow.
       }
-      elseif ($roles == 'ALL'  // Superuser.
-          || workflow_transition_allowed($transition->tid, $roles) ) {
+      elseif ($sid && $sid != $transition->sid) {
+        // Not the requested 'from' state.
+      }
+      elseif ($target_sid && $target_sid != $transition->target_sid) {
+        // Not the requested 'to' state.
+      }
+      elseif ($transition->isAllowed($roles)) {
         // Transition is allowed, permitted. Add to list.
         $transitions[$transition->tid] = clone $transition;
       }

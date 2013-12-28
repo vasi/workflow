@@ -601,7 +601,7 @@ function _workflow_admin_ui_transition_grid_form($workflow) {
         foreach ($roles as $rid => $role_name) {
           $checked = FALSE;
           if ($transition = reset($workflow->getTransitionsBySidTargetSid($from, $to))) {
-            $checked = workflow_transition_allowed($transition->tid, $rid);
+            $checked = $transition->isAllowed($rid);
           }
           $form[$from][$to][$rid] = array(
             '#type' => 'checkbox',

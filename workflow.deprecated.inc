@@ -479,6 +479,14 @@ function workflow_update_workflow_transitions(&$data) {
 }
 
 /**
+ * Given a tid and new roles, update them.
+ * @todo - this should be refactored out, and the update made a full actual update.
+ */
+function workflow_update_workflow_transitions_roles($tid, $roles) {
+  return db_update('workflow_transitions')->fields(array('roles' => implode(',', $roles)))->condition('tid', $tid, '=')->execute();
+}
+
+/**
  * Get allowable transitions for a given workflow state. Typical use:
  *
  * global $user;
@@ -557,11 +565,26 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
 }
 
 /**
- * Given a tid and new roles, update them.
- * @todo - this should be refactored out, and the update made a full actual update.
+ * See if a transition is allowed for a given role.
+ *
+ * @param int $tid
+ *  A transition ID.
+ * @param mixed $role
+ *  A single role (int or string 'author') or array of roles.
+ *
+ * @return bool
+ *  TRUE if the role is allowed to do the transition.
  */
-function workflow_update_workflow_transitions_roles($tid, $roles) {
-  return db_update('workflow_transitions')->fields(array('roles' => implode(',', $roles)))->condition('tid', $tid, '=')->execute();
+function workflow_transition_allowed($tid, $role = NULL) {
+  $transition = reset(entity_load('WorkflowConfigTransition', array($tid)));
+
+  $allowed = $transition->roles;
+  if ($role) {
+    if (!is_array($role)) {
+      $role = array($role);
+    }
+    return array_intersect($role, $allowed) == TRUE;
+  }
 }
 
 
