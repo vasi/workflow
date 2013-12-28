@@ -33,7 +33,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field['id'] = 0;
     $field['settings']['wid'] = $workflow->wid;
     $field['settings']['widget'] = $workflow->options;
-    $field['settings']['widget']['comment'] = $workflow->options['comment_log_tab']; // vs. ['comment_log_node']; 
+    $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_tab']); // vs. ['comment_log_node']; 
 
     $field['settings']['widget']['current_status'] = TRUE;
 
