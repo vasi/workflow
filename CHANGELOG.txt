@@ -370,3 +370,4 @@ Issue #2019345 by johnv: Added notices in info-file for better usage of submodul
 Issue #2019345 by johnv: Added WorkflowConfigTransition as an Entity for workflow_transitions.
 Issue #2019345 by johnv: Fixed delete transitions even when no content is assigned.
 Issue #2019345 by johnv: Moved workflow_transitions functions to Workflow(ConfigTransition) classes.
+Issue #2163805 by johnv: Added user_access to workflow_revert link, not only page.
