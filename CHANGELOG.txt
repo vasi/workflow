@@ -374,4 +374,5 @@ Issue #2163805 by johnv: Added user_access to workflow_revert link, not only pag
 Issue #2019345 by johnv: Fixed message on workflow_tab_page.
 Issue #2149223 by johnv: Moved code from workflow_allowable_transitions to central Workflow::getTransitions().
 Issue #2149223 by johnv: Moved code from workflow_transition_allowed to WorkflowConfigTransition::isAllowed().
-Issue #2019345 by johnv: Fixed update of workflow_node_history.
+Issue #2165179 by colan: Fixed update of workflow_node_history.
+Issue #2160375 by Matthijs: Added workflow tab for all entities.

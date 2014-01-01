@@ -39,33 +39,110 @@ function workflow_permission() {
 
 /**
  * Implements hook_menu().
- * 
- * @todo: add Workflow History Tab for every $entity_type, not only user, node, term.
+ *
+ * hook_menu in workflownode sets a '/workflow' menu item for entity type 'node'.
+ * hook_menu_alter in workflowfield sets a '/workflow' menu item for each relevant entity type.
  */
 function workflow_menu() {
+  if (!module_exists('workflownode')) {
+    return array();
+  }
+
+  $type = 'node';
+  $items['node/%node/workflow'] = array(
+    'title' => 'Workflow',
+    'page callback' => 'workflow_tab_page',
+    'page arguments' => array($type, 1),
+    'access callback' => 'workflow_tab_access',
+    'access arguments' => array($type, 1),
+    'file' => 'workflow.pages.inc',
+    'file path' => drupal_get_path('module', 'workflow'),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'module' => 'workflow',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * hook_menu in workflownode sets a '/workflow' menu item for entity type 'node'.
+ * hook_menu_alter in workflowfield sets a '/workflow' menu item for each relevant entity type.
+ */
+function workflow_menu_alter(&$items) {
+  if (!module_exists('workflowfield')) {
+    return;
+  }
+
+  // Basic menu item.
   $menu_item = array(
     'title' => 'Workflow',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'workflow.pages.inc',
     'page callback' => 'workflow_tab_page',
     'access callback' => 'workflow_tab_access',
+    'file' => 'workflow.pages.inc',
+    'file path' => drupal_get_path('module', 'workflow'),
     'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'module' => 'workflow',
   );
 
-  $items['node/%node/workflow'] = $menu_item + array(
-    'access arguments' => array('node', 1),
-    'page arguments' => array('node', 1),
-  );
-  $items['user/%user/workflow'] = $menu_item + array(
-    'access arguments' => array('user', 1),
-    'page arguments' => array('user', 1),
-  );
-  $items['taxonomy/term/%taxonomy_term/workflow'] = $menu_item + array(
-    'access arguments' => array('taxonomy_term', 2),
-    'page arguments' => array('taxonomy_term', 2),
-  );
+  // Get a cross-bundle map of all fields so we can add the workflow tab to all
+  // entities with a workflow field.
+  foreach (field_info_field_map() as $info) {
+    if ($info['type'] == 'workflow') {
+      // Loop over the entity types that have this field.
+      foreach ($info['bundles'] as $type => $bundles) {
+        $info = entity_get_info($type);
 
-  return $items;
+        // Add the workflow tab in the Entity Admin UI.
+        if (!empty($info['admin ui']['path'])) {
+          $entity_position = substr_count($info['admin ui']['path'], '/') + 2;
+          $wildcard = (isset($info['admin ui']['menu wildcard']) ? $info['admin ui']['menu wildcard'] : '%entity_object');
+          $items[$info['admin ui']['path'] . '/manage/' . $wildcard . '/workflow'] = $menu_item + array(
+              'page arguments' => array($type, $entity_position),
+              'access arguments' => array($type, $entity_position),
+              'load arguments' => array($type),
+            );
+        }
+
+        // We can only continue if the entity relies on a ENTITY_TYPE_load() load hook.
+        if ($info['load hook'] == $type . '_load') {
+          try {
+            foreach ($bundles as $bundle) {
+              // Get the default entity values.
+              $values = array($info['entity keys']['id'] => '%' . $type);
+              if ($info['entity keys']['bundle']) {
+                $values[$info['entity keys']['bundle']] = $bundle;
+              }
+
+              // Create a dummy entity and get the URI.
+              $entity = @entity_create($type, $values);
+              $uri = @$info['uri callback']($entity);
+              if (isset($uri['path'])) {
+                $uri = $uri['path'];
+
+                // Add the workflow tab if possible.
+                if (isset($items[$uri]) && !isset($items[$uri . '/workflow'])) {
+                  $entity_position = array_search('%' . $type, explode('/', $uri));
+
+                  if ($entity_position) {
+                    $items[$uri . '/workflow'] = $menu_item + array(
+                      'page arguments' => array($type, $entity_position),
+                      'access arguments' => array($type, $entity_position),
+                    );
+                  }
+                }
+              }
+            }
+          }
+          catch (Exception $ex) {
+            // The $type entity could not be created or the URI building failed.
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -109,7 +186,7 @@ function workflow_tab_access($entity_type, $entity) {
     // Add 'author' role to user if user is author of this entity.
     // N.B.1: Some entities (e.g, taxonomy_term) do not have a uid.
     // N.B.2: If 'anonymous' is the author, don't allow access to History Tab,
-    // since anyone can access it, and it will be published in Search engines. 
+    // since anyone can access it, and it will be published in Search engines.
     elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
       $roles = array_merge(array('author'), $roles);
     }
@@ -358,13 +435,13 @@ function workflow_transition_form_submit($form, &$form_state) {
     // Caveat: Some entities do not have 'changed' property set.
     if ((isset($entity->changed)) && $entity->changed == REQUEST_TIME) {
       // We were in edit mode. No need to save the entity explicitly.
-      // Create a Transition. The Widget knows if it is scheduled. 
+      // Create a Transition. The Widget knows if it is scheduled.
       $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
       $new_sid = $widget->submit($form, $form_state, $items, $force);
     }
     else {
       // Save $entity, but only if sid has changed.
-      // Use field_attach_update for this? Save always?  
+      // Use field_attach_update for this? Save always?
       $entity->{$field_name}['und'][0]['workflow'] = $form_state['input'];
       entity_save($entity_type, $entity);
     }
@@ -373,7 +450,7 @@ function workflow_transition_form_submit($form, &$form_state) {
     // For a Node API form, only contrib fields need to be filled.
     // No updating of the node itself.
     // (unless we need to record the stamp.)
-    // Create a Transition. The Widget knows if it is scheduled. 
+    // Create a Transition. The Widget knows if it is scheduled.
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
     $new_sid = $widget->submit($form, $form_state, $items, $force);
   }
@@ -425,7 +502,7 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
   }
   else {
     // For Node API, the node does not need to be saved, since all fields are custom.
-    // OTOH, we may need to refresh the cache, which is done by core on entity_save. 
+    // OTOH, we may need to refresh the cache, which is done by core on entity_save.
     $new_sid = $transition->execute($force = TRUE);
   }
 
