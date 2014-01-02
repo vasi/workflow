@@ -34,6 +34,28 @@ function workflow_entity_info() {
   return $entities;
 }
 
+/**
+ * Entity loader for Workflow.
+ *
+ * Also used as Menu wild card loader {wildcard_name}_load for '%workflow'.
+ * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
+ * Used by add-on modules, such as workflow_admin_ui.
+ */
+function workflow_load($wid) {
+  return Workflow::load($wid);
+}
+
+/**
+ * Loads a WorkflowState.
+ */
+function workflow_state_load($sid) {
+  return WorkflowState::load($sid);
+}
+
+
+/*
+ * Test functions.
+ */
 function workflow_entity_test1() {
   $w = Workflow::create('test' . REQUEST_TIME);
   $w->save();

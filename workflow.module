@@ -12,16 +12,6 @@ define('WORKFLOW_DELETION', 0);
 module_load_include('inc', 'workflow', 'workflow.entity');
 
 /**
- * Menu wild card loader {wildcard_name}_load for '%workflow'.
- *
- * Used by add-on modules, such as workflow_admin_ui.
- * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
- */
-function workflow_load($wid) {
-  return Workflow::load($wid);
-}
-
-/**
  * Implements hook_permission().
  */
 function workflow_permission() {
