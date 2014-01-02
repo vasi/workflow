@@ -144,6 +144,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Save the form_id, so the form values can be retrieved in submit function.
     $element['workflow']['form_id'] = array('#type' => 'value', '#value' => $form_id);
+dpm($field);
+dpm(debug_backtrace());
 
     // First of all, we add the default value in the place were normal fields
     // have it. This is to cater for 'preview' of the entity.
