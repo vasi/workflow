@@ -205,16 +205,16 @@ class WorkflowTransition {
     if (($user->uid != 1) && !$force) {
       // Get the WorkflowConfigTransition.
       // @todo: some day, config_transition can be a parent of entity_transition.
-      $config_transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid));
-      if (!$config_transition) {
-        watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
-        return $old_sid;
-      }
-      elseif (!$force) {
-        $allowed = $transition->isAllowed($roles, $force);
-        if (!allowed) {
+      $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
+      $config_transition = reset($config_transitions);
+      if ($config_transition) {
+        if (!$config_transition->isAllowed($roles)) {
           return FALSE;
         }
+      }
+      else {
+        watchdog('workflow', 'Attempt to go to nonexistent transition (from %old to %new)', $args, WATCHDOG_ERROR);
+        return $old_sid;
       }
     }
 

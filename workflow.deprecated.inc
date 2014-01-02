@@ -578,13 +578,14 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
  * @deprecated: workflow_transition_allowed => WorkflowConfigTransition::isAllowed
  */
 function workflow_transition_allowed($tid, $role = NULL) {
-  $transition = reset(entity_load('WorkflowConfigTransition', array($tid)));
+  $config_transitions = entity_load('WorkflowConfigTransition', array($tid));
+  $config_transition = reset($config_transitions);
 
-  $allowed = $transition->roles;
   if ($role) {
     if (!is_array($role)) {
       $role = array($role);
     }
+    $allowed = $config_transition->roles;
     return array_intersect($role, $allowed) == TRUE;
   }
 }

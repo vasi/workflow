@@ -236,13 +236,13 @@ class Workflow {
       $is_valid = FALSE;
     }
 
-    // If the Workflow is mapped to a node type, check if workflow->options is set. 
+    // If the Workflow is mapped to a node type, check if workflow->options is set.
     if ($type_map = $this->getTypeMap() && !count($this->options)) {
       // That's all, so let's remind them to create some transitions.
       $message = t('Please maintain Workflow %workflow on its <a href="@url">settings</a> page.',
         array(
           '%workflow' => $this->getName(),
-          '@url' => url('admin/config/workflow/workflow/edit/' . $this->wid), 
+          '@url' => url('admin/config/workflow/workflow/edit/' . $this->wid),
         )
       );
       drupal_set_message($message, 'warning');
@@ -312,7 +312,7 @@ class Workflow {
    *   Indicates to which states to return.
    *   - TRUE = all, including Creation and Inactive;
    *   - FALSE = only Active states, not Creation;
-   *   - 'CREATION' = only Active states, including Creation. 
+   *   - 'CREATION' = only Active states, including Creation.
    *
    * @return array
    *   An array of WorkflowState objects.
@@ -345,7 +345,7 @@ class Workflow {
    *   A WorkflowState object.
    */
   public function getState($key) {
-    if (is_numeric($key)) { 
+    if (is_numeric($key)) {
       return WorkflowState::load($key, $this->wid);
     }
     else {
@@ -386,7 +386,7 @@ class Workflow {
    * Loads all allowed Transition for this workflow.
    *
    * @param array $tids
-   *  Array of Transitions IDs. If FALSE, show all transitions.  
+   *  Array of Transitions IDs. If FALSE, show all transitions.
    * @param array $conditions
    *  $conditions['sid'] : if provided, a 'from' State ID.
    *  $conditions['target_sid'] : if provided, a 'to' state ID.

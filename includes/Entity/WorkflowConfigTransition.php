@@ -22,12 +22,12 @@ class WorkflowConfigTransitionController extends EntityAPIController {
     $this->cache = FALSE;
 
     $result = parent::load($ids, $conditions);
-    foreach ($result as &$transition) {
-      if(!$transition->roles) {
-        $transition->roles = array();
+    foreach ($result as &$config_transition) {
+      if(!$config_transition->roles) {
+        $config_transition->roles = array();
       }
       else {
-        $transition->roles = explode(',', $transition->roles);
+        $config_transition->roles = explode(',', $config_transition->roles);
       }
     }
     return $result;
@@ -36,9 +36,10 @@ class WorkflowConfigTransitionController extends EntityAPIController {
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     $workflow = workflow_load($entity->wid);
     // First check if this transition already exist.
-    $transition = reset($workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid));
-    if ($transition) {
-      $entity->tid = $transition->tid;
+    $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
+    $config_transition = reset($config_transitions);
+    if ($config_transition) {
+      $entity->tid = $config_transition->tid;
     }
     if (isset($entity->roles) && !empty($entity->roles)) {
       $entity->roles = implode(',', $entity->roles);
@@ -80,7 +81,7 @@ class WorkflowConfigTransition extends Entity {
    */
   public function __construct(array $values = array(), $entityType = NULL) {
     $entityType = 'WorkflowConfigTransition';
-    return parent::__construct($values, $entityType); 
+    return parent::__construct($values, $entityType);
   }
 
   /**

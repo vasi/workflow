@@ -38,7 +38,7 @@ function workflow_actions_trigger_info() {
   if (module_exists('workflownode')) {
     $tm = workflow_get_workflow_type_map();
     foreach ($tm as $type => $wid) {
-      $type_map[$wid][] = array('entity_type' => 'node', 'bundle' => $type); 
+      $type_map[$wid][] = array('entity_type' => 'node', 'bundle' => $type);
     }
   }
 
@@ -60,7 +60,7 @@ function workflow_actions_trigger_info() {
     if ($field['type'] == 'workflow') {
       foreach ($field['bundles'] as $entity_type => $bundles) {
         foreach ($bundles as $bundle) {
-            $type_map[$field['settings']['wid']][] = array('entity_type' => $entity_type, 'bundle' => $bundle,); 
+            $type_map[$field['settings']['wid']][] = array('entity_type' => $entity_type, 'bundle' => $bundle,);
         }
       }
     }
@@ -129,8 +129,11 @@ function workflow_actions_workflow($op, $old_sid, $new_sid, $entity, $force = FA
       // A transition has occurred; fire off actions associated with this transition.
       $old_state = WorkflowState::load($old_sid);
       $workflow = $old_state->getWorkflow();
-      if ($transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid))) {
-        $hook = 'workflow-' . $entity_type . '-' . $entity->type . '-' . $transition->tid;
+
+      $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
+      $config_transition = reset($config_transitions);
+      if ($config_transition) {
+        $hook = 'workflow-' . $entity_type . '-' . $entity->type . '-' . $config_transition->tid;
 
         $aids = trigger_get_assigned_actions($hook);
         if ($aids) {
@@ -161,10 +164,13 @@ function workflow_actions_workflow($op, $old_sid, $new_sid, $entity, $force = FA
     case 'transition delete':
       $old_state = WorkflowState::load($old_sid);
       $workflow = $old_state->getWorkflow();
-      if ($transition = reset($workflow->getTransitionsBySidTargetSid($old_sid, $new_sid))) {
-        $actions = workflow_actions_get_actions_by_tid($transition->tid);
+
+      $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
+      $config_transition = reset($config_transitions);
+      if ($config_transition) {
+        $actions = workflow_actions_get_actions_by_tid($config_transition->tid);
         foreach ($actions as $aid) {
-          workflow_actions_remove($transition->tid, $aid);
+          workflow_actions_remove($config_transition->tid, $aid);
         }
       }
       break;

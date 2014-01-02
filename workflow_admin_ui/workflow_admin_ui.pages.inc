@@ -629,8 +629,10 @@ function _workflow_admin_ui_transition_grid_form($workflow) {
         $to = $nested_state_id;
         foreach ($roles as $rid => $role_name) {
           $checked = FALSE;
-          if ($transition = reset($workflow->getTransitionsBySidTargetSid($from, $to))) {
-            $checked = $transition->isAllowed($rid);
+          $config_transitions = $workflow->getTransitionsBySidTargetSid($from, $to);
+          $config_transition = reset($config_transitions);
+          if ($config_transition) {
+            $checked = $config_transition->isAllowed($rid);
           }
           $form[$from][$to][$rid] = array(
             '#type' => 'checkbox',

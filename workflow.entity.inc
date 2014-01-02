@@ -83,7 +83,8 @@ function workflow_entity_test1() {
 }
 
 function workflow_entity_test2() {
-  $t = reset(entity_load('WorkflowConfigTransition', array(6)));
+  $ts = entity_load('WorkflowConfigTransition', array(6));
+  $t = reset($ts);
   $t->roles += array(3 => 3);
   entity_save('WorkflowConfigTransition', $t);
 }
@@ -102,7 +103,8 @@ dpm($w->loadTransitions());
 //  dpm($t->label());
 // $w->delete();
 
-//  $t = reset(entity_load('WorkflowConfigTransition', array(6)));
+//  $ts = entity_load('WorkflowConfigTransition', array(6));
+//  $t = reset($ts);
 //  $t->roles += array(3 => 3);
 //  entity_save('WorkflowConfigTransition', $t);
 }
