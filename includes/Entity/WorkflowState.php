@@ -388,8 +388,11 @@ class WorkflowState {
           $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
         }
       }
+
       // Include current state for same-state transitions (by replacing the object by the name).
-      $options[$current_sid] = check_plain(t($options[$current_sid]->label()));
+      if ($current_sid != $workflow->getCreationSid()) {
+        $options[$current_sid] = check_plain(t($options[$current_sid]->label()));
+      }
 
       // Remove the unpermitted options.
       foreach ($options as $key => $data) {
