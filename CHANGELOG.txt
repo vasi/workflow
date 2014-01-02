@@ -378,3 +378,4 @@ Issue #2165179 by colan: Fixed update of workflow_node_history.
 Issue #2160375 by Matthijs: Added workflow tab for all entities.
 Issue #2112199 by johnv: Fixed messages by PAReview.sh in WorkflowItem.php.
 Issue #2149223 by johnv: Moved code from workflow_transition_allowed to WorkflowConfigTransition::isAllowed() -2-.
+Issue #2019345 by johnv: Moved code to unify workflow_node and workflow_field.

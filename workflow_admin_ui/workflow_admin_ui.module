@@ -86,14 +86,16 @@ function workflow_admin_ui_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['admin/config/workflow/workflow/edit/%workflow'] = array(
-    'title' => 'Edit',
-    'file' => 'workflow_admin_ui.pages.inc',
-    'access arguments' => array('administer workflow'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_admin_ui_edit_form', 5),
-    'type' => MENU_CALLBACK,
-  );
+  if (module_exists('workflownode')) {
+    $items['admin/config/workflow/workflow/edit/%workflow'] = array(
+      'title' => 'Edit',
+      'file' => 'workflow_admin_ui.pages.inc',
+      'access arguments' => array('administer workflow'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('workflow_admin_ui_edit_form', 5),
+      'type' => MENU_CALLBACK,
+    );
+  }
 
   $items["admin/config/workflow/workflow/delete/%workflow"] = array(
     'title' => 'Delete',
@@ -213,13 +215,22 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
     case 'workflow':
       $name = $workflow->getName();
       $wid = $workflow->wid;
-      $actions = array(
-        'workflow_settings' => array(
-          'title' => t('Settings'),
-          'href' => "admin/config/workflow/workflow/edit/$wid",
-          'attributes' => array('alt' => t('Edit the @wf settings', array('@wf' => $name))),
-        ),
+      $actions = array();
 
+      if(module_exists('workflownode')) {
+        $actions += array(
+          'workflow_settings' => array(
+            'title' => t('Settings'),
+            'href' => "admin/config/workflow/workflow/edit/$wid",
+            'attributes' => array('alt' => t('Edit the @wf settings', array('@wf' => $name))),
+          ),
+        );
+      }
+      else {
+        // For Workflow Field, these settings are in the Field settings form.
+      }
+
+      $actions += array(
         'workflow_transitions' => array(
           'title' => t('Transitions'),
           'href' => "admin/config/workflow/workflow/transitions/$wid",

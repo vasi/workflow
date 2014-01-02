@@ -508,6 +508,33 @@ class Workflow {
     if ($item) {
       $this->item = $item;
     }
+    if (empty($this->item)) {
+      // This is for Workflow Node. Emulate a Field API interface.
+      // @todo D8: Remove, after converting workflow node to workflow field.
+      $workflow = &$this;
+
+      $field = array();
+      $field['field_name'] = '';
+      $field['id'] = 0;
+      $field['settings']['wid'] = $workflow->wid;
+      $field['settings']['widget'] = $workflow->options;
+      // Add default values.
+      $field['settings']['widget'] += array(
+        'name_as_title' => TRUE,
+        'options' => 'radios',
+        'schedule' => TRUE,
+        'schedule_timezone' => TRUE,
+        'comment_log_node' => TRUE,
+        'comment_log_tab' => TRUE,
+        'watchdog_log' => TRUE,
+        'history_tab_show' => TRUE,
+      );
+
+      $instance = array();
+
+      $this->item = new WorkflowItem($field, $instance);
+    }
+
     return $this->item;
   }
 

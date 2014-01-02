@@ -574,6 +574,8 @@ function workflow_allowable_transitions($sid, $dir = 'to', $roles = 'ALL') {
  *
  * @return bool
  *  TRUE if the role is allowed to do the transition.
+ *
+ * @deprecated: workflow_transition_allowed => WorkflowConfigTransition::isAllowed
  */
 function workflow_transition_allowed($tid, $role = NULL) {
   $transition = reset(entity_load('WorkflowConfigTransition', array($tid)));

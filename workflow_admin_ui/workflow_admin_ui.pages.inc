@@ -64,7 +64,7 @@ function workflow_admin_ui_add_form_submit($form, &$form_state) {
     '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
   );
   watchdog('workflow', 'Created workflow %name', $args);
-  drupal_set_message(t('The workflow %name was created. Please maintain the options.', $args), 'status');
+  drupal_set_message(t('The workflow %name was created. Please maintain the settings.', $args), 'status');
 
   // The workflow ID is now generated upon save().
   $wid = $workflow->wid;
@@ -208,6 +208,8 @@ function theme_workflow_admin_ui_view_permissions_form($variables) {
  *   HTML form and permissions table.
  */
 function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
+  // @todo D8: remove workflow_admin_ui_edit_form, after converting Workflow Node to Field.
+
   $noyes = array(t('No'), t('Yes'));
 
   // If we don't have a workflow by this point, we need to go back
@@ -234,17 +236,33 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
     $form['basic']['wf_name'] = array(
       '#type' => 'textfield',
       '#default_value' => $workflow->getName(),
-      '#title' => t('Workflow Name'),
+      '#title' => t('Workflow name'),
       '#maxlength' => '254',
       '#required' => TRUE,
     );
 
+    $form['basic']['options'] = array(
+      '#type' => 'select',
+      '#title' => t('How to show the available states'),
+      '#required' => FALSE,
+      '#default_value' => $workflow->options['options'],
+      // '#multiple' => TRUE / FALSE,
+      '#options' => array(
+        // These options are taken from options.module
+        'select' => 'Select list',
+        'radios' => 'Radio buttons',
+        // 'actions' => 'Action buttons', // by workflow contrib.
+      ),
+      '#description' => t('The Widget shows all available states. Decide which
+        is the best way to show them.'
+      ),
+    );
     $form['basic']['name_as_title'] = array(
       '#type' => 'radios',
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Use the workflow name as the title of the workflow form?'),
-      '#default_value' => isset($workflow->options['name_as_title']) ? $workflow->options['name_as_title'] : 0,
+      '#default_value' => $workflow->options['name_as_title'],
       '#description' => t('The workflow section of the editing form is in its own fieldset. Checking the box will add the workflow ' .
         'name as the title of workflow section of the editing form.'),
     );
@@ -259,7 +277,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Allow scheduling of workflow transitions?'),
-      '#default_value' => isset($workflow->options['schedule']) ? $workflow->options['schedule'] : 1,
+      '#default_value' => $workflow->options['schedule'],
       '#description' => t('Workflow transitions may be scheduled to a moment in the future. ' .
         'Soon after the desired moment, the transition is executed by Cron.'),
     );
@@ -269,7 +287,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Show a timezone when scheduling a transition?'),
-      '#default_value' => isset($workflow->options['schedule_timezone']) ? $workflow->options['schedule_timezone'] : 1,
+      '#default_value' => $workflow->options['schedule_timezone'],
     );
 
     $form['comment'] = array(
@@ -317,7 +335,16 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-
+    $form['tab']['history_tab_show'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use the workflow history, and show it on a separate tab.'),
+      '#required' => FALSE,
+      '#default_value' => $workflow->options['history_tab_show'],
+      '#description' => t("Every state change is recorded in table
+        {workflow_node_history}. If checked and user has proper permission, a
+        tab 'Workflow' is shown on the entity view page, which gives access to
+        the History of the workflow."),
+    );
     $form['tab']['tab_roles'] = array(
       '#type' => 'checkboxes',
       '#options' => workflow_admin_ui_get_roles(),
@@ -387,11 +414,13 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   $workflow->tab_roles = array_filter($form_state['values']['tab_roles']);
   $workflow->options = array(
     'name_as_title' => $form_state['values']['name_as_title'],
+    'options' => $form_state['values']['options'],
     'schedule' => $form_state['values']['schedule'],
     'schedule_timezone' => $form_state['values']['schedule_timezone'],
     'comment_log_node' => $form_state['values']['comment_log_node'],
     'comment_log_tab' => $form_state['values']['comment_log_tab'],
     'watchdog_log' => $form_state['values']['watchdog_log'],
+    'history_tab_show' => $form_state['values']['history_tab_show'],
   );
 
   $workflow->save();

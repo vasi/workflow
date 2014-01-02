@@ -43,7 +43,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
           ),
           'watchdog_log' => 1,
           'history' => array(
-            'show' => 1,
+            'history_tab_show' => 1,
             'roles' => array(),
           ),
         ),
@@ -191,13 +191,15 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-    $element['history']['show'] = array(
+    $element['history']['history_tab_show'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use the workflow history, and show it on a separate tab.'),
       '#required' => FALSE,
-      '#default_value' => $settings['history']['show'],
-      '#description' => t("Every state change is recorded in table {workflow_node_history}.
-        If checked, a tab 'Workflow' is shown on the entity view page, which gives access to the History of the workflow."),
+      '#default_value' => $settings['history']['history_tab_show'],
+      '#description' => t("Every state change is recorded in table
+        {workflow_node_history}. If checked and user has proper permission, a
+        tab 'Workflow' is shown on the entity view page, which gives access to
+        the History of the workflow."),
     );
     $element['history']['roles'] = array(
       '#type' => 'checkboxes',
