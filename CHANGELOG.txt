@@ -382,3 +382,4 @@ Issue #2019345 by johnv: Moved code to unify workflow_node and workflow_field.
 Issue #2019345 by johnv: Added function workflow_state_load.
 Issue #2165703 by Propaganistas, johnv: Fixed strict warnings.
 Issue #2166199 by zihong0: Fixed error.
+Issue #2166047 by johnv: Fixed error when choosing 'Options' widget directly on field-add page.
