@@ -380,4 +380,5 @@ Issue #2112199 by johnv: Fixed messages by PAReview.sh in WorkflowItem.php.
 Issue #2149223 by johnv: Moved code from workflow_transition_allowed to WorkflowConfigTransition::isAllowed() -2-.
 Issue #2019345 by johnv: Moved code to unify workflow_node and workflow_field.
 Issue #2019345 by johnv: Added function workflow_state_load.
-Issue #2165703 by protagonistas, johnv: Fixed strict warnings.
+Issue #2165703 by Propaganistas, johnv: Fixed strict warnings.
+Issue #2166199 by zihong0: Fixed error.
