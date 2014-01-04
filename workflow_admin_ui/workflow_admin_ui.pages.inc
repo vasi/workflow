@@ -245,7 +245,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#type' => 'select',
       '#title' => t('How to show the available states'),
       '#required' => FALSE,
-      '#default_value' => $workflow->options['options'],
+      '#default_value' => isset($workflow->options['options']) ? $workflow->options['options'] : 'radios',
       // '#multiple' => TRUE / FALSE,
       '#options' => array(
         // These options are taken from options.module
@@ -262,7 +262,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Use the workflow name as the title of the workflow form?'),
-      '#default_value' => $workflow->options['name_as_title'],
+      '#default_value' => isset($workflow->options['name_as_title']) ? $workflow->options['name_as_title'] : 0,
       '#description' => t('The workflow section of the editing form is in its own fieldset. Checking the box will add the workflow ' .
         'name as the title of workflow section of the editing form.'),
     );
@@ -277,7 +277,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Allow scheduling of workflow transitions?'),
-      '#default_value' => $workflow->options['schedule'],
+      '#default_value' => isset($workflow->options['schedule']) ? $workflow->options['schedule'] : 1,
       '#description' => t('Workflow transitions may be scheduled to a moment in the future. ' .
         'Soon after the desired moment, the transition is executed by Cron.'),
     );
@@ -287,7 +287,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#options' => $noyes,
       '#attributes' => array('class' => array('container-inline')),
       '#title' => t('Show a timezone when scheduling a transition?'),
-      '#default_value' => $workflow->options['schedule_timezone'],
+      '#default_value' => isset($workflow->options['schedule_timezone']) ? $workflow->options['schedule_timezone'] : 1,
     );
 
     $form['comment'] = array(
@@ -339,7 +339,7 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
       '#type' => 'checkbox',
       '#title' => t('Use the workflow history, and show it on a separate tab.'),
       '#required' => FALSE,
-      '#default_value' => $workflow->options['history_tab_show'],
+      '#default_value' => isset($workflow->options['history_tab_show']) ? $workflow->options['history_tab_show'] : 1,
       '#description' => t("Every state change is recorded in table
         {workflow_node_history}. If checked and user has proper permission, a
         tab 'Workflow' is shown on the entity view page, which gives access to
