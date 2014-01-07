@@ -23,7 +23,6 @@ function workflowfield_field_info() {
 function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
   if ($form['#field']['type'] == 'workflow') {
     // The Workflow field must have a value, so set to required.
-    $form['instance']['required']['#type'] = 'hidden';
     $form['instance']['required']['#default_value'] = 1;
     $form['instance']['required']['#disabled'] = TRUE;
 
@@ -33,7 +32,6 @@ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state,
     unset($form['instance']['default_value_widget']);
 
     // Make sure only 1 value can be entered in the Workflow field.
-    $form['field']['cardinality']['#type'] = 'hidden';
     $form['field']['cardinality']['#default_value'] = 1;
     $form['field']['cardinality']['#disabled'] = TRUE;
   }
@@ -110,7 +108,7 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
     // Load the node again, since the passed node doesn't contain proper 'type' field.
     $referenced_entity = entity_load_single($referenced_entity_type, $referenced_entity_id);
 
-    // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API. 
+    // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API.
     // @todo: when changing Workflow via comment, the history is saved twice.
     // Remember, we don't know if the transition is scheduled or not.
     $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
