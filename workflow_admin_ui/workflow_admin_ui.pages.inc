@@ -696,7 +696,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
 
   foreach ($states as $state) {
     // Allow modules to insert state operations.
-    $state_links = module_invoke_all('workflow_operations', 'state', $workflow, $state);
+    $links = module_invoke_all('workflow_operations', 'state', $workflow, $state);
 
     // Make it impossible to reassign to the same state that is disabled.
     if ($state->isCreationState() || !$state->sid || !$state->isActive()) {
@@ -747,7 +747,7 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
 
       'ops' => array(
         '#type' => 'markup',
-        '#markup' => theme('links', array('links' => $state_links)),
+        '#markup' => theme('links', array('links' => $links)),
        ),
 
       'sysid' => array(

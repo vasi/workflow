@@ -387,3 +387,4 @@ Issue #2165807 by dcanetma: Fixed scheduled transitions cron is not working on t
 Issue #2019345 by johnv: Fixed messages on workflow settings edit page.
 Issue #2064449 by johnv: Changed role ID of 'workflow author' from 'author' to '-1'; 'roles' fields are now serialized.
 Issue #2168571 by rv0: Fixed Workflow field required setting is not saved.
+Issue #2102765 by johnv: Fixed documentation of hook_workflow_operations.
