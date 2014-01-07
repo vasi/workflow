@@ -246,10 +246,10 @@ class WorkflowState {
 
     // Delete the transitions this state is involved in.
     $workflow = Workflow::load($this->wid);
-    foreach ($transitions = $workflow->getTransitionsBySid($current_sid) as $transition) {
+    foreach ($transitions = $workflow->getTransitionsBySid($current_sid, 'ALL') as $transition) {
       $transition->delete();
     }
-    foreach ($transitions = $workflow->getTransitionsByTargetSid($current_sid) as $transition) {
+    foreach ($transitions = $workflow->getTransitionsByTargetSid($current_sid, 'ALL') as $transition) {
       $transition->delete();
     }
 
@@ -348,14 +348,14 @@ class WorkflowState {
       }
       elseif (!$entity_id) {
         // If this is a new page, give the authorship role.
-        $roles = array_merge(array('author'), $roles);
+        $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       }
       elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
         // Add 'author' role to user if user is author of this entity.
         // - Some entities (e.g, taxonomy_term) do not have a uid.
         // - If 'anonymous' is the author, don't allow access to History Tab,
         //   since anyone can access it, and it will be published in Search engines. 
-        $roles = array_merge(array('author'), $roles);
+        $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       }
 
       // Set up an array with states - they are already properly sorted.

@@ -273,7 +273,8 @@ class WorkflowTransition {
     if ($state_changed) {
       // State has changed. Do some checks upfront.
 
-      $roles = array_merge(array_keys($user->roles), array('author'));
+      $roles = array_keys($user->roles);
+      $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       if (!$this->isAllowed($roles, $force)) {
         watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
         // If incorrect, quit.

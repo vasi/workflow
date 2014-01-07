@@ -385,3 +385,4 @@ Issue #2166199 by zihong0: Fixed error.
 Issue #2166047 by johnv: Fixed error when choosing 'Options' widget directly on field-add page.
 Issue #2165807 by dcanetma: Fixed scheduled transitions cron is not working on time basis.
 Issue #2019345 by johnv: Fixed messages on workflow settings edit page.
+Issue #2064449 by johnv: Changed role ID of 'workflow author' from 'author' to '-1'; 'roles' fields are now serialized.

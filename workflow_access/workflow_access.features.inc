@@ -144,7 +144,7 @@ function workflow_access_features_rebuild($module) {
         foreach ($records as $rname => $record) {
           $record['sid'] = ($state) ? $state->sid : $state->sid;
           if ($rname == WORKFLOW_FEATURES_AUTHOR_NAME) {
-            $record['rid'] = -1;
+            $record['rid'] = WORKFLOW_ROLE_AUTHOR_RID;
           }
           else {
             $role = user_role_load_by_name($rname);
@@ -187,9 +187,9 @@ SELECT
 FROM {workflow_access} wa
   LEFT JOIN {role} r ON wa.rid = r.rid
 WHERE
-  wa.sid = :sid AND (wa.rid = r.rid OR wa.rid = -1)
+  wa.sid = :sid AND (wa.rid = r.rid OR wa.rid = :rid)
 SQL;
-  $results = db_query($sql, array(':sid' => $sid));
+  $results = db_query($sql, array(':sid' => $sid, ':rid' => WORKFLOW_ROLE_AUTHOR_RID));
   $records = $results->fetchAll();
   foreach ($records as $record) {
     if (empty($record->rname)) {

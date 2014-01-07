@@ -145,7 +145,7 @@ DPM($t3);
   dpm($s2->getOptions('', NULL));
   // returns  TRUE if the role is allowed to do the transition.
   $rc = $t3->isAllowed($role = 2);
-DPM($t3);
+  dpm($t3);
   dpm('this result must be TRUE: ' . (int) $rc);
   $rc = $t3->isAllowed($role = 3);
   dpm('this result must be FALSE: ' . (int) $rc);
@@ -159,5 +159,4 @@ DPM($t3);
   dpm($ts);
   $ts = $w->getTransitionsBySid($s3->sid);
   dpm($ts);
-
 }

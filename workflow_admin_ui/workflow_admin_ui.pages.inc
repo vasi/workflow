@@ -140,16 +140,16 @@ function workflow_admin_ui_view_permissions_form($workflow) {
     workflow_admin_ui_breadcrumbs($workflow);
 
     $all = array();
-    $roles = workflow_admin_ui_get_roles();
+    $roles = workflow_get_roles();
     foreach ($roles as $rid => $value) {
       $all[$rid]['name'] = $value;
     }
 
     $transitions = $workflow->getTransitions();
-    foreach ($transitions as $t) {
-      foreach ($t->roles as $rid) {
-        $current_state = $workflow->getState($t->sid);
-        $target_state = $workflow->getState($t->target_sid);
+    foreach ($transitions as $transition) {
+      foreach ($transition->roles as $rid) {
+        $current_state = $workflow->getState($transition->sid);
+        $target_state = $workflow->getState($transition->target_sid);
         $all[$rid]['transitions'][] = array(check_plain(t($current_state->label())), WORKFLOW_ADMIN_UI_ARROW, check_plain(t($target_state->label())));
       }
     }
@@ -347,8 +347,8 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
     );
     $form['tab']['tab_roles'] = array(
       '#type' => 'checkboxes',
-      '#options' => workflow_admin_ui_get_roles(),
-      '#default_value' => explode(',', $workflow->tab_roles),
+      '#options' => workflow_get_roles(),
+      '#default_value' => array_keys($workflow->tab_roles),
       '#description' => t('Select any roles that should have access to the workflow tab on nodes that have a workflow.'),
     );
 
@@ -483,7 +483,7 @@ function workflow_admin_ui_transitions_form_validate($form, $form_state) {
   $creation_sid = $creation_state->sid;
   if (isset($form_state['values']['transitions'][$creation_sid]) && is_array($form_state['values']['transitions'][$creation_sid])) {
     foreach ($form_state['values']['transitions'][$creation_sid] as $roles) {
-      if ($roles['author']) {
+      if ($roles[WORKFLOW_ROLE_AUTHOR_RID]) {
         $author_has_permission = TRUE;
         break;
       }
@@ -514,7 +514,7 @@ function theme_workflow_admin_ui_transitions_form($variables) {
 
     $states = $workflow->getStates($all = 'CREATION');
     if ($states) {
-      $roles = workflow_admin_ui_get_roles();
+      $roles = workflow_get_roles();
 
       $header = array(array('data' => t('From / To') . ' &nbsp;' . WORKFLOW_ADMIN_UI_ARROW));
       $rows = array();
@@ -602,7 +602,7 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
 function _workflow_admin_ui_transition_grid_form($workflow) {
   $form = array('#tree' => TRUE);
 
-  $roles = workflow_admin_ui_get_roles();
+  $roles = workflow_get_roles();
 
   $states = $workflow->getStates($all = 'CREATION');
   if (!$states) {

@@ -13,36 +13,23 @@
  */
 class WorkflowConfigTransitionController extends EntityAPIController {
 
-  // @todo: Set $schema['fields'] ['roles']['serialize'] = TRUE to avoid
-  //        below 'roles' code, but this requires conversion of the data.
-
   public function load($ids = array(), $conditions = array()) {
     // Set this explicitely to FALSE, until this is fixed:
     // Calling $workflow->getTransitions() twice, gives an empty list the second time.
     $this->cache = FALSE;
 
-    $result = parent::load($ids, $conditions);
-    foreach ($result as &$config_transition) {
-      if(!$config_transition->roles) {
-        $config_transition->roles = array();
-      }
-      else {
-        $config_transition->roles = explode(',', $config_transition->roles);
-      }
-    }
-    return $result;
+    return parent::load($ids, $conditions);
   }
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
-    $workflow = workflow_load($entity->wid);
-    // First check if this transition already exist.
-    $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
-    $config_transition = reset($config_transitions);
-    if ($config_transition) {
-      $entity->tid = $config_transition->tid;
-    }
-    if (isset($entity->roles) && !empty($entity->roles)) {
-      $entity->roles = implode(',', $entity->roles);
+    if (empty($entity->tid)) {
+      $workflow = workflow_load($entity->wid);
+      // First check if this transition already exist.
+      $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
+      $config_transition = reset($config_transitions);
+      if ($config_transition) {
+        $entity->tid = $config_transition->tid;
+      }
     }
     return parent::save($entity, $transaction);
   }
@@ -138,6 +125,7 @@ class WorkflowConfigTransition extends Entity {
       }
       return array_intersect($user_roles, $this->roles) == TRUE;
     }
+    return TRUE;
   }
 
 }

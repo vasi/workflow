@@ -33,6 +33,9 @@ class Workflow {
       if (!is_array($this->options)) {
         $this->options = unserialize($this->options);
       }
+      if (!is_array($this->tab_roles)) {
+        $this->tab_roles = unserialize($this->tab_roles);
+      }
       if ($this->wid) {
         self::$workflows[$this->wid] = $this;
       }
@@ -155,13 +158,6 @@ class Workflow {
    */
   public function save($create_creation_state = TRUE) {
     $wid = $this->wid;
-
-    if (isset($this->tab_roles) && is_array($this->tab_roles)) {
-      $this->tab_roles = implode(',', $this->tab_roles);
-    }
-    if (is_array($this->options)) {
-      $this->options = serialize($this->options);
-    }
 
     if (($wid > 0) && Workflow::load($wid)) {
       drupal_write_record('workflows', $this, 'wid');
