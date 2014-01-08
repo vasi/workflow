@@ -18,26 +18,38 @@ module_load_include('inc', 'workflow', 'workflow.node.type_map');
  * Implements hook_features_export_options().
  *
  * Generates the options to choose from.
- * Using $wid as key. Result is used by hook_featues_export().
+ * Using $wid as key. Result is used by hook_features_export().
  */
 function workflow_features_export_options() {
-  return workflow_get_workflow_names();
+  $workflows = array();
+  foreach (workflow_load_multiple() as $workflow) {
+    $name = $workflow->getName();
+    $workflows[$name] = $name;
+  }
+  return $workflows;
 }
 
 /**
  * Implements hook_features_export().
  */
 function workflow_features_export($data, &$export, $module_name = '') {
-  // fontyourface_default_fonts integration is provided by Features.
+  $pipe = array();
+
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['workflow'] = 'workflow';
-  foreach ($data as $wid) {
-    if ($workflow = Workflow::load($wid)) {
-      $name = $workflow->getName(); 
-      $export['features']['workflow'][$name] = $name;
+
+  foreach ($data as $workflow_name) {
+    if ($workflow = Workflow::loadByName($workflow_name)) {
+
+      if (count($workflow->getTypeMap())) {
+        $export['dependencies']['workflownode'] = 'workflownode';
+      }
+
+      $export['features']['workflow'][$workflow_name] = $workflow_name;
     }
   }
-  return $export;
+
+  return $pipe;
 }
 
 /**
@@ -48,12 +60,12 @@ function workflow_features_export_render($module, $data) {
   $code[] = '  $workflows = array();';
   $code[] = '';
 
-  foreach ($data as $name) {
-    if ($workflow = workflow_get_workflows_full_object($name)) {
+  foreach ($data as $workflow_name) {
+    if ($workflow = workflow_get_workflows_full_object($workflow_name)) {
       unset($workflow->wid);
       $workflow_export = features_var_export($workflow, '  ');
-      $workflow_identifier = features_var_export($workflow->name);
-      $code[] = "  // Exported workflow: $name";
+      $workflow_identifier = features_var_export($workflow_name);
+      $code[] = "  // Exported workflow: " . $workflow_name;
       $code[] = "  \$workflows[{$workflow_identifier}] = {$workflow_export};";
       $code[] = "";
     }

@@ -45,6 +45,10 @@ function workflow_load($wid) {
   return Workflow::load($wid);
 }
 
+function workflow_load_multiple(array $wids = NULL, $reset = FALSE) {
+  return Workflow::getWorkflows($wids, $reset);
+}
+
 /**
  * Loads a WorkflowState.
  */

@@ -34,37 +34,44 @@ SQL;
  *
  * Provide a list of all workflows as selectable Feature components.
  *
- * We'll make all workflow access records related to the selected workflows
- * available for export.
+ * Generates the options to choose from.
+ * Using $wid as key. Result is used by hook_features_export().
  */
 function workflow_access_features_export_options() {
   $workflows = array();
-  foreach (Workflow::getWorkflows() as $workflow) {
-    $workflows[$workflow->getName()] = t('workflow access configuration for: @label', array('@label' => $workflow->getName()));
+  foreach (workflow_load_multiple() as $workflow) {
+    $name = $workflow->getName();
+    $workflows[$name] = t('workflow access configuration for: @label', array('@label' => $name));
   }
-
   return $workflows;
 }
 
 /**
  * Implements hook_features_export().
- *
- * Inform Features about dependencies.
  */
 function workflow_access_features_export($data, &$export, $module_name = '') {
-  $roles = _workflow_access_get_affected_roles();
+  $pipe = array();
+
   $export['dependencies']['workflow_access'] = 'workflow_access';
   $export['dependencies']['workflow'] = 'workflow';
-  $pipe = array();
-  foreach ($data as $component) {
-    $export['features']['workflow_access'][$component] = $component;
 
-    // Access configuration for a workflow needs that workflow to exist.
-    $pipe['workflow'][$component] = $component;
+  $roles = _workflow_access_get_affected_roles();
 
-    // And it needs the roles to which rights are granted.
-    foreach ($roles[$component] as $rname) {
-      $pipe['user_role'][$rname] = $rname;
+  foreach ($data as $workflow_name) {
+    if ($workflow = Workflow::loadByName($workflow_name)) {
+
+      $export['features']['workflow_access'][$workflow_name] = $workflow_name;
+      $export['features']['workflow'][$workflow_name] = $workflow_name;
+
+      // Access configuration for a workflow needs that workflow to exist.
+      $pipe['workflow'][$workflow_name] = $workflow_name;
+
+      // And it needs the roles to which rights are granted.
+      if (isset($roles[$workflow_name])) {
+        foreach ($roles[$workflow_name] as $role_name) {
+          $pipe['user_role'][$role_name] = $role_name;
+        }
+      }
     }
   }
 
