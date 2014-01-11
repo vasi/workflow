@@ -389,3 +389,4 @@ Issue #2064449 by johnv: Changed role ID of 'workflow author' from 'author' to '
 Issue #2168571 by rv0: Fixed Workflow field required setting is not saved.
 Issue #2102765 by johnv: Fixed documentation of hook_workflow_operations.
 Issue #2169859 by johnv: Fixed problems with Features.
+Issue #2064449 by johnv: Changed hook_update_7007.

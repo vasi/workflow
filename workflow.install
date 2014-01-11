@@ -498,8 +498,12 @@ function workflow_update_7003() {
     'not null' => TRUE,
     'default' => '',
   );
-  db_add_field('workflow_scheduled_transition', 'entity_type', $field);
-  db_add_field('workflow_node_history', 'entity_type', $field);
+  if (!db_field_exists('workflow_scheduled_transition', 'entity_type')) {
+    db_add_field('workflow_scheduled_transition', 'entity_type', $field);
+  }
+  if (!db_field_exists('workflow_node_history', 'entity_type')) {
+    db_add_field('workflow_node_history', 'entity_type', $field);
+  }
 
   $field = array(
     'description' => 'The name of the field the transition relates to.',
@@ -508,8 +512,12 @@ function workflow_update_7003() {
     'not null' => TRUE,
     'default' => '',
   );
-  db_add_field('workflow_scheduled_transition', 'field_name', $field);
-  db_add_field('workflow_node_history', 'field_name', $field);
+  if (!db_field_exists('workflow_scheduled_transition', 'field_name')) {
+    db_add_field('workflow_scheduled_transition', 'field_name', $field);
+  }
+  if (!db_field_exists('workflow_node_history', 'field_name')) {
+    db_add_field('workflow_node_history', 'field_name', $field);
+  }
 
   $field = array(
     'description' => 'The {languages}.language of the entity.',
@@ -518,8 +526,12 @@ function workflow_update_7003() {
     'not null' => TRUE,
     'default' => '',
   );
-  db_add_field('workflow_scheduled_transition', 'language', $field);
-  db_add_field('workflow_node_history', 'language', $field);
+  if (!db_field_exists('workflow_scheduled_transition', 'language')) {
+    db_add_field('workflow_scheduled_transition', 'language', $field);
+  }
+  if (!db_field_exists('workflow_node_history', 'language')) {
+    db_add_field('workflow_node_history', 'language', $field);
+  }
 
   $field = array(
     'description' => 'The sequence number for this data item, used for multi-value fields',
@@ -528,8 +540,12 @@ function workflow_update_7003() {
     'not null' => TRUE,
     'default' => 0,
   );
-  db_add_field('workflow_scheduled_transition', 'delta', $field);
-  db_add_field('workflow_node_history', 'delta', $field);
+  if (!db_field_exists('workflow_scheduled_transition', 'delta')) {
+    db_add_field('workflow_scheduled_transition', 'delta', $field);
+  }
+  if (!db_field_exists('workflow_node_history', 'delta')) {
+    db_add_field('workflow_node_history', 'delta', $field);
+  }
 
   db_drop_index('workflow_scheduled_transition', 'nid');
   db_drop_index('workflow_scheduled_transition', 'entity_id');
@@ -538,11 +554,12 @@ function workflow_update_7003() {
   db_add_index('workflow_scheduled_transition', 'entity_type', array('entity_type'));
 
   db_drop_index('workflow_node_history', 'nid');
+  db_drop_index('workflow_node_history', 'sid');
   db_add_index('workflow_node_history', 'sid', array('entity_type', 'nid', 'sid'));
 }
 
 /**
- * Update contents of table workflow_scheduled_transition for new columns.
+ * Update scheduled state transitions with no association to "node".
  */
 function workflow_update_7004() {
   // Not all module functions are available in a hook_update_N() function.
@@ -562,7 +579,7 @@ function workflow_update_7004() {
     $entity_bundle = isset($entity->type) ? $entity->type : '';
 
     if ($entity_type == 'node' && $entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
-      // Save the original, since we're changing the key and cannot update. 
+      // Save the original, since we're changing the key and cannot update.
       $old_transaction = clone $scheduled_transition;
       $old_transaction->delete();
 
@@ -624,9 +641,12 @@ function workflow_update_7007() {
     $query = "SELECT w.wid, w.tab_roles FROM {workflows} w WHERE w.wid = :wid";
     $results = db_query($query, array(':wid' => $workflow->wid));
     $db_roles = $results->fetchAll();
-    $db_roles[0]->tab_roles = str_replace('author', '-1', $db_roles[0]->tab_roles); 
-    $workflow->tab_roles = empty($db_roles[0]->tab_roles) ? array() : explode(',', $db_roles[0]->tab_roles);
-    $workflow->save();
+    $roles = $db_roles[0]->tab_roles;
+    if (!(strpos($roles, 'a:') === 0)) { // Allow reprocessing this hook.
+      $roles = str_replace('author', '-1', $roles);
+      $workflow->tab_roles = empty($roles) ? array() : explode(',', $roles);
+      $workflow->save();
+    }
   }
 
   // Save field workflow_transitions-roles in serialized array (using explode for the last time).
@@ -635,8 +655,11 @@ function workflow_update_7007() {
     $query = "SELECT wt.tid, wt.roles FROM {workflow_transitions} wt WHERE wt.tid = :tid";
     $results = db_query($query, array(':tid' => $config_transition->tid));
     $db_roles = $results->fetchAll();
-    $db_roles[0]->roles = str_replace('author', '-1', $db_roles[0]->roles);
-    $config_transition->roles = empty($db_roles[0]->roles) ? array() : explode(',', $db_roles[0]->roles);
-    $config_transition->save();
+    $roles = $db_roles[0]->roles;
+    if (!(strpos($roles, 'a:') === 0)) { // Allow reprocessing this hook.
+      $roles = str_replace('author', '-1', $roles);
+      $config_transition->roles = empty($roles) ? array() : explode(',', $roles);
+      $config_transition->save();
+    }
   }
 }
