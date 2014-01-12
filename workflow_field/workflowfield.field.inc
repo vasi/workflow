@@ -155,7 +155,7 @@ function workflowfield_field_is_empty($item, $field) {
 /*
  * Callback function for list.module formatter.
  *
- * Returns the array of allowed values for a list field.
+ * Returns array of allowed values when using a 'core' list formatter, not 'workflow' formatter.
  * @see list_allowed_values()
  */
 function workflowfield_allowed_values($field, $instance, $entity_type, $entity) {

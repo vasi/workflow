@@ -84,7 +84,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     $workflow = $current_state->getWorkflow();
 
     // Show the current state and the Workflow form to allow state changing.
-    // N.B. This part is replicated in hook_node_view and workflow_tab_page.
+    // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo.
     if ($workflow) {
       $workflow_item = $workflow->getWorkflowItem();
       $field = $workflow_item->getField();

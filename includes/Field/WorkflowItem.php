@@ -247,10 +247,10 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
    */
   public function update(&$items) {// ($entity_type, $entity, $field, $instance, $langcode, &$items) {
 
-    // @todo: apparentlly, in course of time, this is not used anymore. Restore or remove.
+    // @todo: apparently, in course of time, this is not used anymore. Restore or remove.
     $field_name = $this->field['field_name'];
     $wid = $this->field['settings']['wid'];
-    $new_state = WorkflowState::load($sid = _workflow_get_sid_by_items($items), $wid);
+    $new_state = workflow_state_load($sid = _workflow_get_sid_by_items($items), $wid);
 
     // @todo D8: remove below lines.
     $entity = $this->entity;
@@ -306,7 +306,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     }
     // A 'normal' node add page.
     // We should not be here, since we only do inserts after $entity_id is known.
-    // $current_sid = Workflow::load($wid)->getCreationSid();
+    // $current_sid = workflow_load($wid)->getCreationSid();
   }
 
   /**
