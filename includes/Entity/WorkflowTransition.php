@@ -265,7 +265,7 @@ class WorkflowTransition {
       '%new' => $new_sid,
     );
 
-    $old_state = WorkflowState::load($old_sid);
+    $old_state = workflow_state_load($old_sid);
     $workflow = $old_state->getWorkflow();
 
     // Check if the state has changed. If not, we only record the comment.
@@ -284,9 +284,9 @@ class WorkflowTransition {
       if (!$force) {
         // Make sure this transition is allowed.
         $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-        // Did anybody veto this choice?
-        if ($permitted === FALSE) {
-          // If vetoed, quit.
+        // Stop if a module says so.
+        if (in_array(FALSE, $permitted, TRUE)) {
+          watchdog('workflow', 'Transition vetoed by module.');
           return $old_sid;
         }
       }
@@ -307,9 +307,9 @@ class WorkflowTransition {
     if ($state_changed) {
       // Invoke a callback indicating a transition is about to occur.
       // Modules may veto the transition by returning FALSE.
-      $result = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      $permitted = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
       // Stop if a module says so.
-      if (in_array(FALSE, $result)) {
+      if (in_array(FALSE, $permitted, TRUE)) {
         watchdog('workflow', 'Transition vetoed by module.');
         return $old_sid;
       }
@@ -367,7 +367,7 @@ class WorkflowTransition {
     // Action triggers should take place in response to this callback, not the 'transaction pre'.
     if (!$field_name) { // @todo D8: remove; this is only for Node API.
       unset($entity->workflow_comment);
-      $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
     }
     else {
       // @todo: we have a problem here, when using Rules, etc: The entity
@@ -376,7 +376,7 @@ class WorkflowTransition {
       // 2. Move the invoke to another place (but there is no entity_postsave());
       // 3. Emulate the new Entity.
       // 4. Something else.
-      $result = module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
     }
 
     // Clear any references in the scheduled listing.

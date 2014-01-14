@@ -372,12 +372,11 @@ class WorkflowState {
         // Modules may veto a choice by returning FALSE.
         // In this case, the choice is never presented to the user.
         // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-        $permitted = TRUE;
         if (!$force) {
           $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = ''); // @todo: add $field_name.
         }
-        // Did anybody veto this choice?
-        if ($permitted !== FALSE) {
+        // Stop if a module says so.
+        if (!in_array(FALSE, $permitted, TRUE)) {
           // If not vetoed, add to list (by replacing the object by the name).
           $target_state = $options[$new_sid];
           $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
@@ -392,7 +391,7 @@ class WorkflowState {
       // Remove the unpermitted options.
       foreach ($options as $key => $data) {
         if (is_object($data) ) {
-          unset ($options[$key]);
+          unset($options[$key]);
         }
       }
       // Save to entity-specific cache.
