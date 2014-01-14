@@ -47,7 +47,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
             'roles' => array(),
           ),
         ),
-        'default_widget' => 'options_select',
+        'default_widget' => 'workflow',
         'default_formatter' => 'list_default',
         'property_type' => WORKFLOWFIELD_PROPERTY_TYPE, // Used for Entity API / Rules integration.
       ),
