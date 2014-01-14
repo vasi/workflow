@@ -128,10 +128,10 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
  *
  * @todo: implement
  */
-// function workflowfield_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
-//   $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
-//   $workflow_field->delete($items);
-// }
+function workflowfield_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  $workflow_field = new WorkflowItem($field, $instance, $entity_type, $entity);
+  $workflow_field->delete($items);
+}
 
 /**
  * Implements hook_field_is_empty().

@@ -312,8 +312,39 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
   /**
    * Implements hook_field_delete() -> FieldItemInterface::delete()
    */
-  // public function delete() {
-  // }
+  public function delete($items) {
+    global $user;
+
+    $entity_type = $this->entity_type;
+    $entity = $this->entity;
+    $entity_id = entity_id($entity_type, $entity);
+
+    $field_name = $this->field['field_name'];
+    $old_sid = _workflow_get_sid_by_items($items);
+    $new_sid = (int) WORKFLOW_DELETION;
+    $comment = t('Entity deleted.');
+
+    if (!$field_name) {
+      // Delete the association of node to state.
+      workflow_delete_workflow_node_by_nid($entity_id);
+    }
+
+    // @see drupal.org/node/2165349, comment by Bastlynn:
+    // The reason for this history log upon delete is because Workflow module
+    // has historically been used to track node states and accountability in
+    // business environments where accountability for changes over time is
+    // *absolutely* required. Think banking and/or particularly strict
+    // retention policies for legal reasons.
+    //
+    // However, a deleted nid may be re-used under certain circumstances: 
+    // e.g., working with InnoDB or after restart the DB server.
+    // This may cause that old history is associated with a new node.
+    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+    $transition->save();
+
+    // Delete any scheduled transitions for this node.
+    WorkflowScheduledTransition::deleteById($entity_type, $entity_id);
+  }
 
   /*
    * Helper functions for the Field Settings page.

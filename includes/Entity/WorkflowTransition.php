@@ -43,7 +43,7 @@ class WorkflowTransition {
    * All arguments must be passed, when creating an object programmatically.
    * One argument $entity may be passed, only to directly call delete() afterwards.
    */
-  public function __construct($entity_type = '', $entity = NULL, $field_name = '', $old_sid = 0, $new_sid = 0, $uid = 0, $stamp = 0, $comment = '') {
+  public function __construct($entity_type = '', $entity = NULL, $field_name = '', $old_sid = NULL, $new_sid = NULL, $uid = 0, $stamp = 0, $comment = '') {
     $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
     $this->language = ($this->language) ? $this->language : 'und';
@@ -64,7 +64,8 @@ class WorkflowTransition {
     if (!$entity && !$old_sid && !$new_sid) {
       // If constructor is called without arguments, e.g., loading from db.
     }
-    elseif ($entity && $old_sid && $new_sid) {
+    elseif ($entity && $old_sid) {
+      // Caveat: upon entity_delete, $new_sid is '0'.
       // If constructor is called with new() and arguments.
       $this->old_sid = $old_sid;
       $this->sid = $new_sid;
@@ -73,7 +74,7 @@ class WorkflowTransition {
       $this->stamp = $stamp;
       $this->comment = $comment;
     }
-    elseif (!$old_sid || !$new_sid) {
+    elseif (!$old_sid) {
       // Not all paramaters are passed programmatically.
       drupal_set_message(
         t('Wrong call to constructor Workflow*Transition(@old_sid to @new_sid)', array('@old_sid' => $old_sid, '@new_sid' => $new_sid)),

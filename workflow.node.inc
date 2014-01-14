@@ -118,7 +118,6 @@ function workflow_node_insert($node) {
  * Implements hook_node_update().
  */
 function workflow_node_update($node) {
-  // Retrieve the data from the form.
   if (!isset($node->workflow_field)) {
     // For this type_map, user did not want a form here. 
     return;
@@ -135,7 +134,7 @@ function workflow_node_update($node) {
   // Careful: take the fresh node here, not the one that is in the form.
   $form_state['values']['workflow_entity'] = $node;
   // For some reason, the Workflow Form does not return the form in a 'workflow' array.
-  // @todo: correct this, or filter on 'workflow' elements.
+  // @todo: correct this (use '#tree => TRUE'), or filter on 'workflow' elements.
   $form_state['input'] = (array) $node;
 
   workflow_transition_form_submit($form, $form_state);
@@ -145,23 +144,17 @@ function workflow_node_update($node) {
  * Implements hook_node_delete().
  */
 function workflow_node_delete($node) {
-  $node->workflow_stamp = REQUEST_TIME;
-  // Delete the association of node to state.
-  workflow_delete_workflow_node_by_nid($node->nid);
   if (!empty($node->workflow)) {
-    global $user;
-    $data = array(
-      'nid' => $node->nid,
-      'old_sid' => $node->workflow,
-      'sid' => WORKFLOW_DELETION,
-      'uid' => $user->uid,
-      'stamp' => $node->workflow_stamp,
-      'comment' => t('Node deleted'),
-    );
-    workflow_insert_workflow_node_history($data);
+    // Re-use functionality of Field API.
+    $field = array();
+    $field['field_name'] = '';
+    $instance = array();
+
+    $workflow_field = new WorkflowItem($field, $instance, 'node', $node);
+    $items[0]['value'] = $node->workflow;
+
+    $workflow_field->delete($items);
   }
-  // Delete any scheduled transitions for this node.
-  WorkflowScheduledTransition::deleteById('node', $node->nid);
 }
 
 /**
