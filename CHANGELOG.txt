@@ -392,3 +392,5 @@ Issue #2169859 by johnv: Fixed problems with Features.
 Issue #2064449 by johnv: Changed hook_update_7007.
 Issue #2171615 by Tim-Erwin, johnv: Fixed wrong parsing of hook_workflow results.
 Issue #2019345 by johnv: Added back the type_map functions to main workflow module, to preserve compatibility with third-party modules.
+Issue #2170037 by johnv: Changed default widget to 'workflow' widget, instead of 'select'.
+Issue #2171615 by Tim-Erwin, johnv: Fixed wrong parsing of hook_workflow results. -2-
