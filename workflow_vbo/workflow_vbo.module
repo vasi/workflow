@@ -70,7 +70,8 @@ function workflow_vbo_next_state_action($node, array $context) {
   $field_name = '';
   $comment = '';
   $force = FALSE;
-  $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+  $transition = new WorkflowTransition();
+  $transition->setValues($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
   workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force);
 }
 

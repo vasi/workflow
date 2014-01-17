@@ -234,7 +234,8 @@ class WorkflowState {
         $entity_type = 'node';
         $entity = entity_load_single('node', $workflow_node->nid);
         $field_name = '';
-        $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+        $transition = new WorkflowTransition();
+        $transition->setValues($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
         $transition->force($force); 
         // Excute Transition, invoke 'pre' and 'post' events, save new state in workflow_node, save also in workflow_node_history.
         // For Workflow Node, only {workflow_node} and {workflow_node_history} are updated. For Field, also the Entity itself.
@@ -372,14 +373,17 @@ class WorkflowState {
         // Modules may veto a choice by returning FALSE.
         // In this case, the choice is never presented to the user.
         // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-        if (!$force) {
+        if ($roles == 'ALL') {
+          $permitted = array();
+        }
+        else {
           $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = ''); // @todo: add $field_name.
-          // Stop if a module says so.
-          if (!in_array(FALSE, $permitted, TRUE)) {
-            // If not vetoed, add to list (by replacing the object by the name).
-            $target_state = $options[$new_sid];
-            $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
-          }
+        }
+        // Stop if a module says so.
+        if (!in_array(FALSE, $permitted, TRUE)) {
+          // If not vetoed, add to list (by replacing the object by the name).
+          $target_state = $options[$new_sid];
+          $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
         }
       }
 

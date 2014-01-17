@@ -60,7 +60,8 @@ function workflow_revert_form_submit($form, $form_state) {
   }
 
   $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-  $transition = new WorkflowTransition($entity_type, $entity, $field_name, $current_sid, $previous_sid, $user->uid, REQUEST_TIME, $comment);
+  $transition = new WorkflowTransition();
+  $transition->setValues($entity_type, $entity, $field_name, $current_sid, $previous_sid, $user->uid, REQUEST_TIME, $comment);
 
   // Force the transition because it's probably not valid.
   workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);

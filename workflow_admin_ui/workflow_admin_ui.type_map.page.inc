@@ -167,7 +167,8 @@ function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, 
     // Due to permissions, it might be different for each.
     $new_sid = $workflow->getFirstSid($entity_type, $entity);
 
-    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $creation_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+    $transition = new WorkflowTransition();
+    $transition->setValues($entity_type, $entity, $field_name, $creation_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
 
     // Force it to transition to the first state and get a history record.
     workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);

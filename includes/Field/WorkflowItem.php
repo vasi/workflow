@@ -313,7 +313,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
    * Implements hook_field_delete() -> FieldItemInterface::delete()
    */
   public function delete($items) {
-    global $user;
+   global $user;
 
     $entity_type = $this->entity_type;
     $entity = $this->entity;
@@ -339,7 +339,8 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // However, a deleted nid may be re-used under certain circumstances: 
     // e.g., working with InnoDB or after restart the DB server.
     // This may cause that old history is associated with a new node.
-    $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+    $transition = new WorkflowTransition();
+    $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
     $transition->save();
 
     // Delete any scheduled transitions for this node.

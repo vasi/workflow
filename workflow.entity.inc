@@ -6,29 +6,58 @@
  */
 
 /**
-* Implements hook_entity_info().
-*/
+ * Implements hook_entity_info().
+ *
+ *  @todo: implement hook_property_info, metadata.
+ */
 function workflow_entity_info() {
-  $entities = array(
-    'WorkflowConfigTransition' => array(
-      'label' => t('Transition'),
-      'entity class' => 'WorkflowConfigTransition',
-      // Add controleer Class. 'Workflow' class is the de-facto controller.
-      'controller class' => 'WorkflowConfigTransitionController',
-      'base table' => 'workflow_transitions',
-//      'fieldable' => TRUE,
-//      'exportable' => TRUE,
-      'entity keys' => array(
-        'id' => 'tid',
-//        'name' => 'tid',
-        'status' => 'status',
-//        'bundle' => 'type',
-      ),
-      'label callback' => 'entity_class_label',
-      'uri callback' => 'entity_class_uri',
-      'module' => 'workflow',
-//      'access callback' => 'workflow_tab_access', // @todo: use to-be workflow_access here. Access to Tab <> access to workflow. 
+  $entities['WorkflowConfigTransition'] = array(
+    'label' => t('Workflow config transition'),
+    'entity class' => 'WorkflowConfigTransition',
+    // Add controller Class. 'Workflow' class is the de-facto controller.
+    'controller class' => 'WorkflowConfigTransitionController',
+    'base table' => 'workflow_transitions',
+//    'fieldable' => TRUE,
+//    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'tid',
+//      'name' => 'tid',
+      'status' => 'status',
+//      'bundle' => 'type',
     ),
+    'label callback' => 'entity_class_label',
+    // 'uri callback' => 'entity_class_uri',
+    'module' => 'workflow',
+//    'access callback' => 'workflow_tab_access', // @todo: use to-be workflow_access here. Access to Tab <> access to workflow. 
+  );
+
+  // The Controller class of Transitions and ScheduledTransition is shared.
+  $entities['WorkflowTransition'] = array(
+    'label' => t('Workflow executed transition'),
+    'entity class' => 'WorkflowTransition',
+    'controller class' => 'WorkflowTransitionController',
+    'base table' => 'workflow_node_history',
+    'entity keys' => array(
+      'id' => 'hid',
+    ),
+    'label callback' => 'entity_class_label',
+    // 'uri callback' => 'entity_class_uri',
+    'module' => 'workflow',
+    'views controller class' => 'EntityDefaultViewsController',
+  );
+
+  $entities['WorkflowScheduledTransition'] = array(
+    'label' => t('Workflow scheduled transition'),
+    'entity class' => 'WorkflowScheduledTransition',
+    'controller class' => 'WorkflowTransitionController',
+    'base table' => 'workflow_scheduled_transition',
+    'entity keys' => array(
+      'id' => '',
+    ),
+    'label callback' => 'entity_class_label',
+    // 'uri callback' => 'entity_class_uri',
+    'module' => 'workflow',
+    'views controller class' => 'EntityDefaultViewsController',
   );
 
   return $entities;
@@ -41,12 +70,27 @@ function workflow_entity_info() {
  * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
  * Used by add-on modules, such as workflow_admin_ui.
  */
-function workflow_load($wid) {
-  return Workflow::load($wid);
+function workflow_load($wid, $reset = FALSE) {
+  return Workflow::load($wid, $reset);
 }
 
 function workflow_load_multiple(array $wids = NULL, $reset = FALSE) {
   return Workflow::getWorkflows($wids, $reset);
+}
+
+/**
+ * Loads a WorkflowTransition.
+ */
+function workflow_transition_load_multiple($entity_type, $entity_id, $field_name = '', $limit = NULL) {
+  return WorkflowTransition::loadMultiple($entity_type, $entity_id, $field_name, $limit);
+}
+
+function workflow_transition_load_single($entity_type, $entity_id, $field_name = '') {
+  $limit = 1;
+  if ($transitions = workflow_transition_load_multiple($entity_type, $entity_id, $field_name, $limit)) {
+    return reset($transitions);
+  }
+  return NULL;
 }
 
 /**

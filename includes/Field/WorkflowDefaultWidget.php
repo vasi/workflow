@@ -381,7 +381,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // Remember, the workflow_scheduled element is not set on 'add' page.
       $scheduled = !empty($items[0]['workflow']['workflow_scheduled']);
       if (!$scheduled) {
-        $transition = new WorkflowTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
+        $transition = new WorkflowTransition();
+        $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
       }
       else {
         // Schedule the time to change the state.
@@ -402,7 +403,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           . $schedule['workflow_scheduled_timezone'];
 
         if ($stamp = strtotime($scheduled_date_time)) {
-          $transition = new WorkflowScheduledTransition($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+          $transition = new WorkflowScheduledTransition();
+          $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
         }
         else {
           $transition = NULL;
