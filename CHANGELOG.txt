@@ -396,4 +396,4 @@ Issue #2170037 by johnv: Changed default widget to 'workflow' widget, instead of
 Issue #2171615 by Tim-Erwin, johnv: Fixed wrong parsing of hook_workflow results. -2-
 Issue #2165349 by johnv: Added logging in hook_field_delete; added comments. Moved code of hook_node_delete to WorkflowItem.php
 Issue #1559680 by johnv: Changed Transitions into Entity. Views support enabled.
-  
+Issue #2175867 by johnv: Updated workflow_views_handler_field_username to use all Views' optons.
