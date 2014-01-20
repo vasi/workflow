@@ -455,22 +455,24 @@ function workflow_update_7000() {
 
 /**
  * Initialize all workflows to show watchdog messages.
+ *
+ * N.B.: Moved to 7007, since this generates errors if 7007 hasn't run yet. 
  */
-function workflow_update_7001() {
-  // Not all module functions are available in a hook_update_N() function.
-  // In order to call a function from your mymodule.module or an include file,
-  // you need to explicitly load that file first.
-  module_load_include('module', 'workflow');
-
-  // Get all workflows.
-  foreach (Workflow::getWorkflows() as $workflow) {
-    // Add the option.
-    $workflow->options['watchdog_log'] = 1;
-
-    // Update the workflow without creating a creation state.
-    $workflow->save(FALSE);
-  }
-}
+//function workflow_update_7001() {
+//  // Not all module functions are available in a hook_update_N() function.
+//  // In order to call a function from your mymodule.module or an include file,
+//  // you need to explicitly load that file first.
+//  module_load_include('module', 'workflow');
+//
+//  // Get all workflows.
+//  foreach (workflow_load_multiple() as $workflow) {
+//    // Add the option.
+//    $workflow->options['watchdog_log'] = 1;
+//
+//    // Update the workflow without creating a creation state.
+//    $workflow->save(FALSE);
+//  }
+//}
 
 /**
  * Add userid to scheduled transition table.
@@ -638,6 +640,9 @@ function workflow_update_7007() {
   // Save field workflows-tab_roles in serialized array (using explode for the last time).
   // Replace role ID 'author' by '-1'.
   foreach ($workflows = Workflow::getWorkflows() as $workflow) {
+    // Add update from 7001.
+    $workflow->options['watchdog_log'] = 1;
+    // Update roles to serializable array.
     $query = "SELECT w.wid, w.tab_roles FROM {workflows} w WHERE w.wid = :wid";
     $results = db_query($query, array(':wid' => $workflow->wid));
     $db_roles = $results->fetchAll();
