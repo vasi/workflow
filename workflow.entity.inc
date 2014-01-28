@@ -74,13 +74,54 @@ function workflow_load($wid, $reset = FALSE) {
   return Workflow::load($wid, $reset);
 }
 
+function workflow_load_by_name($name) {
+  foreach (Workflow::getWorkflows() as $workflow) {
+    if ($name == $workflow->getName()) {
+      return $workflow;
+    }
+  }
+  return NULL;
+}
+
+function workflow_load_single($wid) {
+  $wids = array($wid);
+  // $workflows = entity_load('Workflow', $wids);
+  $workflows = Workflow::getWorkflows($wids);
+  return reset($workflows);
+}
+
 function workflow_load_multiple(array $wids = NULL, $reset = FALSE) {
   return Workflow::getWorkflows($wids, $reset);
+}
+
+function workflow_create($name) {
+  $workflow = Workflow::create($name);
+  return $workflow;
+}
+
+/**
+ * Loads a WorkflowState.
+ */
+function workflow_state_load($sid) {
+  return WorkflowState::load($sid);
+}
+
+function workflow_state_load_single($sid) {
+  return WorkflowState::load($sid);
+}
+
+function workflow_state_load_multiple($wid = 0, $reset = FALSE) {
+  return WorkflowState::getStates($wid, $reset);
 }
 
 /**
  * Loads a WorkflowTransition.
  */
+
+function workflow_state_load_by_name($sid) {
+  return WorkflowState::loadByName($sid);
+}
+
 function workflow_transition_load_multiple($entity_type, $entity_id, $field_name = '', $limit = NULL) {
   return WorkflowTransition::loadMultiple($entity_type, $entity_id, $field_name, $limit);
 }
@@ -91,13 +132,6 @@ function workflow_transition_load_single($entity_type, $entity_id, $field_name =
     return reset($transitions);
   }
   return NULL;
-}
-
-/**
- * Loads a WorkflowState.
- */
-function workflow_state_load($sid) {
-  return WorkflowState::load($sid);
 }
 
 
@@ -138,7 +172,7 @@ function workflow_entity_test2() {
 }
 
 function workflow_entity_test3() {
-  $w = workflow_load(1);
+  $w = workflow_load_single(1);
   dpm($w->getStates());
 dpm($w->loadTransitions());
 //  $t1 = $w->createTransition($s1->sid, $s2->sid);

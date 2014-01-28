@@ -39,7 +39,7 @@ function workflow_admin_ui_add_form_validate($form, &$form_state) {
   $name = $form_state['values']['wf_name'];
 
   // Make sure workflow name is not a duplicate.
-  foreach (Workflow::getWorkflows() as $workflow) {
+  foreach (workflow_load_multiple() as $workflow) {
     if ($name == check_plain($workflow->getName())) {
       form_set_error('wf_name', t('A workflow with the name %name already exists. Please enter another name for your new workflow.',
         array('%name' => $name)));
@@ -56,7 +56,7 @@ function workflow_admin_ui_add_form_validate($form, &$form_state) {
 function workflow_admin_ui_add_form_submit($form, &$form_state) {
   $name = $form_state['values']['wf_name'];
 
-  $workflow = Workflow::create($name);
+  $workflow = workflow_create($name);
   $workflow->save();
 
   $args = array(
@@ -114,7 +114,7 @@ function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
  */
 function workflow_admin_ui_delete_form_submit($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
-  if ($form_state['values']['confirm'] == 1 && $workflow = Workflow::load($workflow->wid)) {
+  if ($form_state['values']['confirm'] == 1 && $workflow = workflow_load_single($workflow->wid)) {
     $name = $workflow->getName();
     $message = 'The workflow %name with all its states was deleted.';
 
@@ -392,7 +392,7 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
   $name = $form_state['values']['wf_name'];
 
   // Make sure workflow name is not a duplicate.
-  foreach (Workflow::getWorkflows() as $stored_workflow) {
+  foreach (workflow_load_multiple() as $stored_workflow) {
     if ($name == check_plain($stored_workflow->getName()) && $workflow->wid != $stored_workflow->wid) {
       form_set_error('wf_name', t('A workflow with the name %name already exists. Please enter another name for this workflow.',
         array('%name' => $name)));
@@ -581,9 +581,16 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
             $roles += array($role => $role);
           }
         }
-        $transition = $workflow->createTransition($from, $to);
-        $transition->roles = $roles;
-        $transition->save();
+        if (count($roles)) {
+          $config_transition = $workflow->createTransition($from, $to);
+          $config_transition->roles = $roles;
+          $config_transition->save();
+        }
+        else {
+          foreach ($workflow->getTransitionsBySidTargetSid($from, $to, 'ALL') as $config_transition) {
+            $config_transition->delete();
+          }
+        }
       }
     }
   }
@@ -859,7 +866,7 @@ function workflow_admin_ui_states_form_validate($form, &$form_state) {
   // we can simply iterate through the submitted values.
   foreach ($form_state['values']['states'] as $sid => $item) {
     // Reload $state from db, in case the states were changed by anyone else. And it is just as fast.
-    $state = WorkflowState::load($sid);
+    $state = workflow_state_load_single($sid);
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
@@ -909,12 +916,12 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
     }
 
     // Reload $state from db, in case the states were changed by anyone else. And it is just as fast.
-    $state = ($sid) ? WorkflowState::load($sid) : $workflow->createState('');
+    $state = ($sid) ? workflow_state_load_single($sid) : $workflow->createState('');
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
       $new_sid = $item['reassign'];
-      $new_state = WorkflowState::load($new_sid);
+      $new_state = workflow_state_load_single($new_sid);
 
       $args = array(
         '%workflow' => $workflow->getName(),

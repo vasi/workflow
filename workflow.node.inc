@@ -70,7 +70,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   }
 
   $current_sid = workflow_node_current_state($node);
-  $current_state = WorkflowState::load($current_sid);
+  $current_state = workflow_state_load_single($current_sid);
 
   // Show current state at the top of the node display.
   $node->content['workflow_current_state'] = workflow_state_formatter($entity_type, $node);

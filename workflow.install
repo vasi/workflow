@@ -639,7 +639,7 @@ function workflow_update_7007() {
 
   // Save field workflows-tab_roles in serialized array (using explode for the last time).
   // Replace role ID 'author' by '-1'.
-  foreach ($workflows = Workflow::getWorkflows() as $workflow) {
+  foreach ($workflows = workflow_load_multiple() as $workflow) {
     // Add update from 7001.
     $workflow->options['watchdog_log'] = 1;
     // Update roles to serializable array.

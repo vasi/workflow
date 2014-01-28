@@ -42,7 +42,7 @@ class Workflow {
     }
     else {
       if (!isset(self::$workflows[$wid])) {
-        self::$workflows[$wid] = Workflow::load($wid);
+        self::$workflows[$wid] = workflow_load_single($wid);
       }
       // Workflow may not exist.
       if (self::$workflows[$wid]) {
@@ -74,7 +74,7 @@ class Workflow {
    *
    */
   public static function create($name) {
-    $workflow = Workflow::loadByName($name);
+    $workflow = workflow_load_by_name($name);
     if (!$workflow) {
       $workflow = new Workflow();
       $workflow->name = $name;
@@ -94,7 +94,7 @@ class Workflow {
    *  A new Workflow object
    */
   public static function load($wid, $reset = FALSE) {
-    $workflows = self::getWorkflows($wid, $reset);
+    $workflows = self::getWorkflows(array($wid), $reset);
     $workflow = isset($workflows[$wid]) ? $workflows[$wid] : NULL;
     return $workflow;
   }
@@ -102,7 +102,7 @@ class Workflow {
   /**
    * Implements a 'Factory' pattern to get Workflow objects from the database.
    *
-   * @deprecated: workflow_get_workflows_by_name() --> Workflow::loadByName($name)
+   * @deprecated: workflow_get_workflows_by_name() --> workflow_load_by_name($name)
    */
   public static function loadByName($name) {
     foreach ($workflows = self::getWorkflows() as $workflow) {
@@ -116,38 +116,33 @@ class Workflow {
   /**
    * Returns an array of Workflows, reading them from table table {workflows}.
    */
-  public static function getWorkflows($wid = 0, $reset = FALSE) {
+  public static function getWorkflows(array $wids = NULL, $reset = FALSE) {
     if ($reset) {
       self::$workflows = array();
     }
 
-    if ($wid && isset(self::$workflows[$wid])) {
-      // Only 1 is requested and cached: return this one.
-      return array($wid => self::$workflows[$wid]);
+    if (!count(self::$workflows)) {
+      // Build the query.
+      $query = db_select('workflows', 'w');
+      $query->leftJoin('workflow_states', 'ws', 'w.wid = ws.wid');
+      $query->fields('w');
+      $query->addField('ws', 'sid', 'creation_sid');
+      // Initially, read the Id of the creationState of the Workflow.
+      $query->condition('ws.sysid', WORKFLOW_CREATION);
+
+      $query->execute()->fetchAll(PDO::FETCH_CLASS, 'Workflow');
     }
 
-    // Build the query.
-    // If all are requested: read from db
-    // (@todo: cache this, but only used on Admin UI.)
-    // If requested one is not cached: read from db.
-    $query = db_select('workflows', 'w');
-    $query->leftJoin('workflow_states', 'ws', 'w.wid = ws.wid');
-    $query->fields('w');
-    $query->addField('ws', 'sid', 'creation_sid');
-    // Initially, read the Id of the creationState of the Workflow.
-    $query->condition('ws.sysid', WORKFLOW_CREATION);
-
-    $query->execute()->fetchAll(PDO::FETCH_CLASS, 'Workflow');
-
-    // Return array of objects, even if only 1 is requested.
-    // Note: self::workflows[] is populated in respective constructors.
-    if ($wid > 0) {
-      // Return 1 object.
-      $workflow = isset(self::$workflows[$wid]) ? self::$workflows[$wid] : NULL;
-      return array($wid => $workflow);
+    if ($wids == NULL) {
+      return self::$workflows;
     }
     else {
-      return self::$workflows;
+      foreach ($wids as $wid) {
+        if (isset(self::$workflows[$wid])) {
+          $workflows[$wid] = self::$workflows[$wid];
+        }
+      }
+      return $workflows;
     }
   }
 
@@ -159,7 +154,7 @@ class Workflow {
   public function save($create_creation_state = TRUE) {
     $wid = $this->wid;
 
-    if (($wid > 0) && Workflow::load($wid)) {
+    if (($wid > 0) && workflow_load_single($wid)) {
       drupal_write_record('workflows', $this, 'wid');
     }
     else {
@@ -266,7 +261,7 @@ class Workflow {
    */
   public function getCreationState() {
     if (!isset($this->creation_state)) {
-      $this->creation_state = WorkflowState::load($this->creation_sid);
+      $this->creation_state = workflow_state_load_single($this->creation_sid);
     }
     if (!$this->creation_state) {
       $this->creation_state = $this->createState(WORKFLOW_CREATION_STATE_NAME);
@@ -342,10 +337,10 @@ class Workflow {
    */
   public function getState($key) {
     if (is_numeric($key)) {
-      return WorkflowState::load($key, $this->wid);
+      return workflow_state_load_single($key, $this->wid);
     }
     else {
-      return WorkflowState::loadByName($key, $this->wid);
+      return workflow_state_load_by_name($key, $this->wid);
     }
   }
 

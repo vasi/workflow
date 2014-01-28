@@ -199,7 +199,7 @@ function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = N
           'attributes' => array('alt' => $alt, 'title' => $alt),
         ),
       );
-      foreach (Workflow::getWorkflows() as $workflow) {
+      foreach (workflow_load_multiple() as $workflow) {
         $name = $workflow->getName();
         $wid = $workflow->wid;
         $alt = t('Work with @wf', array('@wf' => $name));

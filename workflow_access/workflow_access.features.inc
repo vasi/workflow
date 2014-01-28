@@ -58,7 +58,7 @@ function workflow_access_features_export($data, &$export, $module_name = '') {
   $roles = _workflow_access_get_affected_roles();
 
   foreach ($data as $workflow_name) {
-    if ($workflow = Workflow::loadByName($workflow_name)) {
+    if ($workflow = workflow_load_by_name($workflow_name)) {
 
       $export['features']['workflow_access'][$workflow_name] = $workflow_name;
       $export['features']['workflow'][$workflow_name] = $workflow_name;
@@ -91,7 +91,7 @@ function workflow_access_features_export_render($module_name, $data, $export = N
   // For each selected workflow, fetch all related workflow access records
   // we want to put into code.
   foreach ($data as $workflow_name) {
-    $workflow = Workflow::loadByName($workflow_name);
+    $workflow = workflow_load_by_name($workflow_name);
     if ($workflow) {
       $states = $workflow->getStates($all = TRUE);
       if ($states) {
@@ -129,7 +129,7 @@ function workflow_access_features_rebuild($module) {
   // Retrieve the workflow IDs.
   $wids = array();
   foreach ($workflow_access_records as $workflow_name => $state) {
-    $workflow = Workflow::loadByName($workflow_name);
+    $workflow = workflow_load_by_name($workflow_name);
     $wids[$workflow_name] = $workflow->wid;
   }
 
@@ -147,7 +147,7 @@ function workflow_access_features_rebuild($module) {
   // workflow_name[state_name][role_name] => array(grant_name => 0|1, ...)
   foreach ($workflow_access_records as $workflow_name => $states) {
     foreach ($states as $state_name => $records) {
-      if ($state = WorkflowState::loadByName($state_name, $wids[$workflow_name])) {
+      if ($state = workflow_state_load_by_name($state_name, $wids[$workflow_name])) {
         foreach ($records as $rname => $record) {
           $record['sid'] = ($state) ? $state->sid : $state->sid;
           if ($rname == WORKFLOW_FEATURES_AUTHOR_NAME) {

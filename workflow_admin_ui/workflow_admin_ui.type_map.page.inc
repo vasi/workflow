@@ -14,7 +14,7 @@ function workflow_admin_ui_type_map_form($form) {
   // Create list of all Workflow types. Include an initial empty value.
   // Validate each workflow, and generate a message if not complete.
   $workflows[0] = t('None');
-  foreach (Workflow::getWorkflows() as $workflow) {
+  foreach (workflow_load_multiple() as $workflow) {
     if ($is_valid = $workflow->validate()) {
       $workflows[$workflow->wid] = $workflow->label();
     }
@@ -157,7 +157,7 @@ function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, 
   }
   $comment = t('Pre-existing content set to initial state.');
 
-  $workflow = Workflow::load($wid);
+  $workflow = workflow_load_single($wid);
   $creation_sid = $workflow->getCreationSid();
 
   // Load them all up.

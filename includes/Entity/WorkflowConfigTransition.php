@@ -23,7 +23,7 @@ class WorkflowConfigTransitionController extends EntityAPIController {
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     if (empty($entity->tid)) {
-      $workflow = workflow_load($entity->wid);
+      $workflow = workflow_load_single($entity->wid);
       // First check if this transition already exist.
       $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
       $config_transition = reset($config_transitions);
@@ -101,7 +101,7 @@ class WorkflowConfigTransition extends Entity {
    *  Workflow object.
    */
   public function getWorkflow() {
-    return isset($this->workflow) ? $this->workflow : workflow_load($this->wid);
+    return isset($this->workflow) ? $this->workflow : workflow_load_single($this->wid);
   }
 
   /**

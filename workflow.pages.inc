@@ -51,7 +51,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $old_state_name = $new_state_name = '';
 
     $label = $name = '';
-    $state = workflow_state_load($history->new_sid);
+    $state = workflow_state_load_single($history->new_sid);
     if ($state) {
       $name = $state->getName();
       $label = $state->label();
@@ -83,7 +83,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     }
 
     $label = $name = MARK_STATE_IS_DELETED;
-    $state = workflow_state_load($history->old_sid);
+    $state = workflow_state_load_single($history->old_sid);
     if ($state) {
       $name = $state->getName();
       $label = $state->label();

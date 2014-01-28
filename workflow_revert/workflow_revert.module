@@ -88,7 +88,7 @@ function workflow_revert_workflow_history_alter(&$variables) {
     $id = $transition->entity_id;
     $field_name = $transition->field_name;
 
-    $old_state = WorkflowState::load($old_sid);
+    $old_state = workflow_state_load_single($old_sid);
     // Some state are not fit to revert to. In each of these cases, prohibit
     // to revert to an even older state.
     if (!$old_state || !$old_state->isActive() || $old_state->isCreationState()) {

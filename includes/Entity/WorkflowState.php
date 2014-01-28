@@ -39,7 +39,7 @@ class WorkflowState {
     else {
       // Fetching an existing state for a workflow.
       if (!isset(self::$states[$sid])) {
-        self::$states[$sid] = WorkflowState::load($sid, $wid);
+        self::$states[$sid] = workflow_state_load_single($sid, $wid);
       }
       // State may not exist.
       if (self::$states[$sid]) {
@@ -69,7 +69,7 @@ class WorkflowState {
    * "New considered harmful".
    */
   public static function create($wid, $name = '') {
-    $state = WorkflowState::loadByName($name, $wid);
+    $state = workflow_state_load_by_name($name, $wid);
     if (!$state) {
       $state = new WorkflowState($wid);
       $state->state = $name;
@@ -114,9 +114,9 @@ class WorkflowState {
    * @return array $states
    *  an array of cached states.
    *
-   * @deprecated workflow_get_workflow_states() --> WorkflowState::getStates()
-   * @deprecated workflow_get_workflow_states_all() --> WorkflowState::getStates()
-   * @deprecated workflow_get_other_states_by_sid($sid) --> WorkflowState::getStates()
+   * @deprecated workflow_get_workflow_states --> workflow_state_load_multiple
+   * @deprecated workflow_get_workflow_states_all --> workflow_state_load_multiple
+   * @deprecated workflow_get_other_states_by_sid --> workflow_state_load_multiple
    */
   public static function getStates($wid = 0, $reset = FALSE) {
     if ($reset) {
@@ -157,7 +157,7 @@ class WorkflowState {
    *
    * May return more then one State, since a name is not (yet) an UUID.
    */
-  public static function loadByName($name, $wid) {
+  public static function loadByName($name, $wid = 0) {
     foreach ($states = self::getStates($wid) as $state) {
       if ($name == $state->getName()) {
         return $state;
@@ -182,7 +182,7 @@ class WorkflowState {
     $data['state'] = $this->state;
     $data['status'] = $this->status;
 
-    if (!empty($this->sid) && count(WorkflowState::load($sid)) > 0) {
+    if (!empty($this->sid) && workflow_state_load_single($sid)) {
       drupal_write_record('workflow_states', $data, 'sid');
     }
     else {
@@ -246,7 +246,7 @@ class WorkflowState {
     workflow_delete_workflow_node_by_sid($current_sid);
 
     // Delete the transitions this state is involved in.
-    $workflow = Workflow::load($this->wid);
+    $workflow = workflow_load_single($this->wid);
     foreach ($transitions = $workflow->getTransitionsBySid($current_sid, 'ALL') as $transition) {
       $transition->delete();
     }
@@ -276,7 +276,7 @@ class WorkflowState {
    *  Workflow object.
    */
   public function getWorkflow() {
-    return isset($this->workflow) ? $this->workflow : Workflow::load($this->wid);
+    return isset($this->workflow) ? $this->workflow : workflow_load_single($this->wid);
   }
 
   /**
@@ -338,7 +338,7 @@ class WorkflowState {
       return $options;
     }
 
-    $workflow = workflow_load($this->wid);
+    $workflow = workflow_load_single($this->wid);
     if ($workflow) {
       // Gather roles, to get the proper permissions.
       $roles = array_keys($user->roles);

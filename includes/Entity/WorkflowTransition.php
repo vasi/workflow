@@ -266,7 +266,7 @@ class WorkflowTransition extends Entity {
 
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
-    $old_state = workflow_state_load($old_sid);
+    $old_state = workflow_state_load_single($old_sid);
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
 
@@ -328,12 +328,12 @@ class WorkflowTransition extends Entity {
     $field_name = $this->field_name;
 
     $args = array(
-      '%user' => $user->name,
+      '%user' => isset($user->name) ? $user->name : '',
       '%old' => $old_sid,
       '%new' => $new_sid,
     );
 
-    $old_state = workflow_state_load($old_sid);
+    $old_state = workflow_state_load_single($old_sid);
     $workflow = $old_state->getWorkflow();
 
     // Check if the state has changed. If not, we only record the comment.
@@ -417,7 +417,7 @@ class WorkflowTransition extends Entity {
     $this->save();
 
     // Register state change with watchdog.
-    if ($state_changed && $state = workflow_state_load($new_sid)) {
+    if ($state_changed && $state = workflow_state_load_single($new_sid)) {
       if (!empty($workflow->options['watchdog_log'])) {
         $entity_type_info = entity_get_info($entity_type);
         $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';

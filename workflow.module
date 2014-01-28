@@ -371,7 +371,7 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
   }
   else {
     // This is a Workflow Node workflow.
-    $current_state = workflow_state_load($current_sid);
+    $current_state = workflow_state_load_single($current_sid);
     $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
                                                     'state_system_name' => $current_state->getName(),
                                                     'sid' => $current_sid));
@@ -545,7 +545,8 @@ function workflow_get_roles($permission = 'participate in workflow') {
  */
 function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE) {
   $options = array();
-  foreach (Workflow::getWorkflows($wid) as $workflow) {
+  $wids = $wid ? array($wid) : NULL;
+  foreach (workflow_load_multiple($wids) as $workflow) {
     $workflow_options = array();
     foreach ($workflow->getStates($all) as $state) {
       $workflow_options[$state->value()] = check_plain($state->label());
@@ -573,7 +574,7 @@ function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FA
  */
 function workflow_get_workflow_names() {
   $options = array();
-  foreach (Workflow::getWorkflows() as $workflow) {
+  foreach (workflow_load_multiple() as $workflow) {
     $options[$workflow->wid] = $workflow->label();
   }
 
@@ -587,7 +588,7 @@ function workflow_get_sid_label($sid) {
   if (empty($sid)) {
     $output = t('No state');
   }
-  elseif ($state = workflow_state_load($sid)) {
+  elseif ($state = workflow_state_load_single($sid)) {
     $output = $state->label();
   }
   else {
@@ -603,7 +604,7 @@ function workflow_get_wid_label($wid) {
   if (empty($wid)) {
     $output = t('No workflow');
   }
-  elseif ($workflow = workflow_load($wid)) {
+  elseif ($workflow = workflow_load_single($wid)) {
     $output = $workflow->label();
   }
   else {
@@ -656,7 +657,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
     // No current state. Use creation state.
     if (!$sid) {
       $field = field_info_field($field_name);
-      $workflow = workflow_load($field['settings']['wid']);
+      $workflow = workflow_load_single($field['settings']['wid']);
       $sid = $workflow->getCreationSid();
     }
   }
@@ -753,7 +754,7 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
     // Set the cache with a workflow object.
     $map[$entity_type][$entity_bundle] = FALSE;
     if ($wid) {
-      $workflow = workflow_load($wid);
+      $workflow = workflow_load_single($wid);
 
       // Load the WorkflowItem on the Workflow, for later reference.
       $workflow->getWorkflowItem($field_item);

@@ -69,7 +69,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // Validate each workflow, and generate a message if not complete.
     $workflows = array();
     $workflows[''] = t('- Select a value -');
-    foreach (Workflow::getWorkflows() as $workflow) {
+    foreach (workflow_load_multiple() as $workflow) {
       if ($workflow->validate()) {
         $workflows[$workflow->wid] = $workflow->name;
       }
@@ -250,7 +250,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // @todo: apparently, in course of time, this is not used anymore. Restore or remove.
     $field_name = $this->field['field_name'];
     $wid = $this->field['settings']['wid'];
-    $new_state = workflow_state_load($sid = _workflow_get_sid_by_items($items), $wid);
+    $new_state = workflow_state_load_single($sid = _workflow_get_sid_by_items($items), $wid);
 
     // @todo D8: remove below lines.
     $entity = $this->entity;
@@ -306,7 +306,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     }
     // A 'normal' node add page.
     // We should not be here, since we only do inserts after $entity_id is known.
-    // $current_sid = workflow_load($wid)->getCreationSid();
+    // $current_sid = workflow_load_single($wid)->getCreationSid();
   }
 
   /**
@@ -365,12 +365,12 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
    */
   protected function _allowed_values_string($wid = 0) {
     $lines = array();
-    $states = WorkflowState::getStates($wid);
+    $states = workflow_state_load_multiple($wid);
     $previous_wid = -1;
 
     foreach ($states as $state) {
       // Only show enabled states.
-      if ($state->status) {
+      if ($state->isActive()) {
         // Show a Workflow name between Workflows, if more then 1 in the list.
         if (($wid == 0) && ($previous_wid <> $state->wid)) {
           $previous_wid = $state->wid;

@@ -21,7 +21,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
 
     if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
       // Get a list of all possible states for returning state names.
-      $states = WorkflowState::getStates();
+      $states = workflow_state_load_multiple();
       $wid = $workflow->wid;
 
       $last_history = workflow_get_recent_node_history($node->nid);

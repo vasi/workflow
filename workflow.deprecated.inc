@@ -12,26 +12,26 @@
 
 /**
  * Get all workflows.
- * @deprecated: workflow_get_workflows() --> Workflow::getWorkflows($wid)
+ * @deprecated: workflow_get_workflows --> workflow_load_multiple
  */
 function workflow_get_workflows() {
-  return Workflow::getWorkflows();
+  return workflow_load_multiple();
 }
 
 /**
  * Get a specific workflow, wid is a unique ID.
- * @deprecated: workflow_get_workflows_by_wid() --> workflow_load($wid)
+ * @deprecated: workflow_get_workflows_by_wid --> workflow_load_single
  */
 function workflow_get_workflows_by_wid($wid, $reset = FALSE) {
-  return workflow_load($wid, $reset);
+  return workflow_load_single($wid, $reset);
 }
 
 /**
  * Get a specific workflow, name is a unique ID.
- * @deprecated: workflow_get_workflows_by_name() --> Workflow::loadByName($name)
+ * @deprecated: workflow_get_workflows_by_name --> workflow_load_by_name
  */
 function workflow_get_workflows_by_name($name) {
-  return Workflow::loadByName($name);
+  return workflow_load_by_name($name);
 }
 
 /**
@@ -43,7 +43,7 @@ function workflow_get_workflows_by_name($name) {
  */
 function workflow_get_creation_state_by_wid($wid) {
   $sid = 0;
-  if ($workflow = workflow_load($wid)) {
+  if ($workflow = workflow_load_single($wid)) {
     $sid = $workflow->getCreationSid();
   }
   return $sid;
@@ -74,7 +74,7 @@ function workflow_get_creation_state_by_type($type) {
 //    $data->tab_roles = serialize($data->tab_roles);
 //  }
 //
-//  if (isset($data->wid) && workflow_load($data->wid)) {
+//  if (isset($data->wid) && workflow_load_single($data->wid)) {
 //    drupal_write_record('workflows', $data, 'wid');
 //  }
 //  else {
@@ -101,7 +101,7 @@ function workflow_get_creation_state_by_type($type) {
  * @deprecated: workflow_delete_workflows_by_wid() --> Workflow::delete().
  */
 function workflow_delete_workflows_by_wid($wid) {
-  $workflow = workflow_load($wid);
+  $workflow = workflow_load_single($wid);
   $workflow->delete();
 }
 
@@ -163,7 +163,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
     // This is used in Node API.
     $workflow = workflow_get_workflow_type_map_by_type($node->type);
     $current_sid = workflow_node_current_state($node);
-    $state = workflow_state_load($current_sid);
+    $state = workflow_state_load_single($current_sid);
   }
   return $state->getOptions('node', $node, $force);
 }
@@ -185,7 +185,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  *   TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
  */
 function workflow_show_form($sid, $workflow, array $options) {
-  $state = workflow_state_load($sid);
+  $state = workflow_state_load_single($sid);
   return !$state->showWidget($options);
 }
 
@@ -263,7 +263,7 @@ function workflow_get_workflow_states($options = array()) {
 /**
  * Get all states in the system, with options to filter, only where a workflow exists.
  *
- * @deprecated: workflow_get_workflow_states_by_wid() --> Workflow->getOptions()
+ * @deprecated: workflow_get_workflow_states_by_wid --> Workflow->getOptions
  */
 function workflow_get_workflow_states_by_wid($wid, $options = array()) {
   $options['wid'] = $wid;
@@ -272,7 +272,7 @@ function workflow_get_workflow_states_by_wid($wid, $options = array()) {
 
 /**
  * Given a sid, return a workflow. Sids are a unique id.
- * @deprecated: workflow_get_workflow_by_sid --> workflow_state_load()
+ * @deprecated: workflow_get_workflow_by_sid --> workflow_state_load_single
  */
 function workflow_get_workflow_by_sid($sid) {
   return db_query("SELECT w.wid, w.name, w.tab_roles, w.options FROM {workflow_states} s
@@ -282,7 +282,7 @@ function workflow_get_workflow_by_sid($sid) {
 
 /**
  * Given a sid, return a state. Sids are a unique id.
- * @deprecated: workflow_get_workflow_states_by_sid($sid) --> workflow_state_load($sid)
+ * @deprecated: workflow_get_workflow_states_by_sid --> workflow_state_load_single
  */
 function workflow_get_workflow_states_by_sid($sid, $options = array()) {
   static $sids = array();
@@ -322,7 +322,7 @@ function workflow_get_workflow_states_by_wid_state($wid, $state) {
  * @deprecated: workflow_delete_workflow_states_by_sid($sid, $new_sid, $true_delete) --> WorkflowState->delete()
  */
 function workflow_delete_workflow_states_by_sid($sid, $new_sid = FALSE, $true_delete = FALSE) {
-  if ($state = workflow_state_load($sid)) {
+  if ($state = workflow_state_load_single($sid)) {
     $state->delete($new_sid, $true_delete);
   }
 }
@@ -339,7 +339,7 @@ function workflow_update_workflow_states(&$data) {
   if (!isset($data->status)) {
     $data->status = 1;
   }
-  if (isset($data->sid) && workflow_state_load($data->sid)) {
+  if (isset($data->sid) && workflow_state_load_single($data->sid)) {
     drupal_write_record('workflow_states', $data, 'sid');
   }
   else {
@@ -385,7 +385,7 @@ function workflow_get_workflow_transitions_by_tid($tid) {
 /**
  * Given a sid, get the transition.
  *
- * @deprecated: workflow_get_workflow_transitions_by_sid --> workflow_state_load()
+ * @deprecated: workflow_get_workflow_transitions_by_sid --> workflow_state_load_single
  */
 //function workflow_get_workflow_transitions_by_sid($sid) {
 //  static $transitions;

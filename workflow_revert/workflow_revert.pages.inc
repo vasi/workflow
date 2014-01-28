@@ -15,7 +15,7 @@ function workflow_revert_form($form, $form_state, $entity_type, $id, $field_name
   $return_uri = $uri['path'] . '/workflow';
 
   if (drupal_valid_token($_GET['token'], 'workflow_revert ' . $previous_sid)) {
-    $state = WorkflowState::load($previous_sid);
+    $state = workflow_state_load_single($previous_sid);
 
     $args['#previous_sid'] = $previous_sid;
     $args['#entity_id'] = $id;

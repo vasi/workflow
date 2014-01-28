@@ -39,7 +39,7 @@ function workflow_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['workflow'] = 'workflow';
 
   foreach ($data as $workflow_name) {
-    if ($workflow = Workflow::loadByName($workflow_name)) {
+    if ($workflow = workflow_load_by_name($workflow_name)) {
 
       if (count($workflow->getTypeMap())) {
         $export['dependencies']['workflownode'] = 'workflownode';
@@ -130,8 +130,8 @@ function workflow_update_workflows_full_object($workflow_data) {
   $name = $workflow_data->name;
 
   // Then make a workflow so we can track by wid.
-  if (!$workflow = Workflow::loadByName($name)) {
-    $workflow = Workflow::create($name);
+  if (!$workflow = workflow_load_by_name($name)) {
+    $workflow = workflow_create($name);
   }
 
   unset($workflow->tab_roles);
@@ -154,7 +154,7 @@ function workflow_update_workflows_full_object($workflow_data) {
   $active_states = array();
   foreach ($new_states as $state_data) {
     $name = $state_data['name'];
-    if (!$state = WorkflowState::loadByName($name, $workflow->wid)) {
+    if (!$state = workflow_state_load_by_name($name)) {
       $state = $workflow->createState($name);
     }
     $state->weight = $state_data['weight'];
@@ -211,7 +211,7 @@ function workflow_update_workflows_full_object($workflow_data) {
 function workflow_get_workflows_full_object($name) {
   $workflow = NULL;
 
-  if ($workflow = Workflow::loadByName($name)) {
+  if ($workflow = workflow_load_by_name($name)) {
     // Clone so we can modify it independently of cached original.
     $workflow = clone $workflow;
 
@@ -242,7 +242,7 @@ function workflow_get_workflows_full_object($name) {
         $transition = clone $transition;
 
         // And to get the target state (by name) we need to look it up, too.
-        $target_state = WorkflowState::load($transition->target_sid);
+        $target_state = workflow_state_load_single($transition->target_sid);
         if ($target_state && $target_state->isActive() && $state->isActive()) {
           // The Transition seems an exportable entity, so we need to copy it.
           $new_transition = new stdClass();
