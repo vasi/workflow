@@ -372,9 +372,18 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
   else {
     // This is a Workflow Node workflow.
     $current_state = workflow_state_load_single($current_sid);
-    $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
-                                                    'state_system_name' => $current_state->getName(),
-                                                    'sid' => $current_sid));
+    if ($current_state) {
+      $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
+                                                      'state_system_name' => $current_state->getName(),
+                                                      'sid' => $current_sid));
+    }
+    else {
+      // Should not happen in a production site:
+      // For some reason, state doesn't exist anymore.
+      $output = theme('workflow_current_state', array('state' => 'unknown state',
+                                                      'state_system_name' => 'unknown state',
+                                                      'sid' => $current_sid));
+    }
     $list_element =  array(
       '#type' => 'item',
       // '#title' => t('Current state'),
@@ -545,8 +554,8 @@ function workflow_get_roles($permission = 'participate in workflow') {
  */
 function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE) {
   $options = array();
-  $wids = $wid ? array($wid) : NULL;
-  foreach (workflow_load_multiple($wids) as $workflow) {
+
+  foreach (workflow_load_multiple($wid ? array($wid) : FALSE) as $workflow) {
     $workflow_options = array();
     foreach ($workflow->getStates($all) as $state) {
       $workflow_options[$state->value()] = check_plain($state->label());

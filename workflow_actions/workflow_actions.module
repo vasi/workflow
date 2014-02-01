@@ -21,16 +21,15 @@ function workflow_actions_trigger_info() {
     );
   }
 
-  $trigger_page = FALSE;
   if (drupal_substr($_GET['q'], 0, 32) == 'admin/structure/trigger/workflow') {
     $trigger_page = TRUE;
     $wid = arg(4);
-    $workflows = workflow_load_multiple(array($wid));
   }
   else {
+    $trigger_page = FALSE;
     $wid = 0;
-    $workflows = workflow_load_multiple();
   }
+  $workflows = workflow_load_multiple($wid ? array($wid) : FALSE);
 
   // Get the mapping for Node API.
   // Build an array of Wid => array of types.

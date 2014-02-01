@@ -22,13 +22,12 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
 
       $all = $this->options['expose']['workflow_include_all'];
       $wid = isset($this->options['expose']['workflow_reduce_wid']) ? $this->options['expose']['workflow_reduce_wid'] : 0;
-      $wids = $wid ? array($wid) : NULL;
 
       $states = array();
       // Count the workflows to determine grouping.
       // Even if $wid is not set, we may only have 1 workflow.
       $grouped = FALSE;
-      $workflows = workflow_load_multiple($wids);
+      $workflows = workflow_load_multiple($wid ? array($wid) : FALSE);
       $count = count($workflows);
       if ($count > 1) {
         $states += array('' => t('No state'));
@@ -117,7 +116,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       if (count($this->value) == 0) {
         $values = t('Unknown');
       }
-      else if (count($this->value) == 1) {
+      elseif (count($this->value) == 1) {
         // If any, use the 'single' short name of the operator instead.
         if (isset($info[$this->operator]['short_single'])) {
           $operator = check_plain($info[$this->operator]['short_single']);

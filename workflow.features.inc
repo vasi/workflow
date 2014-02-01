@@ -140,21 +140,21 @@ function workflow_update_workflows_full_object($workflow_data) {
   unset($workflow->options);
   $workflow->options = $workflow_data->options;
 
-  $workflow->save(FALSE);
-  // Wid may be known only after save().
+  // For new workflows, $wid is only known after save().
+  $workflow->save();
 
   // Cancel out if workflow failed to save.
   if (!isset($workflow->wid) || empty($workflow->wid)) {
     return FALSE;
   }
 
-  // Workflow is now a fully vetted workflow object. We have NOT created a creation state with this.
+  // Workflow is now a fully vetted workflow object.
   // Then make states, marking state name to state sid.
-  $orig_states = $workflow->getStates(); // Initialize the cache for this workflow.
+  $orig_states = $workflow->getStates($all = TRUE); // Initialize the cache for this workflow.
   $active_states = array();
   foreach ($new_states as $state_data) {
     $name = $state_data['name'];
-    if (!$state = workflow_state_load_by_name($name)) {
+    if (!$state = workflow_state_load_by_name($name, $workflow->wid)) {
       $state = $workflow->createState($name);
     }
     $state->weight = $state_data['weight'];

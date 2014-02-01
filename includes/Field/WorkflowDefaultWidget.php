@@ -132,7 +132,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $form_id = $form_state['build_info']['form_id'];
 
     // Prepare a wrapper. This might be a fieldset.
-    $element['workflow']['#type'] = 'container';
+    $element['workflow']['#type'] = 'container'; // 'fieldset';
     $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
     // Save the current value of the node in the form, for later Workflow-module specific references.

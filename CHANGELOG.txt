@@ -399,3 +399,5 @@ Issue #1559680 by johnv: Changed Transitions into Entity. Views support enabled.
 Issue #2175867 by johnv: Updated workflow_views_handler_field_username to use all Views' optons.
 Issue #2064449 by johnv: Merged hook_update_7001 with hook_update_7007 to avoid errors in 7001.
 Issue #2019345 by johnv: Moved entity_<operations> function calls to workfow.entity.inc.
+Issue #2019345 by kaare: Fixed $node->name is unset in workflow.tokens.inc.
+Issue #2184633 by johnv: Fixed caching of Workflow (BTW, which is now a true entity).

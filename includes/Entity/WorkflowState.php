@@ -24,34 +24,24 @@ class WorkflowState {
   /**
    * Constructor.
    */
-  protected function __construct($wid = 0, $sid = 0) {
-    if (empty($sid) && empty($wid)) {
+  protected function __construct($wid = 0, $name = '') {
+    if (empty($wid) && empty($name)) {
       // Automatic constructor when casting an array or object.
       if (!isset(self::$states[$this->sid])) {
         self::$states[$this->sid] = $this;
       }
     }
-    elseif (empty($sid)) {
-      // Creating an dummy/new state for a workflow.
-      // Do not add to 'cache' self::$tates.
+    elseif ($wid && empty($name)) {
+      // Creating a dummy/new state for a workflow.
+      // Do not add to 'cache' self::$states.
       $this->wid = $wid;
+      $this->state = $name;
     }
     else {
-      // Fetching an existing state for a workflow.
-      if (!isset(self::$states[$sid])) {
-        self::$states[$sid] = workflow_state_load_single($sid, $wid);
-      }
-      // State may not exist.
-      if (self::$states[$sid]) {
-        // @todo: this copy-thing should not be necessary.
-        $this->sid = self::$states[$sid]->sid;
-        $this->wid = self::$states[$sid]->wid;
-        $this->weight = self::$states[$sid]->weight;
-        $this->sysid = self::$states[$sid]->sysid;
-        $this->state = self::$states[$sid]->state;
-        $this->status = self::$states[$sid]->status;
-        $this->workflow = self::$states[$sid]->workflow;
-      }
+      // Creating a dummy/new state for a workflow.
+      // Do not add to 'cache' self::$states.
+      $this->wid = $wid;
+      $this->state = $name;
     }
   }
 
@@ -71,7 +61,7 @@ class WorkflowState {
   public static function create($wid, $name = '') {
     $state = workflow_state_load_by_name($name, $wid);
     if (!$state) {
-      $state = new WorkflowState($wid);
+      $state = new WorkflowState($wid, $name);
       $state->state = $name;
     }
     if ($name == WORKFLOW_CREATION_STATE_NAME) {
@@ -173,7 +163,6 @@ class WorkflowState {
    */
   public function save() {
     $sid = $this->sid;
-
     // Convert all properties to an array, the previous ones, too.
     $data['sid'] = $this->sid;
     $data['wid'] = $this->wid;
@@ -191,6 +180,9 @@ class WorkflowState {
     // Update the page cache.
     $this->sid = $sid = $data['sid'];
     self::$states[$sid] = $this;
+
+    // Reset the cache for the affected workflow.
+    workflow_reset_cache($this->wid);
   }
 
   /**
@@ -382,14 +374,17 @@ class WorkflowState {
         // Stop if a module says so.
         if (!in_array(FALSE, $permitted, TRUE)) {
           // If not vetoed, add to list (by replacing the object by the name).
-          $target_state = $options[$new_sid];
-          $options[$new_sid] = check_plain(t($options[$new_sid]->label()));
+          if ($target_state = $workflow->getState($new_sid)) {
+            $options[$new_sid] = check_plain(t($target_state->label()));
+          }
         }
       }
 
       // Include current state for same-state transitions (by replacing the object by the name).
       if ($current_sid != $workflow->getCreationSid()) {
-        $options[$current_sid] = check_plain(t($options[$current_sid]->label()));
+        if ($current_state = $workflow->getState($current_sid)) {
+          $options[$current_sid] = check_plain(t($current_state->label()));
+        }
       }
 
       // Remove the unpermitted options.

@@ -4,6 +4,8 @@
  * @file
  * Contains workflow\includes\Entity\WorkflowTransition.
  * Contains workflow\includes\Entity\WorkflowTransitionController.
+ *
+ * Implements (scheduled/executed) state transitions on entities.
  */
 
 /**
@@ -13,12 +15,17 @@
  */
 class WorkflowTransitionController extends EntityAPIController {
 
-  public function load($ids = array(), $conditions = array()) {
-    // Set this explicitely to FALSE, until this is fixed:
-    // Calling $workflow->getTransitions() twice, gives an empty list the second time.
-    $this->cache = FALSE;
-
-    return parent::load($ids, $conditions);
+  /**
+   * Overrides DrupalDefaultEntityController::cacheGet()
+   * 
+   * Override default function, due to core issue #1572466.
+   */
+  protected function cacheGet($ids, $conditions = array()) {
+    // Load any available entities from the internal cache.
+    if ($ids === FALSE && !$conditions) {
+      return $this->entityCache;
+    }
+    return parent::cacheGet($ids, $conditions);
   }
 
   /**
@@ -49,9 +56,6 @@ class WorkflowTransitionController extends EntityAPIController {
     return parent::save($entity, $transaction);
   }
 
-  public function delete($ids, DatabaseTransaction $transaction = NULL) {
-    return parent::delete($ids, $transaction);  
-  }
 }
 
 

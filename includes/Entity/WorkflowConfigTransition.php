@@ -13,12 +13,17 @@
  */
 class WorkflowConfigTransitionController extends EntityAPIController {
 
-  public function load($ids = array(), $conditions = array()) {
-    // Set this explicitely to FALSE, until this is fixed:
-    // Calling $workflow->getTransitions() twice, gives an empty list the second time.
-    $this->cache = FALSE;
-
-    return parent::load($ids, $conditions);
+  /**
+   * Overrides DrupalDefaultEntityController::cacheGet()
+   * 
+   * Override default function, due to core issue #1572466.
+   */
+  protected function cacheGet($ids, $conditions = array()) {
+    // Load any available entities from the internal cache.
+    if ($ids === FALSE && !$conditions) {
+      return $this->entityCache;
+    }
+    return parent::cacheGet($ids, $conditions);
   }
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
@@ -31,7 +36,12 @@ class WorkflowConfigTransitionController extends EntityAPIController {
         $entity->tid = $config_transition->tid;
       }
     }
-    return parent::save($entity, $transaction);
+    $return = parent::save($entity, $transaction);
+
+    // Reset the cache for the affected workflow.
+    workflow_reset_cache($entity->wid);
+
+    return $return;
   }
 }
 
