@@ -258,18 +258,14 @@ dpm($w->loadTransitions());
 }
 
 function workflow_test_entity_allowable() {
-  $w = workflow_create('workflow_test_open');
+  $w = workflow_create('workflow_test_'.REQUEST_TIME);
   $w->save();
   $s1 = $w->createState('to be opened');
   $s2 = $w->createState('open');
   $s3 = $w->createState('closed');
-  $s4 = $w->createState('save');
-  $s5 = $w->createState('dummy');
   $s1->save();
   $s2->save();
   $s3->save();
-  $s4->save();
-  $s5->save();
   $roles = array(1, 2); // anon, auth user.
 dpm($roles);
   $t1 = $t = $w->createTransition(WORKFLOW_CREATION_STATE_NAME, 'to be opened');
@@ -286,9 +282,6 @@ DPM($t3);
   $t4 = $t = $w->createTransition('closed', 'open');
   $t->roles = $roles;
   $t->save();
-  $t5 = $t = $w->createTransition(WORKFLOW_CREATION_STATE_NAME, 'dummy');
-  $t->roles = $roles;
-  $t->save();
 
   dpm($s2->getOptions('', NULL));
   // returns  TRUE if the role is allowed to do the transition.
@@ -300,8 +293,6 @@ DPM($t3);
 
   $rc = $w->GetTransitionsBySid($s3->sid);
   dpm($rc, 'allowed transitions from ' . $s3->label());
-  $rc = $w->GetTransitionsBySid($s4->sid);
-  dpm($rc, 'allowed transitions from ' . $s4->label());
 
   $ts = $w->getTransitions();
   dpm($ts);
