@@ -402,3 +402,4 @@ Issue #2019345 by johnv: Moved entity_<operations> function calls to workfow.ent
 Issue #2019345 by kaare: Fixed $node->name is unset in workflow.tokens.inc.
 Issue #2184633 by johnv: Fixed caching of Workflow (BTW, which is now a true entity).
 Issue #2019345 by johnv: Moved workflow.node.inc to submodule workflow_node.
+Issue #2187151 by johnv: Added a 'actions buttons' widget to Workflow form for permitted states.

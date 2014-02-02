@@ -130,7 +130,8 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
         // These options are taken from options.module
         'select' => 'Select list',
         'radios' => 'Radio buttons',
-        // 'actions' => 'Action buttons', // by workflow contrib.
+        // This option does not work properly on edit page.
+        'buttons' => 'Action buttons (do not use on Edit page!)',
       ),
       '#description' => t('The Widget shows all available states. Decide which
         is the best way to show them.'

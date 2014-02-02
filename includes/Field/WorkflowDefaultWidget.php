@@ -79,13 +79,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
+    $settings_options_type = $field['settings']['widget']['options'];
     // The schedule can be hidden via field settings,
     // and cannot be shown on a Content add page (no $entity_id),
     // but can be shown on a VBO page (no entity).
-    $settings_schedule = !empty($field['settings']['widget']['schedule'])
-                      && !($entity && !$entity_id);
+    $settings_schedule = !empty($field['settings']['widget']['schedule']) && !($entity && !$entity_id);
     $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
-
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
 
@@ -95,7 +94,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // If so, show all options for the given workflow(s).
 
       // Set 'grouped' option. This is only valid for select list.
-      $grouped = $field['settings']['widget']['options'] == 'select'; // 'radios';
+      $grouped = ($settings_options_type == 'select');
 
       $options = workflow_get_workflow_state_names($wid, $grouped, $all = FALSE);
       $show_widget = TRUE;
@@ -152,18 +151,18 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // There is no need to a widget when the only choice is the current sid.
     if (!$show_widget) {
       $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
-      return $element;
+      return $element;  // <---- exit.
     }
-    else {
-      $element['workflow']['workflow_sid'] = array(
-        '#type' => $field['settings']['widget']['options'],
-        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
-        '#options' => $options,
-        // '#name' => $workflow_label,
-        // '#parents' => array('workflow'),
-        '#default_value' => $default_value,
-      );
-    }
+
+    // The 'options' widget. May be removed below if 'Action buttons' are choosen.
+    $element['workflow']['workflow_sid'] = array(
+      '#type' => $settings_options_type,
+      '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
+      '#options' => $options,
+      // '#name' => $workflow_label,
+      // '#parents' => array('workflow'),
+      '#default_value' => $default_value,
+    );
 
     // Display scheduling form, but only if entity is being edited and user has
     // permission. State change cannot be scheduled at entity creation because
@@ -216,7 +215,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#maxlength' => 7,
         '#size' => 6,
         '#default_value' => $scheduled ? $hours : '00:00',
-        '#element_validate' => array('_workflow_transition_form_validate_time'),
+        '#element_validate' => array('_workflow_transition_form_element_validate_time'),
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
         '#type' => $settings_schedule_timezone ? 'select' : 'hidden',
@@ -241,9 +240,45 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       '#rows' => 2,
     );
 
-    // The 'add submit' can explicitely set by workflowfield_field_formatter_view(),
-    // to add the submit button on the Content view page and the Workflow history tab.
-    if (!empty($instance['widget']['settings']['submit_function'])) {
+    // Finally, add Submit buttons/Action buttons.
+    // Either a default 'Submit' button is added, or a button per permitted state.
+    if ($settings_options_type == 'buttons') {
+      // The options widget set above is no longer valid.
+      unset($element['workflow']['workflow_sid']);
+
+      // How do action buttons work? See also d.o. issue #2187151. 
+      // Create 'action buttons' per state option. Set $sid property on each button.
+      // 1. Admin sets ['widget']['options']['#type'] = 'buttons'.
+      // 2. This function creates 'action buttons' per state option; sets $sid property on each button.
+      // 3. User clicks button.
+      // 4. Callback _workflow_transition_form_validate_buttons() sets proper State.
+      // 5. Callback _workflow_transition_form_validate_buttons() sets Submit function.
+      // @todo: this does not work yet for the 'edit'/'create' page.
+
+      if (empty($instance['widget']['settings']['submit_function'])) {
+        drupal_set_message(t('Workflow Action buttons are not supported on this page (form_id). Contact your site administrator.',
+                              array(@form_id => $form_state['build_info']['form_id'])),
+                           'warning');	
+      }
+
+      foreach ($options as $sid => $state_label) {
+        $element['workflow']['submit_sid'][$sid] = array(
+          '#type' => 'submit',
+          // @todo: the label could be set in 'transition permitted' hook, or when fetching the allowed states.
+          '#value' => (($sid == $current_sid) ? t('Leave at') : t('Set to')) . ' ' . $state_label,
+          '#executes_submit_callback' => TRUE,
+          '#validate' => array('_workflow_transition_form_validate_buttons'), // ($form, &$form_state)
+          // Add the submit function only if one provided. @todo: On node edit form, we have not the proper function. 
+          '#submit' => (empty($instance['widget']['settings']['submit_function'])) ? array() : array($instance['widget']['settings']['submit_function']),
+          '#workflow_sid' => $sid,
+          // Put current state first.
+          '#weight' => ($sid != $current_sid),
+        );
+      }
+    }
+    elseif (!empty($instance['widget']['settings']['submit_function'])) {
+      // The 'add submit' can explicitely set by workflowfield_field_formatter_view(),
+      // to add the submit button on the Content view page and the Workflow history tab.
       // Add a submit button, but only on Entity View and History page.
       $element['workflow']['submit'] = array(
         '#type' => 'submit',
@@ -251,6 +286,12 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#executes_submit_callback' => TRUE,
         '#submit' => array($instance['widget']['settings']['submit_function']),
       );
+    }
+    else {
+      // In some cases, no submit callback function is specified. This is
+      // explicitly done on e.g., the node edit form, because the workflow form
+      // is 'just a field'.
+      // So, no Submit button is to be shown.
     }
 
     return $element;
