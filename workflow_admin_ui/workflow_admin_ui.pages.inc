@@ -251,10 +251,11 @@ function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
         // These options are taken from options.module
         'select' => 'Select list',
         'radios' => 'Radio buttons',
-        // 'actions' => 'Action buttons', // by workflow contrib.
+        // This option does not work properly on Comment Add form.
+        'buttons' => 'Action buttons',
       ),
-      '#description' => t('The Widget shows all available states. Decide which
-        is the best way to show them.'
+      '#description' => t("The Widget shows all available states. Decide which
+        is the best way to show them. ('Action buttons' do not work on Comment form.)"
       ),
     );
     $form['basic']['name_as_title'] = array(

@@ -244,7 +244,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Either a default 'Submit' button is added, or a button per permitted state.
     if ($settings_options_type == 'buttons') {
       // The options widget set above is no longer valid.
-      unset($element['workflow']['workflow_sid']);
+      $element['workflow']['workflow_sid']['#type'] = 'hidden';
 
       // How do action buttons work? See also d.o. issue #2187151. 
       // Create 'action buttons' per state option. Set $sid property on each button.
@@ -253,13 +253,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // 3. User clicks button.
       // 4. Callback _workflow_transition_form_validate_buttons() sets proper State.
       // 5. Callback _workflow_transition_form_validate_buttons() sets Submit function.
-      // @todo: this does not work yet for the 'edit'/'create' page.
-
-      if (empty($instance['widget']['settings']['submit_function'])) {
-        drupal_set_message(t('Workflow Action buttons are not supported on this page (form_id). Contact your site administrator.',
-                              array(@form_id => $form_state['build_info']['form_id'])),
-                           'warning');	
-      }
+      // @todo: this does not work yet for the Add Comment form.
 
       foreach ($options as $sid => $state_label) {
         $element['workflow']['submit_sid'][$sid] = array(
@@ -409,9 +403,11 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
 
       if (isset($items[0]['workflow']['workflow_sid'])) {
+        // We have shown a workflow form.
         $new_sid = $items[0]['workflow']['workflow_sid'];
       }
       elseif (isset($items[0]['value'])) {
+        // We have shown a core options widget (radios, select).
         $new_sid = $items[0]['value'];
       }
       else {

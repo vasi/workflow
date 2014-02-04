@@ -130,11 +130,11 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
         // These options are taken from options.module
         'select' => 'Select list',
         'radios' => 'Radio buttons',
-        // This option does not work properly on edit page.
-        'buttons' => 'Action buttons (do not use on Edit page!)',
+        // This option does not work properly on Comment Add form.
+        'buttons' => 'Action buttons',
       ),
-      '#description' => t('The Widget shows all available states. Decide which
-        is the best way to show them.'
+      '#description' => t("The Widget shows all available states. Decide which
+        is the best way to show them. ('Action buttons' do not work on Comment form.)"
       ),
     );
     $element['widget']['name_as_title'] = array(
