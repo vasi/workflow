@@ -569,13 +569,16 @@ function workflow_update_7004() {
   // you need to explicitly load that file first.
   module_load_include('module', 'workflow');
 
-  foreach (WorkflowScheduledTransition::loadBetween() as $scheduled_transition) {
+  // Do not use WorkflowScheduledTransition::loadBetween() here.
+  // We'll get an error "class WorkflowScheduleTransition not found".
+  $query = db_select('workflow_scheduled_transition', 'wst');
+  $query->fields('wst');
+  $scheduled_transitions = $query->execute()->fetchAll(PDO::FETCH_CLASS);
+  foreach ($scheduled_transitions as $scheduled_transition) {
     // Set the new field 'field_name'.
     // Set the new field 'entity_type'. This will always be 'node'.
-    $entity_id = $scheduled_transition->entity_id;
-    $entity_type = $scheduled_transition->entity_type;
-    $entity_type = empty($entity_type) ? 'node' : $entity_type;
-    $entity = node_load($entity_id);
+    $entity_type = empty($scheduled_transition->entity_type) ? 'node' : $scheduled_transition->entity_type;
+    $entity = node_load($scheduled_transition->entity_id);
     // When testing, we got Comments in the scheduled_transition table.
     // They should not be there, and do not have type set.
     $entity_bundle = isset($entity->type) ? $entity->type : '';
