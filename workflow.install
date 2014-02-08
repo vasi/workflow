@@ -564,45 +564,14 @@ function workflow_update_7003() {
  * Update scheduled state transitions with no association to "node".
  */
 function workflow_update_7004() {
-  // Not all module functions are available in a hook_update_N() function.
-  // In order to call a function from your mymodule.module or an include file,
-  // you need to explicitly load that file first.
-  module_load_include('module', 'workflow');
-
-  // Do not use WorkflowScheduledTransition::loadBetween() here.
-  // We'll get an error "class WorkflowScheduleTransition not found".
-  $query = db_select('workflow_scheduled_transition', 'wst');
-  $query->fields('wst');
-  $scheduled_transitions = $query->execute()->fetchAll(PDO::FETCH_CLASS);
-  foreach ($scheduled_transitions as $scheduled_transition) {
-    // Set the new field 'field_name'.
-    // Set the new field 'entity_type'. This will always be 'node'.
-    $entity_type = empty($scheduled_transition->entity_type) ? 'node' : $scheduled_transition->entity_type;
-    $entity = node_load($scheduled_transition->entity_id);
-    // When testing, we got Comments in the scheduled_transition table.
-    // They should not be there, and do not have type set.
-    $entity_bundle = isset($entity->type) ? $entity->type : '';
-
-    if ($entity_type == 'node' && $entity_bundle && $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
-      // Save the original, since we're changing the key and cannot update.
-      $old_transaction = clone $scheduled_transition;
-      $old_transaction->delete();
-
-      // Set missing field.
-      // All other missing data is set upon load/construct of ScheduledTransition.
-      $scheduled_transition->entity_type = $entity_type;
-
-      if ($workflow_item = $workflow->getWorkflowItem()) {
-        // Field API. The field name is set explicitely.
-        $instance = $workflow_item->getInstance();
-        $scheduled_transition->field_name = $instance['field_name'];
-      }
-      else {
-        // Node API. The field_name is not set: this implies 'workflow'.
-      }
-      $scheduled_transition->save();
-    }
-  }
+  db_update('workflow_scheduled_transition')
+    ->fields(array(
+      'entity_type' => 'node',
+      'language' => 'und',
+      'delta' => '0',
+      )
+    )
+    ->execute();
 }
 
 /**
