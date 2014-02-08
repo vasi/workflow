@@ -404,3 +404,4 @@ Issue #2184633 by johnv: Fixed caching of Workflow (BTW, which is now a true ent
 Issue #2019345 by johnv: Moved workflow.node.inc to submodule workflow_node.
 Issue #2187151 by johnv: Added an 'Actions buttons' widget to Workflow form for permitted states.
 Issue #2187151 by johnv: Added an 'Actions buttons' widget for permitted states on Workflow_node and Entity Form.
+Issue #2187677 by johnv, boris sondagh: Removed 'Sys ID' column in Admin UI states page.

@@ -757,11 +757,6 @@ function workflow_admin_ui_states_form($form, $form_state, $workflow) {
         '#type' => 'markup',
         '#markup' => theme('links', array('links' => $links)),
        ),
-
-      'sysid' => array(
-        '#type' => 'value',
-        '#value' => $state->isCreationState(),
-      ),
     );
 
     // Don't let the creation state change weight or status or name.
@@ -799,7 +794,6 @@ function theme_workflow_admin_ui_states_form($variables) {
       t('Reassign'),
       t('Count'),
       array('data' => t('Operations'), 'class' => 'state-ops'),
-      t('Sys ID'),
     ),
     'attributes' => array('id' => $table_id, 'style' => 'width: auto;'),
   );
@@ -827,8 +821,6 @@ function theme_workflow_admin_ui_states_form($variables) {
         array('data' => $form['states'][$id]['count']['#value'], 'class' => 'state-count'),
         // Add our 'operations' column
         array('data' => drupal_render($form['states'][$id]['ops']), 'class' => 'state-ops'),
-        // Add our 'sysid' column
-        drupal_render($form['states'][$id]['sysid']),
       ),
       // To support the tabledrag behavior, we need to assign each row of the
       // table a class attribute of 'draggable'. This will add the 'draggable'
