@@ -407,3 +407,4 @@ Issue #2187151 by johnv: Added an 'Actions buttons' widget for permitted states 
 Issue #2187677 by johnv, boris sondagh: Removed 'Sys ID' column in Admin UI states page.
 Issue #2185859 by johnv: Fixed 'Class not found' error in hook_update_7004.
 Issue #2192815 by johnv: Renamed, reordered private functions in workflow.features.inc
+Issue #2192815 by johnv: Fixed broken features export since Workflow is an entity.

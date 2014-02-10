@@ -54,6 +54,9 @@ function workflow_features_export($data, &$export, $module_name = '') {
 
 /**
  * Implements hook_features_export_render().
+ *
+ * Do not use default exportable functions. For backwards compatibility we
+ * want to generate PHP code, not JSON.
  */
 function workflow_features_export_render($module, $data) {
   $translatables = $code = array();
@@ -61,9 +64,9 @@ function workflow_features_export_render($module, $data) {
   $code[] = '';
 
   foreach ($data as $workflow_name) {
-    if ($workflow = _workflow_load_workflows_full_object($workflow_name)) {
-      unset($workflow->wid);
-      $workflow_export = features_var_export($workflow, '  ');
+    // Avoid default var_export, by using array.
+    if ($workflow = _workflow_load_workflows_full($workflow_name)) {
+      $workflow_export = features_var_export((array) $workflow, '  ', FALSE);
       $workflow_identifier = features_var_export($workflow_name);
       $code[] = "  // Exported workflow: " . $workflow_name;
       $code[] = "  \$workflows[{$workflow_identifier}] = {$workflow_export};";
@@ -116,21 +119,23 @@ function workflow_features_rebuild($module) {
  *   A string corresponding to a workflow object.
  *
  * @return
- *   A fully loaded workflow object with type and statue mappings.
+ *   A fully loaded workflow array.
  */
-function _workflow_load_workflows_full_object($name) {
-  $workflow = NULL;
+function _workflow_load_workflows_full($name) {
+  $result = array();
 
   if ($workflow = workflow_load_by_name($name)) {
     // Clone so we can modify it independently of cached original.
     $workflow = clone $workflow;
 
+    $result['name'] = $workflow->getName();
     // Translate to role names so it works cross install.
-    $workflow->tab_roles = _workflow_rids_to_roles($workflow->tab_roles);
+    $result['tab_roles'] = _workflow_rids_to_roles($workflow->tab_roles);
+    $result['options'] = $workflow->options;
 
     // Add the active states for workflow, an array of sub-objects.
     // Add only the active ones and 'creation'.
-    $workflow->states = array();
+    $result['states'] = array();
     foreach ($workflow->getStates('CREATION') as $sid => $state) {
       // Remove what we don't need to export.
       if ($state->isActive()) {
@@ -140,7 +145,8 @@ function _workflow_load_workflows_full_object($name) {
         unset($state->wid);
         $state->name = $state->getName(); // Add explicitly.
         // unset($state->workflow); // Not possible: protected property.
-        $workflow->states[$sid] = $state;
+
+        $result['states'][$sid] = $state;
       }
     }
 
@@ -162,7 +168,8 @@ function _workflow_load_workflows_full_object($name) {
           $new_transition->roles = _workflow_rids_to_roles($transition->roles);
           // Remove what we don't need to export.
           unset($transition->tid, $transition->sid, $transition->target_sid);
-          $workflow->transitions[] = $new_transition;
+
+          $result['transitions'][] = $new_transition;
         }
       }
     }
@@ -170,11 +177,11 @@ function _workflow_load_workflows_full_object($name) {
     // Finally, add the type_maps for workflow, an array of sub-objects.
     // Now we need to add data to the export for each type map, an array of sub-objects.
     foreach (workflow_get_workflow_type_map_by_wid($workflow->wid) as $index => $type_map) {
-      $workflow->node_types[] = $type_map->type;
+      $result['node_types'][] = $type_map->type;
     }
   }
 
-  return $workflow;
+  return $result;
 }
 
 /**
@@ -205,6 +212,7 @@ function _workflow_update_workflows_full_object($workflow_data) {
   unset($workflow->tab_roles);
   // Roles are exported by rolename, so need to translate to RID.
   $workflow->tab_roles = !empty($workflow_data->tab_roles) ? _workflow_roles_to_rids($workflow_data->tab_roles) : array();
+
   unset($workflow->options);
   $workflow->options = $workflow_data->options;
 
@@ -281,10 +289,11 @@ function _workflow_roles_to_rids($role_string) {
   $rid_array = array();
   foreach (explode(',', $role_string) as $role_name) {
     if ($role_name === WORKFLOW_FEATURES_AUTHOR_NAME) {
-      $rid_array[] = WORKFLOW_ROLE_AUTHOR_RID;
+      $rid_array[WORKFLOW_ROLE_AUTHOR_RID] = WORKFLOW_ROLE_AUTHOR_RID;
     }
     elseif ($role_name && in_array($role_name, $roles)) {
-      $rid_array[] = array_search($role_name, $roles);
+      $rid = array_search($role_name, $roles);
+      $rid_array[$rid] = $rid;
     }
   }
   return $rid_array;
