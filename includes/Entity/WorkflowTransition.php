@@ -446,9 +446,8 @@ class WorkflowTransition extends Entity {
       // is not saved here, but only after this call. Alternatives:
       // 1. Save the field here explicitely, using field_attach_save;
       // 2. Move the invoke to another place (but there is no entity_postsave());
-      // 3. Emulate the new Entity.
-      // 4. Something else.
-      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      // 3. rely on the entity hooks. This is what we do.
+      // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
     }
 
     // Clear any references in the scheduled listing.

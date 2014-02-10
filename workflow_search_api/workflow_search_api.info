@@ -1,4 +1,4 @@
-name = Workflow Search API
+name = Workflow Node Search API
 description = "Adds Workflow Node's state information to Search API index."
 dependencies[] = workflow
 dependencies[] = workflownode
