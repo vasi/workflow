@@ -95,3 +95,18 @@ function hook_workflow_history_alter(array &$variables) {
   $path = '<front>';
   $variables['extra'] = l(t('My new operation: go to frontpage'), $path, $options);
 }
+
+/**
+ * Implements hook_workflow_comment_alter().
+ * 
+ * Allow other modules to change the user comment when saving a state change.
+ *
+ * @param $comment
+ *   The comment of the current state transition.
+ * @param array $context
+ *   'transition' - The current transition itself.
+ */
+function hook_workflow_comment_alter(&$comment, &$context) {
+  $transition = $context->transition;
+  $comment = $transition->uid . 'says: ' . $comment;
+}
