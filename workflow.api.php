@@ -48,6 +48,9 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
       break;
 
     case 'transition post':
+      // This is called by Workflow Node during update of the state, directly
+      // after updating {workflow_node}. Workflow Field does not call this,
+      // since you can call an Entity event after saving the entity. 
       break;
 
     case 'transition delete':
