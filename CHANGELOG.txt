@@ -409,3 +409,4 @@ Issue #2185859 by johnv: Fixed 'Class not found' error in hook_update_7004.
 Issue #2192815 by johnv: Renamed, reordered private functions in workflow.features.inc
 Issue #2192815 by johnv: Fixed broken features export since Workflow is an entity.
 Issue #2189761 by johnv, zengenuity, naptown: Add Rules support for Workflow Field using 'EntityDefaultRulesController', removing custom code.
+Issue #2019345 by johnv: Fixed workflow history is saved twice when adding transition via comment.
