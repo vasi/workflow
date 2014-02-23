@@ -6,6 +6,10 @@
 
 /**
  * Implements hook_tokens().
+ *
+ * This is still buggy for Workflow Field:
+ * - we do not know upfront which field to read.
+ * - some evaluations may not be correct.
  */
 function workflow_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();
@@ -17,9 +21,11 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
     $node = $data['node'];
     $entity_id = $node->nid;
     $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
-    $field_name = ''; // @todo: add support for Field API in workflow_tokens().
+    $entity_bundle = $node->type;
+    // We do not know which field we want to use. Just pick one.
+    $field_name = NULL; // @todo: support multiple Workflow fields per entity in workflow_tokens().
 
-    if ($workflow = workflow_get_workflows_by_type($node->type, $entity_type)) {
+    if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       // Get a list of all possible states for returning state names.
       $states = workflow_state_load_multiple();
       $wid = $workflow->wid;
@@ -27,61 +33,61 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       $last_history = workflow_transition_load_single($entity_type, $entity_id, $field_name);
 
       if (isset($node->workflow) && !isset($node->workflow_stamp)) {
+        // Workflow Node mode.
         // The node is being submitted but the form data has not been saved to the database yet,
         // so we set the token values from the workflow form fields.
-        $sid = $node->workflow;
+        $new_sid = $node->workflow;
         $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : $workflow->getCreationSid();
         $uid = $node->uid;
-        $account = user_load($node->uid);
-        $user_name = $node->uid ? (isset($node->name) ? $node->name
-          : variable_get('anonymous', 'Anonymous'))
-          : variable_get('anonymous', 'Anonymous');
-        $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
+        $account = user_load($uid);
+        $user_name = ($uid && isset($node->name)) ? $node->name : variable_get('anonymous', 'Anonymous');
+        $mail = ($uid && isset($node->user_mail)) ? $node->user_mail : '';
         $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
       }
       else {
+        // Workflow Node/Workflow Field mode.
         if (empty($last_history)) {
           // If the node has no workflow history,
           // the node is being inserted and will soon be transitioned to the first valid state.
-          $sid = $workflow->getFirstSid($entity_type, $node);
-          if ($sid) {
+          $new_sid = $workflow->getFirstSid($entity_type, $node);
+          if ($new_sid) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
             $old_sid = $workflow->getCreationSid();
           }
           else {
             // What to choose?
-            $sid = $node->workflow;
+            $new_sid = workflow_node_current_state($node, $entity_type, $field_name);
             $old_sid = $workflow->getCreationSid();
           }
           $uid = $node->uid;
           $account = user_load($node->uid);
-          $user_name = $node->uid ? $node->name : variable_get('anonymous', 'Anonymous');
+          $user_name = ($uid && isset($node->name)) ? $node->name : variable_get('anonymous', 'Anonymous');
           $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
           $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
         }
         else {
+          // We now know the correct field_name.
+          $field_name = $last_history->field_name; // @todo: support multiple Workflow fields per entity in workflow_tokens().
+
           // Sometimes there is no workflow set (edit?).
-          if (!isset($node->workflow)) {
-            $node->workflow = $last_history->new_sid;
-          }
           // Is a transition in progress?
-          if ($node->workflow != $last_history->new_sid) {
-            $sid = $node->workflow;
+          $current_sid = workflow_node_current_state($node, $entity_type, $field_name);
+          if ($current_sid != $last_history->new_sid) {
+            $new_sid = $current_sid;
             $old_sid = $last_history->new_sid;
-            $date = $node->workflow_stamp;
+            $date = REQUEST_TIME; //$node->workflow_stamp;
             $uid = $node->uid;
-            $account = user_load($node->uid);
           }
           else {
             // Not a transition.
-            $sid = $last_history->new_sid;
+            $new_sid = $last_history->new_sid;
             $old_sid = $last_history->old_sid;
             $date = $last_history->stamp;
             $uid = $last_history->uid;
-            $account = user_load($last_history->uid);
           }
 
+          $account = user_load($uid);
           // Default to the most recent transition data in the workflow history table.
           $user_name = $account->uid ? $account->name : variable_get('anonymous', 'Anonymous');
           $mail = $account->uid ? $account->mail : '';
@@ -95,7 +101,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
             $replacements[$original] = $sanitize ? check_plain($workflow->name) : $workflow->name;
             break;
           case 'workflow-current-state-name':
-            $replacements[$original] = $sanitize ? check_plain($states[$sid]->getName()) : $states[$sid]->getName();
+            $replacements[$original] = $sanitize ? check_plain($states[$new_sid]->getName()) : $states[$new_sid]->getName();
             break;
           case 'workflow-old-state-name':
             $old_state_name = (!empty($states[$old_sid])) ? $states[$old_sid]->getName() : 'Deleted state';

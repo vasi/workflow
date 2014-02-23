@@ -206,7 +206,11 @@ class WorkflowTransition extends Entity {
     $query = db_select('workflow_node_history', 'h');
     $query->condition('h.entity_type', $entity_type);
     $query->condition('h.nid', $entity_id);
-    $query->condition('h.field_name', $field_name);
+    if ($field_name !== NULL) {
+      // If we do not know/care for the field_name, fetch all history.
+      // E.g., in workflow.tokens.
+      $query->condition('h.field_name', $field_name);
+    }
     $query->fields('h');
     // The timestamp is only granular to the second; on a busy site, we need the id.
     // $query->orderBy('h.stamp', 'DESC');
