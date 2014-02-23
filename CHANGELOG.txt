@@ -414,3 +414,4 @@ Issue #2187151 by johnv: Added an 'Actions buttons' widget to Workflow form on C
 Issue #2019345 by johnv: Added workflow_enable() and cleared texts.
 Issue #2202405 by johnv: Added Rules action 'Set a workflow field state' to workflow_rules submodule.
 Issue #2196587 by johnv: Fixed earlier introduced error in workflow.tokens.inc.
+Issue #2196587 by johnv: Fixed Notice: Undefined property: stdClass::$workflow in workflow_tokens().
