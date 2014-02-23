@@ -36,7 +36,7 @@ function workflow_node_load($nodes, $types) {
     // have been standardized to workflow_x, dropping the initial underscore.
     // Module maintainers integrating with workflow should keep that in mind.
     // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591. 
-    $last_history = workflow_get_recent_node_history($node->nid);
+    $last_history = workflow_transition_load_single('node', $node->nid, $field_name = '');
 
     // Nodes that existed before the workflow don't have any history.
     if (!$last_history) {

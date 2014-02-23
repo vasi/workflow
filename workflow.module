@@ -830,13 +830,6 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
  */
 
 /**
- * Get most recent history for a node.
- */
-function workflow_get_recent_node_history($nid) {
-  return workflow_transition_load_single('node', $nid, $field_name = '');
-}
-
-/**
  * Given a user id, re-assign history to the new user account. Called by user_delete().
  */
 function workflow_update_workflow_node_history_uid($uid, $new_value) {

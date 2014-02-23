@@ -644,12 +644,23 @@ function workflow_delete_workflow_scheduled_transition_by_nid($nid) {
  */
 
 /**
+ * Get most recent transition for a node.
+ *
+ * @deprecated: workflow_get_recent_node_history() --> workflow_transition_load_single()
+ */
+function workflow_get_recent_node_history($nid) {
+  $field_name = '';
+  return workflow_transition_load_single('node', $nid, $field_name);
+}
+
+/**
  * Get all recorded history for a node id.
  *
  * Since this may return a lot of data, a limit is included to allow for only one result.
  */
 function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
-  return workflow_transition_load_multiple('node', $nid, $field_name= '', $limit);
+  $field_name = '';
+  return workflow_transition_load_multiple('node', $nid, $field_name, $limit);
 }
 
 /**

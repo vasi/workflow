@@ -198,9 +198,6 @@ class WorkflowTransition extends Entity {
    *
    * @return array
    *   An array of WorkflowTransitions.
-   *
-   * @deprecate: workflow_get_workflow_node_history_by_nid() --> workflow_transition_load_single()
-   * @deprecate: workflow_get_recent_node_history() --> workflow_transition_load_multiple()
    */
   public static function loadMultiple($entity_type, $entity_id, $field_name = '', $limit = NULL) {
     if (!$entity_id) {
