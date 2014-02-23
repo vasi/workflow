@@ -1,10 +1,9 @@
-name = Workflow Node Rules
-description = Provides Rules integration for node workflows.
+name = Workflow Rules
+description = Provides additional, workflow-specific Rules integration.
 core = 7.x
 package = Workflow
 
 dependencies[] = workflow
-dependencies[] = workflownode
 dependencies[] = rules
 
 configure = admin/config/workflow/rules
