@@ -157,11 +157,16 @@ function workflow_actions_workflow($op, $id, $new_sid, $entity, $force = FALSE, 
       break;
 
     case 'transition delete':
-      $tid = $id;
-      $actions = workflow_actions_get_actions_by_tid($tid);
-      foreach ($actions as $aid) {
-        workflow_actions_remove($tid, $aid);
-      }
+      // @todo: implement delete triggers upon 'transition delete'.
+      // The below code generates an error PDOException: SQLSTATE[42S22].
+      // So , it is commented out as per d.o. #2200089.
+      // In 7.x-1.2, this trigger was never invoked.
+      // So, 'delete trigger upon transition delete' is now a feature request.
+      // $tid = $id;
+      // $actions = workflow_actions_get_actions_by_tid($tid);
+      // foreach ($actions as $aid) {
+      //   workflow_actions_remove($tid, $aid);
+      // }
       break;
   }
 }
