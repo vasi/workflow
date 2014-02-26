@@ -64,6 +64,14 @@ function workflow_views_views_data_alter(&$data) {
       'left_field' => 'nid',
     ),
   );
+  // This Edit comment handler is copied from workflow_extensions.
+  $data['workflow_node_history']['edit_comment'] = array(
+    'title' => t('Edit comment'),
+    'help' => t('Provide a link to edit the workflow log comment.'),
+    'field' => array(
+      'handler' => 'workflow_views_handler_field_comment_link_edit',
+    ),
+  );
 
   $data['workflow_node_current'] = $data['workflow_node_history'];
   $data['workflow_node_current']['table']['group'] = t('Workflow current');

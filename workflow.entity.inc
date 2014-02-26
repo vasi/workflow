@@ -162,6 +162,18 @@ function workflow_transition_load_single($entity_type, $entity_id, $field_name =
   return NULL;
 }
 
+/**
+ * Load function belonging to the menu option 'workflow-comment/%'.
+ * Maps to this function just like 'node/%node' maps to node_load().
+ *
+ * @param $hid
+ *   The ID of the workflow state transition record to load.
+ * @return
+ *   object representing one row from the {workflow_node_history} table
+ */
+function workflow_transition_load($hid) {
+  return entity_load_single('WorkflowTransition', $hid);
+}
 
 /*
  * Test functions.
