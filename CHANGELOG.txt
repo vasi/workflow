@@ -416,3 +416,4 @@ Issue #2202405 by johnv: Added Rules action 'Set a workflow field state' to work
 Issue #2196587 by johnv: Fixed earlier introduced error in workflow.tokens.inc.
 Issue #2196587 by johnv: Fixed Notice: Undefined property: stdClass::$workflow in workflow_tokens().
 Issue #2200089 by johnv: Fixed PDOException: SQLSTATE[42S22] upon 'transition delete' when workflow_actions enabled.
+Issue #2200089 by johnv: Fixed backwards compatiblity with workflow_actions.
