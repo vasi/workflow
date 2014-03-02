@@ -111,7 +111,7 @@ class WorkflowConfigTransition extends Entity {
    *  Workflow object.
    */
   public function getWorkflow() {
-    return isset($this->workflow) ? $this->workflow : workflow_load_single($this->wid);
+    return workflow_load_single($this->wid);
   }
 
   /**
