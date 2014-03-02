@@ -842,18 +842,29 @@ function workflow_update_workflow_node_history_uid($uid, $new_value) {
 
 /**
  * Given a node id, find out what it's current state is. Unique (for now).
+ *
+ * @param mixed $nid.
+ *   A Node ID or an array of node ID's.
  */
 function workflow_get_workflow_node_by_nid($nid) {
-  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE nid = :nid', array(':nid' => $nid));
-  return $results->fetchObject();
+  $query = db_select('workflow_node', 'wn')->fields('wn')->condition('wn.nid', $nid)->execute();
+  if (is_array($nid)) {
+    $result = array();
+    foreach($query->fetchAll() as $workflow_node) {
+      $result[$workflow_node->nid] = $workflow_node;
+    }
+  }
+  else {
+    $result = $query->fetchObject();
+  }
+  return $result;
 }
 
 /**
  * Given a sid, find out the nodes associated.
  */
 function workflow_get_workflow_node_by_sid($sid) {
-  $results = db_query('SELECT nid, sid, uid, stamp FROM {workflow_node} WHERE sid = :sid', array(':sid' => $sid));
-  return $results->fetchAll();
+  return db_select('workflow_node', 'wn')->fields('wn')->condition('wn.sid', $sid)->execute()->fetchAll();
 }
 
 /**

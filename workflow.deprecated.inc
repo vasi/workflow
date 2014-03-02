@@ -660,7 +660,7 @@ function workflow_get_recent_node_history($nid) {
  */
 function workflow_get_workflow_node_history_by_nid($nid, $limit = NULL) {
   $field_name = '';
-  return workflow_transition_load_multiple('node', $nid, $field_name, $limit);
+  return workflow_transition_load_multiple('node', array($nid), $field_name, $limit);
 }
 
 /**

@@ -47,7 +47,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   $current_themed = FALSE;
   $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $limit = variable_get('workflow_states_per_page', 20);
-  foreach (workflow_transition_load_multiple($entity_type, $entity_id, $field_name, $limit) as $history) {
+  foreach (workflow_transition_load_multiple($entity_type, array($entity_id), $field_name, $limit) as $history) {
     $old_state_name = $new_state_name = '';
 
     $label = $name = '';

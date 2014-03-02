@@ -22,36 +22,36 @@ function theme_workflow_current_state($variables) {
  */
 function workflow_node_load($nodes, $types) {
   // Get which types have workflows associated with them.
-  $workflow_types = array_filter(workflow_get_workflow_type_map());
+  $workflow_types = workflow_get_workflow_type_map();
 
-  foreach ($nodes as $node) {
+  // Leave early if nodes do not have workflow.
+  if (!$workflow_types || !array_intersect_key($workflow_types, array_flip($types))) {
+    return;
+  }
+
+  // Read the current state for all nodes.
+  $states = workflow_get_workflow_node_by_nid(array_keys($nodes));
+
+  foreach ($nodes as $nid => $node) {
     // If it's not a workflow type, quit immediately.
     if (!array_key_exists($node->type, $workflow_types)) {
       continue;
     }
 
-    $workflow = workflow_get_workflows_by_type($node->type);
-
-    // ALERT: With the upgrade to Drupal 7, values stored on the node as _workflow_x
-    // have been standardized to workflow_x, dropping the initial underscore.
-    // Module maintainers integrating with workflow should keep that in mind.
-    // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591. 
-    $last_history = workflow_transition_load_single('node', $node->nid, $field_name = '');
-
-    // Nodes that existed before the workflow don't have any history.
-    if (!$last_history) {
-      $sid = $workflow->getCreationSid();
-      $node->workflow = $sid;
+    // Nodes that existed before the workflow was defined may not have a state.
+    $workflow_node = isset($states[$nid]) ? $states[$nid] : NULL; 
+    if (!$workflow_node) {
+      $workflow = workflow_get_workflows_by_type($node->type);
+      $node->workflow = $workflow->getCreationSid();
       $node->workflow_stamp = $node->created;
     }
     else {
-      $sid = $last_history->new_sid;
-      $state = $workflow->getState($sid);
-      $node->workflow = $sid;
-      $node->workflow_stamp = $last_history->stamp;
-      $node->workflow_state_name = workflow_get_sid_label($sid);
+      $node->workflow = $workflow_node->sid;
+      $node->workflow_stamp = $workflow_node->stamp;
     }
   }
+
+  // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591. 
 }
 
 /**

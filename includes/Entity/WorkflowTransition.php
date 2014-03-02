@@ -194,18 +194,17 @@ class WorkflowTransition extends Entity {
    * @param $entity_type
    * @param $entity_id
    * @param $field_name
-   *   Optional.
+   *   Optional. Can be NULL, if you want to load any field.
    *
    * @return array
    *   An array of WorkflowTransitions.
    */
-  public static function loadMultiple($entity_type, $entity_id, $field_name = '', $limit = NULL) {
-    if (!$entity_id) {
-      return array();
-    }
+  public static function loadMultiple($entity_type, array $entity_ids, $field_name = '', $limit = NULL) {
     $query = db_select('workflow_node_history', 'h');
     $query->condition('h.entity_type', $entity_type);
-    $query->condition('h.nid', $entity_id);
+    if ($entity_ids) {
+      $query->condition('h.nid', $entity_ids);
+    }
     if ($field_name !== NULL) {
       // If we do not know/care for the field_name, fetch all history.
       // E.g., in workflow.tokens.

@@ -150,13 +150,13 @@ function workflow_state_load_by_name($name, $wid) {
   return WorkflowState::loadByName($name, $wid);
 }
 
-function workflow_transition_load_multiple($entity_type, $entity_id, $field_name = '', $limit = NULL) {
-  return WorkflowTransition::loadMultiple($entity_type, $entity_id, $field_name, $limit);
+function workflow_transition_load_multiple($entity_type, array $entity_ids, $field_name = '', $limit = NULL) {
+  return WorkflowTransition::loadMultiple($entity_type, $entity_ids, $field_name, $limit);
 }
 
 function workflow_transition_load_single($entity_type, $entity_id, $field_name = '') {
   $limit = 1;
-  if ($transitions = workflow_transition_load_multiple($entity_type, $entity_id, $field_name, $limit)) {
+  if ($transitions = workflow_transition_load_multiple($entity_type, array($entity_id), $field_name, $limit)) {
     return reset($transitions);
   }
   return NULL;
