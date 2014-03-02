@@ -62,7 +62,6 @@ class WorkflowConfigTransition extends Entity {
 
   // Extra fields.
   public $wid = 0;
-  // protected $workflow = NULL;
   // protected $is_scheduled = FALSE;
   // protected $is_executed = FALSE;
   // protected $force = NULL;
