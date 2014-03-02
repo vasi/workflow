@@ -372,22 +372,15 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
   else {
     // This is a Workflow Node workflow.
     $current_state = workflow_state_load_single($current_sid);
-    if ($current_state) {
-      $output = theme('workflow_current_state', array('state' => workflow_get_sid_label($current_sid),
-                                                      'state_system_name' => $current_state->getName(),
-                                                      'sid' => $current_sid));
-    }
-    else {
-      // Should not happen in a production site:
-      // For some reason, state doesn't exist anymore.
-      $output = theme('workflow_current_state', array('state' => 'unknown state',
-                                                      'state_system_name' => 'unknown state',
-                                                      'sid' => $current_sid));
-    }
+    $args = array(
+      'state' => $current_state ? workflow_get_sid_label($current_sid) : 'unknown state',
+      'state_system_name' => $current_state ? $current_state->getName() : 'unknown state',
+      'sid' => $current_sid,
+    );
     $list_element =  array(
       '#type' => 'item',
       // '#title' => t('Current state'),
-      '#markup' => $output,
+      '#markup' => theme('workflow_current_state', $args),
     );
   }
   return $list_element;

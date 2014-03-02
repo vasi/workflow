@@ -420,3 +420,4 @@ Issue #2200089 by johnv: Fixed backwards compatiblity with workflow_actions.
 Issue #2205707 by johnv: Moved some views handlers from workflow_extensions to workflow_views.
 Issue #2205707 by johnv: Moved workflow_comment_edit_link field handler from workflow_extensions to workflow_views.
 Issue #2208675 by johnv: Fixed Unnecessary db-calls upon node_load in workflow_node.
+Issue #2208675 by johnv: Shorter code in workflow_state_formatter().
