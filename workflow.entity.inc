@@ -142,6 +142,9 @@ function workflow_state_load_multiple($wid = 0, $reset = FALSE) {
 /**
  * Load WorkflowTransitions, most recent first.
  *
+ * @param $field_name
+ *   Optional. Can be NULL, if you want to load any field.
+ *
  * @deprecated: workflow_get_workflow_node_history_by_nid() --> workflow_transition_load_single()
  * @deprecated: workflow_get_recent_node_history() --> workflow_transition_load_single()
  */

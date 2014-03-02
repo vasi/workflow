@@ -12,14 +12,14 @@
 function workflow_vbo_action_info() {
   return array(
     'workflow_vbo_next_state_action' => array(
-      'type' => 'node',
+      'type' => 'entity',
       'label' => t('Change workflow state of post to next state'),
       'configurable' => FALSE,
       'triggers' => array('any'),
     ),
 
     'workflow_vbo_given_state_action' => array(
-      'type' => 'node',
+      'type' => 'entity',
       'label' => t('Change workflow state of post to new state'),
       'configurable' => TRUE,
       'triggers' => array('any'),
@@ -30,26 +30,30 @@ function workflow_vbo_action_info() {
 /**
  * Implements a Drupal action. Move a node to the next state in the workflow.
  */
-function workflow_vbo_next_state_action($node, array $context) {
+function workflow_vbo_next_state_action($entity, array $context) {
   global $user;
 
   // If this action is being fired because it's attached to a workflow transition
-  // then the node's new state (now its current state) should be in $node->workflow
+  // then the node's new state (now its current state) should be in $entity->workflow
   // because that is where the value from the workflow form field is stored;
-  // otherwise the current state is placed in $node->workflow by our nodeapi load.
-  if (!isset($node->nid)) {
-    watchdog('workflow_vbo', 'Unable to get current node id state of node - node is not yet saved.');
-    return;
-  }
-  if (!isset($node->workflow)) {
-    watchdog('workflow_vbo', 'Unable to get current workflow state of node %nid.',
-      array('%nid' => $node->nid));
+  // otherwise the current state is placed in $entity->workflow by our nodeapi load.
+  $entity_type = $context['entity_type'];
+  if (!$entity_id = entity_id($entity_type, $entity)) {
+    watchdog('workflow_vbo', 'Unable to get current entity ID - entity is not yet saved.');
     return;
   }
 
-  $entity_type = 'node'; // @todo: extend workflow_vbo to support Field API.
-  $entity = $node;
-  $current_sid = $node->workflow;
+  // Read the last transition to get the $field_name and $sid, whatever field exists.
+  // @todo: it is cheaper to build this into workflow_node_current_state(). 
+  // $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name = NULL);
+  if (!$last_transition || !$last_transition->new_sid) {
+    watchdog('workflow_vbo', 'Unable to get current workflow state of entity %id.',
+      array('%id' => $entity_id));
+    return;
+  }
+  $field_name = $last_transition->field_name;
+  $current_sid = $last_transition->new_sid;
   $current_state = workflow_state_load_single($current_sid);
 
   // Get the node's new state (which is the next available state).
@@ -67,7 +71,6 @@ function workflow_vbo_next_state_action($node, array $context) {
   }
 
   // Fire the transition.
-  $field_name = '';
   $comment = '';
   $force = FALSE;
   $transition = new WorkflowTransition();
@@ -78,26 +81,26 @@ function workflow_vbo_next_state_action($node, array $context) {
 /**
  * Implements a Drupal action. Move a node to a specified state.
  */
-function workflow_vbo_given_state_action($node, array $context) {
+function workflow_vbo_given_state_action($entity, array $context) {
   global $user;
-  if (!isset($node->nid)) {
-    watchdog('workflow_vbo', 'Unable to get current node id state of node - node is not yet saved.');
+
+  $entity_type = $context['entity_type'];
+  if (!$entity_id = entity_id($entity_type, $entity)) {
+    watchdog('workflow_vbo', 'Unable to get current entity ID - entity is not yet saved.');
     return;
   }
-
-  $force = $context['force'];
 
   $form = $context['form'];
   $form_state = $context['form_state'];
 
   // The initial form was a VBO form, so add the entity.
-  $form_state['values']['workflow_entity'] = $node;
+  $form_state['values']['workflow_entity'] = $entity;
 
   // Parse the $comment variables.
   $new_sid = $form_state['input']['workflow_sid'];
   $comment_string = $form_state['input']['workflow_comment'];
   $comment = t($comment_string, array(
-      '%title' => check_plain($node->title),
+      '%title' => check_plain(entity_label($entity_type, $entity)),
       '%state' => workflow_get_sid_label($new_sid),
       '%user' => theme('username', array('account' => $user)),
     )
@@ -123,24 +126,58 @@ function workflow_vbo_given_state_action_form(array $context) {
   // selected items, and we do not know the field_names, so we have no clue
   // about the allowed workflows or states.
   $entity_type = $context['entity_type'];
-  $entity = NULL;
-  $entity_id = '';
-  $entity_bundle = '';
+  $entities = $context['view']->result;
 
-  // Figure out the $entity's bundle and id.
-  // list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
-  // $entity_id = entity_id($entity_type, $entity);
-  // $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
+  // Get the common workflow from entities. With Workflow Node, we knew how to do this.
+  // With Workflow Field, we need to determine the workflow.
+  // @todo: with 2 Workflow_fields on an entity, you get unpredictable results.
+  $wid = 0;
+  $field_name = NULL;
+  foreach ($entities as $entity) {
+    $entity_id = entity_id($entity_type, $entity);
+    // Read the last transition to get the $field_name and $sid, whatever field exists.
+    // @todo: it is cheaper to build this into workflow_node_current_state(). 
+    $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name = NULL);
+    $state = workflow_state_load_single($last_transition->new_sid);
+    if (!$wid && $state) {
+      $wid = $state->wid;
+    }
+    elseif ($wid && $state && $wid <> $state->wid) {
+      watchdog('workflow', 'Multiple workflows found in VBO action.', WATCHDOG_ERROR);
+      drupal_set_message(t('Error: the selection contains more then one workflow.'), 'error');
 
-  // First, create dummy data. // @todo: improve this logic, Add $workflow, $field_name.
-  $workflow = workflow_create('dummy VBO');
+      return $form; // <--- exit !!
+    }
 
+    if ($field_name === NULL) {
+      $field_name = $last_transition->field_name;
+    }
+    elseif ($field_name <> $last_transition->field_name) {
+      watchdog('workflow', 'Multiple workflow fields found in VBO action.', WATCHDOG_ERROR);
+      drupal_set_message(t('Error: the selection contains more then one workflow field.'), 'warning');
+
+      return $form; // <--- exit !!
+    }
+ 
+  }
+
+  // Preserve $entity's bundle and id, only 1 is selected.
+  if (count($entities) != 1) {
+    $entity = NULL;
+    $entity_id = '';
+    $entity_bundle = '';
+  }
+
+  // Get the common Workflow, or create a dummy Workflow.
+  $workflow = $wid ? workflow_load($wid) : workflow_create('dummy VBO');
   // Show the current state and the Workflow form to allow state changing.
   // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo.
   if ($workflow) {
-    $workflow_item = $workflow->getWorkflowItem();
+    $workflow_item = $workflow->getWorkflowItem(NULL, $entity_type, $entity_bundle, $field_name);
     $field = $workflow_item->getField();
     $instance = $workflow_item->getInstance();
+    // Hide the submit button. VBO has its own 'next' button.
+    $instance['widget']['settings']['submit_function'] = '';
     if (!$field['id']) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
       $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_tab']); // vs. ['comment_log_node']; 
@@ -162,14 +199,10 @@ function workflow_vbo_given_state_action_form(array $context) {
   $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
 
   // Make adaptations for VBO-form:
-  // Change the options widget. Get all states, only where active.
-  // @todo: prevent choosing a state from an illegal Workflow.
-  $options = workflow_get_workflow_state_names(0, $grouped = ($field['settings']['widget']['options'] == 'select'), $all = FALSE);
   // Override the options widget.
   $form['workflow']['workflow_sid']['#title'] = t('Target state');
   $form['workflow']['workflow_sid']['#description'] = t('Please select the state that should be assigned when this action runs.');
   $form['workflow']['workflow_sid']['#default_value'] = isset($context['target_sid']) ? $context['target_sid'] : '';
-  $form['workflow']['workflow_sid']['#options'] = $options;
 
   $form['workflow']['workflow_force'] = array(
     '#type' => 'checkbox',
@@ -196,6 +229,8 @@ function workflow_vbo_given_state_action_form(array $context) {
  * @see workflow_vbo_given_state_action_form()
  */
 function workflow_vbo_given_state_action_submit($form, $form_state) {
+dpm(debug_backtrace(), __FUNCTION__);
+dpm($form_state);
   $new_sid = $form_state['input']['workflow_sid'];
   if (!$new_sid) {
     return;

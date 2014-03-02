@@ -422,3 +422,4 @@ Issue #2205707 by johnv: Moved workflow_comment_edit_link field handler from wor
 Issue #2208675 by johnv: Fixed Unnecessary db-calls upon node_load in workflow_node.
 Issue #2208675 by johnv: Shorter code in workflow_state_formatter().
 Issue #2019345 by johnv: Use api in workflow_search_api.
+Issue #2168197 by johnv: Added VBO support for workflow_field, preventing assigning a state of an illegal Workflow.
