@@ -438,7 +438,9 @@ class WorkflowTransition extends Entity {
     // Notify modules that transition has occurred.
     // Action triggers should take place in response to this callback, not the 'transaction pre'.
     if (!$field_name) { // @todo D8: remove; this is only for Node API.
+      // Now that data is saved, reset stuff to avoid problems when Rules etc want to resave the data.
       unset($entity->workflow_comment);
+      entity_get_controller($entity_type)->resetCache(); // from entity_load();
       module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
     }
     else {

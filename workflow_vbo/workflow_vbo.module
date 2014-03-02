@@ -229,8 +229,6 @@ function workflow_vbo_given_state_action_form(array $context) {
  * @see workflow_vbo_given_state_action_form()
  */
 function workflow_vbo_given_state_action_submit($form, $form_state) {
-dpm(debug_backtrace(), __FUNCTION__);
-dpm($form_state);
   $new_sid = $form_state['input']['workflow_sid'];
   if (!$new_sid) {
     return;
