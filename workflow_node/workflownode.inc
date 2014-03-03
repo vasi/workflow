@@ -69,7 +69,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  $current_sid = workflow_node_current_state($node);
+  $current_sid = workflow_node_current_state($node, 'node', '');
   $current_state = workflow_state_load_single($current_sid);
 
   // Show current state at the top of the node display.

@@ -673,23 +673,31 @@ function workflow_get_wid_label($wid) {
  *   The entity_type of the entity to check.
  * @param string $field_name
  *   The name of the field of the entity to check.
+ *   If NULL, the field_name is determined on the spot.
+ *   If '', we have a workflow_node mode.
  *
  * @return mixed $sid
  *   The ID of the current state.
  *
  * There is no need to use a page cache.
- * The performance is OK, and the cache gives prolems when using Rules.
+ * The performance is OK, and the cache gives problems when using Rules.
  */
-function workflow_node_current_state($entity, $entity_type = 'node', $field_name = '') {
+function workflow_node_current_state($entity, $entity_type = 'node', $field_name = NULL) {
   $sid = FALSE;
+
   static $sids = array();
 
-  $entity_id = entity_id($entity_type, $entity);
-
   if (!$entity) {
-    $sid = FALSE;
+    return $sid;
   }
-  elseif ($field_name) {
+
+  // If $field_name is not known, yet, determine it.
+  // If $entity->workflow is set, avoid this expensive operation.
+  if ($field_name === NULL && !isset($entity->workflow)) {
+    $field_name = _workflow_get_workflow_field_name($entity, $entity_type);
+  }
+
+  if ($field_name) {
     // Field API: Get current/previous state.
     if (isset($entity->is_new) && $entity->is_new == TRUE) {
       // A new node has no sid. Fetch it later.
@@ -726,10 +734,14 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   return $sid;
 }
 
-function workflow_node_previous_state($entity, $entity_type = 'node', $field_name = '') {
+function workflow_node_previous_state($entity, $entity_type = 'node', $field_name = NULL) {
   $sid = FALSE;
-  // Get Id. Is empty when creating a node.
-  $entity_id = entity_id($entity_type, $entity);
+
+  // If $field_name is not known, yet, determine it.
+  // If $entity->workflow is set, avoid this expensive operation.
+  if ($field_name === NULL && !isset($entity->workflow)) {
+    $field_name = _workflow_get_workflow_field_name($entity, $entity_type);
+  }
 
   if ($field_name && isset($entity->original)) {
     // A changed node.
@@ -737,17 +749,16 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
     $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
   }
 
-  if (!$sid && $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, 1)) {
-    $sid = $last_transition->new_sid;
+  // Get Id. Is empty when creating a node.
+  $entity_id = entity_id($entity_type, $entity);
+  if (!$sid && $entity_id) {
+    if ($last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, 1)) {
+      $sid = $last_transition->new_sid;
+    }
   }
   if (!$sid) {
-    // Figure out the $entity's bundle and Id. Id is empty on node create.
-    if (!empty($entity->type)) {
-      $entity_bundle = $entity->type;
-    }
-    else {
-      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
-    }
+    // Figure out the $entity's bundle and Id.
+    list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
     // No current state. Use creation state.
     if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       $sid = $workflow->getCreationSid();
@@ -919,4 +930,55 @@ function _workflow_get_sid_by_items($items) {
   // On a workflow form widget:
   $sid = isset($items[0]['workflow']['workflow_sid']) ? $items[0]['workflow']['workflow_sid'] : $sid;
   return $sid;
+}
+
+/**
+ * Gets the workflow field name, if not known already.
+ *
+ * @param array $items
+ *   Array with values, as passed in the hook_field_<op> functions.
+ *   Although we are parsing an array,
+ *   the Workflow Field settings ensure that the cardinality is set to 1.
+ *
+ * @return string $field_name
+ *   A field name.
+ */
+function _workflow_get_workflow_field_name($entity, $entity_type) {
+  // If $field_name is not known, yet, determine it.
+  $field_name = '';
+
+  // There is some problem with the $bundle when using VBO actions.
+  $bundle = NULL;
+  if (!$bundle && $entity_type == 'node' && isset($entity->type)) {
+    $bundle = $entity->type;
+  }
+  if (!$bundle && $entity_type == 'node' && isset($entity->node_type)) {
+    $bundle = $entity->node_type;
+  }
+  if (!$bundle && $entity_type == 'taxonomy_term' && isset($entity->vocabulary_machine_name)) {
+    $bundle = $entity->vocabulary_machine_name;
+  }
+  if (!$bundle && $entity_type == 'taxonomy_term' && isset($entity->taxonomy_vocabulary_machine_name)) {
+    $bundle = $entity->taxonomy_vocabulary_machine_name;
+  }
+  if (!$bundle) {
+    // This breaks on taxonomy_term, etc in VBO actions... :-(
+    try {
+      list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    }
+    catch (EntityMalformedException $e) {
+//      // Stop here
+//      return NULL;
+    }
+  }
+
+  $field_instances = field_info_instances($entity_type, $bundle);
+  foreach ($field_instances as $fname => $instance){
+    $field = field_info_field($fname);
+    if($field['type'] == 'workflow') {
+      $field_name = $field['field_name'];
+      break; // Get out of this loop.
+    }
+  }
+  return $field_name;
 }

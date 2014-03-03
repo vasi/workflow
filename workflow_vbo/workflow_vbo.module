@@ -57,9 +57,9 @@ function workflow_vbo_next_state_action($entity, array $context) {
   $current_state = workflow_state_load_single($current_sid);
 
   // Get the node's new state (which is the next available state).
-  $new_sid = $current_sid;
   $options = $current_state->getOptions($entity_type, $entity);
-  $flag = FALSE;
+  $new_sid = $current_sid;
+  $flag = $current_state->isCreationState();
   foreach ($options as $sid => $name) {
     if ($flag) {
       $new_sid = $sid;
@@ -134,11 +134,9 @@ function workflow_vbo_given_state_action_form(array $context) {
   $wid = 0;
   $field_name = NULL;
   foreach ($entities as $entity) {
-    $entity_id = entity_id($entity_type, $entity);
-    // Read the last transition to get the $field_name and $sid, whatever field exists.
-    // @todo: it is cheaper to build this into workflow_node_current_state(). 
-    $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name = NULL);
-    $state = workflow_state_load_single($last_transition->new_sid);
+    $field_name = _workflow_get_workflow_field_name($entity, $entity_type);
+    $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+    $state = workflow_state_load_single($current_sid);
     if (!$wid && $state) {
       $wid = $state->wid;
     }
@@ -148,25 +146,14 @@ function workflow_vbo_given_state_action_form(array $context) {
 
       return $form; // <--- exit !!
     }
-
-    if ($field_name === NULL) {
-      $field_name = $last_transition->field_name;
-    }
-    elseif ($field_name <> $last_transition->field_name) {
-      watchdog('workflow', 'Multiple workflow fields found in VBO action.', WATCHDOG_ERROR);
-      drupal_set_message(t('Error: the selection contains more then one workflow field.'), 'warning');
-
-      return $form; // <--- exit !!
-    }
- 
   }
 
-  // Preserve $entity's bundle and id, only 1 is selected.
+  // Preserve $entity's bundle and id, if only 1 is selected.
   if (count($entities) != 1) {
     $entity = NULL;
-    $entity_id = '';
-    $entity_bundle = '';
   }
+  $entity_id = '';
+  $entity_bundle = '';
 
   // Get the common Workflow, or create a dummy Workflow.
   $workflow = $wid ? workflow_load($wid) : workflow_create('dummy VBO');

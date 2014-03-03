@@ -46,7 +46,7 @@ function workflow_access_node_access_records($node) {
 
   if ($current_sid = workflow_node_current_state($node)) {
     // Get 'author' of this entity.
-    // - Some entities (e.g, taxonomy_term) do not have a uid.
+    // - Some entities (e.g., taxonomy_term) do not have a uid.
     // Anonymous ($uid == 0) author is not allowed for role 'author' (== -1).
     $uid = isset($node->uid) ? $node->uid : 0;
 

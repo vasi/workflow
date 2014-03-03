@@ -425,3 +425,4 @@ Issue #2019345 by johnv: Use api in workflow_search_api.
 Issue #2168197 by johnv: Added VBO support for workflow_field, preventing assigning a state of an illegal Workflow.
 Issue #2206923 by Uccio: Fixed Uninstall of workflow_actions doesn't remove actions.
 Issue #2208971 by johnv: Fixed refresh entity_cache upon saving new workflow_node state in WorkflowTransition->execute().
+Issue #2209359 by 2pha, johnv: Fixed workflow_access and other workflow_submodules when $field_name is not known.
