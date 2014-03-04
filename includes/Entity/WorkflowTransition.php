@@ -386,6 +386,11 @@ class WorkflowTransition extends Entity {
         return $old_sid;
       }
     }
+    elseif ($this->comment) {
+      // No need to ask permission for adding comments.
+      // Since you should not add actions to a 'transition pre' event, there is
+      // no need to invoke the event.
+    }
 
     // Log the new state in {workflow_node}.
     // @todo D8: remove; this is only for Node API.
@@ -435,26 +440,28 @@ class WorkflowTransition extends Entity {
       }
     }
 
-    // Notify modules that transition has occurred.
-    // Action triggers should take place in response to this callback, not the 'transaction pre'.
-    if (!$field_name) { // @todo D8: remove; this is only for Node API.
-      // Now that data is saved, reset stuff to avoid problems when Rules etc want to resave the data.
-      unset($entity->workflow_comment);
-      entity_get_controller($entity_type)->resetCache(); // from entity_load();
-      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-    }
-    else {
-      // @todo: we have a problem here, when using Rules, etc: The entity
-      // is not saved here, but only after this call. Alternatives:
-      // 1. Save the field here explicitely, using field_attach_save;
-      // 2. Move the invoke to another place (but there is no entity_postsave());
-      // 3. rely on the entity hooks. This is what we do.
-      // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
-    }
-
-    // Clear any references in the scheduled listing.
+    // Remove any scheduled state transitions.
     foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
       $scheduled_transition->delete();
+    }
+
+    // Notify modules that transition has occurred.
+    // Action triggers should take place in response to this callback, not the 'transaction pre'.
+    if ($state_changed || $this->comment) {
+      if (!$field_name) {
+        // Now that data is saved, reset stuff to avoid problems when Rules etc want to resave the data.
+        unset($entity->workflow_comment);
+        entity_get_controller($entity_type)->resetCache(); // from entity_load();
+        module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      }
+      else {
+        // @todo: we have a problem here, when using Rules, etc: The entity
+        // is not saved here, but only after this call. Alternatives:
+        // 1. Save the field here explicitely, using field_attach_save;
+        // 2. Move the invoke to another place (but there is no entity_postsave());
+        // 3. rely on the entity hooks. This is what we do.
+        // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      }
     }
 
     return $new_sid;
