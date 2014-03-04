@@ -122,7 +122,6 @@ function workflow_actions_workflow($op, $id, $new_sid, $entity, $force = FALSE, 
     case 'transition post':
       if ($field_name) {
         // As a reminder: event 'transition post' does not occur for Workflow Field.
-        return;
       }
 
       $old_sid = $id;
