@@ -331,6 +331,11 @@ class WorkflowTransition extends Entity {
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
+    // Store the transition, so it can be easily fetched later on.
+    // Store in an array, to prepare for multiple workflow_fields per entity.
+    // This is a.o. used in hook_entity_update to trigger 'transition post'.
+    $entity->workflow_transitions[$field_name] = $this;
+
     $args = array(
       '%user' => isset($user->name) ? $user->name : '',
       '%old' => $old_sid,
@@ -449,22 +454,45 @@ class WorkflowTransition extends Entity {
     // Action triggers should take place in response to this callback, not the 'transaction pre'.
     if ($state_changed || $this->comment) {
       if (!$field_name) {
-        // Now that data is saved, reset stuff to avoid problems when Rules etc want to resave the data.
+        // Now that workflow data is saved, reset stuff to avoid problems
+        // when Rules etc want to resave the data.
+        // Remember, this is only for nodes, and node_save() is not necessarily performed.
         unset($entity->workflow_comment);
-        entity_get_controller($entity_type)->resetCache(); // from entity_load();
         module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+        entity_get_controller('node')->resetCache(array($entity->nid)); // from entity_load(), node_save();
       }
       else {
-        // @todo: we have a problem here, when using Rules, etc: The entity
-        // is not saved here, but only after this call. Alternatives:
-        // 1. Save the field here explicitely, using field_attach_save;
-        // 2. Move the invoke to another place (but there is no entity_postsave());
-        // 3. rely on the entity hooks. This is what we do.
         // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+        // We have a problem here with Rules, Trigger, etc. when invoking
+        // 'transition post': the entity has not been saved, yet. we are still
+        // IN the transition, not AFTER. Alternatives:
+        // 1. Save the field here explicitely, using field_attach_save;
+        // 2. Move the invoke to another place: hook_entity_insert(), hook_entity_update();
+        // 3. Rely on the entity hooks. This works for Rules, not for Trigger.
+        // --> We choose option 2.
+        //  - first, $entity->workflow_fields[] is set for easy re-fetching.
+        //  - then, post_execute() is invoked via workflowfield_entity_insert(), _update().
       }
     }
 
     return $new_sid;
+  }
+
+  /**
+   * Invokes 'transition post''.
+   */
+  public function post_execute($force = FALSE) {
+    $old_sid = $this->old_sid;
+    $new_sid = $this->new_sid;
+    $entity_type = $this->entity_type;
+    $entity_id = $this->entity_id;
+    $entity = $this->getEntity(); // Entity may not be loaded, yet.
+    $field_name = $this->field_name;
+
+    $state_changed = ($old_sid != $new_sid);
+    if ($state_changed || $this->comment) {
+      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+    }
   }
 
   /**

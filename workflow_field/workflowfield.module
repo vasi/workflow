@@ -13,3 +13,23 @@ define('WORKFLOWFIELD_PROPERTY_TYPE', 'text'); // 'list', 'text' or 'workflow'?
 module_load_include('inc', 'workflowfield', 'workflowfield.field');
 module_load_include('inc', 'workflowfield', 'workflowfield.widget');
 module_load_include('inc', 'workflowfield', 'workflowfield.formatter');
+
+/**
+ * Implements hook_entity_insert().
+ */
+function workflowfield_entity_insert($entity, $type) {
+  workflowfield_entity_update($entity, $type);
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * @see WorkflowTransition->execute().
+ */
+function workflowfield_entity_update($entity, $entity_type) {
+  if (isset($entity->workflow_transitions)) {
+    foreach($entity->workflow_transitions as $transition) {
+      $transition->post_execute();
+    }
+  }
+}
