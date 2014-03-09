@@ -9,6 +9,36 @@
  */
 
 /**
+ * Implements hook_entity_insert().
+ *
+ * Trigger the 'transition post' event for workflow_field.
+ * Do this only for Trigger & Actions, since Rules has its own way.
+ * And I ndo't like activating an extra hook for nothing.
+ */
+function workflow_actions_entity_insert($entity, $type) {
+  workflow_actions_entity_update($entity, $type);
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * @see WorkflowTransition->execute().
+ */
+function workflow_actions_entity_update($entity, $entity_type) {
+  // For workflow_field, the 'transition post' event is not triggered in 
+  // WorkflowTransition->execute(), since we are still IN a transition.
+  // This is now triggered here.
+  // P.S. You should not mix workflow field and workflow node!!
+  if (module_exists('workflowfield') && !module_exists('workflownode')) {
+    if (isset($entity->workflow_transitions)) {
+      foreach($entity->workflow_transitions as $transition) {
+        $transition->post_execute(); // equivalent with hook_entity_save().
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_hook_info().
  *
  * Expose each transition as a hook.
