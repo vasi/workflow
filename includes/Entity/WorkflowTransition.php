@@ -136,10 +136,7 @@ class WorkflowTransition extends Entity {
       drupal_set_message('Wrong call to new Workflow*Transition()', 'error');
     }
     elseif ($entity) {
-      // When supplying the $entity, the $entity_type must be known, too.
-      $this->entity = $entity;
-      list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
-      $this->nid = $this->entity_id;
+      $this->setEntity($entity_type, $entity);
     }
 
     if (!$entity && !$old_sid && !$new_sid) {
@@ -242,7 +239,7 @@ class WorkflowTransition extends Entity {
   /**
    * Given an Entity, delete transitions for it.
    *
-   * @todo: With Field API, having 2 fields, both are deleted :-( .
+   * @todo: With Field API, having multiple workflow_fields, both are deleted :-( .
    */
   public static function deleteById($entity_type, $entity_id) {
     $conditions = array(
@@ -399,7 +396,6 @@ class WorkflowTransition extends Entity {
     }
 
     // Log the new state in {workflow_node}.
-    // @todo D8: remove; this is only for Node API.
     if (!$field_name) {
       if ($state_changed) {
         // If the node does not have an existing 'workflow' property,
@@ -532,7 +528,8 @@ class WorkflowTransition extends Entity {
     $this->entity = $entity;
     $this->entity_type = $entity_type;
     list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
-    $this->nid = $this->entity_id;
+
+    $this->nid = $this->entity_id; // backwards compatibility.
 
     return $this->entity;
   }
