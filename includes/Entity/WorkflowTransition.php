@@ -72,6 +72,7 @@ class WorkflowTransition extends Entity {
   public $language = LANGUAGE_NONE;
   public $delta = 0;
   // Entity data.
+  public $revision_id;
   public $entity_id;
   public $nid; // @todo D8: remove $nid, use $entity_id. (requires conversion of Views displays.)
   protected $entity; // This is dynamically loaded. Use WorkflowTransition->getEntity() to fetch this.
@@ -131,13 +132,13 @@ class WorkflowTransition extends Entity {
     // If constructor is called with new() and arguments.
     // Load the supplied entity.
     if ($entity && !$entity_type) {
-      // Not all paramaters are passed programmatically.
+      // Not all parameters are passed programmatically.
       drupal_set_message('Wrong call to new Workflow*Transition()', 'error');
     }
     elseif ($entity) {
       // When supplying the $entity, the $entity_type must be known, too.
       $this->entity = $entity;
-      $this->entity_id = entity_id($entity_type, $entity);
+      list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
       $this->nid = $this->entity_id;
     }
 
@@ -530,7 +531,7 @@ class WorkflowTransition extends Entity {
     }
     $this->entity = $entity;
     $this->entity_type = $entity_type;
-    $this->entity_id = entity_id($entity_type, $entity);
+    list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
     $this->nid = $this->entity_id;
 
     return $this->entity;

@@ -526,9 +526,12 @@ function _workflow_transition_form_validate_buttons($form, &$form_state) {
  * @param string $field_name
  *   A field name, used when changing a Workflow Field
  * @param object $transition
- *   A WorkflowTransition of WorkflowScheudledTransition
+ *   A WorkflowTransition of WorkflowScheduledTransition
  * @param $force
  *   If set to TRUE, workflow permissions will be ignored.
+ *
+ * @return
+ *   The new state ID.
  *
  * The first 3 parameters could be extracted from $transition...
  */
@@ -538,7 +541,6 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
   }
 
   if ($field_name) {
-    $new_sid = $transition->new_sid;
     // Do a separate update to update the field (Workflow Field API)
     // This will call hook_field_update() and WorkflowFieldDefaultWidget::submit().
     $entity->{$field_name}['und'][0]['transition'] = $transition;
@@ -546,10 +548,11 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
     // @todo: if transition is scheduled or new_sid == old_sid and no comment, proceed as if no $field_name.
     entity_save($entity_type, $entity);
     // field_attach_update($entity_type, $entity);
+
+    $new_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   }
   else {
-    // For Node API, the node does not need to be saved, since all fields are custom.
-    // OTOH, we may need to refresh the cache, which is done by core on entity_save.
+    // For Node API, the node is not saved, since all fields are custom.
     $new_sid = $transition->execute($force = TRUE);
   }
 

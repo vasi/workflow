@@ -429,3 +429,4 @@ Issue #2209359 by 2pha, johnv: Fixed workflow_access and other workflow_submodul
 Issue #2207423 by johnv: Removed double lock on workflow_actions for workflow_field.
 Issue #2210787 by johnv: Fixed avoid calling 'transition post' twice when workflow_actions is enabled.
 Issue #2207423 by johnv: Fixed hook_workflow('transition post') is now called also for workflow_field on the correct moment.
+Issue #0843568 by johnv: Added 'revision_id' to {workflow_node_history} when saving a transition.
