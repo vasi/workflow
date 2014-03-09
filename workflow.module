@@ -188,7 +188,27 @@ function workflow_tab_access($entity_type, $entity) {
       $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
     }
 
-    if (user_access('administer nodes') || array_intersect($roles, $workflow->tab_roles)) {
+    // Get the permissions from the workflow settings.
+    // @todo: what to do with tab page when multiple workflow_fields per entity_bundle?
+    $fields = _workflow_get_workflow_field_info($entity, $entity_type);
+    $tab_roles = array();
+    $history_tab_show = FALSE;
+    if (!$fields) {
+      // As fallback, get the data from the workflow_node.
+      $tab_roles = $workflow->tab_roles;
+      $history_tab_show = TRUE;
+    }
+    else {
+      foreach ($fields as $field) {
+        $tab_roles += $field['settings']['history']['roles'];
+        $history_tab_show |= $field['settings']['history']['history_tab_show'];
+      }
+    }
+
+    if ($history_tab_show == FALSE) {
+      $access[$user->uid][$entity_type][$entity_id] = FALSE;
+    }
+    elseif (user_access('administer nodes') || array_intersect($roles, $tab_roles)) {
       $access[$user->uid][$entity_type][$entity_id] = TRUE;
     }
     else {
@@ -696,8 +716,12 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
 
   // If $field_name is not known, yet, determine it.
   // If $entity->workflow is set, avoid this expensive operation.
+  // @todo: what to do with multiple workflow_fields per bundle?
   if ($field_name === NULL && !isset($entity->workflow)) {
-    $field_name = _workflow_get_workflow_field_name($entity, $entity_type);
+    $fields = _workflow_get_workflow_field_info($entity, $entity_type);
+    if (count($fields)) {
+      $field_name = reset($fields)['field_name'];
+    }
   }
 
   if ($field_name) {
@@ -742,8 +766,12 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
 
   // If $field_name is not known, yet, determine it.
   // If $entity->workflow is set, avoid this expensive operation.
+  // @todo: what to do with multiple workflow_fields per bundle?
   if ($field_name === NULL && !isset($entity->workflow)) {
-    $field_name = _workflow_get_workflow_field_name($entity, $entity_type);
+    $fields = _workflow_get_workflow_field_info($entity, $entity_type);
+    if (count($fields)) {
+      $field_name = reset($fields)['field_name'];
+    }
   }
 
   if ($field_name && isset($entity->original)) {
@@ -943,12 +971,12 @@ function _workflow_get_sid_by_items($items) {
  *   Although we are parsing an array,
  *   the Workflow Field settings ensure that the cardinality is set to 1.
  *
- * @return string $field_name
- *   A field name.
+ * @return array $fields
+ *   An array of field_info strcutures.
  */
-function _workflow_get_workflow_field_name($entity, $entity_type) {
+function _workflow_get_workflow_field_info($entity, $entity_type) {
   // If $field_name is not known, yet, determine it.
-  $field_name = '';
+  $field = array();
 
   // There is some problem with the $bundle when using VBO actions.
   $bundle = NULL;
@@ -979,9 +1007,9 @@ function _workflow_get_workflow_field_name($entity, $entity_type) {
   foreach ($field_instances as $fname => $instance){
     $field = field_info_field($fname);
     if($field['type'] == 'workflow') {
+      $fields[$fname] = $field;
       $field_name = $field['field_name'];
-      break; // Get out of this loop.
     }
   }
-  return $field_name;
+  return $fields;
 }
