@@ -162,12 +162,13 @@ function workflow_actions_workflow($op, $id, $new_sid, $entity, $force = FALSE, 
       $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
       $config_transition = reset($config_transitions);
       if ($config_transition) {
-        $hook = 'workflow-' . $entity_type . '-' . $entity->type . '-' . $config_transition->tid;
+        list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+        $hook = 'workflow-' . $entity_type . '-' . $entity_bundle . '-' . $config_transition->tid;
         $aids = trigger_get_assigned_actions($hook);
         if (!$aids) {
           // With 7x.-2.x, the pseudohooks have an extra 'entity_type' in the name.
           // This is to be backwards compatible with 7.x-1.2
-          $hook = 'workflow-' . $entity->type . '-' . $config_transition->tid;
+          $hook = 'workflow-' . $entity_bundle . '-' . $config_transition->tid;
           $aids = trigger_get_assigned_actions($hook);
         }
 
