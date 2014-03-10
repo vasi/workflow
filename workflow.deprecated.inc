@@ -162,7 +162,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
   else {
     // This is used in Node API.
     $workflow = workflow_get_workflow_type_map_by_type($node->type);
-    $current_sid = workflow_node_current_state($node);
+    $current_sid = workflow_node_current_state($node, 'node', '');
     $state = workflow_state_load_single($current_sid);
   }
   return $state->getOptions('node', $node, $force);

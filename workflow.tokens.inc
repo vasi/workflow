@@ -23,7 +23,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
     $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
     $entity_bundle = $node->type;
     // We do not know which field we want to use. Just pick one.
-    $field_name = NULL; // @todo: support multiple Workflow fields per entity in workflow_tokens().
+    $field_name = NULL; // @todo: support multiple Workflow fields per entity in workflow_tokens(), using $node->workflow_transitions.
 
     if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       // Get a list of all possible states for returning state names.

@@ -434,3 +434,4 @@ Issue #2207423 by johnv: Fixed hook_workflow('transition post') is now called on
 Issue #2212197 by johnv: Fixed access to workflow history tab per role.
 Issue #2102409 by johnv: Fixed multiple workflow_fields per bundle, when saving a new entity.
 Issue #2207423 by johnv: Fixed workflow_actions' hook_workflow('transition post') also for non-node entities.
+Issue #2102409 by johnv: Fixed multiple workflow_fields per bundle, in workflow_access.

@@ -758,7 +758,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   return $sid;
 }
 
-function workflow_node_previous_state($entity, $entity_type = 'node', $field_name = NULL) {
+function workflow_node_previous_state($entity, $entity_type = 'node', $field_name) {
   $sid = FALSE;
 
   // If $field_name is not known, yet, determine it.
@@ -978,7 +978,7 @@ function _workflow_get_sid_by_items($items) {
  */
 function _workflow_get_workflow_field_info($entity, $entity_type) {
   // If $field_name is not known, yet, determine it.
-  $field = array();
+  $fields = array();
 
   // There is some problem with the $bundle when using VBO actions.
   $bundle = NULL;
