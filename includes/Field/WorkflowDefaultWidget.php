@@ -330,7 +330,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $force = $force || $transition->isForced();
 
     // Try to execute the transition. Return $old_sid when error.
-    $new_sid = $transition->new_sid;
     if (!$transition) {
       // This should only happen when testing/developing.
       drupal_set_message(t('Error: the transition from %old_sid to %new_sid could not be generated.', $t_args), 'error');

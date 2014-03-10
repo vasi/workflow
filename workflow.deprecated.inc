@@ -57,7 +57,7 @@ function workflow_get_creation_state_by_wid($wid) {
  */
 function workflow_get_creation_state_by_type($type) {
   $sid = FALSE;
-  if ($workflow = workflow_get_workflows_by_type($type)) {
+  if ($workflow = workflow_get_workflows_by_type($type, 'node')) {
     $sid = $workflow->getCreationSid();
   }
   return $sid;

@@ -172,6 +172,7 @@ function workflow_tab_access($entity_type, $entity) {
     return $access[$user->uid][$entity_type][$entity_id];
   }
 
+  // @todo: what to do with multiple workflow_fields per bundle?
   if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
     // Get the role IDs of the user. Workflow only stores Ids, not role names. 
     $roles = array_keys($user->roles);
@@ -740,12 +741,6 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
       $items = isset($entity->{$field_name}['und']) ? $entity->{$field_name}['und'] : NULL;
       $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
     }
-    // No current state. Use creation state.
-    if (!$sid) {
-      $field = field_info_field($field_name);
-      $workflow = workflow_load_single($field['settings']['wid']);
-      $sid = $workflow->getCreationSid();
-    }
   }
   else {
     // Node API: Get current/previous state.
@@ -753,9 +748,11 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
     if (isset($entity->workflow)) {
       $sid = $entity->workflow;
     }
-    elseif ($workflow = workflow_get_workflows_by_type($entity->type, $entity_type)) {
-      $sid = $workflow->getCreationSid();
-    }
+  }
+
+  // No current state. Use creation state.
+  if (!$sid) {
+    $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
   }
 
   return $sid;
@@ -780,20 +777,25 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
     $sid = ($items) ? _workflow_get_sid_by_items($items) : FALSE;
   }
 
+  if (!$sid && isset($entity->is_new) && $entity->is_new == TRUE) {
+    // A new Node. $is_new is not set when saving terms, etc.
+    $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
+  }
+
   // Get Id. Is empty when creating a node.
-  $entity_id = entity_id($entity_type, $entity);
+  $entity_id = 0;
+  if (!sid) {
+    $entity_id = entity_id($entity_type, $entity);
+  }
   if (!$sid && $entity_id) {
+    // Read the history. 
     if ($last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, 1)) {
       $sid = $last_transition->new_sid;
     }
   }
   if (!$sid) {
-    // Figure out the $entity's bundle and Id.
-    list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
-    // No current state. Use creation state.
-    if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
-      $sid = $workflow->getCreationSid();
-    }
+    // No history found on an existing entity.
+    $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
   }
   return $sid;
 }
@@ -1012,4 +1014,26 @@ function _workflow_get_workflow_field_info($entity, $entity_type) {
     }
   }
   return $fields;
+}
+
+/**
+ * Gets the creation sid for a given $entity and $field_name.
+ */
+function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name) {
+  $sid = 0;
+  if ($field_name) {
+    // A new Node with Workflow Field.
+    $field = field_info_field($field_name);
+    $wid = $field['settings']['wid'];
+    $workflow = workflow_load_single($wid);
+  }
+  else {
+    // A new Node with Workflow Node.
+    list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+    $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
+  }
+  if ($workflow) {
+    $sid = $workflow->getCreationSid();
+  }
+  return $sid;
 }

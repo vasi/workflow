@@ -41,7 +41,7 @@ function workflow_node_load($nodes, $types) {
     // Nodes that existed before the workflow was defined may not have a state.
     $workflow_node = isset($states[$nid]) ? $states[$nid] : NULL; 
     if (!$workflow_node) {
-      $workflow = workflow_get_workflows_by_type($node->type);
+      $workflow = workflow_get_workflows_by_type($node->type, 'node');
       $node->workflow = $workflow->getCreationSid();
       $node->workflow_stamp = $node->created;
     }
@@ -267,7 +267,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
   if (!workflow_get_workflow_type_map_by_type($bundle)) {
     return;
   }
-  if ($workflow = workflow_get_workflows_by_type($bundle)) {
+  if ($workflow = workflow_get_workflows_by_type($bundle, 'node')) {
     $workflow_entities = variable_get('workflow_' . $bundle, array());
     // Abort if the entity type of the form is not in the list that the user
     // wants to display the workflow form on.
