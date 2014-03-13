@@ -125,15 +125,22 @@ function workflow_vbo_given_state_action_form(array $context) {
   // @todo: There's a problem here: we do not know the node types of the
   // selected items, and we do not know the field_names, so we have no clue
   // about the allowed workflows or states.
+  $entity_info = entity_get_info($context['entity_type']);
+  $entity_key = $entity_info['entity keys']['id'];
   $entity_type = $context['entity_type'];
-  $entities = $context['view']->result;
+  $result = $context['view']->result;
 
   // Get the common workflow from entities. With Workflow Node, we knew how to do this.
   // With Workflow Field, we need to determine the workflow.
   $wid = 0;
   $field_name = NULL;
-  foreach ($entities as $entity) {
+  foreach ($result as $entity_data) {
     // @todo: what to do with multiple workflow_fields per bundle?
+    // The 'result' does not contain 'real' entities, and they mess up subfunctions.
+    // We could fetch it from the array, like this: $entity = $entity_data->_field_data[$entity_key]['entity'];
+    // But this is not reliable, if you have no fields to show.
+    // So, last resort, just fetch from database/cache.
+    $entity = entity_load_single($entity_type, $entity_data->{$entity_key});
     $fields = _workflow_get_workflow_field_info($entity, $entity_type);
     if (count($fields)) {
       $field = reset($fields);
@@ -153,7 +160,7 @@ function workflow_vbo_given_state_action_form(array $context) {
   }
 
   // Preserve $entity's bundle and id, if only 1 is selected.
-  if (count($entities) != 1) {
+  if (count($result) != 1) {
     $entity = NULL;
   }
   $entity_id = '';
