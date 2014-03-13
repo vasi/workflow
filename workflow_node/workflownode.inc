@@ -144,9 +144,9 @@ function workflow_node_update($node) {
  */
 function workflow_node_delete($node) {
   if (!empty($node->workflow)) {
-    // Re-use functionality of Field API.
-    $field = array();
-    $field['field_name'] = '';
+    // Call field_info_field().
+    // Generates pseudo data for workflow_node to re-use Field API.
+    $field = _workflow_info_field($field_name, $workflow);
     $instance = array();
 
     $workflow_field = new WorkflowItem($field, $instance, 'node', $node);

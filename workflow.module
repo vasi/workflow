@@ -172,7 +172,7 @@ function workflow_tab_access($entity_type, $entity) {
     return $access[$user->uid][$entity_type][$entity_id];
   }
 
-  // @todo: what to do with multiple workflow_fields per bundle?
+  // @todo: workflow_tab_access(): what to do with multiple workflow_fields per bundle? Use Views instead!
   if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
     // Get the role IDs of the user. Workflow only stores Ids, not role names. 
     $roles = array_keys($user->roles);
@@ -194,16 +194,9 @@ function workflow_tab_access($entity_type, $entity) {
     $fields = _workflow_get_workflow_field_info($entity, $entity_type);
     $tab_roles = array();
     $history_tab_show = FALSE;
-    if (!$fields) {
-      // As fallback, get the data from the workflow_node.
-      $tab_roles = $workflow->tab_roles;
-      $history_tab_show = TRUE;
-    }
-    else {
-      foreach ($fields as $field) {
-        $tab_roles += $field['settings']['history']['roles'];
-        $history_tab_show |= $field['settings']['history']['history_tab_show'];
-      }
+    foreach ($fields as $field) {
+      $tab_roles += $field['settings']['history']['roles'];
+      $history_tab_show |= $field['settings']['history']['history_tab_show'];
     }
 
     if ($history_tab_show == FALSE) {
@@ -830,8 +823,7 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
 
   if (!isset($map[$entity_type][$entity_bundle])) {
     // Check the Node API first: Get $wid.
-    $type_map = function_exists('workflow_get_workflow_type_map_by_type') ? workflow_get_workflow_type_map_by_type($entity_bundle) : NULL;
-    if ($type_map) {
+    if (module_exists('workflownode') && $type_map = workflow_get_workflow_type_map_by_type($entity_bundle)) {
       // Get the workflow by wid.
       $wid = $type_map->wid;
     }
@@ -968,7 +960,7 @@ function _workflow_get_sid_by_items($items) {
 }
 
 /**
- * Gets the workflow field name, if not known already.
+ * Gets the workflow field names, if not known already.
  *
  * @param array $items
  *   Array with values, as passed in the hook_field_<op> functions.
@@ -979,42 +971,33 @@ function _workflow_get_sid_by_items($items) {
  *   An array of field_info strcutures.
  */
 function _workflow_get_workflow_field_info($entity, $entity_type) {
-  // If $field_name is not known, yet, determine it.
   $fields = array();
 
-  // There is some problem with the $bundle when using VBO actions.
-  $bundle = NULL;
-  if (!$bundle && $entity_type == 'node' && isset($entity->type)) {
-    $bundle = $entity->type;
-  }
-  if (!$bundle && $entity_type == 'node' && isset($entity->node_type)) {
-    $bundle = $entity->node_type;
-  }
-  if (!$bundle && $entity_type == 'taxonomy_term' && isset($entity->vocabulary_machine_name)) {
-    $bundle = $entity->vocabulary_machine_name;
-  }
-  if (!$bundle && $entity_type == 'taxonomy_term' && isset($entity->taxonomy_vocabulary_machine_name)) {
-    $bundle = $entity->taxonomy_vocabulary_machine_name;
-  }
-  if (!$bundle) {
-    // This breaks on taxonomy_term, etc in VBO actions... :-(
-    try {
-      list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+  if (isset($entity->workflow)) {
+    $field_name = '';
+
+    $workflow = NULL;
+    if ($state = workflow_state_load($entity->workflow)) {
+      $workflow = workflow_load($state->wid);
     }
-    catch (EntityMalformedException $e) {
-//      // Stop here
-//      return NULL;
+    // Call field_info_field()
+    // Generates pseudo data for workflow_node to re-use Field API.
+    $field = _workflow_info_field($field_name, $workflow);
+    $instance = array();
+
+    $fields[$field_name] = $field;
+  }
+  else {
+    list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    $field_instances = field_info_instances($entity_type, $bundle);
+    foreach ($field_instances as $field_name => $instance) {
+      $field = field_info_field($field_name);
+      if($field['type'] == 'workflow') {
+        $fields[$field_name] = $field;
+      }
     }
   }
 
-  $field_instances = field_info_instances($entity_type, $bundle);
-  foreach ($field_instances as $fname => $instance){
-    $field = field_info_field($fname);
-    if($field['type'] == 'workflow') {
-      $fields[$fname] = $field;
-      $field_name = $field['field_name'];
-    }
-  }
   return $fields;
 }
 
@@ -1038,4 +1021,43 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
     $sid = $workflow->getCreationSid();
   }
   return $sid;
+}
+
+/*
+ * A wrapper around field_info_field.
+ *
+ * This is to hide implementation details of workflow_node.
+ *
+ * @return array
+ *   field info structure. Pseudo data for workflow_node.
+ */
+function _workflow_info_field($field_name, $workflow = NULL) {
+  // @todo D8: remove this function when we only use workflow_field.
+  $field = array();
+  if ($field_name) {
+    $field = field_info_field($field_name);
+  }
+  else {
+    $field['field_name'] = '';
+    $field['id'] = 0;
+    $field['settings']['widget'] = array();
+    if ($workflow) {
+      $field['settings']['wid'] = $workflow->wid;
+      $field['settings']['widget'] = $workflow->options;
+      $field['settings']['history']['roles'] = $workflow->tab_roles;
+      $field['settings']['history']['history_tab_show'] = TRUE; // @todo: add a setting for this in workflow_node
+    }
+    // Add default values.
+    $field['settings']['widget'] += array(
+      'name_as_title' => TRUE,
+      'options' => 'radios',
+      'schedule' => TRUE,
+      'schedule_timezone' => TRUE,
+      'comment_log_node' => TRUE,
+      'comment_log_tab' => TRUE,
+      'watchdog_log' => TRUE,
+      'history_tab_show' => TRUE,
+    );
+  }
+  return $field;
 }

@@ -445,28 +445,9 @@ class Workflow extends Entity {
       // @todo D8: Remove, after converting workflow node to workflow field.
       $workflow = &$this;
 
-      $field = array();
-      if ($field_name) {
-        $field = field_info_field($field_name);
-      }
-      else {
-        $field['field_name'] = '';
-        $field['id'] = 0;
-        $field['settings']['wid'] = $workflow->wid;
-        $field['settings']['widget'] = $workflow->options;
-        // Add default values.
-        $field['settings']['widget'] += array(
-          'name_as_title' => TRUE,
-          'options' => 'radios',
-          'schedule' => TRUE,
-          'schedule_timezone' => TRUE,
-          'comment_log_node' => TRUE,
-          'comment_log_tab' => TRUE,
-          'watchdog_log' => TRUE,
-          'history_tab_show' => TRUE,
-        );
-      }
-
+      // Call field_info_field().
+      // Generates pseudo data for workflow_node to re-use Field API.
+      $field = _workflow_info_field($field_name, $workflow);
       $instance = array();
 
       $this->item = new WorkflowItem($field, $instance);
