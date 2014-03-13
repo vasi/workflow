@@ -398,10 +398,8 @@ class Workflow extends Entity {
    *   An array of typemaps.
    */
   public function getTypeMap() {
-    if (module_exists('workflownode')) {
-      return workflow_get_workflow_type_map_by_wid($this->wid);
-    }
-    return array();
+    $type_map = module_exists('workflownode') ? workflow_get_workflow_type_map_by_wid($this->wid) : array(); 
+    return $type_map;
   }
 
   /**

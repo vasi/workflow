@@ -63,12 +63,9 @@ function workflow_actions_trigger_info() {
 
   // Get the mapping for Node API.
   // Build an array of Wid => array of types.
-  $type_map = array();
-  if (module_exists('workflownode')) {
-    $tm = workflow_get_workflow_type_map();
-    foreach ($tm as $type => $wid) {
-      $type_map[$wid][] = array('entity_type' => 'node', 'bundle' => $type);
-    }
+  $workflow_node_type_map = module_exists('workflownode') ? workflow_get_workflow_type_map() : array(); 
+  foreach ($workflow_node_type_map as $type => $wid) {
+    $type_map[$wid][] = array('entity_type' => 'node', 'bundle' => $type);
   }
 
   // Get the mapping for Field API. Use 7.22 Field Info API.

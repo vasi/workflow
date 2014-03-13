@@ -439,4 +439,4 @@ Issue #2216641 by johnv: Fixed notices by workflow_access when saving a node wit
 Issue #2216685 by Bastlynn: Fixed WSOD.
 Issue #2216685 by Bastlynn: Fixed WSOD, part 2.
 Issue #2216685 by johnv: Further cleanup and unification of workflow_node and workflow_field.
-
+Issue #2116179 by johnv: Some more isolation of type_map functions.
