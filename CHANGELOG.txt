@@ -437,3 +437,4 @@ Issue #2207423 by johnv: Fixed workflow_actions' hook_workflow('transition post'
 Issue #2102409 by johnv: Fixed multiple workflow_fields per bundle, in workflow_access.
 Issue #2216641 by johnv: Fixed notices by workflow_access when saving a node without workflow.
 Issue #2216685 by bastlynn: Fixed WSOD.
+Issue #2216685 by bastlynn: Fixed WSOD, part 2.

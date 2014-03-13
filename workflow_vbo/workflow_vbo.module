@@ -136,7 +136,8 @@ function workflow_vbo_given_state_action_form(array $context) {
     // @todo: what to do with multiple workflow_fields per bundle?
     $fields = _workflow_get_workflow_field_info($entity, $entity_type);
     if (count($fields)) {
-      $field_name = reset($fields)['field_name'];
+      $field = reset($fields);
+      $field_name = $field['field_name'];
     }
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $state = workflow_state_load_single($current_sid);

@@ -721,7 +721,8 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   if ($field_name === NULL && !isset($entity->workflow)) {
     $fields = _workflow_get_workflow_field_info($entity, $entity_type);
     if (count($fields)) {
-      $field_name = reset($fields['field_name']);
+      $field = reset($fields);
+      $field_name = $field['field_name'];
     }
   }
 
@@ -767,7 +768,8 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
   if ($field_name === NULL && !isset($entity->workflow)) {
     $fields = _workflow_get_workflow_field_info($entity, $entity_type);
     if (count($fields)) {
-      $field_name = reset($fields['field_name']);
+      $field = reset($fields);
+      $field_name = $field['field_name'];
     }
   }
 
