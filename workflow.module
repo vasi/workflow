@@ -431,14 +431,10 @@ function workflow_transition_form_submit($form, &$form_state) {
   $instance = $form_state['values']['workflow_instance'];
   $entity_type = $form_state['values']['workflow_entity_type'];
   $entity = $form_state['values']['workflow_entity'];
-
   $field_name = $field['field_name'];
 
-  $old_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-  $items[0]['workflow'] = $form_state['input'];
-
-  // Determine is the transition is forced.
-  // This can be set by VBO in an additional form element.
+  // Determine if the transition is forced.
+  // This can be set by a 'workflow_vbo action' in an additional form element.
   $force = isset($form_state['input']['workflow_force']) ? $form_state['input']['workflow_force'] : FALSE;
 
   if ($field_name) {
@@ -446,7 +442,10 @@ function workflow_transition_form_submit($form, &$form_state) {
     // Perhaps there is a better way, but for now we use 'changed' property.
     // Caveat: Some entities do not have 'changed' property set.
     if ((isset($entity->changed)) && $entity->changed == REQUEST_TIME) {
-      // We were in edit mode. No need to save the entity explicitly.
+      // We are in edit mode. No need to save the entity explicitly.
+
+      // Add the $form_state to the $items, so we can do a getTransition() later on.
+      $items[0]['workflow'] = $form_state['input'];
       // Create a Transition. The Widget knows if it is scheduled.
       $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
       $new_sid = $widget->submit($form, $form_state, $items, $force);
@@ -462,6 +461,9 @@ function workflow_transition_form_submit($form, &$form_state) {
     // For a Node API form, only contrib fields need to be filled.
     // No updating of the node itself.
     // (unless we need to record the stamp.)
+
+    // Add the $form_state to the $items, so we can do a getTransition() later on.
+    $items[0]['workflow'] = $form_state['input'];
     // Create a Transition. The Widget knows if it is scheduled.
     $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
     $new_sid = $widget->submit($form, $form_state, $items, $force);

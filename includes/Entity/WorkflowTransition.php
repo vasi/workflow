@@ -153,7 +153,7 @@ class WorkflowTransition extends Entity {
       $this->comment = $comment;
     }
     elseif (!$old_sid) {
-      // Not all paramaters are passed programmatically.
+      // Not all parameters are passed programmatically.
       drupal_set_message(
         t('Wrong call to constructor Workflow*Transition(@old_sid to @new_sid)', array('@old_sid' => $old_sid, '@new_sid' => $new_sid)),
         'error');
