@@ -165,7 +165,9 @@ function workflow_admin_ui_breadcrumbs($workflow, $extra = NULL) {
   $bc[] = l(t('Configuration'), 'admin/config');
   $bc[] = l(t('Workflow'), 'admin/config/workflow');
   $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
-  $bc[] = l($workflow->label(), "admin/config/workflow/workflow/$workflow->wid");
+  if ($workflow) { 
+    $bc[] = l($workflow->label(), "admin/config/workflow/workflow/$workflow->wid");
+  }
   if ($extra) {
     $bc[] = $extra;
   }

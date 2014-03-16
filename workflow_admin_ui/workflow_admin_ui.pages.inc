@@ -12,6 +12,9 @@
  * Form builder. Create the form for adding/editing a workflow.
  */
 function workflow_admin_ui_add_form($form, &$form_state, $name = NULL) {
+  // Let's add some breadcrumbs.
+  workflow_admin_ui_breadcrumbs(NULL);
+
   $form = array();
 
   $form['wf_name'] = array(
