@@ -444,3 +444,5 @@ Issue #2216685 by johnv: Further cleanup for workflow_vbo.
 Issue #2168197 by johnv: Separated workflow_vbo actions into own files, for less footprint and better maintainability.
 Issue #2218303 by johnv: Fixed error if you try to assign a state to a non-relevant node type (e.g. in workflow_vbo action).
 
+Since 7.x-2.2
+Fixed some problems with WorkflowConfigTransition.

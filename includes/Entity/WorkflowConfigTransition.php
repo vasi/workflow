@@ -71,16 +71,6 @@ class WorkflowConfigTransition extends Entity {
    */
 
   /**
-   * Creates a new entity.
-   *
-   * @see entity_create()
-   */
-  public function __construct(array $values = array(), $entityType = NULL) {
-    $entityType = 'WorkflowConfigTransition';
-    return parent::__construct($values, $entityType);
-  }
-
-  /**
    * Permanently deletes the entity.
    */
   public function delete() {
@@ -91,10 +81,10 @@ class WorkflowConfigTransition extends Entity {
     return parent::delete();
   }
 
-
   protected function defaultLabel() {
     return ''; // $this->title;
   }
+
   protected function defaultUri() {
     return array('path' => 'admin/config/workflow/workflow/transitions/' . $this->wid);
   }
@@ -106,9 +96,15 @@ class WorkflowConfigTransition extends Entity {
   /**
    * Returns the Workflow object of this State.
    *
+   * @param $workflow
+   *  An optional workflow object. Can be used as a setter.
    * @return Workflow
    *  Workflow object.
    */
+  public function setWorkflow($workflow) {
+    $this->wid = $workflow->wid;
+  }
+
   public function getWorkflow() {
     return workflow_load_single($this->wid);
   }

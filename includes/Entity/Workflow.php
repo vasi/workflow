@@ -307,10 +307,8 @@ class Workflow extends Entity {
     }
     else {
       $values['wid'] = $this->wid;
-      $transition = new WorkflowConfigTransition($values);
+      $transition = entity_create('WorkflowConfigTransition', $values);
     }
-    $transition->wid = $this->wid;
-
     return $transition;
   }
 
@@ -326,6 +324,7 @@ class Workflow extends Entity {
    */
   public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
     $transitions = array();
+
     $states = $this->getStates('CREATION'); // Get valid + creation states.
 
     // Filter on 'from' states, 'to' states, roles.
@@ -347,6 +346,7 @@ class Workflow extends Entity {
       }
       elseif ($transition->isAllowed($roles)) {
         // Transition is allowed, permitted. Add to list.
+        $transition->setWorkflow($this);
         $transitions[$transition->tid] = clone $transition;
       }
     }
