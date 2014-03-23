@@ -447,3 +447,4 @@ Issue #2218303 by johnv: Fixed error if you try to assign a state to a non-relev
 Since 7.x-2.2
 Fixed some problems with WorkflowConfigTransition.
 Fixed breadcrumbs on workflow add page.
+Issue #2218303 by zihong0: Fixed type in workflow_node_previous_state.

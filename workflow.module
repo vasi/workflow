@@ -781,7 +781,7 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
 
   // Get Id. Is empty when creating a node.
   $entity_id = 0;
-  if (!sid) {
+  if (!$sid) {
     $entity_id = entity_id($entity_type, $entity);
   }
   if (!$sid && $entity_id) {
