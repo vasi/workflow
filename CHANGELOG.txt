@@ -448,3 +448,4 @@ Since 7.x-2.2
 Fixed some problems with WorkflowConfigTransition.
 Fixed breadcrumbs on workflow add page.
 Issue #2218303 by zihong0: Fixed type in workflow_node_previous_state.
+Issue #2226781 by johnv: Changed Admin UI to use Entity UI.
