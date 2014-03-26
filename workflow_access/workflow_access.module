@@ -156,13 +156,16 @@ function workflow_access_insert_workflow_access_by_sid(&$data) {
  */
 function workflow_access_form_alter(&$form, &$form_state, $form_id) {
   switch ($form_id) {
-    case 'workflow_admin_ui_overview_page':
+    case 'workflow_admin_ui_overview_page': // From workflow_admin_ui module.
+    case 'Workflow_overview_form':          // From EntityUIController.
+
       $form['workflow_access'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Workflow Access'),
+        '#title' => t('Workflow Access Settings'),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
       );
+      $form['workflow_access']['#tree'] = TRUE;
       $form['workflow_access']['workflow_access_priority'] = array(
         '#type' => 'weight',
         '#delta' => 10,
@@ -172,7 +175,6 @@ function workflow_access_form_alter(&$form, &$form_state, $form_id) {
           setting can be dangerous. If there is any doubt, leave it at 0. 
           <a href="@url">Read the manual.</a>', array('@url' => url('https://api.drupal.org/api/drupal/modules!node!node.api.php/function/hook_node_access_records/7'))),
       );
-
       $form['#submit'][] = 'workflow_access_priority_submit';
       return;
   }

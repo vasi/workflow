@@ -10,7 +10,7 @@
  * Appends the type_map form, allowing administrator
  * to map workflows to content types and determine placement on content forms.
  */
-function workflow_admin_ui_type_map_form($form) {
+function workflow_admin_ui_type_map_form(&$form) {
   // Create list of all Workflow types. Include an initial empty value.
   // Validate each workflow, and generate a message if not complete.
   $workflows[0] = t('None');
@@ -27,7 +27,17 @@ function workflow_admin_ui_type_map_form($form) {
   $type_map = workflow_get_workflow_type_map();
 
   $form['#tree'] = TRUE;
-  $form['help'] = array(
+
+  $form['type_map'] = array(
+    '#type' => 'fieldset',
+//    '#type' => 'container',
+    '#theme' => 'workflow_admin_ui_type_map_form',
+    '#title' => t('Content Type Mapping'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['type_map']['help'] = array(
     '#type' => 'item',
     '#title' => '<h3>' . t('Content Type Mapping') . '</h3>',
     '#markup' => t('Each content type may have a separate workflow. The form for changing workflow state can be '
@@ -53,14 +63,62 @@ function workflow_admin_ui_type_map_form($form) {
     );
   }
 
-  // $form['#validate'] = array('workflow_admin_ui_type_map_form_validate');
+  $header = array(t('Content Type cc'), t('Workflow'), t('Display Workflow Form on:'));
+  $form['type_map']['#header'] = $header;
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save workflow mapping'),
-    '#weight' => 100,
-    '#submit' => array('workflow_admin_ui_type_map_form_submit'),
+  $rows = array();
+  foreach (node_type_get_names() as $node_type => $name) {
+    $w = array(
+      '#type' => 'select',
+      '#options' => $workflows,
+      '#default_value' => isset($type_map[$node_type]) ? $type_map[$node_type] : 0,
+    );
+    $p = array(
+      '#type' => 'checkboxes',
+      '#options' => array(
+        'node' => t('Post'),
+        'comment' => t('Comment'),
+      ),
+      '#default_value' => variable_get('workflow_' . $node_type, array()),
+      '#value' => variable_get('workflow_' . $node_type, array()),
+      '#attributes' => array('style' => 'width: auto; clear: both;'),
+    );
+
+    $row = array(
+      check_plain(t($name)),
+      drupal_render($w),
+      drupal_render(form_process_checkboxes($p)),
+    );
+    $rows[] = $row;
+
+    $form['type_map'][$node_type]['workflow_map'] = array(
+      '#theme' => 'table',
+      // '#header' => $header,
+      '#rows' => array($node_type => $row),
+      '#empty' => t('No content available.'),
+      '#attributes' => array('style' => 'width: auto; clear: both;'),
+    );
+  }
+
+  $form['type_map']['workflow_map'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No content available.'),
+    // '#attributes' => array('style' => 'width: auto; clear: both;'),
   );
+
+  $form['type_map']['workflow_access_priority'] = array(
+    '#type' => 'weight',
+    '#delta' => 10,
+    '#title' => t('Workflow Access Priority'),
+    '#default_value' => variable_get('workflow_access_priority', 0),
+    '#description' => t('This sets the node access priority. Changing this
+      setting can be dangerous. If there is any doubt, leave it at 0. 
+      <a href="@url">Read the manual.</a>', array('@url' => url('https://api.drupal.org/api/drupal/modules!node!node.api.php/function/hook_node_access_records/7'))),
+  );
+
+  $form['#submit'][] = 'workflow_admin_ui_type_map_form_submit';
 
   return $form;
 }
@@ -72,25 +130,26 @@ function theme_workflow_admin_ui_type_map_form($variables) {
   $output = '';
   $form = $variables['form'];
 
-  if (isset($form['type_map'])) {
-    $header = array(t('Content Type'), t('Workflow'), t('Display Workflow Form on:'));
+  $header = array(t('Content Type'), t('Workflow'), t('Display Workflow Form on:'));
+  $caption = t('Each content type may have a separate workflow. The form for
+    changing workflow state can be displayed when editing a node, editing a
+    comment for a node, or both.');
 
-    $rows = array();
-    foreach (node_type_get_names() as $node_type => $name) {
-      $rows[] = array(
-        check_plain(t($name)),
-        drupal_render($form['type_map'][$node_type]['workflow']),
-        drupal_render($form['type_map'][$node_type]['placement']),
-      );
-    }
-
-    $output .= theme('table', array(
-      'header' => $header,
-      'rows' => $rows,
-      'attributes' => array('style' => 'width: auto; clear: both;'),
-      )
+  $rows = array();
+  foreach (node_type_get_names() as $node_type => $name) {
+    $rows[] = array(
+      check_plain(t($name)),
+      drupal_render($form[$node_type]['workflow']),
+      drupal_render($form[$node_type]['placement']),
     );
   }
+  $output .= theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+      'caption' => $caption,
+      // 'attributes' => array('style' => 'width: auto; clear: both;'),
+    )
+  );
 
   return $output;
 }
@@ -105,7 +164,7 @@ function workflow_admin_ui_type_map_form_submit($form, &$form_state) {
   $form_values = $form_state['values'];
 
   // Empty the table and the variables so that types no longer under workflow go away.
-  //@todo: it is possible to switch to new workflow for node_type, leaving nodes are stuck in old workflow.
+  //@todo: it is possible to switch to new workflow for node_type, leaving nodes stuck in old workflow.
   workflow_delete_workflow_type_map_all();
 
   $node_types = node_type_get_names();

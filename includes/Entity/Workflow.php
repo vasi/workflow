@@ -14,6 +14,16 @@ class WorkflowController extends EntityAPIController {
   // public function create(array $values = array()) { }
   // public function load($ids = array(), $conditions = array()) { }
 
+  public function delete($ids, DatabaseTransaction $transaction = NULL) {
+    // @todo: replace WorkflowController::delete() with parent.
+    foreach($ids as $wid) {
+      if ($workflow = workflow_load($wid)) {
+        $workflow->delete();
+      }
+    }
+    $this->resetCache();
+  }
+
   /**
    * Overrides DrupalDefaultEntityController::cacheGet()
    * 
@@ -471,8 +481,9 @@ class Workflow extends Entity {
     return $this->name;
   }
 
-//  protected function defaultUri() {
-//    return array('path' => 'admin/config/workflow/workflow/' . $this->wid);
-//  }
+  protected function defaultUri() {
+    return array('path' => 'admin/config/workflow/workflow/' . $this->wid);
+    return array('path' => 'admin/config/workflow/workflow/' . $this->identifier());
+  }
 
 }

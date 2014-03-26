@@ -11,11 +11,10 @@
 /**
  * Form builder. Create the form for adding/editing a workflow.
  */
-function workflow_admin_ui_add_form($form, &$form_state, $name = NULL) {
-  // Let's add some breadcrumbs.
-  workflow_admin_ui_breadcrumbs(NULL);
-
+function workflow_admin_ui_add_form($form, &$form_state, $workflow = NULL, $op) {
   $form = array();
+
+  $name = isset($workflow) ? $workflow->getName() : '' ;
 
   $form['wf_name'] = array(
     '#type' => 'textfield',
@@ -28,107 +27,13 @@ function workflow_admin_ui_add_form($form, &$form_state, $name = NULL) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Add Workflow'),
+    '#submit' => array('workflow_admin_ui_add_form_submit'),
+    '#validate' => array('workflow_admin_ui_add_form_validate'),
   );
 
   return $form;
 }
 
-/**
- * Validate the workflow add form.
- *
- * @see workflow_add_form()
- */
-function workflow_admin_ui_add_form_validate($form, &$form_state) {
-  $name = $form_state['values']['wf_name'];
-
-  // Make sure workflow name is not a duplicate.
-  foreach (workflow_load_multiple() as $workflow) {
-    if ($name == check_plain($workflow->getName())) {
-      form_set_error('wf_name', t('A workflow with the name %name already exists. Please enter another name for your new workflow.',
-        array('%name' => $name)));
-      break;
-    }
-  }
-}
-
-/**
- * Submit handler for the workflow add form.
- *
- * @see workflow_add_form()
- */
-function workflow_admin_ui_add_form_submit($form, &$form_state) {
-  $name = $form_state['values']['wf_name'];
-
-  $workflow = workflow_create($name);
-  $workflow->save();
-
-  $args = array(
-    '%name' => $name,
-    '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
-  );
-  watchdog('workflow', 'Created workflow %name', $args);
-  drupal_set_message(t('The workflow %name was created. Please maintain the settings.', $args), 'status');
-
-  // The workflow ID is now generated upon save().
-  $wid = $workflow->wid;
-  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $wid;
-}
-
-/**
- * Form builder. Create form for confirmation of workflow deletion.
- *
- * @param $wid
- *   The workflow object to delete.
- *
- * @return
- *   Form definition array.
- */
-function workflow_admin_ui_delete_form($form, &$form_state, $workflow) {
-  // If we don't have a workflow that goes with this, return to the admin page.
-  if (!$workflow) {
-    drupal_goto('admin/config/workflow/workflow');
-  }
-  else {
-    // Let's add some breadcrumbs.
-    workflow_admin_ui_breadcrumbs($workflow);
-
-    $form = array();
-    $form['workflow'] = array(
-      '#type' => 'value',
-      '#value' => $workflow,
-    );
-
-    return confirm_form(
-      $form,
-      t('Are you sure you want to delete %title? All nodes and fields that have a workflow state associated with this workflow will ' .
-        'have those workflow states removed.', array('%title' => $workflow->getName())),
-      !empty($_GET['destination']) ? $_GET['destination'] : 'admin/config/workflow/workflow',
-      t('This action cannot be undone.'),
-      t('Delete ' . $workflow->getName()),   // This seems to get check_plain'ed.
-      t('Cancel')
-    );
-  }
-}
-
-/**
- * Submit handler for workflow deletion form.
- *
- * @see workflow_admin_ui_delete_form()
- */
-function workflow_admin_ui_delete_form_submit($form, &$form_state) {
-  $workflow = $form_state['values']['workflow'];
-  if ($form_state['values']['confirm'] == 1 && $workflow = workflow_load_single($workflow->wid)) {
-    $name = $workflow->getName();
-    $message = 'The workflow %name with all its states was deleted.';
-
-    $workflow->delete();
-
-    watchdog('workflow', $message, array('%name' => $name));
-    drupal_set_message(t($message, array('%name' => $name)));
-
-    $form_state['redirect'] = 'admin/config/workflow/workflow';
-  }
-}
 
 /**
  * View workflow permissions by role
@@ -136,61 +41,34 @@ function workflow_admin_ui_delete_form_submit($form, &$form_state) {
  * @param $workflow
  *   The workflow object.
  */
-function workflow_admin_ui_view_permissions_form($workflow) {
+function workflow_admin_ui_view_permissions_form($workflow, $op) {
   // If we don't have a workflow at this point, go back to admin page.
-  if ($workflow) {
-    // Let's add some breadcrumbs.
-    workflow_admin_ui_breadcrumbs($workflow);
-
-    $all = array();
-    $roles = workflow_get_roles();
-    foreach ($roles as $rid => $value) {
-      $all[$rid]['name'] = $value;
-    }
-
-    $transitions = $workflow->getTransitions();
-    foreach ($transitions as $transition) {
-      foreach ($transition->roles as $rid) {
-        $current_state = $workflow->getState($transition->sid);
-        $target_state = $workflow->getState($transition->target_sid);
-        $all[$rid]['transitions'][] = array(check_plain(t($current_state->label())), WORKFLOW_ADMIN_UI_ARROW, check_plain(t($target_state->label())));
-      }
-    }
-
-    $header = array(t('From'), '', t('To'));
-    $output = '';
-
-    // TODO we should theme out the html here.
-    foreach ($all as $rid => $value) {
-      $role_name = !empty($value['name']) ? $value['name'] : t('deleted role !rid', array('!rid' => $rid));
-      $output .= '<h3>' . t('%role may do these transitions:', array('%role' => $role_name)) . '</h3>';
-      if (!empty($value['transitions'])) {
-        $output .= theme('table', array('header' => $header, 'rows' => $value['transitions'])) . '<p></p>';
-      }
-      else {
-        $output .= '<table><tbody><tr class="odd"><td>' . t('None') . '</td><td></tr></tbody></table><p></p>';
-      }
-    }
-
-    return $output;
-  }
-  else {
+  if (!$workflow) {
     drupal_goto('admin/config/workflow/workflow');
   }
-}
 
-/**
- * Theme the workflow permissions view.
- */
-function theme_workflow_admin_ui_view_permissions_form($variables) {
-  $header = $variables['header'];
-  $all = $variables['all'];
+  $all = array();
+  $roles = workflow_get_roles();
+  foreach ($roles as $rid => $value) {
+    $all[$rid]['name'] = $value;
+  }
+
+  $transitions = $workflow->getTransitions();
+  foreach ($transitions as $transition) {
+    foreach ($transition->roles as $rid) {
+      $current_state = $workflow->getState($transition->sid);
+      $target_state = $workflow->getState($transition->target_sid);
+      $all[$rid]['transitions'][] = array(check_plain(t($current_state->label())), WORKFLOW_ADMIN_UI_ARROW, check_plain(t($target_state->label())));
+    }
+  }
+
+  $header = array(t('From'), '', t('To'));
   $output = '';
 
+  // @todo we should theme out the html here.
   foreach ($all as $rid => $value) {
-    if (!empty($value['name'])) {
-      $output .= '<h3>' . t('%role may do these transitions:', array('%role' => $value['name'])) . '</h3>';
-    }
+    $role_name = !empty($value['name']) ? $value['name'] : t('deleted role !rid', array('!rid' => $rid));
+    $output .= '<h3>' . t('%role may do these transitions:', array('%role' => $role_name)) . '</h3>';
     if (!empty($value['transitions'])) {
       $output .= theme('table', array('header' => $header, 'rows' => $value['transitions'])) . '<p></p>';
     }
@@ -210,190 +88,169 @@ function theme_workflow_admin_ui_view_permissions_form($variables) {
  * @return
  *   HTML form and permissions table.
  */
-function workflow_admin_ui_edit_form($form, $form_state, $workflow = NULL) {
-  // @todo D8: remove workflow_admin_ui_edit_form, after converting Workflow Node to Field.
-
+function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op) {
   $noyes = array(t('No'), t('Yes'));
 
-  // If we don't have a workflow by this point, we need to go back
-  // to creating one at admin/config/workflow/workflow/add
-  // I think the menu loader won't allow this to happen.
-  if (!$workflow) {
-    drupal_goto('admin/config/workflow/workflow/add');
+  $form = array();
+
+  $form['workflow'] = array(
+    '#type' => 'value',
+    '#value' => $workflow,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+    '#submit' => array('workflow_admin_ui_edit_form_submit'),
+    '#validate' => array('workflow_admin_ui_edit_form_validate'),
+    '#weight' => 15,
+  );
+
+  $form['wf_name'] = array(
+    '#type' => 'textfield',
+    '#default_value' => $workflow->getName(),
+    '#title' => t('Workflow name'),
+    '#maxlength' => '254',
+    '#required' => TRUE,
+  );
+
+  // All other settings are only for workflow_node.
+  if (!module_exists('workflownode')) {
+    return $form; // <==== exit !
   }
-  else {
-    // Let's add some breadcrumbs.
-    workflow_admin_ui_breadcrumbs($workflow);
 
-    $form = array();
-    $form['workflow'] = array(
-      '#type' => 'value',
-      '#value' => $workflow,
-    );
+  $form['basic'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Workflow form settings'),
+  );
 
-    $form['basic'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Workflow information'),
-    );
+  $form['basic']['options'] = array(
+    '#type' => 'select',
+    '#title' => t('How to show the available states'),
+    '#required' => FALSE,
+    '#default_value' => isset($workflow->options['options']) ? $workflow->options['options'] : 'radios',
+    // '#multiple' => TRUE / FALSE,
+    '#options' => array(
+      // These options are taken from options.module
+      'select' => 'Select list',
+      'radios' => 'Radio buttons',
+      // This option does not work properly on Comment Add form.
+      'buttons' => 'Action buttons',
+    ),
+    '#description' => t("The Widget shows all available states. Decide which
+      is the best way to show them. ('Action buttons' do not work on Comment form.)"
+    ),
+  );
+  $form['basic']['name_as_title'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Use the workflow name as the title of the workflow form?'),
+    '#default_value' => isset($workflow->options['name_as_title']) ? $workflow->options['name_as_title'] : 0,
+    '#description' => t('The workflow section of the editing form is in its own fieldset. Checking the box will add the workflow ' .
+      'name as the title of workflow section of the editing form.'),
+  );
 
-    $form['basic']['wf_name'] = array(
-      '#type' => 'textfield',
-      '#default_value' => $workflow->getName(),
-      '#title' => t('Workflow name'),
-      '#maxlength' => '254',
-      '#required' => TRUE,
-    );
+  $form['schedule'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Scheduling for Workflow'),
+  );
 
-    $form['basic']['options'] = array(
-      '#type' => 'select',
-      '#title' => t('How to show the available states'),
-      '#required' => FALSE,
-      '#default_value' => isset($workflow->options['options']) ? $workflow->options['options'] : 'radios',
-      // '#multiple' => TRUE / FALSE,
-      '#options' => array(
-        // These options are taken from options.module
-        'select' => 'Select list',
-        'radios' => 'Radio buttons',
-        // This option does not work properly on Comment Add form.
-        'buttons' => 'Action buttons',
-      ),
-      '#description' => t("The Widget shows all available states. Decide which
-        is the best way to show them. ('Action buttons' do not work on Comment form.)"
-      ),
-    );
-    $form['basic']['name_as_title'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Use the workflow name as the title of the workflow form?'),
-      '#default_value' => isset($workflow->options['name_as_title']) ? $workflow->options['name_as_title'] : 0,
-      '#description' => t('The workflow section of the editing form is in its own fieldset. Checking the box will add the workflow ' .
-        'name as the title of workflow section of the editing form.'),
-    );
+  $form['schedule']['schedule'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Allow scheduling of workflow transitions?'),
+    '#default_value' => isset($workflow->options['schedule']) ? $workflow->options['schedule'] : 1,
+    '#description' => t('Workflow transitions may be scheduled to a moment in the future. ' .
+      'Soon after the desired moment, the transition is executed by Cron.'),
+  );
 
-    $form['schedule'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Scheduling for Workflow'),
-    );
+  $form['schedule']['schedule_timezone'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Show a timezone when scheduling a transition?'),
+    '#default_value' => isset($workflow->options['schedule_timezone']) ? $workflow->options['schedule_timezone'] : 1,
+  );
 
-    $form['schedule']['schedule'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Allow scheduling of workflow transitions?'),
-      '#default_value' => isset($workflow->options['schedule']) ? $workflow->options['schedule'] : 1,
-      '#description' => t('Workflow transitions may be scheduled to a moment in the future. ' .
-        'Soon after the desired moment, the transition is executed by Cron.'),
-    );
+  $form['comment'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Comment for Workflow Log'),
+  );
 
-    $form['schedule']['schedule_timezone'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Show a timezone when scheduling a transition?'),
-      '#default_value' => isset($workflow->options['schedule_timezone']) ? $workflow->options['schedule_timezone'] : 1,
-    );
+  $form['comment']['comment_log_node'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Show a comment field in the workflow section of the editing form?'),
+    '#default_value' => isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 0,
+    '#description' => t('On the node editing form, a Comment form can be shown so that the person making the state change can record ' .
+      'reasons for doing so. The comment is then included in the node\'s workflow history.'),
+  );
 
-    $form['comment'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Comment for Workflow Log'),
-    );
+  $form['comment']['comment_log_tab'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Show a comment field in the workflow section of the workflow tab form?'),
+    '#default_value' => isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 0,
+    '#description' => t('On the workflow tab, a Comment form can be shown so that the person making the state change can record ' .
+      'reasons for doing so. The comment is then included in the node\'s workflow history.'),
+  );
 
-    $form['comment']['comment_log_node'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Show a comment field in the workflow section of the editing form?'),
-      '#default_value' => isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 0,
-      '#description' => t('On the node editing form, a Comment form can be shown so that the person making the state change can record ' .
-        'reasons for doing so. The comment is then included in the node\'s workflow history.'),
-    );
+  $form['watchdog'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Watchdog Logging for Workflow'),
+  );
 
-    $form['comment']['comment_log_tab'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Show a comment field in the workflow section of the workflow tab form?'),
-      '#default_value' => isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 0,
-      '#description' => t('On the workflow tab, a Comment form can be shown so that the person making the state change can record ' .
-        'reasons for doing so. The comment is then included in the node\'s workflow history.'),
-    );
+  $form['watchdog']['watchdog_log'] = array(
+    '#type' => 'radios',
+    '#options' => $noyes,
+    '#attributes' => array('class' => array('container-inline')),
+    '#title' => t('Log informational watchdog messages when a transition is executed (state of a node is changed)?'),
+    '#default_value' => isset($workflow->options['watchdog_log']) ? $workflow->options['watchdog_log'] : 0,
+    '#description' => t('Optionally log transition state changes to watchdog.'),
+  );
 
-    $form['watchdog'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Watchdog Logging for Workflow'),
-    );
+  $form['tab'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Workflow tab permissions'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['tab']['history_tab_show'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use the workflow history, and show it on a separate tab.'),
+    '#required' => FALSE,
+    '#default_value' => isset($workflow->options['history_tab_show']) ? $workflow->options['history_tab_show'] : 1,
+    '#description' => t("Every state change is recorded in table
+      {workflow_node_history}. If checked and user has proper permission, a
+      tab 'Workflow' is shown on the entity view page, which gives access to
+      the History of the workflow."),
+  );
+  $form['tab']['tab_roles'] = array(
+    '#type' => 'checkboxes',
+    '#options' => workflow_get_roles(),
+    '#default_value' => array_keys($workflow->tab_roles),
+    '#description' => t('Select any roles that should have access to the workflow tab on nodes that have a workflow.'),
+  );
 
-    $form['watchdog']['watchdog_log'] = array(
-      '#type' => 'radios',
-      '#options' => $noyes,
-      '#attributes' => array('class' => array('container-inline')),
-      '#title' => t('Log informational watchdog messages when a transition is executed (state of a node is changed)?'),
-      '#default_value' => isset($workflow->options['watchdog_log']) ? $workflow->options['watchdog_log'] : 0,
-      '#description' => t('Optionally log transition state changes to watchdog.'),
-    );
-
-    $form['tab'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Workflow tab permissions'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-    $form['tab']['history_tab_show'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use the workflow history, and show it on a separate tab.'),
-      '#required' => FALSE,
-      '#default_value' => isset($workflow->options['history_tab_show']) ? $workflow->options['history_tab_show'] : 1,
-      '#description' => t("Every state change is recorded in table
-        {workflow_node_history}. If checked and user has proper permission, a
-        tab 'Workflow' is shown on the entity view page, which gives access to
-        the History of the workflow."),
-    );
-    $form['tab']['tab_roles'] = array(
-      '#type' => 'checkboxes',
-      '#options' => workflow_get_roles(),
-      '#default_value' => array_keys($workflow->tab_roles),
-      '#description' => t('Select any roles that should have access to the workflow tab on nodes that have a workflow.'),
-    );
-
-    $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
-
-    return $form;
-  }
+  return $form;
 }
 
 /**
- * Theme the workflow editing form.
- *
- * @see workflow_edit_form()
- */
-function theme_workflow_admin_ui_edit_form($variables) {
-  $output = '';
-
-  $form = $variables['form'];
-  $workflow = $variables['form']['workflow']['#value'];
-
-  // If we don't have a workflow here, we need to go back to admin.
-  if ($workflow) {
-    drupal_set_title(t('Edit workflow %name', array('%name' => $workflow->getName())), PASS_THROUGH);
-
-    $output .= drupal_render_children($form);
-    return $output;
-  }
-  else {
-    drupal_goto('admin/config/workflow/workflow');
-  }
-}
-
-/**
- * Validate the workflow editing form.
- *
- * @see workflow_edit_form()
- * @todo: this duplicates code from workflow_admin_ui_add_form_validate()
+ * Validate the workflow edit/add form.
  */
 function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
   $workflow = $form_state['values']['workflow'];
   $name = $form_state['values']['wf_name'];
+
+  // Make sure workflow name is not numeric.
+  if (ctype_digit($name)) {
+    form_set_error('wf_name', t('Please choose a non-numeric name for your workflow.',
+      array('%name' => $name)));
+  }
 
   // Make sure workflow name is not a duplicate.
   foreach (workflow_load_multiple() as $stored_workflow) {
@@ -414,24 +271,49 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
  */
 function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
-  $workflow->name = $form_state['values']['wf_name'];
-  $workflow->tab_roles = array_filter($form_state['values']['tab_roles']);
-  $workflow->options = array(
-    'name_as_title' => $form_state['values']['name_as_title'],
-    'options' => $form_state['values']['options'],
-    'schedule' => $form_state['values']['schedule'],
-    'schedule_timezone' => $form_state['values']['schedule_timezone'],
-    'comment_log_node' => $form_state['values']['comment_log_node'],
-    'comment_log_tab' => $form_state['values']['comment_log_tab'],
-    'watchdog_log' => $form_state['values']['watchdog_log'],
-    'history_tab_show' => $form_state['values']['history_tab_show'],
-  );
+  $name = $form_state['values']['wf_name'];
+  $insert = empty($workflow->wid);
 
-  $workflow->save();
+  if ($insert) {
+    $workflow = workflow_create($name);
+  }
+  else {
+    $workflow->name = $name;
+  }
 
-  drupal_set_message(t('The workflow was updated.'));
+  // For workflow_field, all is in the field settings.
+  // All other settings are only for workflow_node.
+  if (module_exists('workflownode')) {
+    $workflow->tab_roles = array_filter($form_state['values']['tab_roles']);
+    $workflow->options = array(
+      'name_as_title' => $form_state['values']['name_as_title'],
+      'options' => $form_state['values']['options'],
+      'schedule' => $form_state['values']['schedule'],
+      'schedule_timezone' => $form_state['values']['schedule_timezone'],
+      'comment_log_node' => $form_state['values']['comment_log_node'],
+      'comment_log_tab' => $form_state['values']['comment_log_tab'],
+      'watchdog_log' => $form_state['values']['watchdog_log'],
+      'history_tab_show' => $form_state['values']['history_tab_show'],
+    );
+  }
 
-  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $workflow->wid;
+  if ($insert) {
+    $workflow->save();
+
+    $args = array(
+      '%name' => $name,
+      '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
+    );
+    watchdog('workflow', 'Created workflow %name', $args);
+    drupal_set_message(t('The workflow %name was created. Please maintain the settings.', $args), 'status');
+  }
+  else {
+    $workflow->save();
+
+    drupal_set_message(t('The workflow was updated.'));
+  }
+
+  $form_state['redirect'] = 'admin/config/workflow/workflow';
 }
 
 /**
@@ -455,18 +337,15 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
  * @return
  *   HTML form and permissions table.
  */
-function workflow_admin_ui_transitions_form($form, $form_state, $workflow) {
+function workflow_admin_ui_transitions_form($form, &$form_state, $workflow, $op) {
   // Make sure we have a workflow.
   if ($workflow) {
-    // Let's add some breadcrumbs.
-    workflow_admin_ui_breadcrumbs($workflow);
-
     $form = array();
     $form['workflow'] = array(
       '#type' => 'value',
       '#value' => $workflow,
     );
-    $form['transitions'] = _workflow_admin_ui_transition_grid_form($workflow);
+    $form['transitions'] = _workflow_admin_ui_transition_grid_form($form, $form_state, $workflow);
     $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
     return $form;
@@ -512,7 +391,6 @@ function theme_workflow_admin_ui_transitions_form($variables) {
   $workflow = $form['workflow']['#value'];
   $name = $workflow->getName();
 
-  // If we don't have a workflow here, we need to go back to admin.
   if ($workflow) {
     drupal_set_title(t('Edit workflow %name transitions', array('%name' => $name)), PASS_THROUGH);
 
@@ -601,7 +479,7 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
 
   drupal_set_message(t('The workflow was updated.'));
 
-  $form_state['redirect'] = 'admin/config/workflow/workflow/' . $wid;
+  // $form_state['redirect'] = 'admin/config/workflow/workflow';
 }
 
 /**
@@ -610,7 +488,7 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
  * @param int $wid
  *   The workflow object.
  */
-function _workflow_admin_ui_transition_grid_form($workflow) {
+function _workflow_admin_ui_transition_grid_form($form, &$form_state, $workflow) {
   $form = array('#tree' => TRUE);
 
   $roles = workflow_get_roles();
@@ -662,32 +540,14 @@ function _workflow_admin_ui_transition_grid_form($workflow) {
  * of workflows and workflow states.
  * Replaced by http://drupal.org/node/1367530.
  */
-function workflow_admin_ui_states_form($form, $form_state, $workflow) {
-  // Let's add some breadcrumbs.
-  $bc = array(l(t('Home'), '<front>'));
-  $bc[] = l(t('Configuration'), 'admin/config');
-  $bc[] = l(t('Workflow'), 'admin/config/workflow');
-  $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
-  drupal_set_breadcrumb($bc);
-
-  drupal_set_title(t('Workflow: @label', array('@label' => $workflow->label())));
+function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
+  // drupal_set_title(t('Workflow: @label', array('@label' => $workflow->label())));
 
   $form = array();
   $form['#tree'] = TRUE;
   $form['workflow'] = array(
     '#type' => 'value',
     '#value' => $workflow,
-  );
-
-  // Allow modules to insert their own workflow operations.
-  $links = module_invoke_all('workflow_operations', 'workflow', $workflow);
-  $links_args = array(
-    'links' => $links,
-    'attributes' => array('class' => array('inline', 'action-links')),
-  );
-  $form['action-links'] = array(
-    '#type' => 'markup',
-    '#markup' => theme('links', $links_args),
   );
 
   // Build select options for reassigning states.
@@ -949,55 +809,4 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
     $state->weight = $item['weight'];
     $state->save();
   }
-
-  $form_state['redirect'] = "admin/config/workflow/workflow/$wid";
-}
-
-/**
- * Page builder. Show a list of all workflows.
- *
- * Appends the type_map form, allowing administrator
- * to map workflows to content types and determine placement on content forms.
- */
-function workflow_admin_ui_overview_page($form) {
-  $form = array();
-
-  // Allow modules to insert their own action links.
-  $links = module_invoke_all('workflow_operations', 'top_actions', NULL);
-  $links_args = array(
-    'links' => $links,
-    'attributes' => array('class' => array('inline', 'action-links')),
-  );
-  $form['action-links'] = array(
-    '#type' => 'markup',
-    '#markup' => theme('links', $links_args),
-  );
-
-  // Add a form with the type map, which is only valid for Workflow Node API.
-  if (module_exists('workflownode')) {
-    module_load_include('inc', 'workflow_admin_ui', 'workflow_admin_ui.type_map.page');
-    $type_map_form = array();
-    $form += workflow_admin_ui_type_map_form($type_map_form);
-  }
-  return $form;
-}
-
-/**
- * Theme the workflow overview page, include type_map form.
- */
-function theme_workflow_admin_ui_overview_page($variables) {
-  $output = '';
-  $form = $variables['form'];
-
-  // Do the action links at the top.
-  $output .= drupal_render($form['action-links']);
-  $output .= drupal_render($form['help']);
-
-  if (module_exists('workflownode')) {
-    // Add the type_map maintenance form.
-    $output .= theme_workflow_admin_ui_type_map_form($variables);
-    unset($form['type_map']);
-  }
-
-  return $output . drupal_render_children($form);
 }

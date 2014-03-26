@@ -14,17 +14,27 @@ function workflow_entity_info() {
 
   $entities['Workflow'] = array(
     'label' => t('Workflow'),
+    'plural label' => t('Workflows'),
     'entity class' => 'Workflow',
     'controller class' => 'WorkflowController',
+    'module' => 'workflow',
     'base table' => 'workflows',
+    'fieldable' => FALSE,
     'entity keys' => array(
       'id' => 'wid',
       'name' => 'name',
       // 'label' => 'label',
     ),
     'label callback' => 'entity_class_label',
-    //'uri callback' => 'entity_class_uri',
-    'module' => 'workflow',
+    'uri callback' => 'entity_class_uri',
+    // The following is added in workflow_admin_ui.module.
+    // 'access callback' => 'workflow_access',
+    // 'admin ui' => array(
+    //   'path' => 'admin/config/workflow/workflow',
+    //   'file' => 'workflow_admin_ui/workflow_admin_ui.pages.inc',
+    //   'controller class' => 'EntityWorkflowUIController',
+    //   'menu wildcard' => '%workflow',
+    // ),
   );
 
   $entities['WorkflowConfigTransition'] = array(
@@ -43,6 +53,13 @@ function workflow_entity_info() {
     ),
     'label callback' => 'entity_class_label',
     // 'uri callback' => 'entity_class_uri',
+//    'view modes' => array(
+//      'full' => array(
+//        'label' => t('Full'),
+//        'custom settings' => TRUE,
+//      ),
+//    ),
+//    'views controller class' => 'EntityDefaultViewsController',
     'module' => 'workflow',
 //    'access callback' => 'workflow_tab_access', // @todo: use to-be workflow_access here. Access to Tab <> access to workflow. 
   );
@@ -87,7 +104,10 @@ function workflow_entity_info() {
  * @todo D8: deprecated in favour of workflow_load_single(), not needed for menu. 
  */
 function workflow_load($wid) {
-  return entity_load_single('Workflow', $wid); 
+  // Some Admin UI menu page loaders pass the $wid as string, not int.
+  // @see workflow_admin_ui_edit_form_validate().
+  $workflow = ctype_digit($wid) ? entity_load_single('Workflow', $wid) : workflow_load_by_name($wid);
+  return $workflow;
 }
 
 function workflow_load_by_name($name) {
