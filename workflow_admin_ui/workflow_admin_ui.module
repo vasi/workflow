@@ -54,7 +54,11 @@ function workflow_admin_ui_help($path, $arg) {
         the role(s) that may initiate the transition. For example, if only the
         "production editor" role may move a node from Review state to the
         Published state, check the box next to "production editor". The author
-        role is built in and refers to the user who authored the node.');
+        role is built in and refers to the user who authored the node.')
+      . '<br /><i>'
+      . t('If not all roles are in the list, please ')
+      . l(t("check permission 'Participate in workflow'"), 'admin/people/permissions',
+          array('fragment' => 'module-workflow')) . '.</i>';
   }
 }
 
@@ -66,10 +70,6 @@ function workflow_admin_ui_permission() {
     'administer workflow' => array(
       'title' => t('Administer workflow'),
       'description' => t('Administer workflow configurations.'),
-    ),
-    'participate in workflow' => array(
-      'title' => t('Participate in workflow'),
-      'description' => t('Role is shown on workflow admin pages.'),
     ),
   );
 }

@@ -31,6 +31,10 @@ function workflow_permission() {
       'title' => t('Show workflow state change on node view'),
       'description' => t('Show workflow state change form on node viewing.'),
     ),
+    'participate in workflow' => array(
+      'title' => t('Participate in workflow'),
+      'description' => t('Role is shown on workflow admin pages.'),
+    ),
   );
 }
 

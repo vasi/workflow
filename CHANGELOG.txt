@@ -454,3 +454,5 @@ Issue #2226451 by johnv: Streamlined code around $state->showWidget().
 Issue #2226451 by johnv: Removed showing workflow widget when creating a node, and only 1 state allowed.
 Issue #2228317 by johnv: Moved hook_user_role_insert() since it was not called when Admin UI disabled.
 Issue #2220065 by zihong0, johnv: Fixed workflow_access_node_access_records() is not called from node_save().
+Issue #2228317 by johnv: Fixed hook_user_role_insert is not called when Admin UI disabled.
+Issue #2228457 by johnv: Do NOT enable all roles for Transitions, upon enabling Workflow UI module.
