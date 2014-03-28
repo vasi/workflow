@@ -69,17 +69,15 @@ function workflow_node_view($node, $view_mode, $langcode) {
     return;
   }
 
-  $current_sid = workflow_node_current_state($node, 'node', '');
+  $current_sid = workflow_node_current_state($node, $entity_type, '');
   $current_state = workflow_state_load_single($current_sid);
 
   // Show current state at the top of the node display.
   $node->content['workflow_current_state'] = workflow_state_formatter($entity_type, $node);
   $node->content['workflow_current_state']['#weight'] = -99;
 
-  if ($current_state && $current_state->showWidget($choices = $current_state->getOptions($entity_type, $node))) {
-//    // Show state change form at the bottom of the node display.
-//    module_load_include('inc', 'workflow', 'workflow.pages');
-
+  if ($current_state && $current_state->showWidget($entity_type, $node, FALSE)) {
+    $form = array();
     $workflow = $current_state->getWorkflow();
 
     // Show the current state and the Workflow form to allow state changing.

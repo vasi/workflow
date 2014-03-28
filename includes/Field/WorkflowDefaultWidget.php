@@ -101,11 +101,13 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $default_value = '0';
     }
     else {
+      $force = FALSE;
       $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
       $current_state = workflow_state_load_single($current_sid);
       // $grouped = TRUE; // Grouped options only makes sense for multiple workflows.
-      $options = $current_state->getOptions($entity_type, $entity);
-      $show_widget = $current_state->showWidget($options);
+      $options = $current_state->getOptions($entity_type, $entity, $force);
+      $show_widget = $current_state->showWidget($entity_type, $entity, $force);
+
       // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
       $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
     }

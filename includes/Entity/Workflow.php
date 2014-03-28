@@ -226,7 +226,7 @@ class Workflow extends Entity {
   /**
    * Gets the first valid state ID, after the creation state.
    *
-   * Use WorkflowState::getOptions(), because this does a access check.
+   * Uses WorkflowState::getOptions(), because this does a access check.
    */
   public function getFirstSid($entity_type, $entity) {
     $creation_state = $this->getCreationState();

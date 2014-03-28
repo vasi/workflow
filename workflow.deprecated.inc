@@ -184,10 +184,10 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
  * @return bool $show_widget
  *   TRUE = a form must be shown; FALSE = no form, a formatter must be shown instead.
  */
-function workflow_show_form($sid, $workflow, array $options) {
-  $state = workflow_state_load_single($sid);
-  return !$state->showWidget($options);
-}
+// function workflow_show_form($sid, $workflow, array $options) {
+//   $state = workflow_state_load_single($sid);
+//   return !$state->showWidget($options);
+// }
 
 /**
  * Validate target state and either execute a transition immediately or schedule

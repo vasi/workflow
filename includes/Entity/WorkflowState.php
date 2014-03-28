@@ -288,13 +288,11 @@ class WorkflowState {
    * Determine if the Workflow Form must be shown. 
    * If not, a formatter must be shown, since there are no valid options.
    *
-   * @param array $options
-   *   an array with $id => $label options, as determined in WorkflowState->getOptions().
-   * 
    * @return bool $show_widget
    *   TRUE = a form (a.k.a. widget) must be shown; FALSE = no form, a formatter must be shown instead.
    */
-  public function showWidget(array $options) {
+  public function showWidget($entity_type, $entity, $force = FALSE) {
+    $options = $this->getOptions($entity_type, $entity, $force);
     $count = count($options);
     // The easiest case first: more then one option: always show form.
     if ($count > 1) {

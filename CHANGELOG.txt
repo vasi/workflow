@@ -450,3 +450,4 @@ Fixed breadcrumbs on workflow add page.
 Issue #2218303 by zihong0: Fixed type in workflow_node_previous_state.
 Issue #2226781 by johnv: Changed Admin UI to use Entity UI.
 Issue #2226781 by johnv: Added message when saving states.
+Issue #2226451 by johnv: Streamlined code around $state->showWidget().
