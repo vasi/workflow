@@ -298,11 +298,13 @@ class WorkflowState {
     if ($count > 1) {
       return TRUE;
     }
-    // Only when in creation phase, one option is sufficient,
-    // since the '(creation)' option is not included in $options.
-    if ($this->isCreationState()) {
-      return TRUE;
-    }
+    // #2226451: Even in Creation state, we must have 2 visible states to show the widget.
+    // // Only when in creation phase, one option is sufficient,
+    // // since the '(creation)' option is not included in $options.
+    // // When in creation state, 
+    // if ($this->isCreationState()) {
+    //   return TRUE;
+    // }
     return FALSE;
   }
 

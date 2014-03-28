@@ -451,3 +451,4 @@ Issue #2218303 by zihong0: Fixed type in workflow_node_previous_state.
 Issue #2226781 by johnv: Changed Admin UI to use Entity UI.
 Issue #2226781 by johnv: Added message when saving states.
 Issue #2226451 by johnv: Streamlined code around $state->showWidget().
+Issue #2226451 by johnv: Removed showing workflow widget when creating a node, and only 1 state allowed.
