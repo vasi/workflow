@@ -452,3 +452,4 @@ Issue #2226781 by johnv: Changed Admin UI to use Entity UI.
 Issue #2226781 by johnv: Added message when saving states.
 Issue #2226451 by johnv: Streamlined code around $state->showWidget().
 Issue #2226451 by johnv: Removed showing workflow widget when creating a node, and only 1 state allowed.
+Issue #2228317 by johnv: Moved hook_user_role_insert() since it was not called when Admin UI disabled.

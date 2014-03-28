@@ -123,15 +123,6 @@ function workflow_admin_ui_theme() {
 }
 
 /**
- * Implements hook_user_role_insert().
- *
- * Make sure new roles are allowed to participate in workflows by default.
- */
-function workflow_admin_ui_user_role_insert($role) {
-  user_role_change_permissions($role->rid, array('participate in workflow' => 1));
-}
-
-/**
  * Helper function. Create breadcrumbs.
  *
  * @param $workflow
