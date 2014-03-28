@@ -46,7 +46,19 @@ function workflow_access_node_access_records($node) {
 
   // Only relevant for content with Workflow.
   if (!isset($node->workflow_transitions)) {
-    return $grants;
+    if (isset($node->workflow)) {
+      // Create a dummy transition, just to set $node->workflow_transitions.
+      // This is needed for proper functioning of workflow_access when saving a
+      // node with node_save() or on a node view page (so anything that does
+      // not use the Workflow form ánd saves the node.).
+      $old_sid = $new_sid = $node->workflow;
+      $transition = new WorkflowTransition();
+      $transition->setValues('node', $node, '', $old_sid, $new_sid, $node->uid, REQUEST_TIME, '');
+      $transition->execute();
+    }
+    else {
+      return $grants; // <---- exit !!
+    }
   }
 
   // Get 'author' of this entity.
