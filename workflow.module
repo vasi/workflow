@@ -32,8 +32,8 @@ function workflow_permission() {
       'description' => t('Show workflow state change form on node viewing.'),
     ),
     'participate in workflow' => array(
-      'title' => t('Participate in workflow'),
-      'description' => t('Role is shown on workflow admin pages.'),
+      'title' => t('Participate in workflows'),
+      'description' => t('Role is enabled for transitions on the workflow admin pages.'),
     ),
   );
 }

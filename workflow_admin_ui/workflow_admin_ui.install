@@ -16,8 +16,8 @@ function workflow_admin_ui_enable() {
  * Helper function. Used both by update and enable.
  */
 function _workflow_admin_ui_participate() {
-  return t('Please review which roles may participate in workflows. <a href="!url">Permissions</a>',
-    array('!url' => url('admin/people/permissions', array('fragment' => 'module-workflow_admin_ui'))));
+  return t("Please review which roles may 'participate in workflows' <a href='!url'>on the Permissions page</a>.",
+    array('!url' => url('admin/people/permissions', array('fragment' => 'module-workflow'))));
 }
 
 /**
