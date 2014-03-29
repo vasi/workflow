@@ -76,12 +76,9 @@ function workflow_admin_ui_permission() {
 }
 
 function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
-dpm(__FUNCTION__ .' '. $op);
-dpm($workflow);
   switch ($op) {
     case 'add':
     case 'edit':
-      return workflow_admin_ui_edit_form($form, $form_state, $workflow, $op);
     case 'clone':
       return workflow_admin_ui_edit_form($form, $form_state, $workflow, $op);
     case 'view':
@@ -150,47 +147,4 @@ function workflow_admin_ui_breadcrumbs($workflow, $extra = NULL) {
     $bc[] = $extra;
   }
   drupal_set_breadcrumb($bc);
-}
-
-/**
- * Implements hook_workflow_operations().
- *
- * Might as well eat our own cooking.
- */
-function workflow_admin_ui_workflow_operations($op, $workflow = NULL, $state = NULL) {
-  switch ($op) {
-    case 'top_actions':
-      $actions = array();
-      return $actions;
-
-    case 'workflow':
-      $name = $workflow->getName();
-      $wid = $workflow->wid;
-      $actions = array();
-
-      $actions += array(
-        'workflow_states' => array(
-          'title' => t('States'),
-          'href' => "admin/config/workflow/workflow/manage/$wid/states",
-          'attributes' => array('alt' => t('Edit the @wf states', array('@wf' => $name))),
-        ),
-        'workflow_transitions' => array(
-          'title' => t('Transitions'),
-          'href' => "admin/config/workflow/workflow/manage/$wid/transitions",
-          'attributes' => array('alt' => t('Edit the @wf transitions', array('@wf' => $name))),
-        ),
-
-        'workflow_permission_summary' => array(
-          'title' => t('Summary'),
-          'href' => "admin/config/workflow/workflow/manage/$wid/permissions",
-          'attributes' => array('alt' => t('See a summary of the @wf transitions', array('@wf' => $name))),
-        ),
-      );
-
-      foreach ($actions as $name => $link) {
-        $actions[$name]['attributes']['title'] = $actions[$name]['attributes']['alt'];
-      }
-
-      return $actions;
-  }
 }

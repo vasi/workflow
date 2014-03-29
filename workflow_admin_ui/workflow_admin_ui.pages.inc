@@ -312,8 +312,8 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
 
     drupal_set_message(t('The workflow was updated.'));
   }
-
-  $form_state['redirect'] = 'admin/config/workflow/workflow';
+  // This redirect is needed, when changing the workflow name, with name in URL.
+  $form_state['redirect'] = 'admin/config/workflow/workflow/manage' .  $workflow->wid;
 }
 
 /**
@@ -478,7 +478,6 @@ function workflow_admin_ui_transitions_form_submit($form, &$form_state) {
   }
 
   drupal_set_message(t('The workflow was updated.'));
-
   // $form_state['redirect'] = 'admin/config/workflow/workflow';
 }
 

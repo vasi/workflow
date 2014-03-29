@@ -458,3 +458,4 @@ Issue #2228317 by johnv: Fixed hook_user_role_insert is not called when Admin UI
 Issue #2228457 by johnv: Do NOT enable all roles for Transitions, upon enabling Workflow UI module.
 Issue #2228457 by johnv: Fixed some help texts.
 Issue #2228457 by johnv: Fixed menu_build should not be called in admin_ui install, and is not needed since update_7001 exists.
+Issue #2226781 by johnv: Removed states, transitions from Admin UI's workflow overview page. They are under Edit.
