@@ -75,11 +75,15 @@ function workflow_admin_ui_permission() {
   );
 }
 
-function workflow_form($form, &$form_state, $entity, $op, $entity_type) {
+function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
+dpm(__FUNCTION__ .' '. $op);
+dpm($workflow);
   switch ($op) {
     case 'add':
     case 'edit':
-      return workflow_admin_ui_edit_form($form, $form_state, $entity, $op);
+      return workflow_admin_ui_edit_form($form, $form_state, $workflow, $op);
+    case 'clone':
+      return workflow_admin_ui_edit_form($form, $form_state, $workflow, $op);
     case 'view':
     case 'delete':
     default:

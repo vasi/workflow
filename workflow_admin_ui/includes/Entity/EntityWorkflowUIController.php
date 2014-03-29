@@ -10,6 +10,7 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
    * Provides definitions for implementing hook_menu().
    */
   public function hook_menu() {
+dpm(__FUNCTION__);
     $items = parent::hook_menu();  
 
     // Set this on the object so classes that extend hook_menu() can use it.
