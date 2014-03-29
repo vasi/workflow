@@ -10,7 +10,6 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
    * Provides definitions for implementing hook_menu().
    */
   public function hook_menu() {
-dpm(__FUNCTION__);
     $items = parent::hook_menu();  
 
     // Set this on the object so classes that extend hook_menu() can use it.
@@ -18,6 +17,9 @@ dpm(__FUNCTION__);
     $wildcard = isset($this->entityInfo['admin ui']['menu wildcard']) ? $this->entityInfo['admin ui']['menu wildcard'] : '%entity_object';
     $plural_label = isset($this->entityInfo['plural label']) ? $this->entityInfo['plural label'] : $this->entityInfo['label'] . 's';
     $entityType = $this->entityInfo['entity class'];
+
+    // @todo: Allow modules to insert their own action links to the 'workflow',
+    // $workflow_operations = module_invoke_all('workflow_operations', 'workflow', NULL);
 
     $item = array(
       'file' => 'workflow_admin_ui.pages.inc',

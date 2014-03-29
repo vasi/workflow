@@ -9,33 +9,6 @@
  */
 
 /**
- * Form builder. Create the form for adding/editing a workflow.
- */
-function workflow_admin_ui_add_form($form, &$form_state, $workflow = NULL, $op) {
-  $form = array();
-
-  $name = isset($workflow) ? $workflow->getName() : '' ;
-
-  $form['wf_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Workflow Name'),
-    '#maxlength' => '254',
-    '#required' => TRUE,
-    '#default_value' => $name,
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Add Workflow'),
-    '#submit' => array('workflow_admin_ui_add_form_submit'),
-    '#validate' => array('workflow_admin_ui_add_form_validate'),
-  );
-
-  return $form;
-}
-
-
-/**
  * View workflow permissions by role
  *
  * @param $workflow
