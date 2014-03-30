@@ -17,9 +17,11 @@ function workflow_entity_info() {
     'plural label' => t('Workflows'),
     'entity class' => 'Workflow',
     'controller class' => 'WorkflowController',
+    'features controller class' => FALSE, //@todo: implement this.
     'module' => 'workflow',
     'base table' => 'workflows',
     'fieldable' => FALSE,
+    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'wid',
       'name' => 'name',
@@ -43,8 +45,6 @@ function workflow_entity_info() {
     // Add controller Class. 'Workflow' class is the de-facto controller.
     'controller class' => 'WorkflowConfigTransitionController',
     'base table' => 'workflow_transitions',
-//    'fieldable' => TRUE,
-//    'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'tid',
 //      'name' => 'tid',
@@ -69,6 +69,7 @@ function workflow_entity_info() {
     'label' => t('Workflow executed transition'),
     'entity class' => 'WorkflowTransition',
     'controller class' => 'WorkflowTransitionController',
+    'features controller class' => FALSE,
     'base table' => 'workflow_node_history',
     'entity keys' => array(
       'id' => 'hid',
@@ -77,6 +78,7 @@ function workflow_entity_info() {
     'module' => 'workflow',
     'views controller class' => 'EntityDefaultViewsController',
     'rules controller class' => 'EntityDefaultRulesController',
+    'features controller class' => FALSE,
   );
 
   $entities['WorkflowScheduledTransition'] = array(
@@ -91,6 +93,7 @@ function workflow_entity_info() {
     'module' => 'workflow',
     'views controller class' => 'EntityDefaultViewsController',
     'rules controller class' => 'EntityDefaultRulesController',
+    'features controller class' => FALSE,
   );
 
   return $entities;
@@ -106,17 +109,17 @@ function workflow_entity_info() {
 function workflow_load($wid) {
   // Some Admin UI menu page loaders pass the $wid as string, not int.
   // @see workflow_admin_ui_edit_form_validate().
-  $workflow = ctype_digit($wid) ? entity_load_single('Workflow', $wid) : workflow_load_by_name($wid);
+  // The EntityController must be Exportable, or else a string won't work. #1741956 
+  // $workflow = ctype_digit($wid) ? entity_load_single('Workflow', $wid) : workflow_load_by_name($wid);
+  $workflow = entity_load_single('Workflow', $wid);
   return $workflow;
 }
 
+/*
+ * Caveat: this only works for entities with EntityAPIControllerExportable.
+ */
 function workflow_load_by_name($name) {
-  foreach (entity_load('Workflow') as $workflow) {
-    if ($name == $workflow->getName()) {
-      return $workflow;
-    }
-  }
-  return NULL;
+  return reset(entity_load_multiple_by_name('Workflow', array($name)));
 }
 
 function workflow_load_single($wid) {

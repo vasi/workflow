@@ -10,7 +10,11 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
    * Provides definitions for implementing hook_menu().
    */
   public function hook_menu() {
-    $items = parent::hook_menu();  
+    $items = parent::hook_menu();
+
+    // Workflow is now an exportable entity. But the 'Import' menu item is
+    // still broken. Just delete it.
+    unset($items['admin/config/workflow/workflow/import']);
 
     // Set this on the object so classes that extend hook_menu() can use it.
     $id_count = count(explode('/', $this->path));
@@ -60,6 +64,8 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     // Add more then enough colspan.
     return parent::operationCount() + 8;
   }
+
+  // public function operationForm($form, &$form_state, $entity, $op) {}
 
   public function overviewForm($form, &$form_state) {
     // Add table and pager.

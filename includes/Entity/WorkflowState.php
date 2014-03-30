@@ -44,6 +44,10 @@ class WorkflowState {
     }
   }
 
+  // Implementing clone needs a list of tid-less transitions, and a conversion
+  // of sids for both States and ConfigTransitions.
+  // public function __clone() {}
+
   /**
    * Creates and returns a new WorkflowState object.
    *

@@ -98,7 +98,22 @@ function workflow_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
-      'tab_roles' => array(
+      'status' => array(
+        'type' => 'int', 
+        'not null' => TRUE,
+        // Set the default to ENTITY_CUSTOM without using the constant as it is
+        // not safe to use it at this point. 
+        'default' => 0x01, 
+        'size' => 'tiny', 
+        'description' => 'The exportable status of the entity.',
+      ), 
+      'module' => array(
+        'description' => 'The name of the providing module if the entity has been defined in code.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        'not null' => FALSE,
+      ),
+       'tab_roles' => array(
         'description' => 'The role IDs that can access the workflow tabs on node pages.',
         'type' => 'varchar',
         'length' => '255',
@@ -676,5 +691,21 @@ function workflow_update_7008() {
   );
   if (!db_field_exists('workflow_node_history', 'revision_id')) {
     db_add_field('workflow_node_history', 'revision_id', $field);
+  }
+}
+
+/**
+ * Add database fields to make Workflow exportable.
+ *
+ * Ignore the 'User warning'.
+ */
+function workflow_update_7009() {
+  $schema = workflow_schema();
+  $fields = $schema['workflows']['fields'];
+  if (!db_field_exists('workflows', 'status')) {
+    db_add_field('workflows', 'status', $fields['status']);
+  }
+  if (!db_field_exists('workflows', 'module')) {
+    db_add_field('workflows', 'module', $fields['module']);
   }
 }

@@ -244,16 +244,10 @@ function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
  */
 function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
+  $insert = !empty($workflow->is_new);
   $name = $form_state['values']['wf_name'];
-  $insert = empty($workflow->wid);
 
-  if ($insert) {
-    $workflow = workflow_create($name);
-  }
-  else {
-    $workflow->name = $name;
-  }
-
+  $workflow->name = $form_state['values']['wf_name'];;
   // For workflow_field, all is in the field settings.
   // All other settings are only for workflow_node.
   if (module_exists('workflownode')) {
@@ -270,23 +264,22 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
     );
   }
 
+  $workflow->save();
   if ($insert) {
-    $workflow->save();
-
     $args = array(
       '%name' => $name,
       '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
     );
     watchdog('workflow', 'Created workflow %name', $args);
     drupal_set_message(t('The workflow %name was created. Please maintain the settings.', $args), 'status');
+
+    // This redirect is needed, when changing the workflow name, with name in URL.
+    // Also for cloning a workflow.
+    $form_state['redirect'] = 'admin/config/workflow/workflow/manage' .  $workflow->wid;
   }
   else {
-    $workflow->save();
-
     drupal_set_message(t('The workflow was updated.'));
   }
-  // This redirect is needed, when changing the workflow name, with name in URL.
-  $form_state['redirect'] = 'admin/config/workflow/workflow/manage' .  $workflow->wid;
 }
 
 /**

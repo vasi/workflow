@@ -9,9 +9,9 @@
 /**
  * Implements a controller class for Workflow.
  */
-class WorkflowController extends EntityAPIController {
+class WorkflowController extends EntityAPIControllerExportable {
 
-  // public function create(array $values = array()) { }
+  // public function create(array $values = array()) {    return parent::create($values);  }
   // public function load($ids = array(), $conditions = array()) { }
 
   public function delete($ids, DatabaseTransaction $transaction = NULL) {
@@ -61,6 +61,8 @@ class WorkflowController extends EntityAPIController {
     foreach ($queried_entities as $entity) {
       // Load the states, so they are already present on the next (cached) load.
       $entity->states = $entity->getStates($all = TRUE);
+      $entity->transitions = $entity->getTransitions(FALSE);
+      $entity->typeMap = $entity->getTransitions(FALSE);
     }
 
     parent::attachLoad($queried_entities, $revision_id);
@@ -77,12 +79,24 @@ class Workflow extends Entity {
   protected $item = NULL; // Helper to get/set the Item of a Workflow.
   // Attached States.
   public $states = NULL;
+  public $transitions = NULL;
 
   /**
    * CRUD functions.
    */
 
-  // public function __construct(array $values = array(), $entityType = NULL) { }
+//  public function __construct(array $values = array(), $entityType = NULL) {
+//    return parent::__construct($values, $entityType);
+//  }
+
+  public function __clone() {
+    foreach ($this->states as &$state) {
+      $state = clone $state;
+    }
+    foreach ($this->transitions as &$transition) {
+      $transition = clone $transition;
+    }
+  }
 
   /**
    * Given information, update or insert a new workflow.
@@ -94,6 +108,34 @@ class Workflow extends Entity {
 
     $return = parent::save();
 
+    // If a workflow is cloned, it contains data from original workflow.
+    // Redetermine the keys.
+    if ($is_new && $this->states) {
+      foreach ($this->states as $state) {
+        // Can be array when cloning or with features.
+        $state = is_array($state) ? (object) $state : $state;
+        // Set up a conversion table, while saving the states.
+        $old_sid = $state->sid;
+        $state->wid = $this->wid;
+        // @todo: setting sid to FALSE should be done by entity_ui_clone_entity().
+        $state->sid = FALSE;
+        $state->save();
+        $sid_conversion[$old_sid] = $state->sid;
+      }
+      foreach ($this->transitions as $transition) {
+        // Can be array when cloning or with features.
+        $transition = is_array($transition) ? (object) $transition : $transition;
+        // Convert the old sids of each transitions before saving.
+        // @todo: in this be done in 'clone $transition'?
+        // (That requires a list of transitions without tid and a wid-less conversion table.)
+        $transition->tid = FALSE;
+        $transition->sid = $sid_conversion[$transition->sid];
+        $transition->target_sid = $sid_conversion[$transition->target_sid];
+        $transition->save();
+      }
+    }
+
+    // Make sure a Creation state exists.
     if ($is_new) {
       $state = $this->getCreationState();
       $return2 = $state->save();
@@ -259,19 +301,18 @@ class Workflow extends Entity {
     if ($this->states === NULL) {
       $this->states = $this->wid ? WorkflowState::getStates($this->wid) : array();
     }
+    // Do not unset, but add to array - you'll remove global objects otherwise.
+    $states = array();
+    foreach ($this->states as $state) {
 
-    $states = $this->states;
-    if ($all !== TRUE) {
-      foreach ($states as $state) {
-        if (($all == FALSE) && $state->isCreationState()) {
-          unset($states[$state->sid]);
-        }
-        elseif (($all === FALSE) && !$state->isActive()) {
-          unset($states[$state->sid]);
-        }
-        elseif (($all == 'CREATION') && !$state->isActive()) {
-          unset($states[$state->sid]);
-        }
+      if ($all === TRUE) {
+        $states[$state->sid] = $state;
+      }
+      elseif (($all === FALSE) && ($state->isActive() && !$state->isCreationState())) {
+        $states[$state->sid] = $state;
+      }
+      elseif (($all == 'CREATION') && ($state->isActive() || $state->isCreationState())) {
+        $states[$state->sid] = $state;
       }
     }
     return $states;
@@ -357,7 +398,7 @@ class Workflow extends Entity {
       elseif ($transition->isAllowed($roles)) {
         // Transition is allowed, permitted. Add to list.
         $transition->setWorkflow($this);
-        $transitions[$transition->tid] = clone $transition;
+        $transitions[$transition->tid] = $transition;
       }
     }
     return $transitions;
@@ -467,14 +508,8 @@ class Workflow extends Entity {
   /**
    * Mimics Entity API functions.
    */
-  public function label($langcode = NULL) {
-    return t($this->name, $args = array(), $options = array('langcode' => $langcode));
-  }
   public function getName() {
     return $this->name;
-  }
-  public function value() {
-    return $this->wid;
   }
 
   protected function defaultLabel() {
@@ -483,7 +518,6 @@ class Workflow extends Entity {
 
   protected function defaultUri() {
     return array('path' => 'admin/config/workflow/workflow/' . $this->wid);
-    return array('path' => 'admin/config/workflow/workflow/' . $this->identifier());
   }
 
 }
