@@ -10,7 +10,7 @@
  * Add a "three dimensional" (state, role, permission type) configuration
  * interface to the workflow edit form.
  */
-function workflow_access_form($form, $form_state, $workflow) {
+function workflow_access_form($form, $form_state, $workflow, $op) {
   if (!$workflow) {
     // Leave this page immediately.
     drupal_set_message(t('Unknown workflow'));
@@ -18,9 +18,6 @@ function workflow_access_form($form, $form_state, $workflow) {
   }
 
   drupal_set_title(t('@name Access', array('@name' => $workflow->getName())));
-
-  // Let's add some breadcrumbs.
-  workflow_admin_ui_breadcrumbs($workflow);
 
   $form = array('#tree' => TRUE);
 

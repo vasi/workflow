@@ -6,20 +6,50 @@
 
 /**
  * Implements hook_menu().
+ *
+ * Uses pattern of EntityWorkflowUIController::hook_menu().
  */
 function workflow_access_menu() {
   $items = array();
 
-  $items["admin/config/workflow/workflow/access/%workflow"] = array(
+  $path = 'admin/config/workflow/workflow';
+  $id_count = count(explode('/', $path));
+
+  $items[$path . '/manage/' . '%workflow' . '/access'] = array(
     'title' => 'Access',
     'file' => 'workflow_access.pages.inc',
+    // 'file path' => ''
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_access_form', 5),
-    'type' => MENU_CALLBACK,
+    'page arguments' => array('workflow_access_form', $id_count + 1, $id_count + 2),
+    // 'type' => MENU_CALLBACK,
+    // 'type' => MENU_LOCAL_TASK,
   );
-
   return $items;
+}
+
+/**
+ * Implements hook_workflow_operations().
+ *
+ * Create action link for access form on EntityWorkflowUIController::overviewForm.
+ */
+function workflow_access_workflow_operations($op, $workflow = NULL, $state = NULL) {
+  switch ($op) {
+    case 'workflow':
+      $actions = array();
+      $wid = $workflow->wid;
+
+      $alt = t('Control content access for @wf', array('@wf' => $workflow->getName()));
+      $actions = array(
+        'workflow_access_form' => array(
+          'title' => t('Access'),
+          'href' => "admin/config/workflow/workflow/manage/$wid/access",
+          'attributes' => array('alt' => $alt, 'title' => $alt),
+        ),
+      );
+
+      return $actions;
+  }
 }
 
 /**
@@ -102,27 +132,6 @@ function workflow_access_node_access_explain($row) {
       break;
   }
   return (!empty($interpretations[$row->gid]) ? $interpretations[$row->gid] : NULL);
-}
-
-/**
- * Implements hook_workflow_operations().
- *
- * Create action link for access form.
- */
-function workflow_access_workflow_operations($op, $workflow = NULL, $state = NULL) {
-  switch ($op) {
-    case 'workflow':
-      $alt = t('Control content access for @wf', array('@wf' => $workflow->getName()));
-      $actions = array(
-        'workflow_access_form' => array(
-          'title' => t('Access'),
-          'href' => "admin/config/workflow/workflow/access/$workflow->wid",
-          'attributes' => array('alt' => $alt, 'title' => $alt),
-        ),
-      );
-
-      return $actions;
-  }
 }
 
 /**
