@@ -32,16 +32,6 @@ function workflow_cleanup_form($form, $form_state) {
     }
   }
 
-  // Deal with no orphan states.
-  if (!$orphans) {
-    $orphans[0] = t('None');
-  }
-
-  // Deal with no inactive states.
-  if (!$inactive) {
-    $inactive[0] = $states[0] = t('None');
-  }
-
   $form['#workflow_states'] = $states;
 
   $form['no_workflow'] = array(
@@ -110,7 +100,13 @@ function theme_workflow_cleanup_form($variables) {
 
   $output .= '<h3>' . $form['no_workflow']['#title'] . '</h3>';
   $output .= '<div class="description">' . $form['no_workflow']['#description'] . '</div>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width: auto;')));
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'empty' => 'All states are fine',
+    'attributes' => array('style' => 'width: auto;'),
+  ));
+
 
   $header[] = t('Workflow');
   $rows = array();
@@ -124,7 +120,12 @@ function theme_workflow_cleanup_form($variables) {
 
   $output .= '<h3>' . $form['inactive']['#title'] . '</h3>';
   $output .= '<div class="description">' . $form['inactive']['#description'] . '</div>';
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('style' => 'width: auto;')));
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'empty' => 'All states are fine',
+    'attributes' => array('style' => 'width: auto;'),
+   ));
 
   $output .= drupal_render_children($form);
   return $output;
@@ -136,6 +137,9 @@ function theme_workflow_cleanup_form($variables) {
 function workflow_cleanup_form_submit($form, $form_state) {
   $states = $form['#workflow_states'];
   foreach (array('no_workflow', 'inactive') as $section) {
+    if (!isset($form_state['values'][$section])) {
+      continue;
+    }
     foreach ($form_state['values'][$section] as $sid => $data) {
       // FAPI returns either a 0 or the sid.
       if ($data['check']) {
