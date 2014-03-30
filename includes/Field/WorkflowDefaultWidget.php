@@ -427,7 +427,16 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       }
       else {
         // This may happen if only 1 option is left, and a formatter is shown.
-        $new_sid = $old_sid;
+        $state = workflow_state_load_single($old_sid);
+        if (!$state->isCreationState()) {
+          $new_sid = $old_sid;
+        }
+        else {
+          // This only happens on workflows, when only one transition from
+          // '(creation)' to another state is allowed.
+          $workflow = $state->getWorkflow();
+          $new_sid = $workflow->getFirstSid($items[0]['workflow']['workflow_entity_type'], $items[0]['workflow']['workflow_entity_type']);
+        }
       }
 
       // Remember, the workflow_scheduled element is not set on 'add' page.
