@@ -8,12 +8,6 @@
  * The main cleanup page.
  */
 function workflow_cleanup_form($form, $form_state) {
-  $bc = array(l(t('Home'), '<front>'));
-  $bc[] = l(t('Configuration'), 'admin/config');
-  $bc[] = l(t('Workflow'), 'admin/config/workflow');
-  $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
-  drupal_set_breadcrumb($bc);
-
   $form = array();
 
   // Get all of the states, indexed by sid.

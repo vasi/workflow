@@ -463,3 +463,4 @@ Issue #2128423 by johnv: Fixed small theming thingy in workflow_cleanup.pages.in
 Issue #2187321 by johnv: Added Workflow as an Exportable entity (not complete yet, but allows cloning).
 Issue #2226451 by johnv: Fixed workflow widget when creating a node, and only 1 state allowed: should move node to first state.
 Issue #2226781 by johnv: Changed Workflow Access page to use Entity UI.
+Issue #2226781 by johnv: Changed Workflow Clean up page to use Entity UI.
