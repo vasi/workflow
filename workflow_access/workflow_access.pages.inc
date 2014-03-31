@@ -125,13 +125,8 @@ function workflow_access_form_submit($form, &$form_state) {
     }
 
     // Update all nodes having same workflow state to reflect new settings.
-    foreach (workflow_get_workflow_node_by_sid($sid) as $data) {
-      // Instead of trying to construct what the grants should be per node as we save.
-      // Let's fall back on existing node grant systems that will find it for us.
-      $entity_type = 'node'; // @todo: add support for other entity types in workflow_access_form_submit()
-      $node = node_load($data->nid);
-      node_access_acquire_grants($node);
-    }
+    // just set a flag, which is working for both Workflow Field ánd Workflow Node.
+    node_access_needs_rebuild(TRUE);
   }
 
   drupal_set_message(t('Workflow access permissions updated.'));
