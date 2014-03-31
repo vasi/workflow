@@ -423,33 +423,34 @@ class WorkflowTransition extends Entity {
       }
     }
 
-    // Log the transition in {workflow_node_history}.
     $this->is_executed = TRUE;
-    $this->save();
 
-    // Register state change with watchdog.
-    if ($state_changed && $state = workflow_state_load_single($new_sid)) {
-      if (!empty($workflow->options['watchdog_log'])) {
-        $entity_type_info = entity_get_info($entity_type);
-        $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
-        $args = array(
-          '@type' => $entity_type_info['label'],
-          '%label' => entity_label($entity_type, $entity),
-          '%state_name' => $state->label(),
-        );
-        $uri = entity_uri($entity_type, $entity);
-        watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
-      }
-    }
-
-    // Remove any scheduled state transitions.
-    foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
-      $scheduled_transition->delete();
-    }
-
-    // Notify modules that transition has occurred.
-    // Action triggers should take place in response to this callback, not the 'transaction pre'.
     if ($state_changed || $this->comment) {
+      // Log the transition in {workflow_node_history}.
+      $this->save();
+
+      // Register state change with watchdog.
+      if ($state_changed) {
+        if (($state = workflow_state_load_single($new_sid)) && !empty($workflow->options['watchdog_log'])) {
+          $entity_type_info = entity_get_info($entity_type);
+          $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
+          $args = array(
+            '@type' => $entity_type_info['label'],
+            '%label' => entity_label($entity_type, $entity),
+            '%state_name' => $state->label(),
+          );
+          $uri = entity_uri($entity_type, $entity);
+          watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
+        }
+      }
+
+      // Remove any scheduled state transitions.
+      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
+        $scheduled_transition->delete();
+      }
+
+      // Notify modules that transition has occurred.
+      // Action triggers should take place in response to this callback, not the 'transaction pre'.
       if (!$field_name) {
         // Now that workflow data is saved, reset stuff to avoid problems
         // when Rules etc want to resave the data.
