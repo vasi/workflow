@@ -77,6 +77,7 @@ function workflow_access_node_access_records($node) {
   // Only relevant for content with Workflow.
   if (!isset($node->workflow_transitions)) {
     if (isset($node->workflow)) {
+      $field_name = '';
       // Create a dummy transition, just to set $node->workflow_transitions.
       // This is needed for proper functioning of workflow_access when saving a
       // node with node_save() or on a node view page (so anything that does
@@ -84,7 +85,11 @@ function workflow_access_node_access_records($node) {
       $old_sid = $new_sid = $node->workflow;
       $transition = new WorkflowTransition();
       $transition->setValues('node', $node, '', $old_sid, $new_sid, $node->uid, REQUEST_TIME, '');
-      $transition->execute();
+
+      // Store the transition, so it can be easily fetched later on.
+      // Store in an array, to prepare for multiple workflow_fields per entity.
+      // This is a.o. used in hook_entity_update to trigger 'transition post'.
+      $node->workflow_transitions[$field_name] = $transition;
     }
     else {
       return $grants; // <---- exit !!

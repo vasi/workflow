@@ -464,3 +464,4 @@ Issue #2187321 by johnv: Added Workflow as an Exportable entity (not complete ye
 Issue #2226451 by johnv: Fixed workflow widget when creating a node, and only 1 state allowed: should move node to first state.
 Issue #2226781 by johnv: Changed Workflow Access page to use Entity UI.
 Issue #2226781 by johnv: Changed Workflow Clean up page to use Entity UI.
+Issue #2220065 by zihong0, johnv: Fixed workflow_access_node_access_records() is not called from node_save().
