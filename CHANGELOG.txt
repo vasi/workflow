@@ -467,3 +467,4 @@ Issue #2226781 by johnv: Changed Workflow Clean up page to use Entity UI.
 Issue #2220065 by zihong0, johnv: Fixed workflow_access_node_access_records() is not called from node_save().
 Issue #2220065 by johnv: Fixed better filters WorkflowTransition->execute().
 Issue #2209359 by johnv: Fixed submitting workflow access settings, does not trigger access rebuild for workflow_field.
+Issue #2209359 by johnv: Fixed better UX for workflow_access pages, and removing a hook for better performance.
