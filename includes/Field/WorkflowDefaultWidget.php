@@ -130,7 +130,9 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
-    $form_id = $form_state['build_info']['form_id'];
+    // Make it uniquer by adding the field name, or else the scheduling of
+    // multiple workflow_fields is not indendent.
+    $form_id = $form_state['build_info']['form_id'] . '_' . $field_name;
 
     // Prepare a wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container'; // 'fieldset';

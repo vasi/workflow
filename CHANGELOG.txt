@@ -470,3 +470,4 @@ Issue #2209359 by johnv: Fixed submitting workflow access settings, does not tri
 Issue #2209359 by johnv: Fixed better UX for workflow_access pages, and removing a hook for better performance.
 Issue #2230833 by johnv: Fixed deleting/fetching ScheduledTransitions, when having multiple workflow_fields per node.
 Issue #2226781 by johnv: Fixed parameters of workflow_admin_ui_edit_form_validate().
+Issue #2230833 by johnv: Fixed showing ScheduledTransitions, when having multiple workflow_fields per node.
