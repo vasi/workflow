@@ -314,22 +314,18 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
    * Implements hook_field_delete() -> FieldItemInterface::delete()
    */
   public function delete($items) {
-   global $user;
+    global $user;
 
     $entity_type = $this->entity_type;
     $entity = $this->entity;
     $entity_id = entity_id($entity_type, $entity);
-
     $field_name = $this->field['field_name'];
-    $old_sid = _workflow_get_sid_by_items($items);
-    $new_sid = (int) WORKFLOW_DELETION;
-    $comment = t('Entity deleted.');
 
-    if (!$field_name) {
-      // Delete the association of node to state.
-      workflow_delete_workflow_node_by_nid($entity_id);
-    }
+    // Delete the record in {workflow_node} - not for Workflow Field.
+    // Use a one-liner for better code analysis when grepping on old code.
+    (!$field_name) ? workflow_delete_workflow_node_by_nid($entity_id) : NULL ;
 
+    // Add a history record in {workflow_node_history}.
     // @see drupal.org/node/2165349, comment by Bastlynn:
     // The reason for this history log upon delete is because Workflow module
     // has historically been used to track node states and accountability in
@@ -340,12 +336,17 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // However, a deleted nid may be re-used under certain circumstances: 
     // e.g., working with InnoDB or after restart the DB server.
     // This may cause that old history is associated with a new node.
+    $old_sid = _workflow_get_sid_by_items($items);
+    $new_sid = (int) WORKFLOW_DELETION;
+    $comment = t('Entity deleted.');
     $transition = new WorkflowTransition();
     $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
     $transition->save();
 
-    // Delete any scheduled transitions for this node.
-    WorkflowScheduledTransition::deleteById($entity_type, $entity_id);
+    // Delete all records for this node in {workflow_scheduled_transition}.
+    foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
+      $scheduled_transition->delete();
+    }
   }
 
   /*

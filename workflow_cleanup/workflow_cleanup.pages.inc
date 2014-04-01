@@ -148,7 +148,7 @@ function workflow_cleanup_form_submit($form, $form_state) {
         }
 
         // Remove history records too.
-        $hist_del = WorkflowTransition::deleteMultiple(array('sid' => $sid));
+        $hist_del = db_delete('workflow_node_history')->condition('sid', $sid)->execute();
         if ($hist_del) {
           drupal_set_message(t('@count history records for the "@state" state have been deleted.',
             array('@state' => $state_name, '@count' => $hist_del)));

@@ -468,3 +468,4 @@ Issue #2220065 by zihong0, johnv: Fixed workflow_access_node_access_records() is
 Issue #2220065 by johnv: Fixed better filters WorkflowTransition->execute().
 Issue #2209359 by johnv: Fixed submitting workflow access settings, does not trigger access rebuild for workflow_field.
 Issue #2209359 by johnv: Fixed better UX for workflow_access pages, and removing a hook for better performance.
+Issue #2230833 by johnv: Fixed deleting/fetching ScheduledTransitions, when having multiple workflow_fields per node.

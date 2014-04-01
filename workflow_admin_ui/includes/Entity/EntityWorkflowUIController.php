@@ -26,8 +26,6 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     // $workflow_operations = module_invoke_all('workflow_operations', 'workflow', NULL);
 
     $item = array(
-      'file' => 'workflow_admin_ui.pages.inc',
-      'file path' => 'workflow/workflow_admin_ui',
       'file' => $this->entityInfo['admin ui']['file'],
       'file path' => isset($this->entityInfo['admin ui']['file path']) ? $this->entityInfo['admin ui']['file path'] : drupal_get_path('module', $this->entityInfo['module']),
       'access arguments' => array('administer workflow'),

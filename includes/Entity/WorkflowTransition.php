@@ -3,61 +3,9 @@
 /**
  * @file
  * Contains workflow\includes\Entity\WorkflowTransition.
- * Contains workflow\includes\Entity\WorkflowTransitionController.
  *
  * Implements (scheduled/executed) state transitions on entities.
  */
-
-/**
- * Implements a controller class for WorkflowTransition.
- *
- * The 'true' controller class is 'Workflow'.
- */
-class WorkflowTransitionController extends EntityAPIController {
-
-  /**
-   * Overrides DrupalDefaultEntityController::cacheGet()
-   * 
-   * Override default function, due to core issue #1572466.
-   */
-  protected function cacheGet($ids, $conditions = array()) {
-    // Load any available entities from the internal cache.
-    if ($ids === FALSE && !$conditions) {
-      return $this->entityCache;
-    }
-    return parent::cacheGet($ids, $conditions);
-  }
-
-  /**
-   * Insert (no update) a transition.
-   *
-   * @deprecated workflow_insert_workflow_node_history() --> WorkflowTransition::save()
-   */
-  public function save($entity, DatabaseTransaction $transaction = NULL) {
-    // Check for no transition.
-    if ($entity->old_sid == $entity->new_sid) {
-      if (!$entity->comment) {
-        // Write comment into history though.
-        return;
-      }
-    }
-
-    // Make sure we haven't already inserted history for this update.
-    $last_history = workflow_transition_load_single($entity->entity_type, $entity->entity_id, $entity->field_name, $limit = 1);
-    if ($last_history &&
-        $last_history->stamp == REQUEST_TIME &&
-        $last_history->new_sid == $entity->new_sid) {
-      return;
-    }
-
-    unset($entity->hid);
-    $entity->stamp = REQUEST_TIME;
-
-    return parent::save($entity, $transaction);
-  }
-
-}
-
 
 /**
  * Implements an actual Transition.
@@ -164,14 +112,6 @@ class WorkflowTransition extends Entity {
     $this->new_sid = $this->sid;
   }
 
-  /**
-   * Permanently deletes the entity.
-   */
-//  public function delete() {
-//    return parent::delete();
-//  }
-
-
   protected function defaultLabel() {
     return ''; // $this->title;
   }
@@ -218,35 +158,6 @@ class WorkflowTransition extends Entity {
     $result = $query->execute()->fetchAll(PDO::FETCH_CLASS, 'WorkflowTransition');
 
     return $result;
-  }
-
-  /**
-   * Given a Condition, delete transitions for it.
-   * @todo: find a way to make $table automatically set for this class and its subclasses,
-   *  so we do not need to override it.
-   */
-  public static function deleteMultiple(array $conditions, $table = 'workflow_node_history') {
-    if (count($conditions) == 0) {
-      return 0;
-    }
-    $query = db_delete($table);
-    foreach ($conditions as $field_name => $value) {
-      $query->condition($field_name, $value);
-    }
-    return $query->execute();
-  }
-
-  /**
-   * Given an Entity, delete transitions for it.
-   *
-   * @todo: With Field API, having multiple workflow_fields, both are deleted :-( .
-   */
-  public static function deleteById($entity_type, $entity_id) {
-    $conditions = array(
-      'entity_type' => $entity_type,
-      'nid' => $entity_id,
-    );
-    return self::deleteMultiple($conditions);
   }
 
   /**

@@ -635,9 +635,9 @@ function workflow_insert_workflow_scheduled_transition($data) {
  * @deprecated: workflow_delete_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::delete()
  *        It is still used in workflow_execute_transition().
  */
-function workflow_delete_workflow_scheduled_transition_by_nid($nid) {
-  return WorkflowScheduledTransition::deleteById('node', $nid);
-}
+// function workflow_delete_workflow_scheduled_transition_by_nid($nid) {
+//   return WorkflowScheduledTransition::deleteById('node', $nid);
+// }
 
 /**
  * Deprecated functions related to table {workflow_node_history}.
