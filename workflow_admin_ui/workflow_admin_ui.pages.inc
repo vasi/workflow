@@ -73,7 +73,7 @@ function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op)
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save configuration'),
+    '#value' => t('Save'),
     '#submit' => array('workflow_admin_ui_edit_form_submit'),
     '#validate' => array('workflow_admin_ui_edit_form_validate'),
     '#weight' => 15,
@@ -271,15 +271,14 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
       '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
     );
     watchdog('workflow', 'Created workflow %name', $args);
-    drupal_set_message(t('The workflow %name was created. Please maintain the settings.', $args), 'status');
-
-    // This redirect is needed, when changing the workflow name, with name in URL.
-    // Also for cloning a workflow.
-    $form_state['redirect'] = 'admin/config/workflow/workflow/manage' .  $workflow->wid;
+    drupal_set_message(t('The workflow %name was created. Please maintain the states and transitions.', $args), 'status');
   }
   else {
     drupal_set_message(t('The workflow was updated.'));
   }
+  // This redirect is needed, when changing the workflow name, with name in URL.
+  // Also for cloning a workflow.
+  $form_state['redirect'] = 'admin/config/workflow/workflow/manage/' .  $workflow->wid;
 }
 
 /**
@@ -312,7 +311,7 @@ function workflow_admin_ui_transitions_form($form, &$form_state, $workflow, $op)
       '#value' => $workflow,
     );
     $form['transitions'] = _workflow_admin_ui_transition_grid_form($form, $form_state, $workflow);
-    $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+    $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
 
     return $form;
   }
