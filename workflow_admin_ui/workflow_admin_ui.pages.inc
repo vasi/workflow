@@ -215,7 +215,7 @@ function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op)
 /**
  * Validate the workflow edit/add form.
  */
-function workflow_admin_ui_edit_form_validate($form_id, $form_state) {
+function workflow_admin_ui_edit_form_validate($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
   $name = $form_state['values']['wf_name'];
 
