@@ -472,3 +472,4 @@ Issue #2230833 by johnv: Fixed deleting/fetching ScheduledTransitions, when havi
 Issue #2226781 by johnv: Fixed parameters of workflow_admin_ui_edit_form_validate().
 Issue #2230833 by johnv: Fixed showing ScheduledTransitions, when having multiple workflow_fields per node.
 Issue #2226781 by johnv: Fixed screen flow of workflow_admin_ui_edit_form().
+Issue #2209359 by johnv: Fixed workflow_access_node_access_records() in case of Access Rebuild of Workflow Fields.

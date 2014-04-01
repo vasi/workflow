@@ -114,23 +114,28 @@ function workflow_access_node_access_records($node) {
 
   // Only relevant for content with Workflow.
   if (!isset($node->workflow_transitions)) {
-    if (isset($node->workflow)) {
-      $field_name = '';
+    // Sometimes, a node is saved without going through workflow_transition_form.
+    // E.g., 
+    // - when saving a node with workflow_node programmatically with node_save();
+    // - when changing a state on a node view page/history tab;
+    // - when rebuilding permissions via batch for workflow_node and workflow_field.
+    // In that case, we need to create the workflow_transions ourselves to
+    // calculate the grants.
+    foreach( $fields = _workflow_get_workflow_field_info($node, 'node') as $field_name => $field) {
       // Create a dummy transition, just to set $node->workflow_transitions.
-      // This is needed for workflow_access with Workflow Node:
-      // - when saving a node with node_save()
-      // - when changing a state on a node view page/history tab
-      $old_sid = $new_sid = $node->workflow;
+      if (isset($node->workflow)) {
+        $old_sid = $new_sid = $node->workflow;
+      }
+      else {
+        $old_sid = $new_sid = $node->{$field_name};
+      }
       $transition = new WorkflowTransition();
-      $transition->setValues('node', $node, '', $old_sid, $new_sid, $node->uid, REQUEST_TIME, '');
+      $transition->setValues('node', $node, $field_name, $old_sid, $new_sid, $node->uid, REQUEST_TIME, '');
 
       // Store the transition, so it can be easily fetched later on.
       // Store in an array, to prepare for multiple workflow_fields per entity.
       // This is a.o. used in hook_entity_update to trigger 'transition post'.
       $node->workflow_transitions[$field_name] = $transition;
-    }
-    else {
-      return $grants; // <---- exit !!
     }
   }
 
@@ -150,6 +155,7 @@ function workflow_access_node_access_records($node) {
           'grant_update' => $grant->grant_update,
           'grant_delete' => $grant->grant_delete,
           'priority' => variable_get('workflow_access_priority', 0),
+          'field_name' => $field_name, // Just for analysis and info.
         );
       }
     }

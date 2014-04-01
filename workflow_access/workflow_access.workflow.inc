@@ -26,9 +26,13 @@ function workflow_access_workflow($op, $id, $new_sid, $entity, $force, $entity_t
   //
   switch ($op) {
     case 'transition post':
-      // node_access functions are only for nodes.
-      if ($entity_type == 'node' && $old_state = workflow_state_load_single($id)) {
-        if ($id != $new_sid && (empty($entity->is_new) || !$entity->is_new)) {
+      // This is only used for Workflor Node.
+      // In some other location, we make sure that 'transition post' is only
+      // called for Workflow Node, never for Workflow Field. We do not need
+      // that hook, since you can use the event 'entity_save' and 'entity_pre_save'.
+      // Node_access functions are only for nodes with a state change and a valid new state.
+      if ($entity_type == 'node' && ($id != $new_sid) && $old_state = workflow_state_load_single($id)) {
+        if ((empty($node->is_new) || !$node->is_new)) {
           node_access_acquire_grants($entity);
         }
       }
