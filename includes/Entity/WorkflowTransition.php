@@ -255,7 +255,15 @@ class WorkflowTransition extends Entity {
     );
 
     $old_state = workflow_state_load_single($old_sid);
-    $workflow = $old_state->getWorkflow();
+    if (!$old_state) {
+      drupal_set_message($message = t('You tried to set a Workflow State, but
+        the entity is not relevant. Please contact your system administrator.'),
+                         $type = 'error');
+      $message = 'Setting a non-relevant Entity from state %old to %new';
+      $uri = entity_uri($entity_type, $entity);
+      watchdog('workflow', $message, $args, WATCHDOG_ERROR, l('view', $uri['path']));
+      return $old_sid;
+    }
 
     // Check if the state has changed. If not, we only record the comment.
     $state_changed = ($old_sid != $new_sid);
@@ -345,6 +353,7 @@ class WorkflowTransition extends Entity {
 
       // Register state change with watchdog.
       if ($state_changed) {
+        $workflow = $old_state->getWorkflow();
         if (($state = workflow_state_load_single($new_sid)) && !empty($workflow->options['watchdog_log'])) {
           $entity_type_info = entity_get_info($entity_type);
           $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
@@ -391,7 +400,9 @@ class WorkflowTransition extends Entity {
   }
 
   /**
-   * Invokes 'transition post''.
+   * Invokes 'transition post'.
+   *
+   * Add the possibility to invoke the hook from elsewhere.
    */
   public function post_execute($force = FALSE) {
     $old_sid = $this->old_sid;
