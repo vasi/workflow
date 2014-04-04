@@ -107,13 +107,14 @@ function workflow_access_node_grants($account, $op) {
  * Implements hook_node_access_records().
  *
  * Returns a list of grant records for the passed in node object.
- * @todo: support Workflow Field.
+ * This hook is invoked by function node_access_acquire_grants().
  */
 function workflow_access_node_access_records($node) {
   $grants = array();
 
   // Only relevant for content with Workflow.
   if (!isset($node->workflow_transitions)) {
+    $node->workflow_transitions = array();
     // Sometimes, a node is saved without going through workflow_transition_form.
     // E.g., 
     // - when saving a node with workflow_node programmatically with node_save();

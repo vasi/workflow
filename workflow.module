@@ -10,6 +10,8 @@ define('WORKFLOW_CREATION_STATE_NAME', '(creation)');
 define('WORKFLOW_DELETION', 0);
 define('WORKFLOW_ROLE_AUTHOR_RID', '-1');
 define('WORKFLOW_ROLE_AUTHOR_NAME', 'author');
+// The definition of the Field_info property type. Shared between 'workflow_field' and 'workflow_rules'.
+define('WORKFLOWFIELD_PROPERTY_TYPE', 'text'); // 'list', 'text' or 'workflow'?
 
 // Add entity support file.
 module_load_include('inc', 'workflow', 'workflow.entity');
