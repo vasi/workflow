@@ -474,3 +474,4 @@ Issue #2230833 by johnv: Fixed showing ScheduledTransitions, when having multipl
 Issue #2226781 by johnv: Fixed screen flow of workflow_admin_ui_edit_form().
 Issue #2209359 by johnv: Fixed workflow_access_node_access_records() in case of Access Rebuild of Workflow Fields.
 Issue #2209359 by johnv: Fixed error message in workflow_access.
+Issue #2019345 by johnv: Added parameter 'transition' to hook_workflow().

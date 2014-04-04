@@ -240,6 +240,9 @@ class WorkflowTransition extends Entity {
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
+    // Make sure this is set in the transition, too.
+    $this->force = $force;
+
     // Store the transition, so it can be easily fetched later on.
     // Store in an array, to prepare for multiple workflow_fields per entity.
     // This is a.o. used in hook_entity_update to trigger 'transition post'.
@@ -293,7 +296,7 @@ class WorkflowTransition extends Entity {
     if ($state_changed) {
       // Invoke a callback indicating a transition is about to occur.
       // Modules may veto the transition by returning FALSE.
-      $permitted = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      $permitted = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
       // Stop if a module says so.
       if (in_array(FALSE, $permitted, TRUE)) {
         watchdog('workflow', 'Transition vetoed by module.');
@@ -367,11 +370,11 @@ class WorkflowTransition extends Entity {
         // when Rules etc want to resave the data.
         // Remember, this is only for nodes, and node_save() is not necessarily performed.
         unset($entity->workflow_comment);
-        module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+        module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
         entity_get_controller('node')->resetCache(array($entity->nid)); // from entity_load(), node_save();
       }
       else {
-        // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+        // module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
         // We have a problem here with Rules, Trigger, etc. when invoking
         // 'transition post': the entity has not been saved, yet. we are still
         // IN the transition, not AFTER. Alternatives:
@@ -400,7 +403,7 @@ class WorkflowTransition extends Entity {
 
     $state_changed = ($old_sid != $new_sid);
     if ($state_changed || $this->comment) {
-      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+      module_invoke_all('workflow', 'transition post', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
     }
   }
 

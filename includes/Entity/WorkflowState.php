@@ -362,6 +362,7 @@ class WorkflowState {
       $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
       foreach ($transitions as $transition) {
         $new_sid = $transition->target_sid;
+        // $field_name = $transition->field_name; // @todo: add $field_name.
 
         // We now have a list of config_transitions. Check them against the Entity.
         // Invoke a callback indicating that we are collecting state choices.
@@ -372,7 +373,7 @@ class WorkflowState {
           $permitted = array();
         }
         else {
-          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = ''); // @todo: add $field_name.
+          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = '', $transition); // @todo: add $field_name.
         }
         // Stop if a module says so.
         if (!in_array(FALSE, $permitted, TRUE)) {

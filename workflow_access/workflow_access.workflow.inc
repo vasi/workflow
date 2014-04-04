@@ -10,7 +10,7 @@
  * Update grants when a node changes workflow state.
  * This is already called when node_save is called.
  */
-function workflow_access_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '') {
+function workflow_access_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '', $transition = NULL) {
   // ALERT:
   // This is a tricky spot when called on node_insert as part of the transition from create to state1.
   // node_save invokes this function as a hook before calling node_access_acquire_grants.

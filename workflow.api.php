@@ -27,11 +27,14 @@
  * @param string $field_name
  *   The name of the Workflow Field. Empty in case of Workflow Node.
  *   This is used when saving a state change of a Workflow Field.
+ * @param $transition
+ *   The transition, that contains all of the above.
+ *    @todo D8: remove all other paramters.
  *
  * @return
  *   Only 'transition permitted' expects a boolean result.
  */
-function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '') {
+function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '', $transition = NULL) {
   switch ($op) {
     case 'transition permitted':
       // This operation is called in the following situations: 
