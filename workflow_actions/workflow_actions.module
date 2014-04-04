@@ -237,7 +237,7 @@ function _workflow_actions_do($transition) {
     if ($aids) {
       $context = array(
         'hook' => $hook,
-//        'entity_type' => $entity_type,
+        'entity_type' => $entity_type,
       );
       // We need to get the expected object if the action's type is not 'node'.
       // We keep the object in $objects so we can reuse it if we have
