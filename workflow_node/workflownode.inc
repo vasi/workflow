@@ -144,7 +144,7 @@ function workflow_node_delete($node) {
   if (!empty($node->workflow)) {
     // Call field_info_field().
     // Generates pseudo data for workflow_node to re-use Field API.
-    $field = _workflow_info_field($field_name, $workflow);
+    $field = _workflow_info_field($field_name = '', $workflow = NULL);
     $instance = array();
 
     $workflow_field = new WorkflowItem($field, $instance, 'node', $node);

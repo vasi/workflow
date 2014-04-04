@@ -494,8 +494,7 @@ class Workflow extends Entity {
       // @todo D8: Remove, after converting workflow node to workflow field.
       $workflow = &$this;
 
-      // Call field_info_field().
-      // Generates pseudo data for workflow_node to re-use Field API.
+      // Call a field_info_field-wrapper, hiding differences between workflow_node and workflow_field.
       $field = _workflow_info_field($field_name, $workflow);
       $instance = array();
 

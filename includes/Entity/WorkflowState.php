@@ -409,11 +409,11 @@ class WorkflowState {
    *
    * @return integer
    *  counted number.
-   * @todo: add $options, to select on entity type, etc.
+   * @todo: add $options to select on entity type, etc.
    */
   public function count() {
     $sid = $this->sid;
-    // Get the number for Workflow Node.
+    // Get the numbers for Workflow Node.
     $result = db_select('workflow_node', 'wn')
       ->fields('wn')
       ->condition('sid', $sid,'=')
@@ -421,13 +421,13 @@ class WorkflowState {
     $count = $result->rowCount();
 
     // Get the numbers for Workflow Field.
-    $fields = field_info_field_map();
+    $fields = _workflow_info_fields($entity = NULL, $entity_type = '');
     foreach ($fields as $field_name => $field_map) {
       if ($field_map['type'] == 'workflow') {
         $query = new EntityFieldQuery();
         $query
           ->fieldCondition($field_name, 'value', $sid, '=')
-          //->entityCondition('bundle', 'article')
+          // ->entityCondition('bundle', 'article')
           // ->addMetaData('account', user_load(1)) // Run the query as user 1.
           ->count(); // We only need the count.
 

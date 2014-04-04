@@ -83,7 +83,7 @@ function workflow_vbo_given_state_action_form(array $context) {
     // But this is not reliable, if you have no fields to show.
     // So, last resort, just fetch from database/cache.
     $entity = entity_load_single($entity_type, $entity_data->{$entity_key});
-    $fields = _workflow_get_workflow_field_info($entity, $entity_type);
+    $fields = _workflow_info_fields($entity, $entity_type);
     if (count($fields)) {
       $field = reset($fields);
       $field_name = $field['field_name'];

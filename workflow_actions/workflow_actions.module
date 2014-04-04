@@ -115,20 +115,7 @@ function workflow_actions_trigger_info() {
     $type_map[$wid][] = array('entity_type' => 'node', 'bundle' => $type);
   }
 
-  // Get the mapping for Field API. Use 7.22 Field Info API.
-  if (function_exists('field_info_field_map')) {
-    // Only available as of D7.22
-    $fields = field_info_field_map();
-    foreach ($fields as $field_name => $field) {
-      if ($field['type'] == 'workflow') {
-        $fields[$field_name] = field_info_field($field_name);
-      }
-    }
-  }
-  else {
-    $fields = field_info_fields();
-  }
-
+  $fields = _workflow_info_fields($entity = NULL, $entity_type = '');
   foreach ($fields as $field_name => $field) {
     if ($field['type'] == 'workflow') {
       foreach ($field['bundles'] as $entity_type => $bundles) {

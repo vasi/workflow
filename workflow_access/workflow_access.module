@@ -122,7 +122,7 @@ function workflow_access_node_access_records($node) {
     // - when rebuilding permissions via batch for workflow_node and workflow_field.
     // In that case, we need to create the workflow_transions ourselves to
     // calculate the grants.
-    foreach( $fields = _workflow_get_workflow_field_info($node, 'node') as $field_name => $field) {
+    foreach ($fields = _workflow_info_fields($node, 'node') as $field_name => $field) {
       // Create a dummy transition, just to set $node->workflow_transitions.
       if (isset($node->workflow)) {
         $old_sid = $new_sid = $node->workflow;

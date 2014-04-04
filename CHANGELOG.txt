@@ -478,3 +478,5 @@ Issue #2019345 by johnv: Added parameter 'transition' to hook_workflow().
 Issue #2019345 by johnv: Added error message when setting state on non-relevant entity.
 Issue #2209359 by johnv: Fixed error in workflow_actions with workflow_field and workflow_access enabled.
 Issue #2229635 by johnv: Fixed Undefined index: entity_type in workflow_vbo_next_state_action().
+Issue #2231903 by johnv: Fixed usage of field_info_field_map() under D7.22.
+
