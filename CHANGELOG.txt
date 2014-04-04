@@ -476,3 +476,4 @@ Issue #2209359 by johnv: Fixed workflow_access_node_access_records() in case of 
 Issue #2209359 by johnv: Fixed error message in workflow_access.
 Issue #2019345 by johnv: Added parameter 'transition' to hook_workflow().
 Issue #2019345 by johnv: Added error message when setting state on non-relevant entity.
+Issue #2209359 by johnv: Fixed error in workflow_actions with workflow_field and workflow_access enabled.
