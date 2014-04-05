@@ -478,33 +478,6 @@ class Workflow extends Entity {
   }
 
   /**
-   * Helper function for workflow_get_workflows_by_type().
-   *
-   * Get/set the Item of a particular Workflow.
-   * It loads the Workflow object with the particular Field Instance data.
-   * @todo 1: this is not robust: 1 Item has 1 Workflow; 1 Workflow may have N Items (fields)
-   * @todo 2: find other solution.
-   */
-  public function getWorkflowItem(WorkflowItem $item = NULL, $entity_type = '', $entity_bundle = '', $field_name = '') {
-    if ($item) {
-      $this->item = $item;
-    }
-    if (empty($this->item)) {
-      // This is for Workflow Node. Emulate a Field API interface.
-      // @todo D8: Remove, after converting workflow node to workflow field.
-      $workflow = &$this;
-
-      // Call a field_info_field-wrapper, hiding differences between workflow_node and workflow_field.
-      $field = _workflow_info_field($field_name, $workflow);
-      $instance = array();
-
-      $this->item = new WorkflowItem($field, $instance);
-    }
-
-    return $this->item;
-  }
-
-  /**
    * Mimics Entity API functions.
    */
   public function getName() {

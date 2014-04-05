@@ -480,3 +480,4 @@ Issue #2209359 by johnv: Fixed error in workflow_actions with workflow_field and
 Issue #2229635 by johnv: Fixed Undefined index: entity_type in workflow_vbo_next_state_action().
 Issue #2231903 by johnv: Fixed usage of field_info_field_map() under D7.22.
 Issue #2168197 by johnv: Fixed support of VBO 'modify entity values' for workflow_field.
+Issue #2102409 by johnv: Removed $workflow->getWorkfowItem() c.s., which is not needed anymore.

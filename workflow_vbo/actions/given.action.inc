@@ -113,9 +113,12 @@ function workflow_vbo_given_state_action_form(array $context) {
   // Show the current state and the Workflow form to allow state changing.
   // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo.
   if ($workflow) {
-    $workflow_item = $workflow->getWorkflowItem(NULL, $entity_type, $entity_bundle, $field_name);
-    $field = $workflow_item->getField();
-    $instance = $workflow_item->getInstance();
+    $field = _workflow_info_field($field_name, $workflow);
+    // $field = reset(_workflow_info_fields($entity, $entity_type));
+    $field_name = $field['field_name'];
+    $field_id = $field['id'];
+    $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
+
     // Hide the submit button. VBO has its own 'next' button.
     $instance['widget']['settings']['submit_function'] = '';
     if (!$field['id']) {
@@ -132,9 +135,6 @@ function workflow_vbo_given_state_action_form(array $context) {
   // Add the form/widget to the formatter, and include the nid and field_id in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for WorkflowDefaultWidget.
-  // $field_name = $field['field_name'];
-  $field_id = $field['id'];
-
   // $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
   $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
 

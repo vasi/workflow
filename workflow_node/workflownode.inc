@@ -59,9 +59,11 @@ function workflow_node_load($nodes, $types) {
  */
 function workflow_node_view($node, $view_mode, $langcode) {
   $entity_type = 'node'; // This hook is only for nodes.
+  $field_name = ''; // This hook is only for workflow_node.
+  $entity_bundle = $node->type;
 
   // Skip if there are no Node API workflows.
-  if (!workflow_get_workflow_type_map_by_type($node->type)) {
+  if (!workflow_get_workflow_type_map_by_type($entity_bundle)) {
     return;
   }
 
@@ -83,9 +85,12 @@ function workflow_node_view($node, $view_mode, $langcode) {
     // Show the current state and the Workflow form to allow state changing.
     // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo.
     if ($workflow) {
-      $workflow_item = $workflow->getWorkflowItem();
-      $field = $workflow_item->getField();
-      $instance = $workflow_item->getInstance();
+      $field = _workflow_info_field($field_name, $workflow);
+      // $field = reset(_workflow_info_fields($entity, $entity_type));
+      // $field_name = $field['field_name'];
+      $field_id = $field['id'];
+      $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
+
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
         $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
@@ -146,10 +151,9 @@ function workflow_node_delete($node) {
     // Generates pseudo data for workflow_node to re-use Field API.
     $field = _workflow_info_field($field_name = '', $workflow = NULL);
     $instance = array();
-
-    $workflow_field = new WorkflowItem($field, $instance, 'node', $node);
     $items[0]['value'] = $node->workflow;
 
+    $workflow_field = new WorkflowItem($field, $instance, 'node', $node);
     $workflow_field->delete($items);
   }
 }
@@ -260,6 +264,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
   $bundle = $node->type;
   $entity = $node;
   $entity_type = 'node';
+  $field_name = '';
 
   // Skip if there are no Node API workflows.
   if (!workflow_get_workflow_type_map_by_type($bundle)) {
@@ -287,9 +292,12 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
     // Show the current state and the Workflow form to allow state changing.
     // N.B. This part is replicated in hook_node_view and workflow_tab_page.
     if ($workflow) {
-      $workflow_item = $workflow->getWorkflowItem();
-      $field = $workflow_item->getField();
-      $instance = $workflow_item->getInstance();
+      $field = _workflow_info_field($field_name, $workflow);
+      // $field = reset(_workflow_info_fields($entity, $entity_type));
+      $field_name = $field['field_name'];
+      $field_id = $field['id'];
+      $instance = field_info_instance($entity_type, $field_name, $bundle);
+
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
         $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
