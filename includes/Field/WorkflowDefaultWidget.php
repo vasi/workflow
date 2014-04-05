@@ -80,10 +80,20 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
     $settings_options_type = $field['settings']['widget']['options'];
-    // The schedule can be hidden via field settings,
-    // and cannot be shown on a Content add page (no $entity_id),
-    // but can be shown on a VBO page (no entity).
-    $settings_schedule = !empty($field['settings']['widget']['schedule']) && !($entity && !$entity_id);
+    // The schedule can be hidden via field settings, ...
+    $settings_schedule = !empty($field['settings']['widget']['schedule']);
+    if ($settings_schedule) {
+      if (isset($form_state['step']) && ($form_state['step'] == 'views_bulk_operations_config_form')) {
+        // On VBO 'modify entity values' form, leave field settings.
+        $settings_schedule = TRUE;
+      }
+      else {
+        // ... and cannot be shown on a Content add page (no $entity_id),
+        // ...but can be shown on a VBO 'set workflow state to..'page (no entity).
+        $settings_schedule = !($entity && !$entity_id);
+      }
+    }
+
     $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
