@@ -6,10 +6,12 @@
 
 define('WORKFLOW_CREATION', 1);
 define('WORKFLOW_CREATION_DEFAULT_WEIGHT', -50);
-define('WORKFLOW_CREATION_STATE_NAME', '(creation)');
 define('WORKFLOW_DELETION', 0);
+// Couldn't find a more elegant way to preserve translation.
+define('WORKFLOW_CREATION_STATE_NAME', '(' . t('creation') . ')');
+define('WORKFLOW_ROLE_AUTHOR_NAME', '(' . t('author') . ')');
 define('WORKFLOW_ROLE_AUTHOR_RID', '-1');
-define('WORKFLOW_ROLE_AUTHOR_NAME', 'author');
+
 // The definition of the Field_info property type. Shared between 'workflow_field' and 'workflow_rules'.
 define('WORKFLOWFIELD_PROPERTY_TYPE', 'text'); // 'list', 'text' or 'workflow'?
 
