@@ -391,7 +391,7 @@ class WorkflowTransition extends Entity {
         // 2. Move the invoke to another place: hook_entity_insert(), hook_entity_update();
         // 3. Rely on the entity hooks. This works for Rules, not for Trigger.
         // --> We choose option 2.
-        //  - first, $entity->workflow_fields[] is set for easy re-fetching.
+        //  - first, $entity->workflow_transitions[] is set for easy re-fetching.
         //  - then, post_execute() is invoked via workflowfield_entity_insert(), _update().
       }
     }

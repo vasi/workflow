@@ -482,3 +482,4 @@ Issue #2231903 by johnv: Fixed usage of field_info_field_map() under D7.22.
 Issue #2168197 by johnv: Fixed support of VBO 'modify entity values' for workflow_field.
 Issue #2102409 by johnv: Removed $workflow->getWorkfowItem() c.s., which is not needed anymore.
 Issue #1649216 by johnv: Changed display of 'author' and 'creation' on admin pages, to avoid confusion when 'autor' role is defined. 
+Issue #2019345 by johnv: Added error message when used workflow is deleted.

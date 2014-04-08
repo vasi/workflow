@@ -988,6 +988,9 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
   if ($workflow) {
     $sid = $workflow->getCreationSid();
   }
+  else {
+    drupal_set_message(t('Workflow !wid cannot be loaded. Contact your system administrator.', array('!wid' => $wid)), $type = 'error');
+  }
   return $sid;
 }
 
