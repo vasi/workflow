@@ -166,14 +166,20 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       '#default_value' => $settings['widget']['schedule_timezone'],
     );
     $element['widget']['comment'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t('Allow adding a comment to workflow transitions.'),
       '#required' => FALSE,
+      '#options' => array(
+        // Use 0/1/2 to stay compatible with previous checkbox.
+        0 => t('hidden'),
+        1 => t('optional'),
+        2 => t('required'),
+      ),
       '#default_value' => $settings['widget']['comment'],
       '#description' => t('On the Workflow form, a Comment form can be included
         so that the person making the state change can record reasons for doing
         so. The comment is then included in the node\'s workflow history. This
-        may be hidden by settings in widgets, formatters or permissions.'
+        may be altered by settings in widgets, formatters or permissions.'
       ),
     );
 

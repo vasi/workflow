@@ -93,7 +93,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-        $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab']; 
         $field['settings']['widget']['current_status'] = FALSE;
       }
     }
@@ -300,7 +300,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
 
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-        $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_node']); // vs. ['comment_log_tab']; 
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab']; 
         $field['settings']['widget']['current_status'] = TRUE;
       }
     }

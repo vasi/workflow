@@ -153,23 +153,41 @@ function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op)
   );
 
   $form['comment']['comment_log_node'] = array(
-    '#type' => 'radios',
-    '#options' => $noyes,
+    '#type' => 'select',
+    '#required' => FALSE,
+    '#options' => array(
+      // Use 0/1/2 to stay compatible with previous checkbox.
+      0 => t('hidden'),
+      1 => t('optional'),
+      2 => t('required'),
+    ),
     '#attributes' => array('class' => array('container-inline')),
     '#title' => t('Show a comment field in the workflow section of the editing form?'),
     '#default_value' => isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 0,
-    '#description' => t('On the node editing form, a Comment form can be shown so that the person making the state change can record ' .
-      'reasons for doing so. The comment is then included in the node\'s workflow history.'),
+    '#description' => t(
+      'On the node editing form, a Comment form can be shown so that the person
+      making the state change can record reasons for doing so. The comment is
+      then included in the node\'s workflow history.'
+    ),
   );
 
   $form['comment']['comment_log_tab'] = array(
-    '#type' => 'radios',
-    '#options' => $noyes,
+    '#type' => 'select',
+    '#required' => FALSE,
+    '#options' => array(
+      // Use 0/1/2 to stay compatible with previous checkbox.
+      0 => t('hidden'),
+      1 => t('optional'),
+      2 => t('required'),
+    ),
     '#attributes' => array('class' => array('container-inline')),
     '#title' => t('Show a comment field in the workflow section of the workflow tab form?'),
     '#default_value' => isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 0,
-    '#description' => t('On the workflow tab, a Comment form can be shown so that the person making the state change can record ' .
-      'reasons for doing so. The comment is then included in the node\'s workflow history.'),
+    '#description' => t(
+      'On the workflow tab, a Comment form can be shown so that the person
+      making the state change can record reasons for doing so. The comment
+      is then included in the node\'s workflow history.'
+    ),
   );
 
   $form['watchdog'] = array(

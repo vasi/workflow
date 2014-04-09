@@ -33,7 +33,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
     if (!$field['id']) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-      $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_tab']); // vs. ['comment_log_node']; 
+      $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node']; 
       $field['settings']['widget']['current_status'] = TRUE;
     }
   }

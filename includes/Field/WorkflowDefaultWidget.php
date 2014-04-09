@@ -96,7 +96,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
     // Show comment, when both Field and Instance allow this.
-    $settings_comment = $field['settings']['widget']['comment'] ? 'textarea' : 'hidden';
+    $settings_comment = $field['settings']['widget']['comment'];
 
     $options = array();
     if (!$entity) {
@@ -253,7 +253,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       );
     }
     $element['workflow']['workflow_comment'] = array(
-      '#type' => $settings_comment,
+      '#type' => $settings_comment == '0' ? 'hidden' : 'textarea',
+      '#required' => $settings_comment == '2',
       '#title' => t('Workflow comment'),
       '#description' => t('A comment to put in the workflow log.'),
       '#default_value' => $comment,

@@ -123,7 +123,7 @@ function workflow_vbo_given_state_action_form(array $context) {
     $instance['widget']['settings']['submit_function'] = '';
     if (!$field['id']) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-      $field['settings']['widget']['comment'] = !empty($workflow->options['comment_log_tab']); // vs. ['comment_log_node']; 
+      $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node']; 
       $field['settings']['widget']['current_status'] = TRUE;
       // As stated above, the options list is probably very long, so let's use select list.
       $field['settings']['widget']['options'] = 'select';

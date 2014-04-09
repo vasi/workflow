@@ -485,3 +485,4 @@ Issue #1649216 by johnv: Changed display of 'author' and 'creation' on admin pag
 Issue #2019345 by johnv: Added error message when used workflow is deleted.
 Issue #2237125 by johnv: Added token 'workflow-state-age' from workflow_extensions.
 Issue #2237125 by johnv: Reordered functions in workflow.tokens.inc.
+Issue #0907442 by johnv: Fixed comment field can now be hidden, optional and (new!) required.
