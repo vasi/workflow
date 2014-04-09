@@ -136,6 +136,12 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           case 'workflow-current-state-date-formatted':
             $replacements[$original] = format_date($date, 'medium', '', NULL, $langcode);
             break;
+          case 'workflow-current-state-age-seconds':
+            $last_transition = reset(workflow_transition_load_multiple($type, array($entity_id), NULL, 1));
+            $seconds = isset($last_transition->stamp) ? (REQUEST_TIME - $last_transition->stamp) : 0;
+            $replacements[$original] = $seconds;
+            break;
+
           default:
             // Add support for custom date formats. (see token.tokens.inc)
             // @todo Remove when http://drupal.org/node/1173706 is fixed.
@@ -212,6 +218,11 @@ function workflow_token_info() {
   $tokens['workflow-current-state-date-formatted'] = array(
     'name' => t('Current state date (formatted by site default)'),
     'description' => t('Date of last state change (formatted by site default)'),
+    );
+  // Converted from workflow_extensions' workflow-state-age' token.
+  $tokens['workflow-current-state-age-seconds'] = array(
+    'name' => t('Current state age'),
+    'description' => t('Time elapsed since last state change (in seconds)'),
     );
 
   // Add support for custom date formats. (see token.tokens.inc)
