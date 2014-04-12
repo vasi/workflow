@@ -70,8 +70,13 @@ function workflow_node_view($node, $view_mode, $langcode) {
   if (!workflow_get_workflow_type_map_by_type($entity_bundle)) {
     return;
   }
-
-  if (!user_access('show workflow state form') || $node->status == 0) {
+  // Check permission, so that even with state change rights,
+  // the form can be suppressed from the node view (#1893724).
+  if (!user_access('show workflow state form')) {
+    return;
+  }
+  // If the entity is not published. (why?)
+  if ($node->status == 0) {
     return;
   }
 

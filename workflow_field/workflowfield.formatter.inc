@@ -37,13 +37,18 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
     $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance);
   }
 
-  if ($entity_type == 'comment' || // No Workflow form on a comment display, (Also, this avoids a lot of error messages.)
-      (isset($entity->status) && $entity->status == 0) || // or if the entity is not published (not possible for every entity type),  
-      !user_access('show workflow state form') // or if the user has no access to Workflow Form.
-      ) {
+  // Check permission, so that even with state change rights,
+  // the form can be suppressed from the node view (#1893724).
+  if (!user_access('show workflow state form')) {
     return $list_element;
   }
-
+  // If the entity is not published (not possible for every entity type). (why?)
+  if (isset($entity->status) && $entity->status == 0) {
+    return $list_element;
+  }
+  if ($entity_type == 'comment') { // No Workflow form on a comment display, (Also, this avoids a lot of error messages.)
+    return $list_element;
+  }
   // Only build form if user has possible target state(s).
   if (!$current_state->showWidget($entity_type, $entity, $force = FALSE)) {
     return $list_element;
