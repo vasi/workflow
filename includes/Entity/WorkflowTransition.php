@@ -180,12 +180,15 @@ class WorkflowTransition extends Entity {
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
     $old_state = workflow_state_load_single($old_sid);
+    $new_state = workflow_state_load_single($new_sid);
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
 
     $t_args = array(
       '%old_sid' => $old_sid,
+      '%old_sid_label' => ($old_state) ? $old_state->label() : $old_sid,
       '%new_sid' => $new_sid,
+      '%new_sid_label' => ($new_state) ? $new_state->label() : $new_sid,
     );
 
     // Check allow-ability of state change if user is not superuser (might be cron).
@@ -213,7 +216,7 @@ class WorkflowTransition extends Entity {
       $options = $old_state->getOptions($entity_type, $entity, $force);
     }
     if (!array_key_exists($new_sid, $options)) {
-      drupal_set_message(t('The transition from %old_sid to %new_sid is not allowed.', $t_args), 'error');
+      drupal_set_message(t('The transition from %old_sid_label to %new_sid_label is not allowed.', $t_args), 'error');
       return FALSE;
     }
 

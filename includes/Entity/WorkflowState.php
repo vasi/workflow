@@ -315,6 +315,14 @@ class WorkflowState {
   /**
    * Returns the allowed values for the current state.
    *
+   * @param $entity_type
+   *  The type of the entity at hand.
+   * @param $entity
+   *  The entity at hand. May be NULL (E.g., on a Field settings page).
+   *
+   * @return array
+   *   An array of sid=>label pairs of allowed transitions from this state.
+   *
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
   public function getOptions($entity_type, $entity, $force = FALSE) {
@@ -323,13 +331,13 @@ class WorkflowState {
 
     $options = array();
 
-    // Entity may not be given, (e.g., on a Field settings page).
-    $entity_id = (!$entity) ? 'x' : entity_id($entity_type, $entity);
-
+    $entity_id = entity_id($entity_type, $entity);
     $current_sid = $this->sid;
-    // Get options from page cache.
-    if (isset($cache[$entity_type][$entity_id][$force][$current_sid])) {
-      $options = $cache[$entity_type][$entity_id][$force][$current_sid];
+
+    // Get options from page cache, using a non-empty index (just to be sure).
+    $entity_index = (!$entity) ? 'x' : $entity_id;
+    if (isset($cache[$entity_type][$entity_index][$force][$current_sid])) {
+      $options = $cache[$entity_type][$entity_index][$force][$current_sid];
       return $options;
     }
 
@@ -337,17 +345,19 @@ class WorkflowState {
     if ($workflow) {
       // Gather roles, to get the proper permissions.
       $roles = array_keys($user->roles);
-
       if ($user->uid == 1 || $force) {
         // Superuser is special. And $force allows Rules to cause transition.
         $roles = 'ALL';
       }
-      elseif (!$entity_id) {
-        // If this is a new page, give the authorship role.
+      elseif (($entity) && (!empty($entity->is_new) || empty($entity_id))) {
+        // Add 'author' role to user, if this is a new entity.
+        // - $entity can be NULL (E.g., on a Field settings page).
+        // - on display of new entity, $entity_id and $is_new are not set.
+        // - on submit of new entity, $entity_id and $is_new are both set.
         $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       }
       elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
-        // Add 'author' role to user if user is author of this entity.
+        // Add 'author' role to user, if user is author of this entity.
         // - Some entities (e.g, taxonomy_term) do not have a uid.
         // - If 'anonymous' is the author, don't allow access to History Tab,
         //   since anyone can access it, and it will be published in Search engines. 
@@ -357,7 +367,7 @@ class WorkflowState {
       // Set up an array with states - they are already properly sorted.
       // Unfortunately, the config_transitions are not sorted.
       // Also, $transitions does not contain the 'stay on current state' transition.
-      // The object will be replaced with names.
+      // The allowed objects will be replaced with names.
       $options = $workflow->getStates();
       $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
       foreach ($transitions as $transition) {
@@ -383,22 +393,21 @@ class WorkflowState {
           }
         }
       }
-
       // Include current state for same-state transitions (by replacing the object by the name).
       if ($current_sid != $workflow->getCreationSid()) {
         if ($current_state = $workflow->getState($current_sid)) {
           $options[$current_sid] = check_plain(t($current_state->label()));
         }
       }
-
       // Remove the unpermitted options.
       foreach ($options as $key => $data) {
         if (is_object($data) ) {
           unset($options[$key]);
         }
       }
+
       // Save to entity-specific cache.
-      $cache[$entity_type][$entity_id][$force][$current_sid] = $options;
+      $cache[$entity_type][$entity_index][$force][$current_sid] = $options;
     }
 
     return $options;
