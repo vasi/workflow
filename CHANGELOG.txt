@@ -489,4 +489,4 @@ Issue #0907442 by johnv: Fixed comment field can now be hidden, optional and (ne
 Issue #2239189 by johnv: Fixed Anonymous author cannot set a state for new content.
 Issue #2019345 by johnv: Removed workflownode.inc into workflownode.module.
 Issue #2164081 by johnv: Some nervous code reshuffling regarding unpublished nodes.
- 
+Issue #2237361 by johnv: Fixed SQL error in node_access when Anonymous Author has workflow_access rights.
