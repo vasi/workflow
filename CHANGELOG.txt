@@ -490,3 +490,4 @@ Issue #2239189 by johnv: Fixed Anonymous author cannot set a state for new conte
 Issue #2019345 by johnv: Removed workflownode.inc into workflownode.module.
 Issue #2164081 by johnv: Some nervous code reshuffling regarding unpublished nodes.
 Issue #2237361 by johnv: Fixed SQL error in node_access when Anonymous Author has workflow_access rights.
+Issue #2240009 by johnv: Changed some code in workflow.tokens.inc, to prepare for multiple workflows per entity.

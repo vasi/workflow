@@ -8,81 +8,85 @@
  * Implements hook_token_info().
  */
 function workflow_token_info() {
-  $type = array(
+  $types['workflow'] = array(
     'name' => t('Workflow'),
     'description' => t('Tokens related to workflows.'),
     'needs-data' => 'node',
-    );
+  );
 
-  $tokens = array();
-  $tokens['workflow-name'] = array(
+  // 'plain_tokens' indicates a 'chained_tokens' counterpart.
+  $plain_tokens = array();
+  $plain_tokens['workflow-name'] = array(
     'name' => t('Workflow name'),
-    'description' => t('Name of workflow applied to this node'),
-    );
-  $tokens['workflow-current-state-name'] = array(
+    'description' => t('Name of workflow applied to this node.'),
+  );
+  $plain_tokens['workflow-current-state-name'] = array(
     'name' => t('Current state name'),
-    'description' => t('Current state of content'),
-    );
-  $tokens['workflow-old-state-name'] = array(
+    'description' => t('Current state of content.'),
+  );
+  $plain_tokens['workflow-old-state-name'] = array(
     'name' => t('Old state name'),
-    'description' => t('Old state of content'),
-    );
-  $tokens['workflow-current-state-updating-user-name'] = array(
+    'description' => t('Old state of content.'),
+  );
+  $plain_tokens['workflow-current-state-updating-user-name'] = array(
     'name' => t('Username of last state changer'),
-    'description' => t('Username of last state changer'),
-    );
-  $tokens['workflow-current-state-updating-user-link'] = array(
+    'description' => t('Username of last state changer.'),
+  );
+  $plain_tokens['workflow-current-state-updating-user-link'] = array(
     'name' => t('Username link of last state changer'),
-    'description' => t('Themed Username of last state changer'),
-    );
-  $tokens['workflow-current-state-updating-user-uid'] = array(
+    'description' => t('Themed Username of last state changer.'),
+  );
+  $plain_tokens['workflow-current-state-updating-user-uid'] = array(
     'name' => t('Uid of last state changer'),
-    'description' => t('uid of last state changer'),
-    );
-  $tokens['workflow-current-state-updating-user-mail'] = array(
+    'description' => t('uid of last state changer.'),
+  );
+  $plain_tokens['workflow-current-state-updating-user-mail'] = array(
     'name' => t('Email of last state changer'),
-    'description' => t('email of last state changer'),
-    );
-  $tokens['workflow-current-state-updating-user-mail'] = array(
+    'description' => t('email of last state changer.'),
+  );
+  $plain_tokens['workflow-current-state-updating-user-mail'] = array(
     'name' => t('Email link of last state changer'),
-    'description' => t('email link of last state changer'),
-    );
-  $tokens['workflow-current-state-log-entry'] =array(
+    'description' => t('email link of last state changer.'),
+  );
+  $plain_tokens['workflow-current-state-log-entry'] = array(
     'name' => t('Last workflow comment log'),
-    'description' => t('Last workflow comment log'),
-    );
-  $tokens['workflow-current-state-date-iso'] = array(
+    'description' => t('Last workflow comment log.'),
+  );
+  $plain_tokens['workflow-current-state-date-iso'] = array(
     'name' => t('Current state date (ISO)'),
-    'description' => t('Date of last state change (ISO)'),
-    );
-  $tokens['workflow-current-state-date-tstamp'] = array(
+    'description' => t('Date of last state change (ISO).'),
+  );
+  $plain_tokens['workflow-current-state-date-tstamp'] = array(
     'name' => t('Current state date (timestamp)'),
-    'description' => t('Date of last state change (timestamp)'),
-    );
-  $tokens['workflow-current-state-date-formatted'] = array(
+    'description' => t('Date of last state change (timestamp).'),
+  );
+  $plain_tokens['workflow-current-state-date-formatted'] = array(
     'name' => t('Current state date (formatted by site default)'),
-    'description' => t('Date of last state change (formatted by site default)'),
-    );
+    'description' => t('Date of last state change (formatted by site default).'),
+  );
   // Converted token 'workflow-state-age' from workflow_extensions.
-  $tokens['workflow-current-state-age-seconds'] = array(
+  $plain_tokens['workflow-current-state-age-seconds'] = array(
     'name' => t('Current state age'),
-    'description' => t('Time elapsed since last state change (in seconds)'),
-    );
+    'description' => t('Time elapsed since last state change (in seconds).'),
+  );
 
   // Add support for custom date formats. (see token.tokens.inc)
   // @todo Remove when http://drupal.org/node/1173706 is fixed.
   $date_format_types = system_get_date_types();
   foreach ($date_format_types as $date_type => $date_info) {
-    $tokens['workflow-current-state-date-' . $date_type] = array(
+    $plain_tokens['workflow-current-state-date-' . $date_type] = array(
       'name' => t('Current state date (using @format format)', array('@format' => $date_info['title'])),
       'description' => t("A date in '@type' format. (%date)", array('@type' => $date_type, '%date' => format_date(REQUEST_TIME, $date_type))),
       'module' => 'workflow',
-      );
+    );
   }
 
   return array(
-    'types' => array('workflow' => $type),
-    'tokens' => array('workflow' => $tokens, 'node' => $tokens),
+    'types' => $types,
+    'tokens' => array(
+      'workflow' => $plain_tokens,
+      'node' => $plain_tokens,
+    ),
   );
 }
 
