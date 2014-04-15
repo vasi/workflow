@@ -231,7 +231,12 @@ class Workflow extends Entity {
    * Create a new state for this workflow.
    */
   public function createState($name) {
-    $state = WorkflowState::create($this->wid, $name);
+    $wid = $this->wid;
+    $state = workflow_state_load_by_name($name, $wid);
+    if (!$state) {
+      $state = entity_create('WorkflowState', array('name' => $name, 'wid' => $wid));
+    }
+
     // Properly maintain the states list.
     $this->states[] = $state;
     return $state;

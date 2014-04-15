@@ -5,15 +5,43 @@
  * Contains workflow\includes\Entity\WorkflowState.
  */
 
-class WorkflowState {
+class WorkflowStateController extends EntityAPIController {
+
+  public function save($entity, DatabaseTransaction $transaction = NULL) {
+    $return = parent::save($entity, $transaction);
+
+    // Reset the cache for the affected workflow.
+    workflow_reset_cache($entity->wid);
+
+    return $return;
+  }
+
+  public function delete($ids, DatabaseTransaction $transaction = NULL) {
+    // @todo: replace with parent.
+    foreach($ids as $id) {
+      if ($state = workflow_state_load($id)) {
+        $wid = $state->wid;
+        db_delete('workflow_states')
+          ->condition('sid', $state->sid)
+          ->execute();
+
+        // Reset the cache for the affected workflow.
+        workflow_reset_cache($wid);
+      }
+    }
+  }
+
+}
+
+class WorkflowState extends Entity {
   // Since workflows do not change, it is implemented as a singleton.
   protected static $states = array();
 
   public $sid = 0;
   public $wid = 0;
   public $weight = 0;
-  protected $sysid = 0;
-  protected $state = ''; // @todo D8: remove $state, use $label/$name. (requires conversion of Views displays.)
+  public $sysid = 0;
+  public $state = ''; // @todo D8: remove $state, use $label/$name. (requires conversion of Views displays.)
   public $status = 1;
 
   /**
@@ -22,57 +50,37 @@ class WorkflowState {
 
   /**
    * Constructor.
-   */
-  protected function __construct($wid = 0, $name = '') {
-    if (empty($wid) && empty($name)) {
-      // Automatic constructor when casting an array or object.
-      if (!isset(self::$states[$this->sid])) {
-        self::$states[$this->sid] = $this;
-      }
-    }
-    elseif ($wid && empty($name)) {
-      // Creating a dummy/new state for a workflow.
-      // Do not add to 'cache' self::$states.
-      $this->wid = $wid;
-      $this->state = $name;
-    }
-    else {
-      // Creating a dummy/new state for a workflow.
-      // Do not add to 'cache' self::$states.
-      $this->wid = $wid;
-      $this->state = $name;
-    }
-  }
-
-  // Implementing clone needs a list of tid-less transitions, and a conversion
-  // of sids for both States and ConfigTransitions.
-  // public function __clone() {}
-
-  /**
-   * Creates and returns a new WorkflowState object.
    *
    * @param $wid
    *  The Workflow ID for which a new State is created.
    * @param $name
    *  The name of the new State. If '(creation)', a CreationState is generated.
-   *
-   * @return WorkflowState
-   *  A new WorkflowState object.
-   *
-   * "New considered harmful".
    */
-  public static function create($wid, $name = '') {
-    $state = workflow_state_load_by_name($name, $wid);
-    if (!$state) {
-      $state = new WorkflowState($wid, $name);
-      $state->state = $name;
+  public function __construct(array $values = array(), $entityType = 'WorkflowState') {
+    // Keep oficial name and external name equal.
+    if (isset($values['name'])) {
+      $values['state'] = $values['name'];
     }
-    if ($name == WORKFLOW_CREATION_STATE_NAME) {
-      $state->sysid = WORKFLOW_CREATION;
-      $state->weight = WORKFLOW_CREATION_DEFAULT_WEIGHT;
+    // Set default values for '(creation)' state.
+    if (!empty($values['is_new']) && $values['name'] == WORKFLOW_CREATION_STATE_NAME) {
+      $values['sysid'] = WORKFLOW_CREATION;
+      $values['weight'] = WORKFLOW_CREATION_DEFAULT_WEIGHT;
     }
-    return $state;
+    parent::__construct($values, $entityType);
+
+    if (empty($values)) {
+      // Automatic constructor when casting an array or object.
+      // Add pre-existing states to cache. (not new/temp ones)
+      if (!isset(self::$states[$this->sid])) {
+        self::$states[$this->sid] = $this;
+      }
+    }
+
   }
+
+  // Implementing clone needs a list of tid-less transitions, and a conversion
+  // of sids for both States and ConfigTransitions.
+  // public function __clone() {}
 
   /**
    * Alternative constructor, loading objects from table {workflow_states}.
@@ -160,44 +168,6 @@ class WorkflowState {
   }
 
   /**
-   * Save (update/insert) a Workflow State into table workflow_states.
-   *
-   * @deprecated: workflow_update_workflow_states() --> WorkflowState->save()
-   */
-  public function save() {
-    $sid = $this->sid;
-    // Convert all properties to an array, the previous ones, too.
-    $data['sid'] = $this->sid;
-    $data['wid'] = $this->wid;
-    $data['weight'] = $this->weight;
-    $data['sysid'] = $this->sysid;
-    $data['state'] = $this->state;
-    $data['status'] = $this->status;
-
-    if (!empty($this->sid) && workflow_state_load_single($sid)) {
-      drupal_write_record('workflow_states', $data, 'sid');
-    }
-    else {
-      drupal_write_record('workflow_states', $data);
-    }
-    // Update the page cache.
-    $this->sid = $sid = $data['sid'];
-    self::$states[$sid] = $this;
-
-    // Reset the cache for the affected workflow.
-    workflow_reset_cache($this->wid);
-  }
-
-  /**
-   * Given data, delete from workflow_states.
-   */
-  public function delete() {
-    db_delete('workflow_states')
-      ->condition('sid', $this->sid)
-      ->execute();
-  }
-
-  /**
    * Deactivate a Workflow State, moving existing nodes to a given State.
    *
    * @param $new_sid
@@ -257,7 +227,7 @@ class WorkflowState {
     $this->save();
 
     // Clear the cache.
-    self::$states = array();
+    self::getStates(0, TRUE);
   }
 
   /**
@@ -451,9 +421,10 @@ class WorkflowState {
   /**
    * Mimics Entity API functions.
    */
-  public function label($langcode = NULL) {
-    return t($this->state, $args = array(), $options = array('langcode' => $langcode));
+  protected function defaultLabel() {
+    return $this->state;
   }
+
   public function getName() {
     return $this->state;
   }

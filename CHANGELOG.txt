@@ -491,3 +491,4 @@ Issue #2019345 by johnv: Removed workflownode.inc into workflownode.module.
 Issue #2164081 by johnv: Some nervous code reshuffling regarding unpublished nodes.
 Issue #2237361 by johnv: Fixed SQL error in node_access when Anonymous Author has workflow_access rights.
 Issue #2240009 by johnv: Changed some code in workflow.tokens.inc, to prepare for multiple workflows per entity.
+Issue #2209359 by johnv: Fixed WorkflowState is not an Entity, too.

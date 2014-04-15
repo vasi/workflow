@@ -39,6 +39,22 @@ function workflow_entity_info() {
     // ),
   );
 
+  $entities['WorkflowState'] = array(
+    'label' => t('Workflow state'),
+    'entity class' => 'WorkflowState',
+    'controller class' => 'WorkflowStateController',
+    'features controller class' => FALSE, //@todo: implement this.
+    'module' => 'workflow',
+    'base table' => 'workflow_states',
+    'fieldable' => FALSE,
+    'exportable' => FALSE,
+    'entity keys' => array(
+      'id' => 'sid',
+    ),
+    'label callback' => 'entity_class_label',
+    'uri callback' => 'entity_class_uri',
+  );
+
   $entities['WorkflowConfigTransition'] = array(
     'label' => t('Workflow config transition'),
     'entity class' => 'WorkflowConfigTransition',
@@ -148,7 +164,7 @@ function workflow_reset_cache($wid) {
 }
 
 /**
- * Loads a WorkflowState.
+ * CRUD for WorkflowState.
  */
 function workflow_state_load($sid) {
   return WorkflowState::load($sid);
@@ -162,6 +178,10 @@ function workflow_state_load_multiple($wid = 0, $reset = FALSE) {
   return WorkflowState::getStates($wid, $reset);
 }
 
+function workflow_state_load_by_name($name, $wid) {
+  return WorkflowState::loadByName($name, $wid);
+}
+
 /**
  * Load WorkflowTransitions, most recent first.
  *
@@ -171,10 +191,6 @@ function workflow_state_load_multiple($wid = 0, $reset = FALSE) {
  * @deprecated: workflow_get_workflow_node_history_by_nid() --> workflow_transition_load_single()
  * @deprecated: workflow_get_recent_node_history() --> workflow_transition_load_single()
  */
-
-function workflow_state_load_by_name($name, $wid) {
-  return WorkflowState::loadByName($name, $wid);
-}
 
 function workflow_transition_load_multiple($entity_type, array $entity_ids, $field_name = '', $limit = NULL) {
   return WorkflowTransition::loadMultiple($entity_type, $entity_ids, $field_name, $limit);
