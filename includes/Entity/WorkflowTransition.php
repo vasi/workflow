@@ -421,6 +421,19 @@ class WorkflowTransition extends Entity {
     }
   }
 
+
+  /**
+   * Get the Transitions $workflow.
+   *
+   * @return object
+   *   The workflow for this Transition.
+   */
+  public function getWorkflow() {
+    $state = workflow_state_load($this->new_sid);
+    $workflow = workflow_load($state->wid);
+    return $workflow;
+  }
+
   /**
    * Get the Transitions $entity.
    *
