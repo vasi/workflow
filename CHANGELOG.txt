@@ -496,3 +496,4 @@ Issue #2019345 by johnv: Added method getWorkflow() to WorkflowTransition class.
 Issue #2241577 by johnv: Fixed export/import Features after making WorkflowState an entity.
 Issue #2164081 by johnv: Removed code that hides Workflow Form on unpublished nodes.
 Issue #2241577 by johnv: Removed dependency on Features module. Now you can enable a workflow feature without!
+Issue #2217291: Added new view + view_mode 'history_tab', to create customizable tab, for multiple workflows.
