@@ -17,7 +17,7 @@ function workflow_entity_info() {
     'plural label' => t('Workflows'),
     'entity class' => 'Workflow',
     'controller class' => 'WorkflowController',
-    'features controller class' => FALSE, //@todo: implement this.
+    'features controller class' => 'WorkflowFeaturesController',
     'module' => 'workflow',
     'base table' => 'workflows',
     'fieldable' => FALSE,
@@ -43,7 +43,7 @@ function workflow_entity_info() {
     'label' => t('Workflow state'),
     'entity class' => 'WorkflowState',
     'controller class' => 'WorkflowStateController',
-    'features controller class' => FALSE, //@todo: implement this.
+//    'features controller class' => FALSE, //@todo: implement this.
     'module' => 'workflow',
     'base table' => 'workflow_states',
     'fieldable' => FALSE,
@@ -61,6 +61,7 @@ function workflow_entity_info() {
     // Add controller Class. 'Workflow' class is the de-facto controller.
     'controller class' => 'WorkflowConfigTransitionController',
     'base table' => 'workflow_transitions',
+    'exportable' => FALSE,
     'entity keys' => array(
       'id' => 'tid',
 //      'name' => 'tid',
@@ -77,7 +78,7 @@ function workflow_entity_info() {
 //    ),
 //    'views controller class' => 'EntityDefaultViewsController',
     'module' => 'workflow',
-//    'access callback' => 'workflow_tab_access', // @todo: use to-be workflow_access here. Access to Tab <> access to workflow. 
+//    'access callback' => 'workflow_tab_access', // @todo: use to-be workflow_access here. Access to Tab <> access to workflow.
   );
 
   // The Controller class of Transitions and ScheduledTransition is shared.
@@ -85,6 +86,8 @@ function workflow_entity_info() {
     'label' => t('Workflow executed transition'),
     'entity class' => 'WorkflowTransition',
     'controller class' => 'WorkflowTransitionController',
+    'views controller class' => 'EntityDefaultViewsController',
+    'rules controller class' => 'EntityDefaultRulesController',
     'features controller class' => FALSE,
     'base table' => 'workflow_node_history',
     'entity keys' => array(
@@ -92,24 +95,21 @@ function workflow_entity_info() {
     ),
     'label callback' => 'entity_class_label',
     'module' => 'workflow',
-    'views controller class' => 'EntityDefaultViewsController',
-    'rules controller class' => 'EntityDefaultRulesController',
-    'features controller class' => FALSE,
   );
 
   $entities['WorkflowScheduledTransition'] = array(
     'label' => t('Workflow scheduled transition'),
     'entity class' => 'WorkflowScheduledTransition',
     'controller class' => 'WorkflowTransitionController',
+    'views controller class' => 'EntityDefaultViewsController',
+    'rules controller class' => 'EntityDefaultRulesController',
+    'features controller class' => FALSE,
     'base table' => 'workflow_scheduled_transition',
     'entity keys' => array(
       'id' => '',
     ),
     'label callback' => 'entity_class_label',
     'module' => 'workflow',
-    'views controller class' => 'EntityDefaultViewsController',
-    'rules controller class' => 'EntityDefaultRulesController',
-    'features controller class' => FALSE,
   );
 
   return $entities;
@@ -120,12 +120,12 @@ function workflow_entity_info() {
  *
  * Also used as Menu wild card loader {wildcard_name}_load for '%workflow'.
  * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
- * @todo D8: deprecated in favour of workflow_load_single(), not needed for menu. 
+ * @todo D8: deprecated in favour of workflow_load_single(), not needed for menu.
  */
 function workflow_load($wid) {
   // Some Admin UI menu page loaders pass the $wid as string, not int.
   // @see workflow_admin_ui_edit_form_validate().
-  // The EntityController must be Exportable, or else a string won't work. #1741956 
+  // The EntityController must be Exportable, or else a string won't work. #1741956
   // $workflow = ctype_digit($wid) ? entity_load_single('Workflow', $wid) : workflow_load_by_name($wid);
   $workflow = entity_load_single('Workflow', $wid);
   return $workflow;
@@ -139,7 +139,7 @@ function workflow_load_by_name($name) {
 }
 
 function workflow_load_single($wid) {
-  return entity_load_single('Workflow', $wid); 
+  return entity_load_single('Workflow', $wid);
 }
 
 function workflow_load_multiple($wids = FALSE, $reset = FALSE) {

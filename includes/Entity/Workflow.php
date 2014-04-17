@@ -26,7 +26,7 @@ class WorkflowController extends EntityAPIControllerExportable {
 
   /**
    * Overrides DrupalDefaultEntityController::cacheGet()
-   * 
+   *
    * Override default function, due to Core issue #1572466.
    */
   protected function cacheGet($ids, $conditions = array()) {
@@ -62,13 +62,13 @@ class WorkflowController extends EntityAPIControllerExportable {
       // Load the states, so they are already present on the next (cached) load.
       $entity->states = $entity->getStates($all = TRUE);
       $entity->transitions = $entity->getTransitions(FALSE);
-      $entity->typeMap = $entity->getTransitions(FALSE);
+      $entity->typeMap = $entity->getTypeMap();
     }
 
     parent::attachLoad($queried_entities, $revision_id);
   }
 }
- 
+
 class Workflow extends Entity {
   public $wid = 0;
   public $name = '';
@@ -100,31 +100,60 @@ class Workflow extends Entity {
 
   /**
    * Given information, update or insert a new workflow.
-   *
-   * @deprecated: workflow_update_workflows() --> Workflow->save()
    */
   public function save($create_creation_state = TRUE) {
+    // When changing this function, test with the following situations:
+    // - maintain Workflow in Admin UI;
+    // - clone Workflow in Admin UI;
+    // - create Workflow with Features;
+    // - save Workflow programmatically;
+
     $is_new = !empty($this->is_new);
+    $is_rebuild = !empty($this->is_rebuild);
+
+    // If rebuild by Features, make some conversions.
+    if ($is_rebuild) {
+      if ($role_map = $this->system_roles) {
+        // Remap roles. They can come from another system with shifted role IDs.
+        // See also https://drupal.org/node/1702626 .
+        $this->tab_roles = _workflow_rebuild_roles($this->tab_roles, $role_map);
+        foreach ($this->transitions as &$transition) {
+          $transition['roles'] = _workflow_rebuild_roles($transition['roles'], $role_map);
+        }
+      }
+
+      // Insert the type_map when building from Features.
+      if ($this->typeMap) {
+        foreach ($this->typeMap as $node_type) {
+          workflow_insert_workflow_type_map($node_type, $this->wid);
+        }
+      }
+    }
 
     $return = parent::save();
 
-    // If a workflow is cloned, it contains data from original workflow.
+    // If a workflow is cloned in Admin UI, it contains data from original workflow.
     // Redetermine the keys.
     if ($is_new && $this->states) {
       foreach ($this->states as $state) {
         // Can be array when cloning or with features.
-        $state = is_array($state) ? (object) $state : $state;
+        $state = is_array($state) ? new WorkflowState($state) : $state;
         // Set up a conversion table, while saving the states.
         $old_sid = $state->sid;
         $state->wid = $this->wid;
         // @todo: setting sid to FALSE should be done by entity_ui_clone_entity().
         $state->sid = FALSE;
-        $state->save();
-        $sid_conversion[$old_sid] = $state->sid;
+        if($state->isActive()) {
+          $state->save();
+          $sid_conversion[$old_sid] = $state->sid;
+        }
       }
-      foreach ($this->transitions as $transition) {
+
+      // Reset state cache.
+      $this->getStates(TRUE, TRUE);
+      foreach ($this->transitions as &$transition) {
         // Can be array when cloning or with features.
-        $transition = is_array($transition) ? (object) $transition : $transition;
+        $transition = is_array($transition) ? new WorkflowConfigTransition($transition, 'WorkflowConfigTransition') : $transition;
         // Convert the old sids of each transitions before saving.
         // @todo: in this be done in 'clone $transition'?
         // (That requires a list of transitions without tid and a wid-less conversion table.)
@@ -206,7 +235,7 @@ class Workflow extends Entity {
     }
 
     // If the Workflow is mapped to a node type, check if workflow->options is set.
-    if ($type_map = $this->getTypeMap() && !count($this->options)) {
+    if ($this->getTypeMap() && !count($this->options)) {
       // That's all, so let's remind them to create some transitions.
       $message = t('Please maintain Workflow %workflow on its <a href="@url">settings</a> page.',
         array(
@@ -247,13 +276,7 @@ class Workflow extends Entity {
    */
   public function getCreationState() {
     $sid = $this->getCreationSid();
-
-    if ($sid) {
-      return $this->getState($sid);
-    }
-    else {
-      return $this->createState(WORKFLOW_CREATION_STATE_NAME);
-    }
+    return ($sid) ? $this->getState($sid) : $this->createState(WORKFLOW_CREATION_STATE_NAME);
   }
 
   /**
@@ -302,14 +325,13 @@ class Workflow extends Entity {
    * @return array
    *   An array of WorkflowState objects.
    */
-  public function getStates($all = FALSE) {
-    if ($this->states === NULL) {
-      $this->states = $this->wid ? WorkflowState::getStates($this->wid) : array();
+  public function getStates($all = FALSE, $reset = FALSE) {
+    if ($this->states === NULL || $reset) {
+      $this->states = $this->wid ? WorkflowState::getStates($this->wid, $reset) : array();
     }
     // Do not unset, but add to array - you'll remove global objects otherwise.
     $states = array();
     foreach ($this->states as $state) {
-
       if ($all === TRUE) {
         $states[$state->sid] = $state;
       }
@@ -454,8 +476,14 @@ class Workflow extends Entity {
    *   An array of typemaps.
    */
   public function getTypeMap() {
-    $type_map = module_exists('workflownode') ? workflow_get_workflow_type_map_by_wid($this->wid) : array(); 
-    return $type_map;
+    $result = array();
+
+    $type_maps = module_exists('workflownode') ? workflow_get_workflow_type_map_by_wid($this->wid) : array();
+    foreach ($type_maps as $map) {
+      $result[] = $map->type;
+    }
+
+    return $result;
   }
 
   /**
@@ -497,4 +525,18 @@ class Workflow extends Entity {
     return array('path' => 'admin/config/workflow/workflow/' . $this->wid);
   }
 
+}
+
+function _workflow_rebuild_roles(array $roles, array $role_map) {
+  // See also https://drupal.org/node/1702626 .
+  foreach ($roles as $key => $rid) {
+    if ($rid == -1) {
+      $new_roles[$rid] = $rid;
+    }
+    else {
+      $role = user_role_load_by_name($role_map[$rid]);
+      $new_roles[$role->rid] = $role->rid;
+    }
+  }
+  return $new_roles;
 }

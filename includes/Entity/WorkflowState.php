@@ -171,7 +171,7 @@ class WorkflowState extends Entity {
    * Deactivate a Workflow State, moving existing nodes to a given State.
    *
    * @param $new_sid
-   *  the state ID, to which all affected entities must be moved. 
+   *  the state ID, to which all affected entities must be moved.
    *
    * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->deactivate() + delete()
    */
@@ -201,7 +201,7 @@ class WorkflowState extends Entity {
         $field_name = '';
         $transition = new WorkflowTransition();
         $transition->setValues($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
-        $transition->force($force); 
+        $transition->force($force);
         // Execute Transition, invoke 'pre' and 'post' events, save new state in workflow_node, save also in workflow_node_history.
         // For Workflow Node, only {workflow_node} and {workflow_node_history} are updated. For Field, also the Entity itself.
         $new_sid = workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force);
@@ -259,7 +259,7 @@ class WorkflowState extends Entity {
   }
 
   /**
-   * Determine if the Workflow Form must be shown. 
+   * Determine if the Workflow Form must be shown.
    * If not, a formatter must be shown, since there are no valid options.
    *
    * @return bool $show_widget
@@ -275,7 +275,7 @@ class WorkflowState extends Entity {
     // #2226451: Even in Creation state, we must have 2 visible states to show the widget.
     // // Only when in creation phase, one option is sufficient,
     // // since the '(creation)' option is not included in $options.
-    // // When in creation state, 
+    // // When in creation state,
     // if ($this->isCreationState()) {
     //   return TRUE;
     // }
@@ -330,7 +330,7 @@ class WorkflowState extends Entity {
         // Add 'author' role to user, if user is author of this entity.
         // - Some entities (e.g, taxonomy_term) do not have a uid.
         // - If 'anonymous' is the author, don't allow access to History Tab,
-        //   since anyone can access it, and it will be published in Search engines. 
+        //   since anyone can access it, and it will be published in Search engines.
         $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       }
 

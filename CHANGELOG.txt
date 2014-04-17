@@ -493,3 +493,4 @@ Issue #2237361 by johnv: Fixed SQL error in node_access when Anonymous Author ha
 Issue #2240009 by johnv: Changed some code in workflow.tokens.inc, to prepare for multiple workflows per entity.
 Issue #2019345 by johnv: Changed WorkflowState to an Entity, too.
 Issue #2019345 by johnv: Added method getWorkflow() to WorkflowTransition class.
+Issue #2241577 by johnv: Fixed export/import Features after making WorkflowState an entity.
