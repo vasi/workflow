@@ -500,3 +500,4 @@ Issue #2217291: Added new view + view_mode 'history_tab', to create customizable
 Issue #0443094: Fixed typo in workflow_admin_paths_alter().
 Issue #2241577 by preddy: Added check for existing workflow in WorkflowConfigTransition::save().
 Issue #2243569: Added inline documentation for usage of workflow_get_workflows_by_type with multiple workflows per node type.
+Issue #2243997: Added refreshed default views in workflow_views under /workflow/ path.

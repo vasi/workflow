@@ -632,7 +632,7 @@ function workflow_get_roles($permission = 'participate in workflow') {
  *   Indicates to return all (TRUE) or active (FALSE) states of a workflow.
  *
  * @return array $options
- *   An array of $sid => state->label(), grouped per Workfllow.
+ *   An array of $sid => state->label(), grouped per Workflow.
  */
 function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE) {
   $options = array();
