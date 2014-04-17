@@ -157,11 +157,11 @@ function workflow_menu_alter(&$items) {
  * @todo: make this work (#443094); add support for every $entity_type.
  */
 function workflow_admin_paths_alter(&$paths) {
-  if (isset($path['node/*/edit'])) {
-    $path['node/*/workflow'] = $path['node/*/edit'];
+  if (isset($paths['node/*/edit'])) {
+    $paths['node/*/workflow'] = $paths['node/*/edit'];
   }
-  if (isset($path['user/*/edit'])) {
-    $path['user/*/workflow'] = $path['user/*/edit'];
+  if (isset($paths['user/*/edit'])) {
+    $paths['user/*/workflow'] = $paths['user/*/edit'];
   }
 }
 
