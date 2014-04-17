@@ -75,8 +75,7 @@ class Workflow extends Entity {
   public $tab_roles = array();
   public $options = array();
   protected $creation_sid = 0;
-  // Helper for workflow_get_workflows_by_type().
-  protected $item = NULL; // Helper to get/set the Item of a Workflow.
+
   // Attached States.
   public $states = NULL;
   public $transitions = NULL;

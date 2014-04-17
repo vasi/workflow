@@ -206,7 +206,9 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       '#description' => t("Every state change is recorded in table
         {workflow_node_history}. If checked and user has proper permission, a
         tab 'Workflow' is shown on the entity view page, which gives access to
-        the History of the workflow."),
+        the History of the workflow. If you have multiple workflows per bundle,
+        better disable this feature, and use, clone & adapt the Views display
+        'Workflow history per Entity'."),
     );
     $element['history']['roles'] = array(
       '#type' => 'checkboxes',

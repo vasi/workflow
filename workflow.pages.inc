@@ -2,6 +2,8 @@
 /**
  * @file
  * Provide user interface for changing workflow state.
+ *
+ * @todo D8: remove this in favour of View 'Workflow history per entity'.
  */
 
 define('MARK_STATE_IS_DELETED', '*');
@@ -18,7 +20,8 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
   $entity_id = entity_id($entity_type, $entity);
 
-  // @todo: workflow_tab_page(): what to do with multiple workflow_fields per bundle? Use Views instead!
+  // When having multiple workflows per bundle, use Views display
+  // 'Workflow history per entity' instead!
   $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
 
   // Show the current state and the Workflow form to allow state changing.

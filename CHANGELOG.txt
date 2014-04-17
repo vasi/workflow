@@ -499,3 +499,4 @@ Issue #2241577 by johnv: Removed dependency on Features module. Now you can enab
 Issue #2217291: Added new view + view_mode 'history_tab', to create customizable tab, for multiple workflows.
 Issue #0443094: Fixed typo in workflow_admin_paths_alter().
 Issue #2241577 by preddy: Added check for existing workflow in WorkflowConfigTransition::save().
+Issue #2243569: Added inline documentation for usage of workflow_get_workflows_by_type with multiple workflows per node type.

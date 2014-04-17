@@ -55,13 +55,14 @@ function workflow_get_creation_state_by_wid($wid) {
  * @param string $type
  *   The type of the content.
  */
-function workflow_get_creation_state_by_type($type) {
-  $sid = FALSE;
-  if ($workflow = workflow_get_workflows_by_type($type, 'node')) {
-    $sid = $workflow->getCreationSid();
-  }
-  return $sid;
-}
+//function workflow_get_creation_state_by_type($type) {
+//  $sid = FALSE;
+//
+//  if ($workflow = workflow_get_workflows_by_type($type, 'node')) {
+//    $sid = $workflow->getCreationSid();
+//  }
+//  return $sid;
+//}
 
 /**
  * Given information, update or insert a new workflow. Returns data by ref. (like node_save).

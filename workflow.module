@@ -168,6 +168,9 @@ function workflow_admin_paths_alter(&$paths) {
 /**
  * Menu access control callback. Determine access to Workflow tab.
  *
+ * The History tab should not be used with multiple workflows per node.
+ * Use the dedicated view for this use case.
+ * @todo D8: remove this in favour of View 'Workflow history per entity'.
  */
 function workflow_tab_access($entity_type, $entity) {
   global $user;
@@ -180,6 +183,8 @@ function workflow_tab_access($entity_type, $entity) {
     return $access[$user->uid][$entity_type][$entity_id];
   }
 
+  // When having multiple workflows per bundle, use Views display
+  // 'Workflow history per entity' instead!
   if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
     // Get the role IDs of the user. Workflow only stores Ids, not role names. 
     $roles = array_keys($user->roles);
