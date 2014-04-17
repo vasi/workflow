@@ -22,15 +22,14 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
     $pipe = array();
     $pipe = parent::export($data, $export, $module_name);
 
-    $export['dependencies']['features'] = 'features';
-    $export['dependencies']['workflow'] = 'workflow';
-
     foreach ($data as $workflow_name) {
       if ($workflow = workflow_load_by_name($workflow_name)) {
+        // Add dependency on workflow_node.
         if (count($workflow->getTypeMap())) {
           $export['dependencies']['workflownode'] = 'workflownode';
         }
-        $export['features']['workflow'][$workflow_name] = $workflow_name;
+        // Add dependency on workflow_field.
+        $export['features']['Workflow'][$workflow_name] = $workflow_name;
       }
     }
     return $pipe;
