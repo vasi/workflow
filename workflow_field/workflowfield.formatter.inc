@@ -42,10 +42,6 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   if (!user_access('show workflow state form')) {
     return $list_element;
   }
-  // If the entity is not published (not possible for every entity type). (why?)
-  if (isset($entity->status) && $entity->status == 0) {
-    return $list_element;
-  }
   if ($entity_type == 'comment') { // No Workflow form on a comment display, (Also, this avoids a lot of error messages.)
     return $list_element;
   }

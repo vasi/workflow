@@ -75,10 +75,6 @@ function workflow_node_view($node, $view_mode, $langcode) {
   if (!user_access('show workflow state form')) {
     return;
   }
-  // If the entity is not published. (why?)
-  if ($node->status == 0) {
-    return;
-  }
 
   $current_sid = workflow_node_current_state($node, $entity_type, '');
   $current_state = workflow_state_load_single($current_sid);
