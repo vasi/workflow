@@ -27,13 +27,14 @@ class WorkflowConfigTransitionController extends EntityAPIController {
   }
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
+    // To avoid double posting, check if this transition already exist.
     if (empty($entity->tid)) {
-      $workflow = workflow_load_single($entity->wid);
-      // First check if this transition already exist.
-      $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
-      $config_transition = reset($config_transitions);
-      if ($config_transition) {
-        $entity->tid = $config_transition->tid;
+      if ($workflow = workflow_load_single($entity->wid)) {
+        $config_transitions = $workflow->getTransitionsBySidTargetSid($entity->sid, $entity->target_sid);
+        $config_transition = reset($config_transitions);
+        if ($config_transition) {
+          $entity->tid = $config_transition->tid;
+        }
       }
     }
     $return = parent::save($entity, $transaction);
