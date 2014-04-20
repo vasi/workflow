@@ -227,9 +227,6 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           break;
 
         case 'seconds':
-dpm($type);
-dpm($tokens);
-dpm($data);
           // Valid for WorkflowTransition.
           $replacements[$original] = $sanitize ? filter_xss($entity->comment) : $entity->comment;
           break;
