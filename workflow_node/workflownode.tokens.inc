@@ -1,13 +1,15 @@
 <?php
 /**
  * @file
- * Tokens hooks for Workflow module.
+ * Tokens hooks for Workflow Node module.
+ *
+ * These tokens are deprecated in favour of 'chained' tokens in main module.
  */
 
 /**
  * Implements hook_token_info().
  */
-function workflow_token_info() {
+function workflownode_token_info() {
   $types['workflow'] = array(
     'name' => t('Workflow'),
     'description' => t('Tokens related to workflows.'),
@@ -97,7 +99,7 @@ function workflow_token_info() {
  * - we do not know upfront which field to read.
  * - some evaluations may not be correct.
  */
-function workflow_tokens($type, $tokens, array $data = array(), array $options = array()) {
+function workflownode_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();
   $sanitize = !empty($options['sanitize']);
   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
