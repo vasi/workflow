@@ -83,11 +83,13 @@ function workflow_admin_ui_type_map_form(&$form) {
       '#value' => variable_get('workflow_' . $node_type, array()),
       '#attributes' => array('style' => 'width: auto; clear: both;'),
     );
+    // Use separate line to avoid PHP5.4 error.
+    $p_element = form_process_checkboxes($p);
 
     $row = array(
       check_plain(t($name)),
       drupal_render($w),
-      drupal_render(form_process_checkboxes($p)),
+      drupal_render($p_element),
     );
     $rows[] = $row;
 

@@ -505,3 +505,5 @@ Issue #2217291: Fixed workflow_views for installations with D7<7.22.
 Issue #2240009: Moved current tokens to submodule 'workflownode' to prepare for workflow_field tokens.
 Issue #2240009: Added better readable 'chained' tokens, re-using tokens of core objects.
 Issue #2237125: Removed token 'workflow-state-age' from workflow_extensions, since it is now available as a chained token.
+Issue #2240009: Removed dpm().
+Issue #2226781: Fixed error on type_map admin page for PHP5.4
