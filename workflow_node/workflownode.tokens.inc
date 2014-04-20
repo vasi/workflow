@@ -66,11 +66,6 @@ function workflownode_token_info() {
     'name' => t('Current state date (formatted by site default)'),
     'description' => t('Date of last state change (formatted by site default).'),
   );
-  // Converted token 'workflow-state-age' from workflow_extensions.
-  $plain_tokens['workflow-current-state-age-seconds'] = array(
-    'name' => t('Current state age'),
-    'description' => t('Time elapsed since last state change (in seconds).'),
-  );
 
   // Add support for custom date formats. (see token.tokens.inc)
   // @todo Remove when http://drupal.org/node/1173706 is fixed.
@@ -224,15 +219,11 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
           case 'workflow-current-state-date-formatted':
             $replacements[$original] = format_date($date, 'medium', '', NULL, $langcode);
             break;
-          case 'workflow-current-state-age-seconds':
-            $last_transition = reset(workflow_transition_load_multiple($type, array($entity_id), NULL, 1));
-            $seconds = isset($last_transition->stamp) ? (REQUEST_TIME - $last_transition->stamp) : 0;
-            $replacements[$original] = $seconds;
-            break;
 
           default:
             // Add support for custom date formats. (see token.tokens.inc)
-            // @todo Remove when http://drupal.org/node/1173706 is fixed.
+            // @todo1 Remove when http://drupal.org/node/1173706 is fixed.
+            // @todo2 It seems the custom date formats work normally in D7.22 with chained tokens. 
             $date_format_types = system_get_date_types();
             foreach ($date_format_types as $date_type => $date_info) {
               if ($name == 'workflow-current-state-date-' . $date_type) {
