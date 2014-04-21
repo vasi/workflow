@@ -38,7 +38,7 @@ function workflow_admin_ui_view_permissions_form($workflow, $op) {
   $header = array(t('From'), '', t('To'));
   $output = '';
 
-  // @todo we should theme out the html here.
+  // @todo: we should theme out the html here.
   foreach ($all as $rid => $value) {
     $role_name = !empty($value['name']) ? $value['name'] : t('deleted role !rid', array('!rid' => $rid));
     $output .= '<h3>' . t('%role may do these transitions:', array('%role' => $role_name)) . '</h3>';
@@ -78,13 +78,26 @@ function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op)
     '#validate' => array('workflow_admin_ui_edit_form_validate'),
     '#weight' => 15,
   );
-
-  $form['wf_name'] = array(
+  $form['label'] = array(
+    '#title' => t('Label'),
     '#type' => 'textfield',
-    '#default_value' => $workflow->getName(),
-    '#title' => t('Workflow name'),
-    '#maxlength' => '254',
+    '#default_value' => isset($workflow->label) ? $workflow->label : $workflow->name,
+    '#description' => t('The human-readable name of this content type.'),
     '#required' => TRUE,
+    '#maxlength' => '254',
+    '#size' => 30,
+  );
+  $form['name'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => $workflow->getName(),
+    '#maxlength' => '254',  // $todo D8 : '#maxlength' => 32,
+    '#required' => TRUE,
+    '#disabled' => !empty($workflow->locked),
+    '#machine_name' => array(
+      'exists' => 'workflow_load',
+      'source' => array('label'),
+    ),
+    '#description' => t('A unique machine-readable name for this content type. It must only contain lowercase letters, numbers, and underscores.'),
   );
 
   // All other settings are only for workflow_node.
@@ -235,18 +248,18 @@ function workflow_admin_ui_edit_form($form, &$form_state, $workflow = NULL, $op)
  */
 function workflow_admin_ui_edit_form_validate($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
-  $name = $form_state['values']['wf_name'];
+  $name = $form_state['values']['name'];
 
   // Make sure workflow name is not numeric.
   if (ctype_digit($name)) {
-    form_set_error('wf_name', t('Please choose a non-numeric name for your workflow.',
+    form_set_error('name', t('Please choose a non-numeric name for your workflow.',
       array('%name' => $name)));
   }
 
   // Make sure workflow name is not a duplicate.
   foreach (workflow_load_multiple() as $stored_workflow) {
     if ($name == check_plain($stored_workflow->getName()) && $workflow->wid != $stored_workflow->wid) {
-      form_set_error('wf_name', t('A workflow with the name %name already exists. Please enter another name for this workflow.',
+      form_set_error('name', t('A workflow with the name %name already exists. Please enter another name for this workflow.',
         array('%name' => $name)));
       break;
     }
@@ -263,9 +276,9 @@ function workflow_admin_ui_edit_form_validate($form, &$form_state) {
 function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   $workflow = $form_state['values']['workflow'];
   $insert = !empty($workflow->is_new);
-  $name = $form_state['values']['wf_name'];
 
-  $workflow->name = $form_state['values']['wf_name'];;
+  $workflow->name = trim($form_state['values']['name']);
+  $workflow->label = trim($form_state['values']['label']);
   // For workflow_field, all is in the field settings.
   // All other settings are only for workflow_node.
   if (module_exists('workflownode')) {
@@ -285,7 +298,7 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   $workflow->save();
   if ($insert) {
     $args = array(
-      '%name' => $name,
+      '%name' => $workflow->getName(),
       '@url' => url('admin/config/workflow/workflow/edit/' . $workflow->wid),
     );
     watchdog('workflow', 'Created workflow %name', $args);

@@ -109,9 +109,15 @@ class Workflow extends Entity {
 
     $is_new = !empty($this->is_new);
     $is_rebuild = !empty($this->is_rebuild);
+    $is_reverted = !empty($this->is_reverted);
 
+dpm($this, ' save');
     // If rebuild by Features, make some conversions.
-    if ($is_rebuild) {
+    if (!$is_rebuild && !$is_reverted) {
+      // Avoid troubles with features clone/revert/..
+      unset($this->module);
+    }
+    else {
       if ($role_map = $this->system_roles) {
         // Remap roles. They can come from another system with shifted role IDs.
         // See also https://drupal.org/node/1702626 .
@@ -128,12 +134,16 @@ class Workflow extends Entity {
         }
       }
     }
+    // After update.php or import feature, label might be empty. @todo: remove in D8.
+    if (empty($this->label)) {
+      $this->label = $this->name;
+    }
 
     $return = parent::save();
 
     // If a workflow is cloned in Admin UI, it contains data from original workflow.
     // Redetermine the keys.
-    if ($is_new && $this->states) {
+    if (($is_new) && $this->states) {
       foreach ($this->states as $state) {
         // Can be array when cloning or with features.
         $state = is_array($state) ? new WorkflowState($state) : $state;
@@ -517,7 +527,7 @@ class Workflow extends Entity {
   }
 
   protected function defaultLabel() {
-    return $this->name;
+    return isset($this->label) ? $this->label : '';
   }
 
   protected function defaultUri() {
@@ -528,6 +538,7 @@ class Workflow extends Entity {
 
 function _workflow_rebuild_roles(array $roles, array $role_map) {
   // See also https://drupal.org/node/1702626 .
+  $new_roles = array();
   foreach ($roles as $key => $rid) {
     if ($rid == -1) {
       $new_roles[$rid] = $rid;

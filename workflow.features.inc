@@ -63,6 +63,19 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
 
     return array($hook => $output);
   }
+
+  /**
+   * Overridden to not delete upon revert.
+   */
+  function revert($module = NULL) {
+    // Loads defaults from feature code.
+    $defaults = features_get_default($entity_type, $module);
+    if ($defaults = features_get_default($this->type, $module)) {
+      foreach ($defaults as $name => $entity) {
+        // entity_delete($this->type, $name);
+      }
+    }
+  }
 }
 
 
@@ -72,7 +85,15 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
 function workflow_features_rebuild($module) {
   // workflow_features_revert($module);
   $entity_type = 'Workflow';
-  return entity_features_get_controller($entity_type)->revert($module);
+
+  // Do not delete the previous workflow. It will break the installation due to
+  // the new $wid that is created.
+  // return entity_features_get_controller($entity_type)->revert($module);
+
+//  $info = entity_get_info($entity_type);
+//  if (in_array('EntityAPIControllerInterface', class_implements($info['controller class']))) {
+//    return entity_get_controller($entity_type)->import($export);
+//  }
 }
 
 /** *******************************************************************

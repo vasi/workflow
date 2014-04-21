@@ -92,11 +92,19 @@ function workflow_schema() {
         'not null' => TRUE,
       ),
       'name' => array(
-        'description' => 'The name of the workflow (used as machine name for features integration).',
+        'description' => 'The machine-readable name of this workflow.',
         'type' => 'varchar',
         'length' => '255',
         'not null' => TRUE,
         'default' => '',
+      ),
+      'label' => array(
+        'description' => 'The human-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
       ),
       'status' => array(
         'type' => 'int', 
@@ -113,7 +121,7 @@ function workflow_schema() {
         'length' => 255, 
         'not null' => FALSE,
       ),
-       'tab_roles' => array(
+      'tab_roles' => array(
         'description' => 'The role IDs that can access the workflow tabs on node pages.',
         'type' => 'varchar',
         'length' => '255',
@@ -699,13 +707,20 @@ function workflow_update_7008() {
  *
  * Ignore the 'User warning'.
  */
-function workflow_update_7009() {
+function workflow_update_7010() {
   $schema = workflow_schema();
   $fields = $schema['workflows']['fields'];
+  if (!db_field_exists('workflows', 'label')) {
+    db_add_field('workflows', 'label', $fields['label']);
+  }
   if (!db_field_exists('workflows', 'status')) {
     db_add_field('workflows', 'status', $fields['status']);
   }
   if (!db_field_exists('workflows', 'module')) {
     db_add_field('workflows', 'module', $fields['module']);
+  }
+  // Load&save workflows, to populate the label.
+  foreach (workflow_load_multiple() as $workflow) {
+    $workflow->save();
   }
 }
