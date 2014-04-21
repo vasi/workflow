@@ -135,7 +135,8 @@ function workflow_load($wid) {
  * Caveat: this only works for entities with EntityAPIControllerExportable.
  */
 function workflow_load_by_name($name) {
-  return reset(entity_load_multiple_by_name('Workflow', array($name)));
+  $workflows = entity_load_multiple_by_name('Workflow', array($name));
+  return reset($workflows);
 }
 
 function workflow_load_single($wid) {

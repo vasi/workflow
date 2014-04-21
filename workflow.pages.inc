@@ -30,7 +30,8 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   // For workflow_tab_page with multiple workflows, use a separate view. See [#2217291].
   if ($workflow) {
     // $field = _workflow_info_field($field_name, $workflow);
-    $field = reset(_workflow_info_fields($entity, $entity_type));
+    $field_info = _workflow_info_fields($entity, $entity_type);
+    $field = reset($field_info);
     $field_name = $field['field_name'];
     $field_id = $field['id'];
     $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
