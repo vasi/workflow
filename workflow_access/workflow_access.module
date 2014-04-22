@@ -116,7 +116,7 @@ function workflow_access_node_access_records($node) {
   if (!isset($node->workflow_transitions)) {
     $node->workflow_transitions = array();
     // Sometimes, a node is saved without going through workflow_transition_form.
-    // E.g., 
+    // E.g.,
     // - when saving a node with workflow_node programmatically with node_save();
     // - when changing a state on a node view page/history tab;
     // - when rebuilding permissions via batch for workflow_node and workflow_field.

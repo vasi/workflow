@@ -196,6 +196,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'seconds':
+          // This is our custom date token in 'seconds ago' format.
           $seconds = REQUEST_TIME - $data['date'];
           $replacements[$original] = $seconds;
           break;
@@ -278,10 +279,21 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       $field_name = isset($data['field_name']) ? $data['field_name'] : NULL;
       // Get NUMERIC id.
       list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
+
+      // If the node is being created or updated, do not read from db, since
+      // the field widget has not been processed yet.
+      // @todo: solve this with module weight?
+      if (empty($entity_id) || isset($entity->original)) {
+        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id);
+        $last_transition = $field_name ? $transitions[$field_name] : reset($transitions);
+      }
+      else {
+        $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
+      }
       $sub_token_type = 'WorkflowTransition';
       $data = array(
         'entity_type' => $sub_token_type,
-        'entity' => workflow_transition_load_single($entity_type, $entity_id, $field_name),
+        'entity' => $last_transition,
         'token_type' => $sub_token_type,
       );
       $replacements += token_generate('entity', $sub_tokens, $data, $options);
@@ -364,4 +376,32 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   }
 
   return $replacements;
+}
+
+function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id) {
+  global $user;
+  $transitions = array();
+
+  foreach ($fields = _workflow_info_fields($entity, $entity_type) as $field_name => $field) {
+    // Create a dummy transition, just to set $node->workflow_transitions.
+    $new_sid = _workflow_get_sid_by_items($entity->{$field_name}[LANGUAGE_NONE]);
+    if (!isset($entity_id)) {
+      // Creating an entity.
+      $new_state = workflow_state_load($new_sid);
+      $workflow = $new_state->getWorkflow();
+      $old_sid = $workflow->getCreationSid();
+    }
+    elseif (isset($entity->original)) {
+      // Updating an entity.
+      $old_sid = _workflow_get_sid_by_items($entity->original->{$field_name}[LANGUAGE_NONE]);
+    }
+    $transition = new WorkflowTransition();
+    $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, '');
+
+    // Store the transition, so it can be easily fetched later on.
+    // Store in an array, to prepare for multiple workflow_fields per entity.
+    // This is a.o. used in hook_entity_update to trigger 'transition post'.
+    $transitions[$field_name] = $transition;
+  }
+  return $transitions;
 }

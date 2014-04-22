@@ -510,3 +510,4 @@ Issue #2226781: Fixed error on type_map admin page for PHP5.4
 Issue #2226781: Fixed warnings for PHP5.4 using reset().
 Issue #2241577: Added machine_name to Workflow, influencing features.
 Issue #2240009: Removed dpm().
+Issue #2240009: Fixed 'chained' tokens now also workf when saving entities.
