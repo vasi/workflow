@@ -111,7 +111,6 @@ class Workflow extends Entity {
     $is_rebuild = !empty($this->is_rebuild);
     $is_reverted = !empty($this->is_reverted);
 
-dpm($this, ' save');
     // If rebuild by Features, make some conversions.
     if (!$is_rebuild && !$is_reverted) {
       // Avoid troubles with features clone/revert/..
