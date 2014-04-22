@@ -555,13 +555,14 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
   // Get the state objects as array ($sid => WorkflowState)
   $states = $workflow->getStates($all = TRUE);
   // Create a dummy object for new state item.
+  $maxweight = $minweight = -50;
   $wid = $workflow->wid;
   $dummy = $workflow->createState('');
-  $dummy->weight = 99;
+  $dummy->weight = $minweight;
   $states[$dummy->sid] = $dummy; // Although the index is 0, the state is appended at the end of the list.
 
   foreach ($states as $state) {
-    // Allow modules to insert state operations.
+    // Allow modules to insert operations per state.
     $links = module_invoke_all('workflow_operations', 'state', $workflow, $state);
 
     // Make it impossible to reassign to the same state that is disabled.
@@ -619,16 +620,22 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
 
     // Don't let the creation state change weight or status or name.
     if ($state->isCreationState()) {
-      $form['states'][$state->sid]['weight']['#value'] = -50;
+      $form['states'][$state->sid]['weight']['#value'] = $minweight;
       $form['states'][$state->sid]['sysid']['#value'] = 1;
       $form['states'][$state->sid]['state']['#disabled'] = TRUE;
       $form['states'][$state->sid]['status']['#disabled'] = TRUE;
       $form['states'][$state->sid]['reassign']['#type'] = 'hidden';
       $form['states'][$state->sid]['reassign']['#disabled'] = TRUE;
     }
+    // New state and disabled states cannot be reassigned.
     if (!$state->sid || !$state->isActive()) {
       $form['states'][$state->sid]['reassign']['#type'] = 'hidden';
       $form['states'][$state->sid]['reassign']['#disabled'] = TRUE;
+    }
+    // Set a proper weight to the new state.
+    $maxweight = max($maxweight, $state->weight);
+    if (!$state->sid) {
+      $form['states'][$state->sid]['weight']['#default_value'] = $maxweight + 1;
     }
   }
 
