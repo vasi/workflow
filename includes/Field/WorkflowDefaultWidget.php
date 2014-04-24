@@ -279,8 +279,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       foreach ($options as $sid => $state_label) {
         $element['workflow']['submit_sid'][$sid] = array(
           '#type' => 'submit',
-          // @todo: the label could be set in 'transition permitted' hook, or when fetching the allowed states.
-          '#value' => (($sid == $current_sid) ? t('Leave at') : t('Set to')) . ' ' . $state_label,
+          '#value' => $state_label,
           '#executes_submit_callback' => TRUE,
           '#validate' => array('_workflow_transition_form_validate_buttons'), // ($form, &$form_state)
           // Add the submit function only if one provided. @todo: On node edit form, we have not the proper function. 
