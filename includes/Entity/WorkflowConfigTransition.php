@@ -37,6 +37,10 @@ class WorkflowConfigTransitionController extends EntityAPIController {
         }
       }
     }
+    // Create the machine_name. This can be used to rebuild/revert the Feature in a target system.
+    if (empty($entity->name)) {
+      $entity->name = $entity->sid . '_'. $entity->target_sid;
+    }
     $return = parent::save($entity, $transaction);
 
     // Reset the cache for the affected workflow.
@@ -88,7 +92,7 @@ class WorkflowConfigTransition extends Entity {
   }
 
   protected function defaultLabel() {
-    return ''; // $this->title;
+    return $this->label;
   }
 
   protected function defaultUri() {

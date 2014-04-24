@@ -99,15 +99,23 @@ class Workflow extends Entity {
 
   /**
    * Given information, update or insert a new workflow.
+   *
+   * This also handles importing, rebuilding, reverting from Features, 
+   * as defined in workflow.features.inc.
+   * todo: reverting does not refresh States and transitions, since no
+   * machine_name was present. As of 7.x-2.3, the machine_name exists in 
+   * Workflow and WorkflowConfigTransition, so rebuilding is possible.
+   *
+   * When changing this function, test with the following situations:
+   * - maintain Workflow in Admin UI;
+   * - clone Workflow in Admin UI;
+   * - create/revert/rebuild Workflow with Features; @see workflow.features.inc
+   * - save Workflow programmatically;
    */
   public function save($create_creation_state = TRUE) {
-    // When changing this function, test with the following situations:
-    // - maintain Workflow in Admin UI;
-    // - clone Workflow in Admin UI;
-    // - create Workflow with Features;
-    // - save Workflow programmatically;
-
+    // Are we saving a new Workflow?
     $is_new = !empty($this->is_new);
+    // Are we rebuilding, reverting a new Workflow? @see workflow.features.inc
     $is_rebuild = !empty($this->is_rebuild);
     $is_reverted = !empty($this->is_reverted);
 
@@ -117,7 +125,8 @@ class Workflow extends Entity {
       unset($this->module);
     }
     else {
-      if ($role_map = $this->system_roles) {
+      $role_map = isset($this->system_roles) ? $this->system_roles : array();
+      if ($role_map) {
         // Remap roles. They can come from another system with shifted role IDs.
         // See also https://drupal.org/node/1702626 .
         $this->tab_roles = _workflow_rebuild_roles($this->tab_roles, $role_map);

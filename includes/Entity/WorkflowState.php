@@ -359,16 +359,20 @@ class WorkflowState extends Entity {
         if (!in_array(FALSE, $permitted, TRUE)) {
           // If not vetoed, add to list (by replacing the object by the name).
           if ($target_state = $workflow->getState($new_sid)) {
-            $options[$new_sid] = check_plain(t($target_state->label()));
+            $label = $transition->label() ? $transition->label() : $target_state->label();
+            $options[$new_sid] = check_plain(t($label));
           }
         }
       }
       // Include current state for same-state transitions (by replacing the object by the name).
+      // Caveat: this unnecessary since 7.x-2.3 (where stay-on-state transitions are saved, too.)
+      // but only if the transitions are saved once.
       if ($current_sid != $workflow->getCreationSid()) {
-        if ($current_state = $workflow->getState($current_sid)) {
+        if (!isset($options[$current_sid]) && $current_state = $workflow->getState($current_sid)) {
           $options[$current_sid] = check_plain(t($current_state->label()));
         }
       }
+
       // Remove the unpermitted options.
       foreach ($options as $key => $data) {
         if (is_object($data) ) {

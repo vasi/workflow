@@ -8,6 +8,8 @@
  * We're moving workflow in a API direction, so UI and the like - out.
  */
 
+// Caveat: Several hooks have moved into the EntityWorkflowUIController class.
+
 define('WORKFLOW_ADMIN_UI_ARROW', '&#8594;');
 
 /**
@@ -20,7 +22,8 @@ function workflow_admin_ui_entity_info_alter(&$entity_info) {
     'access callback' => 'workflow_access',
     'admin ui' => array(
       'path' => 'admin/config/workflow/workflow',
-      'file' => 'workflow_admin_ui/workflow_admin_ui.pages.inc',
+      // Do not add 'file', since each page has its own file.
+      //'file' => 'workflow_admin_ui/workflow_admin_ui.pages.inc',
       'controller class' => 'EntityWorkflowUIController',
       'menu wildcard' => '%workflow',
     ),
@@ -60,6 +63,15 @@ function workflow_admin_ui_help($path, $arg) {
         'participate in workflows' <a href='!url'> on the Permissions page</a>.",
         array('!url' => url('admin/people/permissions', array('fragment' =>
         'module-workflow'))));
+
+    case 'admin/config/workflow/workflow/manage/%/labels':
+      return t('You can add labels to transitions if you don\'t like the
+        standard state labels. They will modify the Workflow form options, so
+        specific workflow transitions can have their own labels, relative to
+        the beginning and ending states. Rather than showing the user a
+        workflow box containing options like "review required" as a state in
+        the workflow, it could say "move to the editing department for grammar
+        review".');
   }
 }
 
@@ -76,6 +88,8 @@ function workflow_admin_ui_permission() {
 }
 
 function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
+  module_load_include('inc', 'workflow_admin_ui', 'workflow_admin_ui.page.workflow');
+
   switch ($op) {
     case 'add':
     case 'edit':

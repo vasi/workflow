@@ -99,7 +99,7 @@ function workflow_schema() {
         'default' => '',
       ),
       'label' => array(
-        'description' => 'The human-readable name of this type.',
+        'description' => 'The human-readable name of this workflow.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -168,6 +168,21 @@ function workflow_schema() {
         'description' => 'The primary identifier for a workflow transition.',
         'type' => 'serial',
         'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'The machine-readable name of this transition.',
+        'type' => 'varchar',
+        'length' => '32',
+        // 'not null' => TRUE,
+        'default' => '',
+      ),
+      'label' => array(
+        'description' => 'The human-readable name of this transition.',
+        'type' => 'varchar',
+        'length' => '128',
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
       ),
       'sid' => array(
         'description' => 'The {workflow_states}.sid start state.',
@@ -707,20 +722,35 @@ function workflow_update_7008() {
  *
  * Ignore the 'User warning'.
  */
-function workflow_update_7010() {
+function workflow_update_7011() {
   $schema = workflow_schema();
-  $fields = $schema['workflows']['fields'];
-  if (!db_field_exists('workflows', 'label')) {
-    db_add_field('workflows', 'label', $fields['label']);
+
+  // Update the Workflow table.
+  $table = 'workflows';
+  $fields = $schema[$table]['fields'];
+  if (!db_field_exists($table, 'label')) {
+    db_add_field($table, 'label', $fields['label']);
   }
-  if (!db_field_exists('workflows', 'status')) {
-    db_add_field('workflows', 'status', $fields['status']);
+  if (!db_field_exists($table, 'status')) {
+    db_add_field($table, 'status', $fields['status']);
   }
-  if (!db_field_exists('workflows', 'module')) {
-    db_add_field('workflows', 'module', $fields['module']);
+  if (!db_field_exists($table, 'module')) {
+    db_add_field($table, 'module', $fields['module']);
   }
   // Load&save workflows, to populate the label.
   foreach (workflow_load_multiple() as $workflow) {
     $workflow->save();
   }
+
+  // Update the ConfigTransition table.
+  $table = 'workflow_transitions';
+  $fields = $schema[$table]['fields'];
+  if (!db_field_exists($table, 'label')) {
+    db_add_field($table, 'label', $fields['label']);
+  }
+  if (!db_field_exists($table, 'name')) {
+    db_add_field($table, 'name', $fields['name']);
+  }
+
+
 }
