@@ -166,7 +166,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
     $current_sid = workflow_node_current_state($node, 'node', '');
     $state = workflow_state_load_single($current_sid);
   }
-  return $state->getOptions('node', $node, $force);
+  return $state->getOptions('node', $node, $force, '');
 }
 
 /**

@@ -180,7 +180,7 @@ function workflow_admin_ui_type_map_form_submit($form, &$form_state) {
       // If this type uses workflow, make sure pre-existing nodes are set
       // to the workflow's creation state.
       if ($form_values['type_map'][$node_type]['workflow']) {
-        _workflow_node_initialize_nodes('node', $node_type, '', $wid);
+        _workflow_node_initialize_nodes('node', $node_type, $field_name = '', $wid);
       }
     }
   }
@@ -195,9 +195,6 @@ function workflow_admin_ui_type_map_form_submit($form, &$form_state) {
  */
 function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, $wid) {
   global $user;
-
-  $entity_type = 'node';  // 'Initialize' only for 'pure' nodes with type_map + Node API
-  $field_name = '';
 
   // Build the select query.
   // We want all published nodes of this type that don't already have a workflow state.
@@ -219,6 +216,7 @@ function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, 
   $comment = t('Pre-existing content set to initial state.');
 
   $workflow = workflow_load_single($wid);
+  $force = TRUE;
   $creation_sid = $workflow->getCreationSid();
 
   // Load them all up.
@@ -226,13 +224,13 @@ function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, 
   foreach ($nodes as $entity) {
     // Get the initial state for this entity.
     // Due to permissions, it might be different for each.
-    $new_sid = $workflow->getFirstSid($entity_type, $entity);
+    $new_sid = $workflow->getFirstSid($entity_type, $entity, $force, $field_name);
 
     $transition = new WorkflowTransition();
     $transition->setValues($entity_type, $entity, $field_name, $creation_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
 
     // Force it to transition to the first state and get a history record.
-    workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
+    workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force);
   }
 
   drupal_set_message(t('!count @type nodes have been initialized.', array('@type' => node_type_get_name($node_type), '!count' => $how_many)));

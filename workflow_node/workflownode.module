@@ -83,7 +83,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   $node->content['workflow_current_state'] = workflow_state_formatter($entity_type, $node);
   $node->content['workflow_current_state']['#weight'] = -99;
 
-  if ($current_state && $current_state->showWidget($entity_type, $node, FALSE)) {
+  if ($current_state && $current_state->showWidget($entity_type, $node, FALSE, '')) {
     $form = array();
     $workflow = $current_state->getWorkflow();
 

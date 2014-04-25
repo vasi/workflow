@@ -46,7 +46,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
     return $list_element;
   }
   // Only build form if user has possible target state(s).
-  if (!$current_state->showWidget($entity_type, $entity, $force = FALSE)) {
+  if (!$current_state->showWidget($entity_type, $entity, $force = FALSE, $field_name)) {
     return $list_element;
   }
 

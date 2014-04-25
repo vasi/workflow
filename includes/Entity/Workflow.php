@@ -315,9 +315,9 @@ class Workflow extends Entity {
    *
    * Uses WorkflowState::getOptions(), because this does a access check.
    */
-  public function getFirstSid($entity_type, $entity) {
+  public function getFirstSid($entity_type, $entity, $force, $field_name) {
     $creation_state = $this->getCreationState();
-    $options = $creation_state->getOptions($entity_type, $entity);
+    $options = $creation_state->getOptions($entity_type, $entity, $force, $field_name);
     if ($options) {
       $keys = array_keys($options);
       $sid = $keys[0];

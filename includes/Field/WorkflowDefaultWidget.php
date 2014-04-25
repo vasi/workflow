@@ -115,8 +115,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
       if ($current_state = workflow_state_load_single($current_sid)) {
         // $grouped = TRUE; // Grouped options only makes sense for multiple workflows.
-        $options = $current_state->getOptions($entity_type, $entity, $force);
-        $show_widget = $current_state->showWidget($entity_type, $entity, $force);
+        $options = $current_state->getOptions($entity_type, $entity, $force, $field_name);
+        $show_widget = $current_state->showWidget($entity_type, $entity, $force, $field_name);
 
         // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
         $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
@@ -357,7 +357,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       return $new_sid;
     }
 
-    $transition = $this->getTransition($old_sid, $items);
+    $transition = $this->getTransition($old_sid, $items, $field_name);
 
     $force = $force || $transition->isForced();
 
@@ -418,7 +418,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    *
    * This merely extracts the transition from the form/widget. No validation.
    */
-  public function getTransition($old_sid, array $items) {
+  public function getTransition($old_sid, array $items, $field_name) {
     global $user;
 
     $entity_type = $this->entity_type;
@@ -453,7 +453,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           // This only happens on workflows, when only one transition from
           // '(creation)' to another state is allowed.
           $workflow = $state->getWorkflow();
-          $new_sid = $workflow->getFirstSid($items[0]['workflow']['workflow_entity_type'], $items[0]['workflow']['workflow_entity_type']);
+          $new_sid = $workflow->getFirstSid($this->entity_type, $this->entity, FALSE, $field_name);
         }
       }
 

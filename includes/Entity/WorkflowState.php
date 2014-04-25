@@ -265,8 +265,8 @@ class WorkflowState extends Entity {
    * @return bool $show_widget
    *   TRUE = a form (a.k.a. widget) must be shown; FALSE = no form, a formatter must be shown instead.
    */
-  public function showWidget($entity_type, $entity, $force = FALSE) {
-    $options = $this->getOptions($entity_type, $entity, $force);
+  public function showWidget($entity_type, $entity, $force, $field_name) {
+    $options = $this->getOptions($entity_type, $entity, $force, $field_name);
     $count = count($options);
     // The easiest case first: more then one option: always show form.
     if ($count > 1) {

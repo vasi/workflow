@@ -50,7 +50,7 @@ function workflow_vbo_next_state_action($entity, array $context) {
   $current_state = workflow_state_load_single($current_sid);
 
   // Get the node's new state (which is the next available state).
-  $options = $current_state->getOptions($entity_type, $entity);
+  $options = $current_state->getOptions($entity_type, $entity, $field_name);
   $new_sid = $current_sid;
   $flag = $current_state->isCreationState();
   foreach ($options as $sid => $name) {

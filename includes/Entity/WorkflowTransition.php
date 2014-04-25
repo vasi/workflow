@@ -183,6 +183,7 @@ class WorkflowTransition extends Entity {
     $new_state = workflow_state_load_single($new_sid);
     $entity_type = $this->entity_type;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
+    $field_name = $this->field_name;
 
     $t_args = array(
       '%old_sid' => $old_sid,
@@ -213,7 +214,7 @@ class WorkflowTransition extends Entity {
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = array();
     if ($old_state) {
-      $options = $old_state->getOptions($entity_type, $entity, $force);
+      $options = $old_state->getOptions($entity_type, $entity, $force, $field_name);
     }
     if (!array_key_exists($new_sid, $options)) {
       drupal_set_message(t('The transition from %old_sid_label to %new_sid_label is not allowed.', $t_args), 'error');

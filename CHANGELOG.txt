@@ -517,3 +517,4 @@ Issue #0073412: Removed hardcoded text on action buttons, since they can be set 
 Issue #2019345: Fixed constructor of WorkflowConfigTransition.
 Issue #0744272: Added new hook to allow freely definable transitions per state.
 Issue #0744272: Fixed sort order of states in Workflow Form was not according to states weight.
+Issue #2102409: Fixed some function (calls) dit not support multiple field_names.

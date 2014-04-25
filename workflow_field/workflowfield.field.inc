@@ -186,7 +186,7 @@ function workflowfield_options_list($field, $instance, $entity_type, $entity) {
     $field_name = $field['field_name'];
     $sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $state = workflow_state_load_single($sid);
-    $options = $state->getOptions($entity_type, $entity, $force = FALSE);
+    $options = $state->getOptions($entity_type, $entity, $force = FALSE, $field_name);
   }
   return $options;
 }

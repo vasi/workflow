@@ -106,14 +106,14 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
     $entity_type = 'node'; // @todo: support other entity types in workflow_tokens().
     $entity_bundle = $node->type;
     // We do not know which field we want to use. Just pick one.
-    $field_name = NULL; // @todo: support multiple Workflow fields per entity in workflow_tokens(), using $node->workflow_transitions.
+    $field_name = ''; // For workflow_node, multiple workflow per node_type are not supported.
 
     if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       // Get a list of all possible states for returning state names.
       $states = workflow_state_load_multiple();
       $wid = $workflow->wid;
 
-      $last_history = workflow_transition_load_single($entity_type, $entity_id, $field_name);
+      $last_history = workflow_transition_load_single($entity_type, $entity_id, '');
 
       if (isset($node->workflow) && !isset($node->workflow_stamp)) {
         // Workflow Node mode.
@@ -132,7 +132,7 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
         if (empty($last_history)) {
           // If the node has no workflow history,
           // the node is being inserted and will soon be transitioned to the first valid state.
-          $new_sid = $workflow->getFirstSid($entity_type, $node);
+          $new_sid = $workflow->getFirstSid($entity_type, $node, FALSE, '');
           if ($new_sid) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
