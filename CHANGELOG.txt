@@ -515,3 +515,4 @@ Issue #2226781: Fixed new states add added at end of state list.
 Issue #0073412: Fixed a long-standing issue by adding a machine_name and label for Transitions! Many thanks to workflow_named_transitions.
 Issue #0073412: Removed hardcoded text on action buttons, since they can be set with Transition labels, now.
 Issue #2019345: Fixed constructor of WorkflowConfigTransition.
+Issue #0744272: Added new hook to allow freely definable transitions per state.

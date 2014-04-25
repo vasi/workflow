@@ -38,10 +38,13 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
   switch ($op) {
     case 'transition permitted':
       // This operation is called in the following situations: 
-      // 1. when executing a transition, just before the 'transition pre';
-      // 2. when the list of available transitions in built;
+      // 1. when the widget with list of available transitions is built;
+      // 2. when executing a transition, just before the 'transition pre';
+      // 3. when showing a 'revert state' link in a Views display.
       // Your module's implementation may return FALSE here and disallow
       // the execution, or avoid the presentation of the new State.
+      // As of 7.x-2.3, better use hook_workflow_permitted_state_transitions_alter() in option 1.
+      // For options 2 and 3, the 'transition pre' gives an alternative.
       return TRUE;
 
     case 'transition pre':
@@ -112,4 +115,43 @@ function hook_workflow_history_alter(array &$variables) {
 function hook_workflow_comment_alter(&$comment, &$context) {
   $transition = $context->transition;
   $comment = $transition->uid . 'says: ' . $comment;
+}
+
+/*
+ * Implements hook_workflow_permitted_state_transitions_alter().
+ *
+ * @param array $transitions
+ *  An array of allowed transitions from the current state (as provided in
+ *  $context). They are already filtered by the settings in Admin UI.
+ * @param array $context
+ *  An array of relevant objects. Currently:
+ *    $context = array(
+ *      'entity_type' => $entity_type,
+ *      'entity' => $entity,
+ *      'field_name' => $field_name,
+ *      'force' => $force,
+ *      'workflow' => $workflow,
+ *      'state' => $current_state,
+ *      'user_roles' => $roles,
+ *    );
+ *
+ * This hook in invoked in WorkflowState::getOptions().
+ * This hooks allows you to add custom filtering of allowed target states,
+ * add new custom states, change labels, etc.
+ */
+function hook_workflow_permitted_state_transitions_alter(&$transitions, $context) {
+  // This example creates a new custom target state.
+  $values = array(
+    // Fixed values for new transition.
+    'wid' => $context['workflow']->wid,
+    'sid' => $context['state']->sid,
+
+    // Custom values for new transition.
+    // The ID must be an integer, due to db-table constraints.
+    'target_sid' => '998',
+    'label' => 'go to my new fantasy state',
+  );
+  $new_transition = new WorkflowConfigTransition($values);
+
+  $transitions[] = $new_transition;
 }

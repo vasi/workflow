@@ -295,7 +295,7 @@ class WorkflowState extends Entity {
    *
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
-  public function getOptions($entity_type, $entity, $force = FALSE) {
+  public function getOptions($entity_type, $entity, $force = FALSE, $field_name = '') {
     global $user;
     static $cache = array(); // Entity-specific cache per page load.
 
@@ -338,45 +338,59 @@ class WorkflowState extends Entity {
       // Unfortunately, the config_transitions are not sorted.
       // Also, $transitions does not contain the 'stay on current state' transition.
       // The allowed objects will be replaced with names.
-      $options = $workflow->getStates();
+      $current_state = $workflow->getState($current_sid);
       $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
+
+      // Let custom code add/remove/alter the available transitions.
+      // Using the new drupal_alter.
+      // Modules may veto a choice by removing a transition from the list.
+      $context = array(
+        'entity_type' => $entity_type,
+        'entity' => $entity,
+        'field_name' => $field_name,
+        'force' => $force,
+        'workflow' => $workflow,
+        'state' => $current_state,
+        'user_roles' => $roles,
+      );
+      drupal_alter('workflow_permitted_state_transitions', $transitions, $context);
+
+      // Let custom code change the options, using old_style hook.
       foreach ($transitions as $transition) {
         $new_sid = $transition->target_sid;
-        // $field_name = $transition->field_name; // @todo: add $field_name.
+        $permitted = array();
 
+        // @todo D8: delete below hook for better performance and flexibility.
+        // Above drupal_alter() calls hook_workflow_permitted_state_transitions_alter() only once.
+        //
         // We now have a list of config_transitions. Check them against the Entity.
         // Invoke a callback indicating that we are collecting state choices.
         // Modules may veto a choice by returning FALSE.
         // In this case, the choice is never presented to the user.
-        // @todo: for better performance, call a hook only once: can we find a way to pass all transitions at once
-        if ($roles == 'ALL') {
-          $permitted = array();
+        // @todo D8: remove. See also other calls to this hook.
+        if ($roles != 'ALL') {
+          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name, $transition);
         }
-        else {
-          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name = '', $transition); // @todo: add $field_name.
-        }
-        // Stop if a module says so.
+
+        // If not vetoed by a module, add to list.
         if (!in_array(FALSE, $permitted, TRUE)) {
-          // If not vetoed, add to list (by replacing the object by the name).
-          if ($target_state = $workflow->getState($new_sid)) {
-            $label = $transition->label() ? $transition->label() : $target_state->label();
-            $options[$new_sid] = check_plain(t($label));
+          // Get the label of the transition, and if empty of the target state.
+          // Beware: the target state may not exist, since it can be invented
+          // by custom code in the above drupal_alter() hook.
+          if (!$label = $transition->label()) {
+            $target_state = $workflow->getState($new_sid);
+            $label = $target_state ? $target_state->label() : '';
           }
-        }
-      }
-      // Include current state for same-state transitions (by replacing the object by the name).
-      // Caveat: this unnecessary since 7.x-2.3 (where stay-on-state transitions are saved, too.)
-      // but only if the transitions are saved once.
-      if ($current_sid != $workflow->getCreationSid()) {
-        if (!isset($options[$current_sid]) && $current_state = $workflow->getState($current_sid)) {
-          $options[$current_sid] = check_plain(t($current_state->label()));
+          $options[$new_sid] = check_plain(t($label));
         }
       }
 
-      // Remove the unpermitted options.
-      foreach ($options as $key => $data) {
-        if (is_object($data) ) {
-          unset($options[$key]);
+      // Include current state for same-state transitions.
+      // Caveat: this unnecessary since 7.x-2.3 (where stay-on-state transitions are saved, too.)
+      // but only if the transitions are saved once.
+      if ($current_sid != $workflow->getCreationSid()) {
+        if (!isset($options[$current_sid])) {
+          $options[$current_sid] = check_plain(t($current_state->label()));
         }
       }
 

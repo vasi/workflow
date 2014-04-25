@@ -283,6 +283,7 @@ class WorkflowTransition extends Entity {
 
       if (!$force) {
         // Make sure this transition is allowed.
+        // @todo D8: remove, or replace by 'transition pre'. See WorkflowState::getOptions().
         $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
         // Stop if a module says so.
         if (in_array(FALSE, $permitted, TRUE)) {

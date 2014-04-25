@@ -236,13 +236,15 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         case 'old_state':
           // Valid for WorkflowTransition.
           $state = workflow_state_load($entity->old_sid);
-          $replacements[$original] = $sanitize ? filter_xss($state->label()) : $state->label();
+          $replacement = $state ? $state->label() : '<unknown>';
+          $replacements[$original] = $sanitize ? filter_xss($replacement) : $replacement;
           break;
 
         case 'new_state':
           // Valid for WorkflowTransition.
           $state = workflow_state_load($entity->new_sid);
-          $replacements[$original] = $sanitize ? filter_xss($state->label()) : $state->label();
+          $replacement = $state ? $state->label() : '<unknown>';
+          $replacements[$original] = $sanitize ? filter_xss($replacement) : $replacement;
           break;
 
         case 'user':
