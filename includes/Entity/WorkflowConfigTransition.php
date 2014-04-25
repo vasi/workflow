@@ -77,8 +77,11 @@ class WorkflowConfigTransition extends Entity {
 
   // Implementing clone needs a list of tid-less transitions, and a conversion
   // of sids for both States and ConfigTransitions.
-  // public function __construct(array $values = array(), $entityType = NULL) {}
   // public function __clone() {}
+
+  public function __construct(array $values = array(), $entityType = NULL) {
+    return parent::__construct($values, $entityType = 'WorkflowConfigTransition');
+  }
 
   /**
    * Permanently deletes the entity.
