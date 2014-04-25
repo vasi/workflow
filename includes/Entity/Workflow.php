@@ -445,6 +445,8 @@ class Workflow extends Entity {
         $transitions[$transition->tid] = $transition;
       }
     }
+    // Sort the states on state weight.
+    usort($transitions, '_workflow_transitions_sort_by_weight');
     return $transitions;
   }
 
@@ -557,4 +559,21 @@ function _workflow_rebuild_roles(array $roles, array $role_map) {
     }
   }
   return $new_roles;
+}
+
+/**
+ * Helper function to sort the transitions.
+ */
+function _workflow_transitions_sort_by_weight($a, $b) {
+  $old_state_a1 = workflow_state_load($a->sid);
+  $old_state_b1 = workflow_state_load($b->sid);
+  if ($old_state_a1->weight < $old_state_b1->weight)  return -1;
+  if ($old_state_a1->weight > $old_state_b1->weight)  return +1;
+
+  $old_state_a2 = workflow_state_load($a->target_sid);
+  $old_state_b2 = workflow_state_load($b->target_sid);
+  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight == $old_state_b2->weight) return 0;
+  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight < $old_state_b2->weight)  return -1;
+  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight > $old_state_b2->weight)  return +1;
+  return ($old_state_a->weight < $old_state_b->weight) ? -1 : 1;
 }

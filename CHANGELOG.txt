@@ -516,3 +516,4 @@ Issue #0073412: Fixed a long-standing issue by adding a machine_name and label f
 Issue #0073412: Removed hardcoded text on action buttons, since they can be set with Transition labels, now.
 Issue #2019345: Fixed constructor of WorkflowConfigTransition.
 Issue #0744272: Added new hook to allow freely definable transitions per state.
+Issue #0744272: Fixed sort order of states in Workflow Form was not according to states weight.

@@ -50,7 +50,6 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
   $first_row = TRUE;
   // Get transitions, sorted by weight of the old state.
   $config_transitions = $workflow->getTransitions();
-  usort($config_transitions, '_workflow_transitions_sort_by_weight');
   foreach ($config_transitions as $transition) {
     $old_state = workflow_state_load($transition->sid);
     $new_state = workflow_state_load($transition->target_sid);
@@ -100,21 +99,4 @@ function workflow_admin_ui_labels_form_submit($form, &$form_state) {
     $config_transition->save();
   }
   drupal_set_message(t('The transition labels have been saved.'));
-}
-
-/**
- * Helper function to sort the transitions.
- */
-function _workflow_transitions_sort_by_weight($a, $b) {
-  $old_state_a1 = workflow_state_load($a->sid);
-  $old_state_b1 = workflow_state_load($b->sid);
-  if ($old_state_a1->weight < $old_state_b1->weight)  return -1;
-  if ($old_state_a1->weight > $old_state_b1->weight)  return +1;
-
-  $old_state_a2 = workflow_state_load($a->target_sid);
-  $old_state_b2 = workflow_state_load($b->target_sid);
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight == $old_state_b2->weight) return 0;
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight < $old_state_b2->weight)  return -1;
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight > $old_state_b2->weight)  return +1;
-  return ($old_state_a->weight < $old_state_b->weight) ? -1 : 1;
 }
