@@ -124,7 +124,7 @@ function workflow_access($op, $entity, $account, $entity_type) {
   if (!isset($account)) {
     $account = $user;
   }
-  return user_access('administer workflows', $account);
+  return user_access('administer workflow', $account);
 }
 
 /**
