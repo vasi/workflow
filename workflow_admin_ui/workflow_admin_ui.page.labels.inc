@@ -14,10 +14,10 @@
  * AUTHOR
  * ------
  * David Kent Norman (http://deekayen.net/)
- * 
+ *
  * Amazon Honor System donation:
  * http://zme.amazon.com/exec/varzea/pay/T2EOCSRRDQ9CL2
- * 
+ *
  * Paypal donation:
  * https://www.paypal.com/us/cgi-bin/webscr?cmd=_xclick&business=paypal@deekayen.net&item_name=Drupal%20contribution&currency_code=USD&amount=20.00
  */
@@ -46,8 +46,7 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
   );
 
   $rows = array();
-  // Use a variable, to set label of FROM state, including '(creation)'.
-  $first_row = TRUE;
+  $previous_from_sid = -1;
   // Get transitions, sorted by weight of the old state.
   $config_transitions = $workflow->getTransitions();
   foreach ($config_transitions as $transition) {
@@ -55,22 +54,23 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
     $new_state = workflow_state_load($transition->target_sid);
     $rows[] = array(
       'data' => array(
-        array('data' => ($first_row || $old_state == $new_state) ? $old_state->label() : ''),
+        array('data' => (($previous_from_sid != $transition->sid) ? $old_state->label() : '"')),
         array('data' => $new_state->label() ),
         array(
           'data' => array(
             '#type' => 'textfield',
             '#value' => $transition->label(),
-            '#size' => 60, 
-            '#maxlength' => 128, 
+            '#size' => 60,
+            '#maxlength' => 128,
             '#name' => 'label_' . $transition->tid,
             '#id' => 'label_' . $transition->tid,
           ),
         ),
       ),
     );
-    $first_row = FALSE;
+    $previous_from_sid = $transition->sid;
   }
+
   $form['transition_labels'] = array(
     '#theme' => 'table',
     '#header' => $headers,

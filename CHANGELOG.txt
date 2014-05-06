@@ -523,3 +523,4 @@ Issue #2102409: Fixed some function (calls) did not support multiple field_names
 Issue #2250403: Fixed typo in workflow_access function, leaving Admin UI only accessible for user 1.
 Issue #2256607 by chadhester: Added 'bundle' parameter to workflow_get_workflows_by_type().
 Issue #2257145 by chadhester: Fixed Empty $wid value in _workflow_get_workflow_creation_sid().
+Issue #2259893 by preddy: Fixed incorrectly hidden labels on Workflow Labels page.
