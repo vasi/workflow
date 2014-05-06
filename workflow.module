@@ -380,15 +380,19 @@ function workflow_forms($form_id, $args) {
 /**
  * Creates a form element to show the current value of a Workflow state.
  *
+ * @params
+ *  like a normal Field API function
+ * @param $default_value
+ *  extra param for performance and edge cases. 
  * @return array
  *   Form element, resembling the formatter of List module.
  *   If state 0 is given, return an empty form element.
  */
-function workflow_state_formatter($entity_type, $entity, $field = array(), $instance = array()) {
+function workflow_state_formatter($entity_type, $entity, $field = array(), $instance = array(), $default_value = NULL) {
   $list_element = array();
 
   $field_name = isset($field['field_name']) ? $field['field_name'] : '';
-  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $current_sid = ($default_value == NULL) ? workflow_node_current_state($entity, $entity_type, $field_name) : $default_value;
   if (!$current_sid) {
     $list_element = array();
   }

@@ -31,10 +31,10 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
 
   if ($field_name) {
     // First compose the current value with the normal formatter from list.module.
-    $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance);
+    $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
   }
   elseif (!empty($field['settings']['widget']['current_status'])) {
-    $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance);
+    $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
   }
 
   // Check permission, so that even with state change rights,

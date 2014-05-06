@@ -170,7 +170,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Decide if we show a widget or a formatter.
     // There is no need to a widget when the only choice is the current sid.
     if (!$show_widget) {
-      $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
+      $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $default_value);
       return $element;  // <---- exit.
     }
 

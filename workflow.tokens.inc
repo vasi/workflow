@@ -49,7 +49,7 @@ function workflow_token_info_alter(&$data) {
       // Caveat: the following agorithm is just a guess.
       if (isset($token['module']) && $token['module'] == 'token') {
         if (isset($token['description']) && 0 == substr_compare($token['description'], 'Workflow', 0, 8)) {
-          $token['type'] = 'WorkflowLastTransition';
+          $token['type'] = 'WorkflowTransition';
           $token['module'] = 'workflow';
         }
       }
@@ -262,117 +262,90 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
     // If this is a WorkflowField, get subtokens for it.
     $name_parts = explode(':', $name, 2);
     $field_name = reset($name_parts);
-    if (isset($entity->{$field_name})) {
-      if ($sub_tokens = token_find_with_prefix($tokens, $field_name)) {
-        $sub_token_type = 'WorkflowTransition';
-        $data = array(
-          'entity_type' => $data['entity_type'],
-          'entity' => $data['entity'],
-          'token_type' => $sub_token_type,
-          'field_name' => $field_name,
-        );
-        $replacements += token_generate('entity', $sub_tokens, $data, $options);
-      }
+    if (isset($entity->{$field_name}) && $sub_tokens = token_find_with_prefix($tokens, $field_name)) {
+      $sub_token_type = 'WorkflowTransition';
+      $sub_data = array(
+        'entity_type' => $data['entity_type'],
+        'entity' => $data['entity'],
+        'token_type' => $sub_token_type,
+        'field_name' => $field_name,
+      );
+      $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
     }
 
     // If this is a Last Transition, get subtokens for it.
     if ($sub_tokens = token_find_with_prefix($tokens, 'last-transition')) {
       // Get the workflow tokens from the transition of this entity.
       $field_name = isset($data['field_name']) ? $data['field_name'] : NULL;
-      // Get NUMERIC id.
-      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
-
-      // If the node is being created or updated, do not read from db, since
-      // the field widget has not been processed yet.
-      // @todo: solve this with module weight?
-      if (empty($entity_id) || isset($entity->original)) {
-        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle);
-        $last_transition = $field_name ? $transitions[$field_name] : reset($transitions);
-      }
-      else {
-        $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
-      }
       $sub_token_type = 'WorkflowTransition';
-      $data = array(
-        'entity_type' => $sub_token_type,
-        'entity' => $last_transition,
+      $sub_data = array(
+        'entity_type' => $data['entity_type'],
+        'entity' => $data['entity'],
         'token_type' => $sub_token_type,
+        'field_name' => $field_name,
       );
-      $replacements += token_generate('entity', $sub_tokens, $data, $options);
+      $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
     }
 
     if ($token_type == 'WorkflowTransition') {
+      // First, get the Transition.
+      // If the node is being created or updated (using the NUMERIC id),
+      // do not read from db, since the field widget has not been processed yet.
+      // @todo: solve this with module weight?
+      $field_name = $data['field_name'];
+      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+      if (empty($entity_id) || isset($entity->original)) {
+        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle, $field_name);
+        $transition = $field_name ? $transitions[$field_name] : reset($transitions);
+      }
+      else {
+        $transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
+      }
+
       if ($sub_tokens = token_find_with_prefix($tokens, 'Workflow')) {
-        // $entity is a Transition, get its workflow.
         $sub_token_type = 'Workflow';
-        $data = array(
+        $sub_data = array(
           'entity_type' => $sub_token_type,
-          'entity' => $entity->getWorkflow(),
+          'entity' => $transition->getWorkflow(),
           'token_type' => $sub_token_type,
         );
-        $replacements += token_generate('entity', $sub_tokens, $data, $options);
+        $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'old_state')) {
-        if ($data['entity_type'] == 'WorkflowTransition') {
-          $transition = $entity;
-        }
-        else {
-          $field_name = $data['field_name'];
-          // Get NUMERIC id.
-          list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
-          $transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
-        }
-        $state = workflow_state_load($transition->old_sid);
-
-        // $entity is a Transition, get its state.
         $sub_token_type = 'WorkflowState';
-        $data = array(
+        $sub_data = array(
           'entity_type' => $sub_token_type,
-          'entity' => $state,
+          'entity' => workflow_state_load($transition->old_sid),
           'token_type' => $sub_token_type,
         );
-        $replacements += token_generate('entity', $sub_tokens, $data, $options);
+        $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'new_state')) {
-        if ($data['entity_type'] == 'WorkflowTransition') {
-          $transition = $entity;
-        }
-        else {
-          $field_name = $data['field_name'];
-          // Get NUMERIC id.
-          list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
-          $transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
-        }
-        $state = workflow_state_load($transition->new_sid);
-
-        // $entity is a Transition, get its state.
         $sub_token_type = 'WorkflowState';
-        $data = array(
+        $sub_data = array(
           'entity_type' => $sub_token_type,
-          'entity' => $state,
+          'entity' => workflow_state_load($transition->new_sid),
           'token_type' => $sub_token_type,
         );
-        $replacements += token_generate('entity', $sub_tokens, $data, $options);
+        $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'user')) {
-        // $entity is a Transition, get its user.
         $sub_token_type = 'user';
-        $data = array(
+        $sub_data = array(
           'entity_type' => $sub_token_type,
           'user' => user_load($entity->uid),
           'token_type' => $sub_token_type,
         );
-        $replacements += token_generate('user', $sub_tokens, $data, $options);
+        $replacements += token_generate('user', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'created')) {
-        // $entity is a Transition, get its state.
         $sub_token_type = 'date';
-        $data = array(
+        $sub_data = array(
           'entity_type' => $sub_token_type,
           'date' => $entity->stamp,
           'token_type' => $sub_token_type,
         );
-        $replacements += token_generate('date', $sub_tokens, $data, $options);
+        $replacements += token_generate('date', $sub_tokens, $sub_data, $options);
       }
     }
   }
@@ -380,23 +353,38 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   return $replacements;
 }
 
-function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle) {
+function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle, $field_name) {
   global $user;
   $transitions = array();
 
-  foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $field_name => $field) {
-    // Create a dummy transition, just to set $node->workflow_transitions.
-    $new_sid = _workflow_get_sid_by_items($entity->{$field_name}[LANGUAGE_NONE]);
-    if (!isset($entity_id)) {
-      // Creating an entity.
-      $new_state = workflow_state_load($new_sid);
-      $workflow = $new_state->getWorkflow();
-      $old_sid = $workflow->getCreationSid();
+  // Create dummy transitions, just to set $node->workflow_transitions[].
+  foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $name => $field) {
+    if ($field_name <> NULL && $name != $field_name) {
+      continue;
     }
+
+    $old_sid = FALSE;
+    $new_sid = _workflow_get_sid_by_items($entity->{$name}[LANGUAGE_NONE]);
+
+    if (!isset($entity_id)) {
+      // When creating a node, and only 1 valid sid is available, then the widget is not shown.
+      // This generates a prolbem, since the new/old sid isn't yet loaded in the Entity. 
+      // Creating an entity.
+      if ($new_state = workflow_state_load($new_sid)) {
+        $workflow = $new_state->getWorkflow();
+        $old_sid = $workflow->getCreationSid();
+      }
+      else {
+        $workflow = workflow_load($wid = $field['settings']['wid']);
+        $old_sid = $workflow->getCreationSid();
+        $new_sid = $workflow->getFirstSid($entity_type, $entity, $force = FALSE, $field_name);
+      }
+    }	
     elseif (isset($entity->original)) {
       // Updating an entity.
-      $old_sid = _workflow_get_sid_by_items($entity->original->{$field_name}[LANGUAGE_NONE]);
+      $old_sid = _workflow_get_sid_by_items($entity->original->{$name}[LANGUAGE_NONE]);
     }
+
     $transition = new WorkflowTransition();
     $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, '');
 

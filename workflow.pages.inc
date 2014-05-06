@@ -42,17 +42,18 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     }
   }
 
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+
   // Add the form/widget to the formatter, and include the nid and field_id in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for WorkflowDefaultWidget.
-  $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
+  $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
   $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
   $output = drupal_render($form);
 
   // Show the history table.
   $rows = array();
   $current_themed = FALSE;
-  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $limit = variable_get('workflow_states_per_page', 20);
   foreach (workflow_transition_load_multiple($entity_type, array($entity_id), $field_name, $limit) as $history) {
     $old_state_name = $new_state_name = '';
