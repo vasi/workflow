@@ -18,7 +18,7 @@
  *
  * It would be nice if this would work! But it doesn't...
  */
-function workflow_token_field_info_alter(&$info) {
+//function workflow_token_field_info_alter(&$info) {
 //  $workflow_field_info = _workflow_info_fields();
 //  foreach($workflow_field_info as $field_name => $field_info) {
 //    if (array_key_exists($field_name, $info)) {
@@ -26,7 +26,7 @@ function workflow_token_field_info_alter(&$info) {
 //      $info[$field_name]['module'] = 'workflow';
 //    }
 //  }
-}
+//}
 
 /**
  * Adds a subtree to each WorkflowField.
@@ -280,13 +280,13 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       // Get the workflow tokens from the transition of this entity.
       $field_name = isset($data['field_name']) ? $data['field_name'] : NULL;
       // Get NUMERIC id.
-      list($entity_id, , ) = entity_extract_ids($entity_type, $entity);
+      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
 
       // If the node is being created or updated, do not read from db, since
       // the field widget has not been processed yet.
       // @todo: solve this with module weight?
       if (empty($entity_id) || isset($entity->original)) {
-        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id);
+        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle);
         $last_transition = $field_name ? $transitions[$field_name] : reset($transitions);
       }
       else {
@@ -380,11 +380,11 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   return $replacements;
 }
 
-function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id) {
+function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle) {
   global $user;
   $transitions = array();
 
-  foreach ($fields = _workflow_info_fields($entity, $entity_type) as $field_name => $field) {
+  foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $field_name => $field) {
     // Create a dummy transition, just to set $node->workflow_transitions.
     $new_sid = _workflow_get_sid_by_items($entity->{$field_name}[LANGUAGE_NONE]);
     if (!isset($entity_id)) {

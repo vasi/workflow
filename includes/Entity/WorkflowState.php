@@ -418,7 +418,7 @@ class WorkflowState extends Entity {
     $count = $result->rowCount();
 
     // Get the numbers for Workflow Field.
-    $fields = _workflow_info_fields($entity = NULL, $entity_type = '');
+    $fields = _workflow_info_fields();
     foreach ($fields as $field_name => $field_map) {
       if ($field_map['type'] == 'workflow') {
         $query = new EntityFieldQuery();
