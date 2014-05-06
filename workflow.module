@@ -981,6 +981,7 @@ function _workflow_get_sid_by_items($items) {
  */
 function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name) {
   $sid = 0;
+  $wid = 0;
   if ($field_name) {
     // A new Node with Workflow Field.
     $field = field_info_field($field_name);
