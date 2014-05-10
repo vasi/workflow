@@ -181,7 +181,7 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
       foreach ($tokens as $name => $original) {
         switch ($name) {
           case 'workflow-name':
-            $replacements[$original] = $sanitize ? check_plain($workflow->name) : $workflow->name;
+            $replacements[$original] = $sanitize ? check_plain($workflow->label()) : $workflow->label();
             break;
           case 'workflow-current-state-name':
             $replacements[$original] = $sanitize ? check_plain($states[$new_sid]->getName()) : $states[$new_sid]->getName();

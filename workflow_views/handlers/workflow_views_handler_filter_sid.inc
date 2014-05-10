@@ -52,7 +52,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
 
     $workflows[''] = t('- Select a value -');
     foreach (workflow_load_multiple() as $workflow) {
-      $workflows[$workflow->wid] = $workflow->name;
+      $workflows[$workflow->wid] = $workflow->label();
     }
 
     $form['expose']['workflow_reduce_wid'] = array(

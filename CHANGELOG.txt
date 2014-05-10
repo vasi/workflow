@@ -525,3 +525,4 @@ Issue #2256607 by chadhester: Added 'bundle' parameter to workflow_get_workflows
 Issue #2257145 by chadhester: Fixed Empty $wid value in _workflow_get_workflow_creation_sid().
 Issue #2259893 by preddy: Fixed incorrectly hidden labels on Workflow Labels page.
 Issue #2260183: Fixed errors with Tokens.
+Issue #2261375: Fixed Workflow label was replaced by Workflow machine_name in version 2.3
