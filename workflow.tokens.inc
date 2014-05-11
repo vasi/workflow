@@ -368,7 +368,7 @@ function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $en
 
     if (!isset($entity_id)) {
       // When creating a node, and only 1 valid sid is available, then the widget is not shown.
-      // This generates a prolbem, since the new/old sid isn't yet loaded in the Entity. 
+      // This generates a problem, since the new/old sid isn't yet loaded in the Entity. 
       // Creating an entity.
       if ($new_state = workflow_state_load($new_sid)) {
         $workflow = $new_state->getWorkflow();
@@ -380,6 +380,11 @@ function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $en
         $new_sid = $workflow->getFirstSid($entity_type, $entity, $force = FALSE, $field_name);
       }
     }	
+    elseif (isset($entity->original) && !isset($entity->original->{$name}[LANGUAGE_NONE])) {
+      // When updating a node, that did not have a workflow attached before.
+      // (Happens when you add workflows to existing Entity types.)
+      $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
+    }
     elseif (isset($entity->original)) {
       // Updating an entity.
       $old_sid = _workflow_get_sid_by_items($entity->original->{$name}[LANGUAGE_NONE]);

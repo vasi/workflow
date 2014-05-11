@@ -526,3 +526,4 @@ Issue #2257145 by chadhester: Fixed Empty $wid value in _workflow_get_workflow_c
 Issue #2259893 by preddy: Fixed incorrectly hidden labels on Workflow Labels page.
 Issue #2260183: Fixed errors with Tokens.
 Issue #2261375: Fixed Workflow label was replaced by Workflow machine_name in version 2.3
+Issue #2260183: Fixed errors with Tokens with entities that existed before Workflow was added to Entity type.
