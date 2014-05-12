@@ -737,11 +737,6 @@ function workflow_update_7011() {
   if (!db_field_exists($table, 'module')) {
     db_add_field($table, 'module', $fields['module']);
   }
-  // Load&save workflows, to populate the label.
-  foreach (workflow_load_multiple() as $workflow) {
-    $workflow->save();
-  }
-
   // Update the ConfigTransition table.
   $table = 'workflow_transitions';
   $fields = $schema[$table]['fields'];
@@ -752,5 +747,9 @@ function workflow_update_7011() {
     db_add_field($table, 'name', $fields['name']);
   }
 
-
+  // Load&save workflows, to populate the label.
+  // Do this after all db-updates!!
+  foreach (workflow_load_multiple() as $workflow) {
+    $workflow->save();
+  }
 }
