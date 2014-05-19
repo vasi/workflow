@@ -529,3 +529,4 @@ Issue #2261375: Fixed Workflow label was replaced by Workflow machine_name in ve
 Issue #2260183: Fixed errors with Tokens with entities that existed before Workflow was added to Entity type.
 Issue #2265147: Fixed error in workflow_update_7011() during update.php.
 Issue #2266077: Added help text on workflow_cleanup page.
+Issue #2267115: Fixed No watchdog call when using Workflow Field.

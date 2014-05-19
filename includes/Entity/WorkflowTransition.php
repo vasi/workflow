@@ -359,7 +359,12 @@ class WorkflowTransition extends Entity {
       // Register state change with watchdog.
       if ($state_changed) {
         $workflow = $old_state->getWorkflow();
-        if (($state = workflow_state_load_single($new_sid)) && !empty($workflow->options['watchdog_log'])) {
+        // Get the workflow_settings, unified for workflow_node and workflow_field.
+        // @todo D8: move settings back to Workflow (like workflownode currently is).
+        // @todo D8: to move settings back, grep for "workflow->options" and "field['settings']".
+        $field = _workflow_info_field($field_name, $workflow);
+
+        if (($state = workflow_state_load_single($new_sid)) && !empty($field['settings']['watchdog_log'])) {
           $entity_type_info = entity_get_info($entity_type);
           $message = ($this->isScheduled()) ? 'Scheduled state change of @type %label to %state_name executed' : 'State of @type %label set to %state_name';
           $args = array(
