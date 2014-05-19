@@ -155,3 +155,66 @@ function hook_workflow_permitted_state_transitions_alter(&$transitions, $context
 
   $transitions[] = $new_transition;
 }
+
+/**
+ * Examples of hooks, that can be used to alter the Workflow Form.
+ */
+
+/*
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Use this hook to alter the form.
+ * It is only suited if you only use View Page or Workflow Tab.
+ * If you change the state on the Node Form (Edit modus), you need the hook
+ * hook_form_alter(). See below for more info.
+ */
+function workflowfield_form_workflow_transition_form_alter(&$form, &$form_state, $form_id) {
+
+  // Get the node, entity.
+  $entity = $form['workflow']['workflow_entity']['#value']; 
+  $entity_type = $form['workflow']['workflow_entity_type']['#value']; 
+
+  // Use the complicated form, which is suited for all Entity Types. 
+  // For nodes only: $entity_type = 'node'; $entity_bundle = $entity->type;
+  list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Get the current State ID.
+  $sid = workflow_node_current_state($entity, $entity_type, $field_name = NULL);
+  // Get the State object, if needed.
+  $state = workflow_state_load($sid);
+
+  // Change the form, depending on the state ID.
+  // In the upcoming version 7.x-2.4, States should have a machine_name, too.
+  if ($entity_type == 'node' && $entity_bundle == 'MY_NODE_TYPE') {
+    switch ($state->sid) {
+      case '2':
+        // Change form element, form validate and form submit for state '2'.
+        break;
+      case '3':
+        // Change form element, form validate and form submit for state '3'.
+        break;
+    }
+  }
+
+}
+
+/*
+ * Implements hook_form_alter().
+ *
+ * Use this hook to alter the form on a Node Form, Comment Form (Edit page).
+ */
+function workflowfield_form_alter(&$form, $form_state, $form_id) {
+
+  // Get the node, entity.
+  $entity = $form['#entity']; 
+  $entity_type = $form['#entity_type']; 
+  // Use the complicated form, which is suited for all Entity Types. 
+  // For nodes only: $entity_type = 'node'; $entity_bundle = $entity->type;
+  list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+
+  // Discover if this is the correct form.
+  // ...
+
+  // Get the current state and act upon it.
+  // .. copy code from the hook above. 
+}
