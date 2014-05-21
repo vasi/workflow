@@ -169,7 +169,7 @@ function workflow_token_info() {
   $return = array(
     'types' => $types,
     'tokens' => array(
-      'entity' => $entity,
+      // 'entity' => $entity, // #2272121
       'user' => $user,
       'node' => $node,
       'term' => $term,
@@ -349,7 +349,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       }
     }
   }
-
+dpm($replacements, __FUNCTION__);
   return $replacements;
 }
 
