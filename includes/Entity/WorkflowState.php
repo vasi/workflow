@@ -9,6 +9,11 @@ class WorkflowStateController extends EntityAPIController {
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
     $return = parent::save($entity, $transaction);
+    if ($return) {
+      $workflow = $entity->getWorkflow();
+      // Maintain the new object in the workflow.
+      $workflow->states[$entity->sid] = $entity;
+    }
 
     // Reset the cache for the affected workflow.
     workflow_reset_cache($entity->wid);
@@ -241,7 +246,15 @@ class WorkflowState extends Entity {
    *  Workflow object.
    */
   public function getWorkflow() {
+    if (isset($this->workflow)) {
+      return $this->workflow;
+    }
     return workflow_load_single($this->wid);
+  }
+
+  public function setWorkflow($workflow) {
+    $this->wid = $workflow->wid;
+    $this->workflow = $workflow;
   }
 
   /**

@@ -532,3 +532,4 @@ Issue #2266077: Added help text on workflow_cleanup page.
 Issue #2267115: Fixed No watchdog call when using Workflow Field.
 Issue #2270581: Added examples of hook_workflow_(BASE_FORM_ID_)alter() to workflow.api.php.
 Issue #2272121: Fixed 'Tokens' warning on page admin/reports/status.
+Issue #2269703: Added code to create a workflow programmatically.

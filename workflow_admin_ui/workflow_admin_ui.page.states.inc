@@ -28,10 +28,10 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
 
   // Get the state objects as array ($sid => WorkflowState)
   $states = $workflow->getStates($all = TRUE);
-  // Create a dummy object for new state item.
+  // Create a dummy object for new state item. It must NOT be saved to DB.
   $maxweight = $minweight = -50;
   $wid = $workflow->wid;
-  $dummy = $workflow->createState('');
+  $dummy = $workflow->createState('', FALSE);
   $dummy->weight = $minweight;
   $states[$dummy->sid] = $dummy; // Although the index is 0, the state is appended at the end of the list.
 

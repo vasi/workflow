@@ -56,8 +56,8 @@ class WorkflowTransition extends Entity {
   public function __construct(array $values = array(), $entityType = 'WorkflowTransition') {
     parent::__construct($values = array(), $entityType);
 
-    // This transition is not scheduled, 
-    $this->is_scheduled = FALSE; // This transition is not scheduled, 
+    // This transition is not scheduled,
+    $this->is_scheduled = FALSE; // This transition is not scheduled,
     $this->is_executed = NULL;   // But we do not know if it is executed, yet.
 
     // Fill the 'new' fields correctly. @todo D8: rename these fields in db table.
@@ -71,7 +71,7 @@ class WorkflowTransition extends Entity {
   public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp, $comment) {
 
     // Normally, the values are passed in an array, and set in parent::__construct, but we do it ourselves.
-    // (But there is no objection to do it there.) 
+    // (But there is no objection to do it there.)
 
     $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;

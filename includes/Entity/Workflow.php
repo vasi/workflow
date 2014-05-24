@@ -100,10 +100,10 @@ class Workflow extends Entity {
   /**
    * Given information, update or insert a new workflow.
    *
-   * This also handles importing, rebuilding, reverting from Features, 
+   * This also handles importing, rebuilding, reverting from Features,
    * as defined in workflow.features.inc.
    * todo: reverting does not refresh States and transitions, since no
-   * machine_name was present. As of 7.x-2.3, the machine_name exists in 
+   * machine_name was present. As of 7.x-2.3, the machine_name exists in
    * Workflow and WorkflowConfigTransition, so rebuilding is possible.
    *
    * When changing this function, test with the following situations:
@@ -184,7 +184,6 @@ class Workflow extends Entity {
     // Make sure a Creation state exists.
     if ($is_new) {
       $state = $this->getCreationState();
-      $return2 = $state->save();
     }
 
     workflow_reset_cache($this->wid);
@@ -275,16 +274,28 @@ class Workflow extends Entity {
 
   /**
    * Create a new state for this workflow.
+   *
+   * @param $name
+   *  The human readable label of the state.
+   * @param boolean $save
+   *  Indicator if the new state must be saved. Normally, the new State is
+   *  saved directly in the database. This is because you can use States only
+   *  with Transitions, and they rely on State IDs which are generated
+   *  magically when saving the State. But you may need a temporary state.
    */
-  public function createState($name) {
+  public function createState($name, $save = TRUE) {
     $wid = $this->wid;
     $state = workflow_state_load_by_name($name, $wid);
     if (!$state) {
       $state = entity_create('WorkflowState', array('name' => $name, 'wid' => $wid));
+      if ($save) {
+        $state->save();
+      }
     }
+    $state->setWorkflow($this);
+    // Maintain the new object in the workflow.
+    $this->states[$state->sid] = $state;
 
-    // Properly maintain the states list.
-    $this->states[] = $state;
     return $state;
   }
 
@@ -384,12 +395,12 @@ class Workflow extends Entity {
    * Creates a Transition for this workflow.
    */
   public function createTransition($sid, $target_sid, $values = array()) {
+    $workflow = $this;
     if (is_numeric($sid) && is_numeric($target_sid)) {
       $values['sid'] = $sid;
       $values['target_sid'] = $target_sid;
     }
     else {
-      $workflow = $this;
       $state = $workflow->getState($sid);
       $target_state = $workflow->getState($target_sid);
       $values['sid'] = $state->sid;
@@ -401,10 +412,25 @@ class Workflow extends Entity {
       $transition = reset($transitions);
     }
     else {
-      $values['wid'] = $this->wid;
+      $values['wid'] = $workflow->wid;
       $transition = entity_create('WorkflowConfigTransition', $values);
+      $transition->save();
     }
+    $transition->setWorkflow($this);
+    // Maintain the new object in the workflow.
+    $this->transitions[$transition->tid] = $transition;
+
     return $transition;
+  }
+
+  /**
+   * Sorts all Transitions for this workflow, according to State weight.
+   *
+   * This is only needed for the Admin UI.
+   */
+  public function sortTransitions() {
+    // Sort the transitions on state weight.
+    usort($this->transitions, '_workflow_transitions_sort_by_weight');
   }
 
   /**
@@ -420,16 +446,30 @@ class Workflow extends Entity {
   public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
     $transitions = array();
 
-    $states = $this->getStates('CREATION'); // Get valid + creation states.
+    // Get valid + creation states.
+    $states = $this->getStates('CREATION');
 
-    // Filter on 'from' states, 'to' states, roles.
+    // Get filters on 'from' states, 'to' states, roles.
     $sid = isset($conditions['sid']) ? $conditions['sid'] : FALSE;
     $target_sid = isset($conditions['target_sid']) ? $conditions['target_sid'] : FALSE;
     $roles = isset($conditions['roles']) ? $conditions['roles'] : 'ALL';
 
-    // Get all transitions. (Even from other workflows. :-( )
-    $config_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
-    foreach ($config_transitions as $transition) {
+    // Cache all transitions in the workflow.
+    // We may have 0 transitions....
+    if ($this->transitions === NULL) {
+      $this->transitions = array();
+      // Get all transitions. (Even from other workflows. :-( )
+      $config_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
+      foreach ($config_transitions as &$transition) {
+        if (isset($states[$transition->sid])) {
+          $transition->setWorkflow($this);
+          $this->transitions[$transition->tid] = $transition;
+        }
+      }
+      $this->sortTransitions();
+    }
+
+    foreach ($this->transitions as $transition) {
       if (!isset($states[$transition->sid])) {
         // Not a valid transition for this workflow.
       }
@@ -444,9 +484,11 @@ class Workflow extends Entity {
         $transition->setWorkflow($this);
         $transitions[$transition->tid] = $transition;
       }
+      else {
+        // Transition is otherwise not allowed.
+      }
     }
-    // Sort the states on state weight.
-    usort($transitions, '_workflow_transitions_sort_by_weight');
+
     return $transitions;
   }
 
