@@ -349,7 +349,6 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       }
     }
   }
-dpm($replacements, __FUNCTION__);
   return $replacements;
 }
 
