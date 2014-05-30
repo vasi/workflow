@@ -48,7 +48,6 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
   }
 
   function expose_form(&$form, &$form_state) {
-    parent::expose_form($form, $form_state);
 
     $workflows[''] = t('- Select a value -');
     foreach (workflow_load_multiple() as $workflow) {
@@ -67,12 +66,13 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
       '#title' => "Include '(creation)' and inactive states?",
       '#default_value' => $this->options['expose']['workflow_include_all'],
     );
+    parent::expose_form($form, $form_state);
   }
 
   function option_definition() {
     $options = parent::option_definition();
 
-    $options['expose']['contains']['workflow_reduce_wid'] = array('default' => '', 'bool' => FALSE);
+    $options['expose']['contains']['workflow_reduce_wid'] = array('default' => '');
     $options['expose']['contains']['workflow_include_all'] = array('default' => FALSE, 'bool' => TRUE);
 
     return $options;
