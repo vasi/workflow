@@ -186,7 +186,7 @@ function workflow_tab_access($entity_type, $entity) {
   // When having multiple workflows per bundle, use Views display
   // 'Workflow history per entity' instead!
   if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
-    // Get the role IDs of the user. Workflow only stores Ids, not role names. 
+    // Get the role IDs of the user. Workflow only stores Ids, not role names.
     $roles = array_keys($user->roles);
 
     // If this is a new page, give the authorship role.
@@ -383,7 +383,7 @@ function workflow_forms($form_id, $args) {
  * @params
  *  like a normal Field API function
  * @param $default_value
- *  extra param for performance and edge cases. 
+ *  extra param for performance and edge cases.
  * @return array
  *   Form element, resembling the formatter of List module.
  *   If state 0 is given, return an empty form element.
@@ -812,7 +812,7 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
     $entity_id = entity_id($entity_type, $entity);
   }
   if (!$sid && $entity_id) {
-    // Read the history. 
+    // Read the history.
     if ($last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, 1)) {
       $sid = $last_transition->new_sid;
     }
@@ -897,6 +897,8 @@ function workflow_update_workflow_node_history_uid($uid, $new_value) {
  *
  * @param mixed $nid.
  *   A Node ID or an array of node ID's.
+ *
+ * @deprecated: workflow_get_workflow_node_by_nid --> workflow_node_current_state().
  */
 function workflow_get_workflow_node_by_nid($nid) {
   $query = db_select('workflow_node', 'wn')->fields('wn')->condition('wn.nid', $nid)->execute();
@@ -1016,8 +1018,8 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
  * @param string $entity_type
  *  Entity type of object, optional but required if $entity provided.
  * @param $bundle
- *  Bundle of entity. Optional. 
- *     
+ *  Bundle of entity. Optional.
+ *
  * @return array $field_info
  *   An array of field_info structures.
  */

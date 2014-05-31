@@ -14,7 +14,7 @@
  */
 
 /**
- * Implements drupal_alter('token_field_info', $info) from token.tokens.inc. 
+ * Implements drupal_alter('token_field_info', $info) from token.tokens.inc.
  *
  * It would be nice if this would work! But it doesn't...
  */
@@ -34,16 +34,17 @@
  * ATM we only generate tokens for the last transition of a field.
  */
 function workflow_token_info_alter(&$data) {
-  foreach ($data['tokens'] as $object => &$tokens) {
 
+  foreach ($data['tokens'] as $object => &$tokens) {
     // Add a token for scheduling, in 'seconds ago' format.
     if ($object == 'date' && !isset($tokens['seconds'])) {
       $tokens['seconds'] = array(
-        'name'  => 'Seconds-since', 
+        'name'  => 'Seconds-since',
         'description' => "A date in 'seconds ago' format (<i>604800</i>). Use it for easy scheduling workflow transitions.",
         'module' => 'workflow',
       );
     }
+
     // High-jack the fields (they do not have sub-tokens, yet).
     foreach ($tokens as &$token) {
       // Caveat: the following agorithm is just a guess.
@@ -62,6 +63,8 @@ function workflow_token_info_alter(&$data) {
  *
  * Adds tokens and token types, from field to transition to workflow and state.
  * Using the names of the entities from Workflow module.
+ * Lot of tokens are already defined via entity_properties.
+ * @see workflow_entity_property_info_alter().
  */
 function workflow_token_info() {
   /*
@@ -107,65 +110,6 @@ function workflow_token_info() {
   $node['last-transition'] = $last_transition;
   $term['last-transition'] = $last_transition;
 
-  // Tokens for 'Workflow' class.
-  $workflow['id'] = array(
-    'name' => t('Workflow ID'),
-    'description' => t('The unique ID of the workflow applied to this node.'),
-    'module'=> 'workflow',
-  );
-  $workflow['label'] = array(
-    'name' => t('Workflow label'),
-    'description' => t('The workflow applied to this node.'),
-    'module'=> 'workflow',
-  );
-
-  // Tokens for 'Workflow State' class.
-  $workflow_state['id'] = array(
-    'name' => t('State ID'),
-    'description' => t('The State ID.'),
-    'module'=> 'workflow',
-  );
-  $workflow_state['label'] = array(
-    'name' => t('State label'),
-    'description' => t('The state label.'),
-    'module'=> 'workflow',
-  );
-
-  // Tokens for 'Workflow Transition' class.
-  $workflow_transition['Workflow'] = array(
-    'name' => t('Workflow'),
-    'description' => t('Workflow the state belongs to.'),
-    'type' => 'Workflow',
-    'module'=> 'workflow',
-  );
-  $workflow_transition['new_state'] = array(
-    'name' => t('New state'),
-    'description' => t("The new state."),
-    'type' => 'WorkflowState',
-    'module'=> 'workflow',
-  );
-  $workflow_transition['old_state'] = array(
-    'name' => t('Old state'),
-    'description' => t('The old state.'),
-    'type' => 'WorkflowState',
-    'module'=> 'workflow',
-  );
-  $workflow_transition['body'] = array(
-    'name' => t('Comment'),
-    'description' => t('The comment on the transititon.'),
-    'module'=> 'workflow',
-  );
-  $workflow_transition['user'] = array(
-    'name' => t('User'),
-    'description' => t('The user that executed the transition.'),
-    'type' => 'user',
-  );
-  $workflow_transition['created'] = array(
-    'name' => t('Created'),
-    'description' => t('The date the transition was created.'),
-    'type' => 'date',
-  );
-
   $return = array(
     'types' => $types,
     'tokens' => array(
@@ -174,9 +118,9 @@ function workflow_token_info() {
       'node' => $node,
       'term' => $term,
       'WorkflowField' => $workflow_field,
-      'WorkflowTransition' => $workflow_transition,
-      'WorkflowState' => $workflow_state,
-      'Workflow' => $workflow,
+//      'WorkflowTransition' => $workflow_transition,
+//      'WorkflowState' => $workflow_state,
+//      'Workflow' => $workflow,
     ),
   );
 
@@ -192,6 +136,12 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   $sanitize = !empty($options['sanitize']);
   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
 
+  // The 'node' tokens have already been replaced with 'entity'. Skip for easier debugging.
+  // @todo: is this always the case, or only if Entity Tokens is enabled?
+  if ($type == 'node' || $type == 'user' || $type == 'term') {
+    return $replacements;
+  }
+
   if ($type == 'date' && !empty($data['date']) ) {
     foreach ($tokens as $name => $original) {
       switch ($name) {
@@ -199,151 +149,117 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
           // This is our custom date token in 'seconds ago' format.
           $seconds = REQUEST_TIME - $data['date'];
           $replacements[$original] = $seconds;
+          // Avoid reporcessing in the remainder of this function.
           break;
       }
     }
+    return $replacements;
   }
   elseif ($type == 'entity' && !empty($data['entity']) ) {
     // new, chained tokens, as of version 7.x-2.3.
     $entity = $data['entity'];
     $entity_type = $data['entity_type'];
-    $token_type = $data['token_type'];
+//    $token_type = $data['token_type'];
 
     foreach ($tokens as $name => $original) {
-      switch ($name) {
-        case 'id':
-          // Valid for WorkflowTransition, WorkflowState, Workflow.
-          list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-          $replacements[$original] = $id;
-          break;
-
-        case 'label':
-          // Valid for WorkflowTransition, WorkflowState, Workflow.
-          $replacements[$original] = entity_label($entity_type, $entity);
-          break;
-
-        case 'body':
-          // Valid for WorkflowTransition.
-          $replacements[$original] = $sanitize ? filter_xss($entity->comment) : $entity->comment;
-          break;
-
-        case 'seconds':
-          // Valid for WorkflowTransition.
-          $replacements[$original] = $sanitize ? filter_xss($entity->comment) : $entity->comment;
-          break;
-
-        // Default values for the chained tokens handled below.
-        case 'old_state':
-          // Valid for WorkflowTransition.
-          $state = workflow_state_load($entity->old_sid);
-          $replacement = $state ? $state->label() : '<unknown>';
-          $replacements[$original] = $sanitize ? filter_xss($replacement) : $replacement;
-          break;
-
-        case 'new_state':
-          // Valid for WorkflowTransition.
-          $state = workflow_state_load($entity->new_sid);
-          $replacement = $state ? $state->label() : '<unknown>';
-          $replacements[$original] = $sanitize ? filter_xss($replacement) : $replacement;
-          break;
-
-        case 'user':
-          // Valid for WorkflowTransition.
-          $replacements[$original] = $sanitize ? $entity->uid : $entity->uid;
-          break;
-
-        case 'created':
-          // Valid for WorkflowTransition.
-          $replacements[$original] = format_date($entity->stamp, 'medium', '', NULL, $langcode);
-          break;
+      if (FALSE !== strpos($name, ':')) {
+        // This is a chained property (contains ':').
       }
-    }
-
-    // If this is a WorkflowField, get subtokens for it.
-    $name_parts = explode(':', $name, 2);
-    $field_name = reset($name_parts);
-    if (isset($entity->{$field_name}) && $sub_tokens = token_find_with_prefix($tokens, $field_name)) {
-      $sub_token_type = 'WorkflowTransition';
-      $sub_data = array(
-        'entity_type' => $data['entity_type'],
-        'entity' => $data['entity'],
-        'token_type' => $sub_token_type,
-        'field_name' => $field_name,
-      );
-      $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
+      elseif(isset($data['workflow_token_type'])) {
+        // This part taken from entity_token_tokens().
+        $wrapper = entity_metadata_wrapper($data['workflow_token_type'], $data[$data['workflow_token_type'] ]);
+        $property_name = str_replace('-', '_', $name);
+        try {
+          if ($name == 'workflow' ||
+              $name == 'states' ||
+              $name == 'transitions') {
+            $replacement = _workflow_token_get_token($wrapper->$property_name, $options);
+          }
+          else {
+            $replacement = _entity_token_get_token($wrapper->$property_name, $options);
+          }
+          if (isset($replacement)) {
+            $replacements[$original] = $replacement;
+          }
+        }
+        catch (EntityMetadataWrapperException $e) {
+          // dpm('token not found: ' . $name);
+          // If tokens for not existing values are requested, just do nothing.
+        }
+      }
     }
 
     // If this is a Last Transition, get subtokens for it.
     if ($sub_tokens = token_find_with_prefix($tokens, 'last-transition')) {
       // Get the workflow tokens from the transition of this entity.
-      $field_name = isset($data['field_name']) ? $data['field_name'] : NULL;
-      $sub_token_type = 'WorkflowTransition';
+      $transition = _workflow_tokens_get_transition($entity_type, $entity, NULL);
       $sub_data = array(
-        'entity_type' => $data['entity_type'],
-        'entity' => $data['entity'],
-        'token_type' => $sub_token_type,
-        'field_name' => $field_name,
+        'WorkflowTransition' => $transition,
+        'workflow_token_type' => 'WorkflowTransition',
       );
+      $sub_data += $data;
       $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
     }
 
-    if ($token_type == 'WorkflowTransition') {
-      // First, get the Transition.
-      // If the node is being created or updated (using the NUMERIC id),
-      // do not read from db, since the field widget has not been processed yet.
-      // @todo: solve this with module weight?
-      $field_name = $data['field_name'];
-      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
-      if (empty($entity_id) || isset($entity->original)) {
-        $transitions = _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle, $field_name);
-        $transition = $field_name ? $transitions[$field_name] : reset($transitions);
-      }
-      else {
-        $transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
-      }
+    // If this is a WorkflowField, get subtokens for it.
+    $name_parts = explode(':', $name, 2);
+    $field_name = reset($name_parts);
+    if ($field_name != 'created' && isset($entity->{$field_name}) && $sub_tokens = token_find_with_prefix($tokens, $field_name)) {
+      $transition = _workflow_tokens_get_transition($entity_type, $entity, $field_name);
+      $sub_data = array(
+        'WorkflowTransition' => $transition,
+        'workflow_token_type' => 'WorkflowTransition',
+      );
+      $sub_data += $data;
+      $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
+    }
+
+    if (isset($data['WorkflowTransition'])) {
+      $transition = $data['WorkflowTransition'];
+      $field_name = $transition->field_name;
 
       if ($sub_tokens = token_find_with_prefix($tokens, 'Workflow')) {
-        $sub_token_type = 'Workflow';
         $sub_data = array(
-          'entity_type' => $sub_token_type,
-          'entity' => $transition->getWorkflow(),
-          'token_type' => $sub_token_type,
+          'Workflow' => $transition->getWorkflow(),
+          'workflow_token_type' => 'Workflow',
         );
+        $sub_data += $data;
         $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
-      if ($sub_tokens = token_find_with_prefix($tokens, 'old_state')) {
-        $sub_token_type = 'WorkflowState';
+
+	      // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
+      if ($sub_tokens = token_find_with_prefix($tokens, 'old-state')) {
         $sub_data = array(
-          'entity_type' => $sub_token_type,
-          'entity' => workflow_state_load($transition->old_sid),
-          'token_type' => $sub_token_type,
+          'WorkflowState' => workflow_state_load($transition->old_sid),
+          'workflow_token_type' => 'WorkflowState',
         );
+        $sub_data += $data;
         $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
-      if ($sub_tokens = token_find_with_prefix($tokens, 'new_state')) {
-        $sub_token_type = 'WorkflowState';
+      if ($sub_tokens = token_find_with_prefix($tokens, 'new-state')) {
         $sub_data = array(
-          'entity_type' => $sub_token_type,
-          'entity' => workflow_state_load($transition->new_sid),
-          'token_type' => $sub_token_type,
+          'WorkflowState' => workflow_state_load($transition->new_sid),
+          'workflow_token_type' => 'WorkflowState',
         );
+        $sub_data += $data;
         $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'user')) {
-        $sub_token_type = 'user';
+        if (isset($data['WorkflowTransition'])) {
+          $sub_entity = $data['WorkflowTransition'];
+        }
         $sub_data = array(
-          'entity_type' => $sub_token_type,
-          'user' => user_load($entity->uid),
-          'token_type' => $sub_token_type,
+          'entity_type' => 'user',
+          'user' => user_load($sub_entity->uid),
+          'token_type' => 'user',
         );
         $replacements += token_generate('user', $sub_tokens, $sub_data, $options);
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'created')) {
-        $sub_token_type = 'date';
         $sub_data = array(
-          'entity_type' => $sub_token_type,
-          'date' => $entity->stamp,
-          'token_type' => $sub_token_type,
+          'entity_type' => 'date',
+          'date' => $data['WorkflowTransition']->stamp,
+          'token_type' => 'date',
         );
         $replacements += token_generate('date', $sub_tokens, $sub_data, $options);
       }
@@ -352,9 +268,69 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
   return $replacements;
 }
 
-function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $entity_bundle, $field_name) {
+/*
+ * Gets the token replacement by correctly obeying the options.
+ *
+ * Taken from _entity_token_get_token().
+ */
+function _workflow_token_get_token($wrapper, $options) {
+
+//  if ($wrapper->value() === NULL) {
+//    // Do not provide a replacement if there is no value.
+//    return NULL;
+//  }
+
+  if (empty($options['sanitize'])) {
+    // When we don't need sanitized tokens decode already sanitizied texts.
+    $options['decode'] = TRUE;
+  }
+  $langcode = isset($options['language']) ? $options['language']->language : NULL;
+
+  // If there is a label for a property, e.g. defined by an options list or an
+  // entity label, make use of it.
+  if ($label = $wrapper->label()) {
+    return empty($options['sanitize']) ? $label : check_plain($label);
+  }
+
+  switch ($wrapper->type()) {
+    case 'Workflow':
+    case 'WorkflowState':
+    case 'WorkflowTranssiton':
+      return $wrapper->value();
+  }
+
+  // Care for outputing list values.
+  if ($wrapper instanceof EntityListWrapper) {
+    $output = array();
+    foreach ($wrapper as $item) {
+      $output[] = _workflow_token_get_token($item, $options);
+    }
+    return implode(', ', $output);
+  }
+  // Else we do not have a good string to output, e.g. for struct values. Just
+  // output the string representation of the wrapper.
+  return (string) $wrapper;
+}
+
+/*
+ * Helper function to get the Transition.
+ *
+ * If the node is being created or updated (using the NUMERIC id),
+ * do not read from db, since the field widget has not been processed yet.
+ * @todo: solve this with module weight?
+ */
+function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
   global $user;
   $transitions = array();
+
+  list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+
+  if (!empty($entity_id) && !isset($entity->original)) {
+    $transition = workflow_transition_load_single($entity_type, $entity_id, $field_name);
+    return $transition;
+  }
+
+  // Get transition data from online-data.
 
   // Create dummy transitions, just to set $node->workflow_transitions[].
   foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $name => $field) {
@@ -367,7 +343,7 @@ function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $en
 
     if (!isset($entity_id)) {
       // When creating a node, and only 1 valid sid is available, then the widget is not shown.
-      // This generates a problem, since the new/old sid isn't yet loaded in the Entity. 
+      // This generates a problem, since the new/old sid isn't yet loaded in the Entity.
       // Creating an entity.
       if ($new_state = workflow_state_load($new_sid)) {
         $workflow = $new_state->getWorkflow();
@@ -397,5 +373,7 @@ function _workflow_tokens_get_transitions($entity_type, $entity, $entity_id, $en
     // This is a.o. used in hook_entity_update to trigger 'transition post'.
     $transitions[$field_name] = $transition;
   }
-  return $transitions;
+
+  $transition = $field_name ? $transitions[$field_name] : reset($transitions);
+  return $transition;
 }

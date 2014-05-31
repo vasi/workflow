@@ -116,6 +116,115 @@ function workflow_entity_info() {
 }
 
 /**
+ * Implements hook_entity_property_info_alter().
+ *
+ * P.S. When adding a new property here, you might delete code from workflow_tokens().
+ */
+function workflow_entity_property_info_alter(&$info) {
+  $info['Workflow']['properties']['wid']['label'] = 'Workflow ID';
+  $info['Workflow']['properties']['options']['getter callback'] = '_workflow_metadata_workflow_get_properties';
+  $info['Workflow']['properties']['states'] = array(
+    'type' => 'list<WorkflowState>',
+    'label' => 'States of this Workflow',
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+    // 'options list' => 'entity_metadata_user_roles',
+    // 'required' => TRUE/FALSE,
+    // 'entity views field' => TRUE/FALSE,
+    // 'entity token' => TRUE/FALSE,
+  );
+  $info['Workflow']['properties']['transitions'] = array(
+    'type' => 'list<WorkflowConfigTransition>',
+    'label' => 'Transitions of this Workflow',
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+  );
+
+  unset($info['Workflow']['properties']['tab_roles']['description']);
+  $info['Workflow']['properties']['tab_roles'] += array(
+    'name' => t('roles'),
+    'description' => t("The roles that can access the Workflow History tab."),
+    'type' => 'list<integer>',
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+  );
+
+  // Properties for WorkflowState.
+  $info['WorkflowState']['properties']['label'] = array(
+    'label' => t("Label"),
+    'description' => t("The label of the state."),
+    'schema field' => 'state',
+    'required' => TRUE,
+  ) + $info['WorkflowState']['properties']['state'];
+  unset($info['WorkflowState']['properties']['state']);
+	
+  // Properties for WorkflowConfigTransition.
+  $info['WorkflowConfigTransition']['properties']['workflow'] = array(
+    'label' => t("Workflow"),
+    'type' => 'Workflow',
+    'description' => t("The workflow of the transition."),
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+    'entity token' => FALSE,
+  );
+  // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
+  unset($info['WorkflowTransition']['properties']['sid']);
+  unset($info['WorkflowTransition']['properties']['target_sid']);
+  $info['WorkflowConfigTransition']['properties']['old-state'] = array(
+    'label' => t('Old state'),
+    'description' => t("The old state."),
+    'type' => 'WorkflowState',
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+  );
+  $info['WorkflowConfigTransition']['properties']['new-state'] = array(
+    'label' => t('New state'),
+    'description' => t("The new state."),
+    'type' => 'WorkflowState',
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+  );
+
+  // Properties for WorkflowTransition.
+  $info['WorkflowTransition']['properties']['label'] = $info['WorkflowConfigTransition']['properties']['label'];
+  $info['WorkflowTransition']['properties']['workflow'] = $info['WorkflowConfigTransition']['properties']['workflow'];
+  $info['WorkflowTransition']['properties']['hid']['label'] = 'Transition ID';
+  // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
+  unset($info['WorkflowTransition']['properties']['old_sid']);
+  unset($info['WorkflowTransition']['properties']['sid']);
+  $info['WorkflowTransition']['properties']['old-state'] = $info['WorkflowConfigTransition']['properties']['old-state'];
+  $info['WorkflowTransition']['properties']['new-state'] = $info['WorkflowConfigTransition']['properties']['new-state'];
+  $info['WorkflowTransition']['properties']['user'] = array(
+    'label' => t('User'),
+    'description' => t('The user that executed the transition.'),
+    'type' => 'user',
+  );
+  $info['WorkflowTransition']['properties']['created'] = array(
+    'label' => t('Created'),
+    'description' => t('The date the transition was created.'),
+    'type' => 'date',
+  );
+
+}
+
+/**
+ * Getter callback for Workflow defined in hook_entity_property_info_alter.
+ */
+function _workflow_metadata_workflow_get_properties($entity, array $options, $name, $entity_type, $property) {
+  switch ($name) {
+    case 'workflow':
+      return $entity->getWorkflow();
+    case 'states':
+      return $entity->getStates();
+    case 'transitions':
+// @todo: for some reason, getTransitions gives no result.
+      return $entity->getTransitions();
+    case 'tab_roles':
+// @todo: for some reason, Tab_roles gives no result.
+      // Taken from user.
+      return isset($entity->tab_roles) ? array_keys($entity->tab_roles) : array();
+
+    // The following properties meed more love. Also test their tokens!
+    case 'options':
+      return 'n/a';
+  }
+}
+
+/**
  * Entity loader for Workflow.
  *
  * Also used as Menu wild card loader {wildcard_name}_load for '%workflow'.

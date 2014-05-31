@@ -535,3 +535,4 @@ Issue #2272121: Fixed 'Tokens' warning on page admin/reports/status.
 Issue #2269703: Added code to create a workflow programmatically.
 Issue #2272761: Fixed wsod in version 2.4-beta1, due to dpm() leftover in tokens.inc.
 Issue #2276149: Fixed 'wid' value in Views Export of filter 'Workflow current: Current state' in workflow_views_handler_filter_sid.
+Issue #2263561: Added Entity properties + tokens.

@@ -87,7 +87,7 @@ function workflow_schema() {
     'description' => 'Workflows',
     'fields' => array(
       'wid' => array(
-        'description' => 'The primary identifier for a node.',
+        'description' => 'The primary identifier for a workflow.',
         'type' => 'serial',
         'not null' => TRUE,
       ),
