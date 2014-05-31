@@ -374,6 +374,6 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
     $transitions[$field_name] = $transition;
   }
 
-  $transition = $field_name ? $transitions[$field_name] : reset($transitions);
+  $transition = ($field_name && isset($transitions[$field_name])) ? $transitions[$field_name] : reset($transitions);
   return $transition;
 }
