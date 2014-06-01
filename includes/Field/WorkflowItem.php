@@ -52,6 +52,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
         'default_formatter' => 'list_default',
         // Properties are introduced in Entity API and used for Rules integration.
         'property_type' => WORKFLOWFIELD_PROPERTY_TYPE,
+        'property_callbacks' => array('workflowfield_property_info_callback'),
       ),
     );
   }

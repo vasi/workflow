@@ -49,6 +49,73 @@ function workflowfield_field_settings_form($field, $instance, $has_data) {
 }
 
 /**
+ * Implements property_callbacks for hook_field_info().
+ */
+function workflowfield_property_info_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
+  $property['getter callback'] = 'entity_metadata_field_property_get';
+  $property['getter callback'] = '_workflowfield_metadata_property_get';
+  // $property['setter callback'] = 'entity_metadata_field_property_set';
+  // $property['setter callback'] = '_workflowfield_metadata_property_set';
+  $property['property info'] = array(
+    'value' => array(
+      'type' => 'integer',
+      'label' => t('State ID'),
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+    'workflow' => array(
+      'type' => 'array',
+      'label' => t('Workflow details'),
+      'setter callback' => 'entity_property_verbatim_set',
+    ),
+  );
+}
+
+/**
+ * Getter callback for Workflow defined in hook_entity_property_info_alter.
+ *
+ * This is different from the default, because 'value' is not always set
+ * and 'workflow' may be set, but is not in the field data.
+ */
+function _workflowfield_metadata_property_get($entity, array $options, $name, $entity_type, $info) {
+  // return entity_metadata_field_property_get($entity, array $options, $name, $entity_type, $info);
+  $field = field_info_field($name);
+  $columns = array_keys($field['columns']);
+  $langcode = isset($options['language']) ? $options['language']->language : LANGUAGE_NONE;
+  $langcode = entity_metadata_field_get_language($entity_type, $entity, $field, $langcode, TRUE);
+  $values = array();
+
+  if (isset($entity->{$name}[$langcode])) {
+    foreach ($entity->{$name}[$langcode] as $delta => $data) {
+      // In workflowfield_property_info_callback(), we needed to set a column 'value'.
+      // This is now filled from the widget data.
+      // Sometimes that is not widget, or the submit function has not been processed yet.
+
+      // On a normal widget:
+      $data[$columns[0]] = $sid = isset($data['value']) ? $data['value'] : 0;
+      // On a workflow form widget:
+      $data[$columns[0]] = $sid = isset($data['workflow']['workflow_sid']) ? $data['workflow']['workflow_sid'] : $sid;
+
+      $values[$delta] = $data[$columns[0]];
+    }
+  }
+  // For an empty single-valued field, we have to return NULL.
+  return $field['cardinality'] == 1 ? ($values ? reset($values) : NULL) : $values;
+}
+
+/**
+ * Callback for setting field property values.
+ */
+function _workflowfield_metadata_property_set($entity, $name, $value, $langcode, $entity_type, $info) {
+  // return entity_metadata_field_property_set($entity, $name, $value, $langcode, $entity_type, $info);
+  $field = field_info_field($name);
+  $columns = array_keys($field['columns']);
+  $langcode = entity_metadata_field_get_language($entity_type, $entity, $field, $langcode);
+  $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
+}
+
+
+/**
  * We will be using some default formatters and widgets from the List and Options modules.
  */
 

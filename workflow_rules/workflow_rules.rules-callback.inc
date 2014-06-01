@@ -124,7 +124,9 @@ function _workflow_rules_set_state(array $parameters, RulesAction $action) {
       $entity->{$field_name}['und'] = array();
       $entity->{$field_name}['und'][0]['workflow']['workflow_sid'] = $new_sid;
       $entity->{$field_name}['und'][0]['workflow']['workflow_comment'] = $comment;
-      field_attach_update($entity_type, $entity);
+      if ($entity_id) {
+        field_attach_update($entity_type, $entity);
+      }
 
       // Reset the entity cache after update.
       entity_get_controller($entity_type)->resetCache(array($entity_id));
