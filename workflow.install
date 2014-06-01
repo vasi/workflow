@@ -722,7 +722,7 @@ function workflow_update_7008() {
  *
  * Ignore the 'User warning'.
  */
-function workflow_update_7011() {
+function workflow_update_7012() {
   $schema = workflow_schema();
 
   // Update the Workflow table.
@@ -752,4 +752,7 @@ function workflow_update_7011() {
   foreach (workflow_load_multiple() as $workflow) {
     $workflow->save();
   }
+
+  // The update system is going to flush all caches,
+  // including the updated Rules Action, so nothing to do here.
 }
