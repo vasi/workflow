@@ -57,6 +57,20 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
         '#default_value' => $state->label(),
       ),
 
+      'name' => array(
+        '#type' => 'machine_name',
+        '#size' => 30,
+        '#maxlength' => 255,
+        '#required' => FALSE,
+        // '#disabled' => !empty($name), // If needed this would disable updating machine name, once set.
+        '#default_value' => $state->getName(),
+        '#machine_name' => array(
+          'exists' => 'workflow_admin_ui_states_validate_state_machine_name',
+          'source' => array('states', $state->sid, 'state'),
+          'replace_pattern' => '[^a-z0-9_()]+', // Added '()' characters from exclusion list since creation state has it.
+        ),
+      ),
+
       'weight' => array(
         '#type' => 'weight',
         '#delta' => 20,
@@ -89,7 +103,7 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
       'ops' => array(
         '#type' => 'markup',
         '#markup' => theme('links', array('links' => $links)),
-       ),
+      ),
     );
 
     // Don't let the creation state change weight or status or name.
@@ -97,6 +111,7 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
       $form['states'][$state->sid]['weight']['#value'] = $minweight;
       $form['states'][$state->sid]['sysid']['#value'] = 1;
       $form['states'][$state->sid]['state']['#disabled'] = TRUE;
+      $form['states'][$state->sid]['name']['#disabled'] = TRUE;
       $form['states'][$state->sid]['status']['#disabled'] = TRUE;
       $form['states'][$state->sid]['reassign']['#type'] = 'hidden';
       $form['states'][$state->sid]['reassign']['#disabled'] = TRUE;
@@ -149,7 +164,8 @@ function theme_workflow_admin_ui_states_form($variables) {
     $table['rows'][] = array(
       'data' => array(
         // Add our 'name' column
-        array('data' => drupal_render($form['states'][$id]['state']), 'class' => 'state-name'),
+//        array('data' => drupal_render($form['states'][$id]['state']), 'class' => 'state-name'),
+        array('data' => drupal_render($form['states'][$id]['state']) . drupal_render($form['states'][$id]['name']), 'class' => 'state-name'),
         // Add our 'weight' column
         drupal_render($form['states'][$id]['weight']),
         // Add our 'status' column
@@ -280,7 +296,9 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
       watchdog('workflow', $message, $args);
       drupal_set_message(t($message, $args));
     }
-    $state->setName($item['state']);
+
+    $state->state = $item['state'];
+    $state->name = $item['name'];
     $state->status = $item['status'];
     $state->weight = $item['weight'];
     $state->save();
@@ -288,4 +306,23 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
 
   drupal_set_message(t('The workflow was updated.'));
   // $form_state['redirect'] = 'admin/config/workflow/workflow';
+}
+
+/*
+ * Validate duplicate machine names. Function registered in 'name' form element.
+ */
+function workflow_admin_ui_states_validate_state_machine_name($name, $element, $form_state){
+  //TODO - Should $name be checked against DB?
+  $state_names = array();
+  foreach ($form_state['values']['states'] as $sid => $item) {
+    $state_names[] = $item['name'];
+  }
+
+  $state_names = array_map('strtolower', $state_names);
+  $result = array_unique( array_diff_assoc( $state_names, array_unique( $state_names ) ) );
+
+  if(in_array($name, $result)){
+    return TRUE;
+  }
+  return FALSE;
 }

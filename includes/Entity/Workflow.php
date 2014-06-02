@@ -287,7 +287,7 @@ class Workflow extends Entity {
     $wid = $this->wid;
     $state = workflow_state_load_by_name($name, $wid);
     if (!$state) {
-      $state = entity_create('WorkflowState', array('name' => $name, 'wid' => $wid));
+      $state = entity_create('WorkflowState', array('name' => $name, 'state' => $name, 'wid' => $wid));
       if ($save) {
         $state->save();
       }

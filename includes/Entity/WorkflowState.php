@@ -8,6 +8,16 @@
 class WorkflowStateController extends EntityAPIController {
 
   public function save($entity, DatabaseTransaction $transaction = NULL) {
+    // Create the machine_name.
+    if (empty($entity->name)) {
+      if ($label = $entity->state) {
+        $entity->name = str_replace(' ', '_', strtolower($label));
+      }
+      else {
+        $entity->name = 'state_' . $entity->sid;
+      }
+    }
+
     $return = parent::save($entity, $transaction);
     if ($return) {
       $workflow = $entity->getWorkflow();
@@ -457,10 +467,10 @@ class WorkflowState extends Entity {
   }
 
   public function getName() {
-    return $this->state;
+    return $this->name;
   }
   public function setName($name) {
-    return $this->state = $name;
+    return $this->name = $name;
   }
   public function value() {
     return $this->sid;
