@@ -80,6 +80,8 @@ class WorkflowConfigTransition extends Entity {
 
   // Extra fields.
   public $wid = 0;
+  // The following must explicitely defined, and not be public, to avoid errors when exporting with json_encode().
+  protected $workflow = NULL;
   // protected $is_scheduled = FALSE;
   // protected $is_executed = FALSE;
   // protected $force = NULL;

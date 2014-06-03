@@ -541,3 +541,4 @@ Issue #2265615: Added Rules Action 'Set a workflow field state' for any entity.
 Issue #2277935: Fixed message 'Wrong call to constructor' when rebuilding permission with workflow_access enabled.
 Issue #2196247: Added machine_names for WorkflowStates.
 Issue #2217291: Removed warnings from workflow_views, when another module was rudely disabled.
+Issue #2279241: Fixed json_encode() error by making $workflow property protected.

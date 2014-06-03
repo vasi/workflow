@@ -736,9 +736,9 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   }
 
   // If $field_name is not known, yet, determine it.
-  // If $entity->workflow is set, avoid this expensive operation.
+  // If $entity->workflow (hence, workflow_node) is set, avoid this expensive operation.
   // @todo: what to do with multiple workflow_fields per bundle?
-  if ($field_name === NULL && !isset($entity->workflow)) {
+  if ($field_name === NULL && !isset($entity->workflow)) {  // This is a workflow_node sid.
     list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
     $fields = _workflow_info_fields($entity, $entity_type, $entity_bundle);
     if (count($fields)) {
@@ -767,8 +767,8 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   else {
     // Node API: Get current/previous state.
     // Do not use a page cache. This gives problems with Rules.
-    if (isset($entity->workflow)) {
-      $sid = $entity->workflow;
+    if (isset($entity->workflow)) {  // This is a workflow_node sid.
+      $sid = $entity->workflow;      // This is a workflow_node sid.
     }
   }
 
@@ -784,9 +784,9 @@ function workflow_node_previous_state($entity, $entity_type = 'node', $field_nam
   $sid = FALSE;
 
   // If $field_name is not known, yet, determine it.
-  // If $entity->workflow is set, avoid this expensive operation.
+  // If $entity->workflow (hence, workflow_node) is set, avoid this expensive operation.
   // @todo: what to do with multiple workflow_fields per bundle?
-  if ($field_name === NULL && !isset($entity->workflow)) {
+  if ($field_name === NULL && !isset($entity->workflow)) { // This is a workflow_node sid.
     list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
     $fields = _workflow_info_fields($entity, $entity_type, $entity_bundle);
     if (count($fields)) {
@@ -1026,10 +1026,10 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
 function _workflow_info_fields($entity = NULL, $entity_type = '', $bundle = '') {
   $field_info = array();
 
-  if (isset($entity->workflow)) {
+  if (isset($entity->workflow)) { // This is a workflow_node sid.
     $field_name = '';
     $workflow = NULL;
-    if ($state = workflow_state_load($entity->workflow)) {
+    if ($state = workflow_state_load($entity->workflow)) {  // This is a workflow_node sid.
       $workflow = workflow_load($state->wid);
     }
     // Call field_info_field()

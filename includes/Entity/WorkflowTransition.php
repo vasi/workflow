@@ -327,8 +327,8 @@ class WorkflowTransition extends Entity {
       if ($state_changed) {
         // If the node does not have an existing 'workflow' property,
         // save the $old_sid there, so it can be logged.
-        if (!isset($entity->workflow)) {
-          $entity->workflow = $old_sid;
+        if (!isset($entity->workflow)) { // This is a workflow_node sid.
+          $entity->workflow = $old_sid;  // This is a workflow_node sid.
         }
 
         // Change the state for {workflow_node}.
@@ -341,7 +341,7 @@ class WorkflowTransition extends Entity {
         );
         workflow_update_workflow_node($data);
 
-        $entity->workflow = $new_sid;
+        $entity->workflow = $new_sid;  // This is a workflow_node sid.
       }
       elseif ($this->comment) {
         // If no state change, but comment, update node stamp.
