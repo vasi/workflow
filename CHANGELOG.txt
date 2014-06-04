@@ -543,3 +543,4 @@ Issue #2196247: Added machine_names for WorkflowStates.
 Issue #2217291: Removed warnings from workflow_views, when another module was rudely disabled.
 Issue #2279241: Fixed json_encode() error by making $workflow property protected.
 Issue #2279677: Fixed Notice 'Undefined property: $title in WorkflowScheduledTransition->save()'.
+Issue #2279967: Fixed Wrong default value for ScheduledTransition widget.

@@ -138,7 +138,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // Technically you could have more than one scheduled, but this will only add the soonest one.
       foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name) as $scheduled_transition) {
         $scheduled = '1';
-        $current_sid = $scheduled_transition->sid;
+        $default_value = $scheduled_transition->new_sid;
         $timestamp = $scheduled_transition->scheduled;
         $comment = $scheduled_transition->comment;
         break;
