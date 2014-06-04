@@ -111,11 +111,11 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     // Create user message.
     if ($state = workflow_state_load_single($this->new_sid)) {
       $entity = $this->getEntity();
-      $message = '@entity_title scheduled for state change to %state_name on %scheduled_date';
+      $message = '%entity_title scheduled for state change to %state_name on %scheduled_date';
       $args = array(
         '@entity_type' => $this->entity_type,
-        '@entity_title' => $entity->title,
-        '%state_name' => $state->label(),
+        '%entity_title' => entity_label($this->entity_type, $entity),
+        '%state_name' => entity_label('WorkflowState', $state),
         '%scheduled_date' => format_date($this->scheduled),
       );
       $uri = entity_uri($this->entity_type, $entity);

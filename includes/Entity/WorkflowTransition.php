@@ -113,7 +113,9 @@ class WorkflowTransition extends Entity {
   }
 
   protected function defaultLabel() {
-    return ''; // $this->title;
+    // @todo; Should return title of WorkflowConfigTransition. Make it a superclass??
+    // return $this->title;
+    return '';
   }
 
 //  protected function defaultUri() {
