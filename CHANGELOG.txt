@@ -481,7 +481,7 @@ Issue #2229635 by johnv: Fixed Undefined index: entity_type in workflow_vbo_next
 Issue #2231903 by johnv: Fixed usage of field_info_field_map() under D7.22.
 Issue #2168197 by johnv: Fixed support of VBO 'modify entity values' for workflow_field.
 Issue #2102409 by johnv: Removed $workflow->getWorkfowItem() c.s., which is not needed anymore.
-Issue #1649216 by johnv: Changed display of 'author' and 'creation' on admin pages, to avoid confusion when 'autor' role is defined. 
+Issue #1649216 by johnv: Changed display of 'author' and 'creation' on admin pages, to avoid confusion when 'autor' role is defined.
 Issue #2019345 by johnv: Added error message when used workflow is deleted.
 Issue #2237125 by johnv: Added token 'workflow-state-age' from workflow_extensions.
 Issue #2237125 by johnv: Reordered functions in workflow.tokens.inc.
@@ -545,3 +545,4 @@ Issue #2279241: Fixed json_encode() error by making $workflow property protected
 Issue #2279677: Fixed Notice 'Undefined property: $title in WorkflowScheduledTransition->save()'.
 Issue #2279967: Fixed Wrong default value for ScheduledTransition widget.
 Issue #2282969: Added help text on Workflows page, to tell user how to use Workflow Field.
+Issue #2285327: Fixed wrong function call in VBO action 'Set to next state'.

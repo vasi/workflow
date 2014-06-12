@@ -135,9 +135,9 @@ function hook_workflow_comment_alter(&$comment, &$context) {
  *      'user_roles' => $roles,
  *    );
  *
- * This hook in invoked in WorkflowState::getOptions().
- * This hooks allows you to add custom filtering of allowed target states,
- * add new custom states, change labels, etc.
+ * This hook allows you to add custom filtering of allowed target states, add
+ * new custom states, change labels, etc.
+ * It is is invoked in WorkflowState::getOptions().
  */
 function hook_workflow_permitted_state_transitions_alter(&$transitions, $context) {
   // This example creates a new custom target state.
