@@ -57,6 +57,7 @@ function workflowfield_property_info_callback(&$info, $entity_type, $field, $ins
   $property['getter callback'] = '_workflowfield_metadata_property_get';
   // $property['setter callback'] = 'entity_metadata_field_property_set';
   // $property['setter callback'] = '_workflowfield_metadata_property_set';
+  $property['options list'] = 'entity_metadata_field_options_list';
   $property['property info'] = array(
     'value' => array(
       'type' => 'integer',
@@ -243,17 +244,26 @@ function workflowfield_allowed_values($field, $instance, $entity_type, $entity) 
 }
 
 /**
- * Callback function for the default Options widgets. Implements hook_options_list().
+ * Implements hook_options_list().
+ *
+ * Callback function for the default Options widgets. 
+ * 
  * @todo: move to a class.
  */
 function workflowfield_options_list($field, $instance, $entity_type, $entity) {
   $options = array();
 
   if ($entity) {
+    // Get the allowed new states for the entity's current state.
     $field_name = $field['field_name'];
     $sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $state = workflow_state_load_single($sid);
     $options = $state->getOptions($entity_type, $entity, $force = FALSE, $field_name);
+  }
+  elseif ($wid = $field['settings']['wid']) {
+    // There is no entity, E.g., on the Rules action "Set a data value".
+    $state = new WorkflowState(array('wid' => $wid));
+    $options = $state->getOptions('', NULL);
   }
   return $options;
 }

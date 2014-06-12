@@ -642,10 +642,8 @@ function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FA
   $options = array();
 
   foreach (workflow_load_multiple($wid ? array($wid) : FALSE) as $workflow) {
-    $workflow_options = array();
-    foreach ($workflow->getStates($all) as $state) {
-      $workflow_options[$state->value()] = check_plain($state->label());
-    }
+    $state = new WorkflowState(array('wid' => $workflow->wid));
+    $workflow_options = $state->getOptions('', NULL);
 
     if (!$grouped) {
       $options += $workflow_options;

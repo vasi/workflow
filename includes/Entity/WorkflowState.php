@@ -306,7 +306,8 @@ class WorkflowState extends Entity {
   }
 
   /**
-   * Returns the allowed values for the current state.
+   * Returns the allowed values for the current state. If State ID = 0, then
+   * all states of the Workflow are returned.
    *
    * @param $entity_type
    *  The type of the entity at hand.
@@ -314,7 +315,9 @@ class WorkflowState extends Entity {
    *  The entity at hand. May be NULL (E.g., on a Field settings page).
    *
    * @return array
-   *   An array of sid=>label pairs of allowed transitions from this state.
+   *   An array of sid=>label pairs. Contains allowed transitions from this 
+   *   state if State ID is given. If State ID is 0 or FALSE, then labels of
+   *   all states of the given Workflow are returned.
    *
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
@@ -324,8 +327,9 @@ class WorkflowState extends Entity {
 
     $options = array();
 
-    $entity_id = entity_id($entity_type, $entity);
+    $entity_id = ($entity) ? entity_id($entity_type, $entity) : '';
     $current_sid = $this->sid;
+    $current_state = $this;
 
     // Get options from page cache, using a non-empty index (just to be sure).
     $entity_index = (!$entity) ? 'x' : $entity_id;
@@ -335,7 +339,18 @@ class WorkflowState extends Entity {
     }
 
     $workflow = workflow_load_single($this->wid);
-    if ($workflow) {
+    if (!$workflow) {
+      // No workflow, no options ;-)
+    }
+    elseif (!$current_sid) {
+      // If no State ID is given, we return all states.
+      // We cannot use getTransitions, since there are no ConfigTransitions
+      // from State with ID 0.
+      foreach ($workflow->getStates() as $state) {
+        $options[$state->value()] = check_plain(t($state->label()));
+      }
+    }
+    else {
       // Gather roles, to get the proper permissions.
       $roles = array_keys($user->roles);
       if ($user->uid == 1 || $force) {
@@ -361,7 +376,6 @@ class WorkflowState extends Entity {
       // Unfortunately, the config_transitions are not sorted.
       // Also, $transitions does not contain the 'stay on current state' transition.
       // The allowed objects will be replaced with names.
-      $current_state = $workflow->getState($current_sid);
       $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
 
       // Let custom code add/remove/alter the available transitions.
@@ -408,10 +422,10 @@ class WorkflowState extends Entity {
         }
       }
 
-      // Include current state for same-state transitions.
+      // Include current state for same-state transitions, except when $sid = 0.
       // Caveat: this unnecessary since 7.x-2.3 (where stay-on-state transitions are saved, too.)
-      // but only if the transitions are saved once.
-      if ($current_sid != $workflow->getCreationSid()) {
+      // but only if the transitions have been saved at least one time.
+      if ($current_sid && ($current_sid != $workflow->getCreationSid())) {
         if (!isset($options[$current_sid])) {
           $options[$current_sid] = check_plain(t($current_state->label()));
         }
@@ -467,7 +481,7 @@ class WorkflowState extends Entity {
   }
 
   public function getName() {
-    return $this->name;
+    return isset($this->name) ? $this->name : '';
   }
   public function setName($name) {
     return $this->name = $name;
