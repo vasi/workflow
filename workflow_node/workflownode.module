@@ -9,6 +9,20 @@ module_load_include('inc', 'workflow', 'workflow.node.type_map');
 module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
+ * Implements hook_ctools_plugin_directory -
+ *
+ * This lets ctools know to scan my module for a content_type plugin file
+ * Detailed docks in ctools/ctools.api.php
+ *
+ * This is used to integrate WorkflowNode with Panels. See d.o. #1511694, #2187731
+ */
+function workflownode_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && !empty($plugin_type)) {
+    return "plugins/$plugin_type";
+  }
+}
+
+/**
  * Theme the current workflow state as top line of History tab.
  */
 function theme_workflow_current_state($variables) {
@@ -287,7 +301,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
       $form['#wf'] = $workflow;
       $form['workflow'] = array(
         '#type' => 'fieldset',
-        '#title' => $label,
+        '#title' => check_plain($label),
         '#collapsible' => TRUE,
         '#collapsed' => FALSE,
         '#weight' => 10,

@@ -902,7 +902,7 @@ function workflow_get_workflow_node_by_nid($nid) {
   $query = db_select('workflow_node', 'wn')->fields('wn')->condition('wn.nid', $nid)->execute();
   if (is_array($nid)) {
     $result = array();
-    foreach($query->fetchAll() as $workflow_node) {
+    foreach ($query->fetchAll() as $workflow_node) {
       $result[$workflow_node->nid] = $workflow_node;
     }
   }
