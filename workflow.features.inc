@@ -7,6 +7,8 @@
  * As you will notice this file will only handle the <export> of Worflows, 
  * including states and transitions. The <import> is handeled magically, 
  * and all modifications are done in function Workflow::save().
+ *
+ * @see http://foxinbox.org/content/features-magic-how-features-adds-additional-items-export for an introduction.
  */
 
 define('WORKFLOW_FEATURES_AUTHOR_NAME', 'workflow_features_author_name');
@@ -23,7 +25,6 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
    * Generates the result for hook_features_export().
    */
   public function export($data, &$export, $module_name = '') {
-    $pipe = array();
     $pipe = parent::export($data, $export, $module_name);
 
     foreach ($data as $workflow_name) {
@@ -43,29 +44,38 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
    * Generates the result for hook_features_export_render().
    *
    * This is a copy of the parent, adding 'system_roles'.
+   * The workflow is imported in the target system with Workflow::save().
    */
   function export_render($module, $data, $export = NULL) {
-    $output = array();
-    $output[] = '  $items = array();';
-    foreach (entity_load_multiple_by_name($this->type, $data) as $name => $entity) {
+    $translatables = $code = array();
+    $code[] = '  $workflows = array();';
+    $code[] = '';
+    foreach ($data as $identifier) {
+      // Clone workflow to make sure changes are not propagated to original.
+      if ($workflow = clone entity_load_single($this->type, $identifier)) {
+        // Modification for the Workflow object:
+        // For mapping workflow_field, add original wid in case target system already contains workflows.
+        $workflow->wid_original = $workflow->wid;
+        // Add roles to translate role IDs on target system.
+        $workflow->system_roles = workflow_get_roles($permission = NULL);
+        // >> Now resume with normal flow.
 
-      // >> A modification for the Workflow object:
-      // Add roles to translate role IDs on target system.
-      $entity->system_roles = workflow_get_roles($permission = NULL);
-      // >> Now resume with normal flow.
-
-      $export  = "  \$items['$name'] = entity_import('{$this->type}', '";
-      // Make sure to escape the characters \ and '.
-      $export .= addcslashes(entity_export($this->type, $entity, '  '), '\\\'');
-      $export .= "');";
-      $output[] = $export;
+        // Make sure to escape the characters \ and '.
+        // The following method has the advandage, that you can export with features,
+        // and later import without enabling Features in the target system.
+        $workflow_export = addcslashes(entity_export($this->type, $workflow, '  '), '\\\'');
+        $workflow_identifier = features_var_export($identifier);
+        $code[] = "  // Exported workflow: {$workflow_identifier}";
+        $code[] = "  \$workflows[{$workflow_identifier}] = entity_import('{$this->type}', '"  . $workflow_export . "');";
+        $code[] = "";
+      }
     }
-    $output[] = '  return $items;';
-    $output = implode("\n", $output);
+    $code[] = '  return $workflows;';
+    $code = implode("\n", $code);
 
     $hook = isset($this->info['export']['default hook']) ? $this->info['export']['default hook'] : 'default_' . $this->type;
 
-    return array($hook => $output);
+    return array($hook => $code);
   }
 
   /**
@@ -82,6 +92,25 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
   }
 }
 
+/**
+ * Implements hook_features_COMPONENT_alter().
+ *
+ * Adds the corresponding Workflow to the WorkflowField.
+ */
+function workflow_features_pipe_field_base_alter(&$pipe, $data, $export) {
+  if (!empty($data)) {
+    foreach ($data as $field_name) {
+      //$info = field_info_field($field_name);
+      $field = _workflow_info_field($field_name);
+      if ($field['type'] = 'workflow') {
+
+        // $field['settings']['wid'] can be numeric or named.
+        $workflow = workflow_load_single($field['settings']['wid']);
+        $pipe['Workflow'][] = $workflow->name;
+      }
+    }
+  }
+}
 
 /**
  * Implements hook_features_rebuild().

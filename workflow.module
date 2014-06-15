@@ -682,26 +682,10 @@ function workflow_get_sid_label($sid) {
     $output = t('No state');
   }
   elseif ($state = workflow_state_load_single($sid)) {
-    $output = $state->label();
+    $output = t($state->label());
   }
   else {
     $output = t('Unknown state');
-  }
-  return $output;
-}
-
-/**
- * Helper function, to get the label of a given state.
- */
-function workflow_get_wid_label($wid) {
-  if (empty($wid)) {
-    $output = t('No workflow');
-  }
-  elseif ($workflow = workflow_load_single($wid)) {
-    $output = $workflow->label();
-  }
-  else {
-    $output = t('Unknown workflow');
   }
   return $output;
 }
@@ -854,20 +838,21 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
     // Check the Node API first: Get $wid.
     if (module_exists('workflownode') && $type_map = workflow_get_workflow_type_map_by_type($entity_bundle)) {
       // Get the workflow by wid.
-      $wid = $type_map->wid;
+      $workflow_id = $type_map->wid;
     }
 
     // If $entity_type is set, we must check Field API. Data is already cached by core.
     if (!$wid && isset($entity_type)) {
       foreach (_workflow_info_fields(NULL, $entity_type, $entity_bundle) as $field_name => $field_info) {
-        $wid = $field_info['settings']['wid'];
+        $workflow_id = $field_info['settings']['wid'];
       }
     }
 
     // Set the cache with a workflow object.
     $map[$entity_type][$entity_bundle] = FALSE;
-    if ($wid) {
-      $workflow = workflow_load_single($wid);
+    if ($workflow_id) {
+      // $workflow_id can be numeric or named.
+      $workflow = workflow_load_single($workflow_id);
       $map[$entity_type][$entity_bundle] = $workflow;
     }
   }
@@ -989,8 +974,9 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
   if ($field_name) {
     // A new Node with Workflow Field.
     $field = field_info_field($field_name);
-    $wid = $field['settings']['wid'];
-    $workflow = workflow_load_single($wid);
+    // $field['settings']['wid'] can be numeric or named.
+    $workflow = workflow_load_single($field['settings']['wid']);
+    $wid = $workflow->wid;
   }
   else {
     // A new Node with Workflow Node.
@@ -1065,6 +1051,8 @@ function _workflow_info_fields($entity = NULL, $entity_type = '', $bundle = '') 
  *
  * This is to hide implementation details of workflow_node.
  *
+ * @param $field_name
+ *   The name of a Workflow Field. Can be empty if fetching Workflow Node.
  * @param $workflow
  *   Workflow object. Can be NULL.
  *   For a workflow_field, no $workflow is needed, since info is in field itself.
@@ -1073,7 +1061,7 @@ function _workflow_info_fields($entity = NULL, $entity_type = '', $bundle = '') 
  * @return array
  *   field info structure. Pseudo data for workflow_node.
  */
-function _workflow_info_field($field_name, $workflow) {
+function _workflow_info_field($field_name, $workflow = NULL) {
   // @todo D8: remove this function when we only use workflow_field.
   $field = array();
 
@@ -1086,10 +1074,11 @@ function _workflow_info_field($field_name, $workflow) {
     $field['settings']['wid'] = 0;
     $field['settings']['widget'] = array();
     if ($workflow != NULL) {
-      $field['settings']['wid'] = $workflow->wid;
+      // $field['settings']['wid'] can be both: numeric or named.
+      $field['settings']['wid'] = $workflow->wid; // @todo: to make this exportable: use machine_name??
       $field['settings']['widget'] = $workflow->options;
       $field['settings']['history']['roles'] = $workflow->tab_roles;
-      $field['settings']['history']['history_tab_show'] = TRUE; // @todo: add a setting for this in workflow_node
+      $field['settings']['history']['history_tab_show'] = TRUE; // @todo: add a setting for this in workflow_node.
     }
     // Add default values.
     $field['settings']['widget'] += array(

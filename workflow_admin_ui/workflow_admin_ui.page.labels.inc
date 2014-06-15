@@ -94,7 +94,7 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
  * @see workflow_admin_ui_labels_form()
  */
 function workflow_admin_ui_labels_form_submit($form, &$form_state) {
-  foreach($form['#transitions'] as $config_transition) {
+  foreach ($form['#transitions'] as $config_transition) {
     $config_transition->label = trim($form_state['input']['label_' . $config_transition->tid]);
     $config_transition->save();
   }

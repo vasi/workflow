@@ -549,3 +549,4 @@ Issue #2285327: Fixed wrong function call in VBO action 'Set to next state'.
 Issue #2277751 by barami: Added $property['options list'] to Workflow Field.
 Issue #1511694 by joel_osc: Added integration of WorkflowNode with Panels.
 Issue #2187731 by boris sondagh: Added Panels access/selection rules based on workflow.
+Issue #2152435: Prepared WorkflowField Features export for better import when wid changed in target system.

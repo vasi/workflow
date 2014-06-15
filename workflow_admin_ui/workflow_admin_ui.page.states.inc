@@ -218,7 +218,7 @@ function workflow_admin_ui_states_form_validate($form, &$form_state) {
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
-      $args = array('%state' => $state->getName(), );
+      $args = array('%state' => check_plain($state->getName()), );
 
       // Does that state have nodes in it?
       if ($item['count'] > 0 && empty($item['reassign'])) {
@@ -272,9 +272,9 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
       $new_state = workflow_state_load_single($new_sid);
 
       $args = array(
-        '%workflow' => $workflow->getName(),
-        '%old_state' => $state->getName(),
-        '%new_state' => isset($new_state) ? $new_state->getName() : '',
+        '%workflow' => check_plain($workflow->getName()),
+        '%old_state' => check_plain($state->getName()),
+        '%new_state' => isset($new_state) ? check_plain($new_state->getName()) : '',
       );
 
       if ($item['count'] > 0) {
@@ -311,7 +311,7 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
 /*
  * Validate duplicate machine names. Function registered in 'name' form element.
  */
-function workflow_admin_ui_states_validate_state_machine_name($name, $element, $form_state){
+function workflow_admin_ui_states_validate_state_machine_name($name, $element, $form_state) {
   //TODO - Should $name be checked against DB?
   $state_names = array();
   foreach ($form_state['values']['states'] as $sid => $item) {
@@ -321,7 +321,7 @@ function workflow_admin_ui_states_validate_state_machine_name($name, $element, $
   $state_names = array_map('strtolower', $state_names);
   $result = array_unique( array_diff_assoc( $state_names, array_unique( $state_names ) ) );
 
-  if(in_array($name, $result)){
+  if (in_array($name, $result)) {
     return TRUE;
   }
   return FALSE;

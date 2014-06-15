@@ -74,8 +74,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity_id = entity_id($entity_type, $entity);
     $field_name = $field['field_name'];
 
-    $wid = $field['settings']['wid'];
-    $workflow_label = workflow_get_wid_label($wid);
+    // $field['settings']['wid'] can be numeric or named.
+    $workflow = workflow_load_single($field['settings']['wid']);
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
@@ -175,6 +175,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // The 'options' widget. May be removed below if 'Action buttons' are choosen.
+    $workflow_label = check_plain($workflow->label());
     $element['workflow']['workflow_sid'] = array(
       '#type' => $settings_options_type,
       '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),

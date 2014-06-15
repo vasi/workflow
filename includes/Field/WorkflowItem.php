@@ -66,21 +66,23 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     $settings += $field_info['workflow']['settings'];
     $settings['widget'] += $field_info['workflow']['settings']['widget'];
 
-    $wid = $settings['wid'];
-
     // Create list of all Workflow types. Include an initial empty value.
     // Validate each workflow, and generate a message if not complete.
     $workflows = array();
     $workflows[''] = t('- Select a value -');
-    foreach (workflow_load_multiple() as $workflow) {
+    foreach (workflow_load_multiple() as $id => $workflow) {
       if ($workflow->validate()) {
-        $workflows[$workflow->wid] = $workflow->label();
+        // Use the machine name of the workflow, to make it exportable.
+        $workflows[$id] = check_plain($workflow->label());
       }
     }
+
+    // Set message, if no 'validated' workflows exist.
     if (count($workflows) == 1) {
       drupal_set_message(
         t('You must create at least one workflow before content can be
-          assigned to a workflow.'));
+          assigned to a workflow.')
+      );
     }
 
     // The allowed_values_functions is used in the formatter from list.module.
@@ -89,12 +91,14 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       '#value' => $settings['allowed_values_function'], // = 'workflowfield_allowed_values',
     );
 
+    // $field['settings']['wid'] can be numeric or named.
+    $current_workflow = workflow_load_single($settings['wid']);
     // Let the user choose between the available workflow types.
     $element['wid'] = array(
       '#type' => 'select',
       '#title' => t('Workflow type'),
       '#options' => $workflows,
-      '#default_value' => $wid,
+      '#default_value' => $current_workflow->wid,
       '#required' => TRUE,
       '#disabled' => $has_data,
       '#description' => t('Choose the Workflow type. Maintain workflows !url.', array('!url' => l(t('here'), 'admin/config/workflow/workflow'))),
@@ -102,9 +106,9 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
 
     // Inform the user of possible states.
     // If no Workflow type is selected yet, do not show anything.
-    if ($wid) {
+    if ($current_workflow) {
       // Get a string representation to show all options.
-      $allowed_values_string = $this->_allowed_values_string($wid);
+      $allowed_values_string = $this->_allowed_values_string($current_workflow->wid);
 
       $element['allowed_values_string'] = array(
         '#type' => 'textarea',
@@ -261,7 +265,10 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
 
     // @todo: apparently, in course of time, this is not used anymore. Restore or remove.
     $field_name = $this->field['field_name'];
-    $wid = $this->field['settings']['wid'];
+    // $field['settings']['wid'] can be numeric or named.
+    $workflow = workflow_load_single($this->field['settings']['wid']);
+    $wid = $workflow->wid;
+
     $new_state = workflow_state_load_single($sid = _workflow_get_sid_by_items($items), $wid);
 
     // @todo D8: remove below lines.

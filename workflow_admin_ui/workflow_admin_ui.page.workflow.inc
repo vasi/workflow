@@ -260,5 +260,5 @@ function workflow_admin_ui_edit_form_submit($form, &$form_state) {
   }
   // This redirect is needed, when changing the workflow name, with name in URL.
   // Also for cloning a workflow.
-  $form_state['redirect'] = 'admin/config/workflow/workflow/manage/' .  $workflow->wid;
+  $form_state['redirect'] = 'admin/config/workflow/workflow/manage/' . $workflow->wid;
 }

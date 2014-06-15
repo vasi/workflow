@@ -99,7 +99,7 @@ function workflow_token_info() {
     'name' => t('Workflow last transition'),
     'description' => t('Last workflow state transition of content.'),
     'type' => 'WorkflowTransition',
-    'module'=> 'workflow',
+    'module' => 'workflow',
   );
 
   // Add a token tree to each core entity type. This allows easy reference
@@ -132,7 +132,7 @@ function workflow_token_info() {
  */
 function workflow_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();
-	
+
   $sanitize = !empty($options['sanitize']);
   $langcode = !empty($options['language']->language) ? $options['language']->language : LANGUAGE_NONE;
 
@@ -165,7 +165,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       if (FALSE !== strpos($name, ':')) {
         // This is a chained property (contains ':').
       }
-      elseif(isset($data['workflow_token_type'])) {
+      elseif (isset($data['workflow_token_type'])) {
         // This part taken from entity_token_tokens().
         $wrapper = entity_metadata_wrapper($data['workflow_token_type'], $data[$data['workflow_token_type'] ]);
         $property_name = str_replace('-', '_', $name);
@@ -227,7 +227,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
         $replacements += token_generate('entity', $sub_tokens, $sub_data, $options);
       }
 
-	      // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
+      // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
       if ($sub_tokens = token_find_with_prefix($tokens, 'old-state')) {
         $sub_data = array(
           'WorkflowState' => workflow_state_load($transition->old_sid),
@@ -350,11 +350,12 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
         $old_sid = $workflow->getCreationSid();
       }
       else {
-        $workflow = workflow_load($wid = $field['settings']['wid']);
+        // $field['settings']['wid'] can be numeric or named.
+        $workflow = workflow_load_single($field['settings']['wid']);
         $old_sid = $workflow->getCreationSid();
         $new_sid = $workflow->getFirstSid($entity_type, $entity, $force = FALSE, $field_name);
       }
-    }	
+    }
     elseif (isset($entity->original) && !isset($entity->original->{$name}[LANGUAGE_NONE])) {
       // When updating a node, that did not have a workflow attached before.
       // (Happens when you add workflows to existing Entity types.)

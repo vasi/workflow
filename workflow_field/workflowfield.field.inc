@@ -260,10 +260,13 @@ function workflowfield_options_list($field, $instance, $entity_type, $entity) {
     $state = workflow_state_load_single($sid);
     $options = $state->getOptions($entity_type, $entity, $force = FALSE, $field_name);
   }
-  elseif ($wid = $field['settings']['wid']) {
-    // There is no entity, E.g., on the Rules action "Set a data value".
-    $state = new WorkflowState(array('wid' => $wid));
-    $options = $state->getOptions('', NULL);
+  else {
+    // $field['settings']['wid'] can be numeric or named.
+    if ($workflow = workflow_load_single($field['settings']['wid'])) {
+      // There is no entity, E.g., on the Rules action "Set a data value".
+      $state = new WorkflowState(array('wid' => $workflow->wid));
+      $options = $state->getOptions('', NULL);
+    }
   }
   return $options;
 }

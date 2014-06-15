@@ -160,10 +160,8 @@ class Workflow extends Entity {
         $state->wid = $this->wid;
         // @todo: setting sid to FALSE should be done by entity_ui_clone_entity().
         $state->sid = FALSE;
-        if($state->isActive()) {
-          $state->save();
-          $sid_conversion[$old_sid] = $state->sid;
-        }
+        $state->save();
+        $sid_conversion[$old_sid] = $state->sid;
       }
 
       // Reset state cache.

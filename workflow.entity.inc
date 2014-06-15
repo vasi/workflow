@@ -25,7 +25,6 @@ function workflow_entity_info() {
     'entity keys' => array(
       'id' => 'wid',
       'name' => 'name',
-      // 'label' => 'label',
     ),
     'label callback' => 'entity_class_label',
     'uri callback' => 'entity_class_uri',
@@ -154,7 +153,7 @@ function workflow_entity_property_info_alter(&$info) {
     'required' => TRUE,
   ) + $info['WorkflowState']['properties']['state'];
   unset($info['WorkflowState']['properties']['state']);
-	
+
   // Properties for WorkflowConfigTransition.
   $info['WorkflowConfigTransition']['properties']['workflow'] = array(
     'label' => t("Workflow"),
@@ -230,30 +229,33 @@ function _workflow_metadata_workflow_get_properties($entity, array $options, $na
  * Also used as Menu wild card loader {wildcard_name}_load for '%workflow'.
  * @see http://www.phpgainers.com/content/creating-menu-wildcard-loader-function-drupal-7
  * @todo D8: deprecated in favour of workflow_load_single(), not needed for menu.
+ *
+ * $id can be numeric ID ('wid') or machine name ('name'). 
+ * Caveat: this only works for entities with EntityAPIControllerExportable. #1741956
  */
-function workflow_load($wid) {
+function workflow_load($id) {
   // Some Admin UI menu page loaders pass the $wid as string, not int.
   // @see workflow_admin_ui_edit_form_validate().
-  // The EntityController must be Exportable, or else a string won't work. #1741956
-  // $workflow = ctype_digit($wid) ? entity_load_single('Workflow', $wid) : workflow_load_by_name($wid);
-  $workflow = entity_load_single('Workflow', $wid);
+  $workflow = entity_load_single('Workflow', $id);
   return $workflow;
 }
 
-/*
- * Caveat: this only works for entities with EntityAPIControllerExportable.
- */
 function workflow_load_by_name($name) {
   $workflows = entity_load_multiple_by_name('Workflow', array($name));
   return reset($workflows);
 }
 
-function workflow_load_single($wid) {
-  return entity_load_single('Workflow', $wid);
+function workflow_load_multiple_by_name($names = FALSE) {
+  $workflows = entity_load_multiple_by_name('Workflow', $names);
+  return $workflows;
 }
 
-function workflow_load_multiple($wids = FALSE, $reset = FALSE) {
-  return entity_load('Workflow', $wids, array(), $reset);
+function workflow_load_single($id) {
+  return entity_load_single('Workflow', $id);
+}
+
+function workflow_load_multiple($ids = FALSE, $reset = FALSE) {
+  return entity_load('Workflow', $ids, array(), $reset);
 }
 
 function workflow_create($name) {
@@ -263,6 +265,27 @@ function workflow_create($name) {
     $workflow = entity_create('Workflow', array('name' => $name));
   }
   return $workflow;
+}
+
+
+/**
+ * Helper function, to get the label of a given workflow.
+ *
+ * @see workflow_get_sid_label($sid)
+ * @see workflow_get_wid_label($wid)
+ */
+function workflow_label($workflow) {
+  if ($workflow === FALSE) {
+    $output = t('No workflow');
+  }
+  elseif ($workflow) {
+    $output = t(check_plain($workflow->label()));
+  }
+  else {
+    // E.g., NULL.
+    $output = t('Unknown workflow');
+  }
+  return $output;
 }
 
 /**

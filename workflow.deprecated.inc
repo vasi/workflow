@@ -35,6 +35,24 @@ function workflow_get_workflows_by_name($name) {
 }
 
 /**
+ * Helper function, to get the label of a given workflow.
+ *
+ * @deprecated: workflow_get_wid_label --> workflow_label
+ */
+function workflow_get_wid_label($wid) {
+  if (empty($wid)) {
+    $output = t('No workflow');
+  }
+  elseif ($workflow = workflow_load_single($wid)) {
+    $output = $workflow->label();
+  }
+  else {
+    $output = t('Unknown workflow');
+  }
+  return $output;
+}
+
+/**
  * Return the ID of the creation state for this workflow.
  * @deprecated: workflow_get_creation_state_by_wid($wid) --> $workflow->getCreationSid().
  *
