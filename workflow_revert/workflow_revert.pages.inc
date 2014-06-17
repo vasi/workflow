@@ -64,7 +64,7 @@ function workflow_revert_form_submit($form, $form_state) {
   $transition->setValues($entity_type, $entity, $field_name, $current_sid, $previous_sid, $user->uid, REQUEST_TIME, $comment);
 
   // Force the transition because it's probably not valid.
-  workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = TRUE);
+  workflow_execute_transition($entity_type, $entity, $field_name, $transition, TRUE);
 
   drupal_set_message($comment);
 

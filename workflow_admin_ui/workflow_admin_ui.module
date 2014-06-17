@@ -119,11 +119,6 @@ function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
  *   access information, NULL is returned.
  */
 function workflow_access($op, $entity, $account, $entity_type) {
-  global $user;
-
-  if (!isset($account)) {
-    $account = $user;
-  }
   return user_access('administer workflow', $account);
 }
 

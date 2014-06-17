@@ -91,14 +91,14 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       '#value' => $settings['allowed_values_function'], // = 'workflowfield_allowed_values',
     );
 
-    // $field['settings']['wid'] can be numeric or named.
-    $current_workflow = workflow_load_single($settings['wid']);
+    // $field['settings']['wid'] can be numeric or named, or empty.
+    $wid = isset($settings['wid']) ? $settings['wid'] : '';
     // Let the user choose between the available workflow types.
     $element['wid'] = array(
       '#type' => 'select',
       '#title' => t('Workflow type'),
       '#options' => $workflows,
-      '#default_value' => $current_workflow->wid,
+      '#default_value' => $wid,
       '#required' => TRUE,
       '#disabled' => $has_data,
       '#description' => t('Choose the Workflow type. Maintain workflows !url.', array('!url' => l(t('here'), 'admin/config/workflow/workflow'))),
@@ -106,9 +106,9 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
 
     // Inform the user of possible states.
     // If no Workflow type is selected yet, do not show anything.
-    if ($current_workflow) {
+    if ($wid) {
       // Get a string representation to show all options.
-      $allowed_values_string = $this->_allowed_values_string($current_workflow->wid);
+      $allowed_values_string = $this->_allowed_values_string($wid);
 
       $element['allowed_values_string'] = array(
         '#type' => 'textarea',

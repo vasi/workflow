@@ -76,6 +76,8 @@ function workflow_node_load($nodes, $types) {
  * Implements hook_node_view().
  */
 function workflow_node_view($node, $view_mode, $langcode) {
+  global $user;
+
   $entity_type = 'node'; // This hook is only for nodes.
   $field_name = ''; // This hook is only for workflow_node.
   $entity_bundle = $node->type;
@@ -86,7 +88,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   }
   // Check permission, so that even with state change rights,
   // the form can be suppressed from the node view (#1893724).
-  if (!user_access('show workflow state form')) {
+  if (!user_access('show workflow state form', $user)) {
     return;
   }
 
@@ -98,7 +100,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
   $node->content['workflow_current_state'] = workflow_state_formatter($entity_type, $node, $field, $instance, $current_sid);
   $node->content['workflow_current_state']['#weight'] = -99;
 
-  if ($current_state && $current_state->showWidget($entity_type, $node, FALSE, '')) {
+  if ($current_state && $current_state->showWidget('node', $node, '', $user, FALSE)) {
     $form = array();
     $workflow = $current_state->getWorkflow();
 
@@ -306,7 +308,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
         '#collapsed' => FALSE,
         '#weight' => 10,
       );
-*/
+ */
 
     // Emulate a Field API interface.
     // Show the current state and the Workflow form to allow state changing.

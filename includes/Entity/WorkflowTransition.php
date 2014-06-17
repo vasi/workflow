@@ -21,16 +21,19 @@ class WorkflowTransition extends Entity {
   public $delta = 0;
   // Entity data.
   public $revision_id;
-  public $entity_id;
+  public $entity_id; // Use WorkflowTransition->getEntity() to fetch this.
   public $nid; // @todo D8: remove $nid, use $entity_id. (requires conversion of Views displays.)
-  protected $entity; // This is dynamically loaded. Use WorkflowTransition->getEntity() to fetch this.
   // Transition data.
   public $old_sid = 0;
   public $new_sid = 0;
   public $sid = 0; // @todo D8: remove $sid, use $new_sid. (requires conversion of Views displays.)
-  public $uid = 0;
+  public $uid = 0; // Use WorkflowTransition->getUser() to fetch this.
   public $stamp;
   public $comment = '';
+  // Cached data, from $this->entity_id and $this->uid.
+  protected $entity = NULL; // Use WorkflowTransition->getEntity() to fetch this.
+  protected $user = NULL; // Use WorkflowTransition->getUser() to fetch this.
+  // Extra data.
   protected $is_scheduled = NULL;
   protected $is_executed = NULL;
   protected $force = NULL;
@@ -81,7 +84,7 @@ class WorkflowTransition extends Entity {
     // Load the supplied entity.
     if ($entity && !$entity_type) {
       // Not all parameters are passed programmatically.
-      drupal_set_message('Wrong call to new Workflow*Transition()', 'error');
+      drupal_set_message(t('Wrong call to new Workflow*Transition()'), 'error');
     }
     elseif ($entity) {
       $this->setEntity($entity_type, $entity);
@@ -175,10 +178,12 @@ class WorkflowTransition extends Entity {
    *
    * @return bool
    *  TRUE if OK, else FALSE.
+   *
+   * Having both $roles AND $user seems redundant, but $roles have been tampered
+   * with, even though they belong to the $user.
+   * @see WorkflowConfigTransition::isAllowed()
    */
-  public function isAllowed($roles, $force) {
-    global $user;
-
+  public function isAllowed($roles, $user, $force) {
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
     $old_state = workflow_state_load_single($old_sid);
@@ -216,7 +221,7 @@ class WorkflowTransition extends Entity {
     // WorkflowState::getOptions() will consider all permissions, etc.
     $options = array();
     if ($old_state) {
-      $options = $old_state->getOptions($entity_type, $entity, $force, $field_name);
+      $options = $old_state->getOptions($entity_type, $entity, $field_name, $user, $force);
     }
     if (!array_key_exists($new_sid, $options)) {
       drupal_set_message(t('The transition from %old_sid_label to %new_sid_label is not allowed.', $t_args), 'error');
@@ -237,8 +242,7 @@ class WorkflowTransition extends Entity {
    *  new state ID. If execution failed, old state ID is returned,
    */
   public function execute($force = FALSE) {
-    global $user;
-
+    $user = $this->getUser();
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
@@ -278,7 +282,7 @@ class WorkflowTransition extends Entity {
 
       $roles = array_keys($user->roles);
       $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
-      if (!$this->isAllowed($roles, $force)) {
+      if (!$this->isAllowed($roles, $user, $force)) {
         watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
         // If incorrect, quit.
         return $old_sid;
@@ -287,7 +291,7 @@ class WorkflowTransition extends Entity {
       if (!$force) {
         // Make sure this transition is allowed.
         // @todo D8: remove, or replace by 'transition pre'. See WorkflowState::getOptions().
-        $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name);
+        $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this, $user);
         // Stop if a module says so.
         if (in_array(FALSE, $permitted, TRUE)) {
           watchdog('workflow', 'Transition vetoed by module.');
@@ -302,7 +306,7 @@ class WorkflowTransition extends Entity {
       'node' => $entity,
       'sid' => $new_sid,
       'old_sid' => $old_sid,
-      'uid' => $this->uid,
+      'uid' => $user->uid,
       'transition' => $this,
     );
     drupal_alter('workflow_comment', $this->comment, $context);
@@ -468,7 +472,7 @@ class WorkflowTransition extends Entity {
    *  the Entity ID or the Entity object, to add to the Transition.
    *
    * @return object $entity
-   *  the entity, that is added to the Transition.
+   *  the Entity, that is added to the Transition.
    */
   public function setEntity($entity_type, $entity) {
     if (!is_object($entity)) {
@@ -485,6 +489,12 @@ class WorkflowTransition extends Entity {
     return $this->entity;
   }
 
+  public function getUser() {
+    if (!isset($this->user) || ($this->user->uid != $this->uid) ) {
+      $this->user = user_load($this->uid);
+    }
+    return $this->user;
+  }
   /**
    * Functions, common to the WorkflowTransitions.
    */

@@ -16,7 +16,7 @@ class WorkflowController extends EntityAPIControllerExportable {
 
   public function delete($ids, DatabaseTransaction $transaction = NULL) {
     // @todo: replace WorkflowController::delete() with parent.
-    foreach($ids as $wid) {
+    foreach ($ids as $wid) {
       if ($workflow = workflow_load($wid)) {
         $workflow->delete();
       }
@@ -323,10 +323,11 @@ class Workflow extends Entity {
    * Gets the first valid state ID, after the creation state.
    *
    * Uses WorkflowState::getOptions(), because this does a access check.
+   * The first State ID is user-dependent!
    */
-  public function getFirstSid($entity_type, $entity, $force, $field_name) {
+  public function getFirstSid($entity_type, $entity, $field_name, $user, $force) {
     $creation_state = $this->getCreationState();
-    $options = $creation_state->getOptions($entity_type, $entity, $force, $field_name);
+    $options = $creation_state->getOptions($entity_type, $entity, $field_name, $user, $force);
     if ($options) {
       $keys = array_keys($options);
       $sid = $keys[0];
@@ -432,7 +433,7 @@ class Workflow extends Entity {
   }
 
   /**
-   * Loads all allowed Transition for this workflow.
+   * Loads all allowed ConfigTransitions for this workflow.
    *
    * @param array $tids
    *  Array of Transitions IDs. If FALSE, show all transitions.
@@ -442,7 +443,7 @@ class Workflow extends Entity {
    *  $conditions['roles'] : if provided, an array of roles, or 'ALL'.
    */
   public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
-    $transitions = array();
+    $config_transitions = array();
 
     // Get valid + creation states.
     $states = $this->getStates('CREATION');
@@ -458,36 +459,36 @@ class Workflow extends Entity {
       $this->transitions = array();
       // Get all transitions. (Even from other workflows. :-( )
       $config_transitions = entity_load('WorkflowConfigTransition', $tids, array(), $reset);
-      foreach ($config_transitions as &$transition) {
-        if (isset($states[$transition->sid])) {
-          $transition->setWorkflow($this);
-          $this->transitions[$transition->tid] = $transition;
+      foreach ($config_transitions as &$config_transition) {
+        if (isset($states[$config_transition->sid])) {
+          $config_transition->setWorkflow($this);
+          $this->transitions[$config_transition->tid] = $config_transition;
         }
       }
       $this->sortTransitions();
     }
 
-    foreach ($this->transitions as $transition) {
-      if (!isset($states[$transition->sid])) {
+    foreach ($this->transitions as &$config_transition) {
+      if (!isset($states[$config_transition->sid])) {
         // Not a valid transition for this workflow.
       }
-      elseif ($sid && $sid != $transition->sid) {
+      elseif ($sid && $sid != $config_transition->sid) {
         // Not the requested 'from' state.
       }
-      elseif ($target_sid && $target_sid != $transition->target_sid) {
+      elseif ($target_sid && $target_sid != $config_transition->target_sid) {
         // Not the requested 'to' state.
       }
-      elseif ($transition->isAllowed($roles)) {
+      elseif ($config_transition->isAllowed($roles)) {
         // Transition is allowed, permitted. Add to list.
-        $transition->setWorkflow($this);
-        $transitions[$transition->tid] = $transition;
+        $config_transition->setWorkflow($this);
+        $config_transitions[$config_transition->tid] = $config_transition;
       }
       else {
         // Transition is otherwise not allowed.
       }
     }
 
-    return $transitions;
+    return $config_transitions;
   }
 
   public function getTransitionsByTid($tid, $roles = '', $reset = FALSE) {

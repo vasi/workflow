@@ -189,6 +189,9 @@ function workflow_tab_access($entity_type, $entity) {
     // Get the role IDs of the user. Workflow only stores Ids, not role names.
     $roles = array_keys($user->roles);
 
+    // Some entities (e.g., taxonomy_term) do not have a uid.
+    $entity_uid = isset($entity->uid) ? $entity->uid : 0;
+
     // If this is a new page, give the authorship role.
     if (!$entity_id) {
       $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
@@ -197,7 +200,7 @@ function workflow_tab_access($entity_type, $entity) {
     // N.B.1: Some entities (e.g, taxonomy_term) do not have a uid.
     // N.B.2: If 'anonymous' is the author, don't allow access to History Tab,
     // since anyone can access it, and it will be published in Search engines.
-    elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
+    elseif (($entity_uid > 0) && ($user->uid > 0) && ($entity_uid == $user->uid)) {
       $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
     }
 
@@ -641,9 +644,12 @@ function workflow_get_roles($permission = 'participate in workflow') {
 function workflow_get_workflow_state_names($wid = 0, $grouped = FALSE, $all = FALSE) {
   $options = array();
 
+  // Get the (user-dependent) options.
+  // Since this function is only used in UI, it is save to use the global $user.
+  global $user;
   foreach (workflow_load_multiple($wid ? array($wid) : FALSE) as $workflow) {
     $state = new WorkflowState(array('wid' => $workflow->wid));
-    $workflow_options = $state->getOptions('', NULL);
+    $workflow_options = $state->getOptions('', NULL, '', $user, FALSE);
 
     if (!$grouped) {
       $options += $workflow_options;

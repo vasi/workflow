@@ -119,10 +119,10 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
         // Workflow Node mode.
         // The node is being submitted but the form data has not been saved to the database yet,
         // so we set the token values from the workflow form fields.
-        $new_sid = $node->workflow;
-        $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : $workflow->getCreationSid();
         $uid = $node->uid;
         $account = user_load($uid);
+        $new_sid = $node->workflow;
+        $old_sid = isset($last_history->old_sid) ? $last_history->old_sid : $workflow->getCreationSid();
         $user_name = ($uid && isset($node->name)) ? $node->name : variable_get('anonymous', 'Anonymous');
         $mail = ($uid && isset($node->user_mail)) ? $node->user_mail : '';
         $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
@@ -132,10 +132,12 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
         if (empty($last_history)) {
           // If the node has no workflow history,
           // the node is being inserted and will soon be transitioned to the first valid state.
-          $new_sid = $workflow->getFirstSid($entity_type, $node, FALSE, '');
+          $uid = $node->uid;
+          $account = user_load($uid);
           if ($new_sid) {
             // @TODO: Some users, like anonymous, may not be allowed
             // to cause transitions, so there will be no choices.
+            $new_sid = $workflow->getFirstSid($entity_type, $node, '', $account, FALSE);
             $old_sid = $workflow->getCreationSid();
           }
           else {
@@ -143,10 +145,8 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
             $new_sid = workflow_node_current_state($node, $entity_type, $field_name);
             $old_sid = $workflow->getCreationSid();
           }
-          $uid = $node->uid;
-          $account = user_load($node->uid);
           $user_name = ($uid && isset($node->name)) ? $node->name : variable_get('anonymous', 'Anonymous');
-          $mail = ($node->uid && isset($node->user_mail)) ? $node->user_mail : '';
+          $mail = ($uid && isset($node->user_mail)) ? $node->user_mail : '';
           $comment = isset($node->workflow_comment) ? $node->workflow_comment : '';
         }
         else {

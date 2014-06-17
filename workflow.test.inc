@@ -33,11 +33,11 @@ function workflow_test_entity_workflow_crud() {
   $ws = workflow_load_multiple();
   $count3 = count($ws);
 
-  if($count1 === $count3 && ($count2 - $count1) == 1) {
-    drupal_set_message('workflow->create/save/delete OK');
+  if ($count1 === $count3 && ($count2 - $count1) == 1) {
+    drupal_set_message(t('workflow->create/save/delete OK'));
   }
   else  {
-    drupal_set_message('workflow->create/save/delete: error');
+    drupal_set_message(t('workflow->create/save/delete: error'));
   }
 
 
@@ -155,7 +155,9 @@ dpm($workflow->loadTransitions());
 }
 
 function workflow_test_entity_allowable() {
-  $workflow = workflow_create('workflow_test_'.REQUEST_TIME);
+  globl $user;
+
+  $workflow = workflow_create('workflow_test_' . REQUEST_TIME);
   $workflow->save();
   $s1 = $workflow->createState('to be opened');
   $s2 = $workflow->createState('open');
@@ -179,8 +181,8 @@ DPM($t3);
   $t->roles = $roles;
   $t->save();
 
-  dpm($s2->getOptions('', NULL));
-  // returns  TRUE if the role is allowed to do the transition.
+  dpm($s2->getOptions('', NULL, '', $user, FALSE));
+  // returns TRUE if the role is allowed to do the transition.
   $rc = $t3->isAllowed($role = 2);
   dpm($t3);
   dpm('this result must be TRUE: ' . (int) $rc);
@@ -210,18 +212,18 @@ dpm($workflow);
 dpm($wrapper);
 
   // Get properties of the Workflow.
-dpm(  $wrapper->wid->label(). ' ' . $wrapper->wid->value()  );
-dpm(  $wrapper->name->label(). ' ' . $wrapper->name->value()  );
-dpm(  $wrapper->label->label(). ' ' . $wrapper->label->value()  );
-dpm(  $wrapper->status->value()  );
-dpm(  $wrapper->tab_roles->value()  );
-//dpm(  $wrapper->states->value()  );
-dpm(  $wrapper->states->optionsList()  );
-//dpm(  $wrapper->transitions->value()  );
-dpm(  $wrapper->options->optionsList()  );
-dpm('---- end of Workflow getters ---');
+dpm($wrapper->wid->label() . ' ' . $wrapper->wid->value() );
+dpm($wrapper->name->label() . ' ' . $wrapper->name->value() );
+dpm($wrapper->label->label() . ' ' . $wrapper->label->value() );
+dpm($wrapper->status->value() );
+dpm($wrapper->tab_roles->value() );
+//dpm($wrapper->states->value() );
+dpm($wrapper->states->optionsList() );
+//dpm($wrapper->transitions->value() );
+dpm($wrapper->options->optionsList() );
+dpm(t('---- end of Workflow getters ---'));
   // Set properties of the Workflow.
-  //dpm(  $wrapper->label->set('ssdfdss')  );
+  //dpm($wrapper->label->set('ssdfdss') );
   // ...
 
   // Get properties of States.
@@ -488,7 +490,7 @@ function workflow_test_tokens_term($entity_id = '2', $entity_type = 'taxonomy_te
   $options['language'] = NULL;
 //dpm($node);
 //dpm($data);
-	  // Display the tokenized text.
+  // Display the tokenized text.
 //  dpm(token_replace(  $t_greetings   , $data));
   dpm(token_replace(  $t_node_all  , $data, $options));
 

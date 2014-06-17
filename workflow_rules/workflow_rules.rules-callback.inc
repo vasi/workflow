@@ -120,7 +120,8 @@ function _workflow_rules_set_state(array $parameters, RulesAction $action) {
 
   // Set the Force, to ignore the limitations on the current user's permissions.
   // But the transition must be existent for a/any role! 
-  $transition->force($force = TRUE);
+  $force = TRUE;
+  $transition->force($force);
 
   // Execute the transition. It may bounce, due to extra checks.
   $sid = $transition->execute($force);

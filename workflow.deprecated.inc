@@ -168,6 +168,8 @@ function workflow_node_tab_access($node = NULL) {
  *  Array of transitions.
  */
 function workflow_field_choices($node, $force = FALSE, $state = NULL) {
+  global $user; // Alert: In 7.x-2.4, getOptions() uses a $user parameter.
+
   $choices = array();
 
   if (!$node) {
@@ -184,7 +186,7 @@ function workflow_field_choices($node, $force = FALSE, $state = NULL) {
     $current_sid = workflow_node_current_state($node, 'node', '');
     $state = workflow_state_load_single($current_sid);
   }
-  return $state->getOptions('node', $node, $force, '');
+  return $state->getOptions('node', $node, '', $user, $force);
 }
 
 /**

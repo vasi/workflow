@@ -353,7 +353,7 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
         // $field['settings']['wid'] can be numeric or named.
         $workflow = workflow_load_single($field['settings']['wid']);
         $old_sid = $workflow->getCreationSid();
-        $new_sid = $workflow->getFirstSid($entity_type, $entity, $force = FALSE, $field_name);
+        $new_sid = $workflow->getFirstSid($entity_type, $entity, $field_name, $user, FALSE);
       }
     }
     elseif (isset($entity->original) && !isset($entity->original->{$name}[LANGUAGE_NONE])) {

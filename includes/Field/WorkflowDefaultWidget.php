@@ -67,6 +67,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * @todo D8: change "array $items" to "FieldInterface $items"
    */
   public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
+    global $user; // @todo #2287057: verify if formElement() really is only used for UI. If not, $user must be passed.
+
     $field = $this->field;
     $instance = $this->instance;
     $entity = $this->entity;
@@ -115,8 +117,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
       if ($current_state = workflow_state_load_single($current_sid)) {
         // $grouped = TRUE; // Grouped options only makes sense for multiple workflows.
-        $options = $current_state->getOptions($entity_type, $entity, $force, $field_name);
-        $show_widget = $current_state->showWidget($entity_type, $entity, $force, $field_name);
+        $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, $force);
+        $show_widget = $current_state->showWidget($entity_type, $entity, $field_name, $user, $force);
 
         // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
         $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
@@ -189,8 +191,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // permission. State change cannot be scheduled at entity creation because
     // that leaves the entity in the (creation) state.
     if ($settings_schedule == TRUE && user_access('schedule workflow transitions')) {
-      global $user;
-
       if (variable_get('configurable_timezones', 1) && $user->uid && drupal_strlen($user->timezone)) {
         $timezone = $user->timezone;
       }
@@ -209,7 +209,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         ),
         '#default_value' => $scheduled,
         '#attributes' => array(
-          'id' => 'scheduled_' .  $form_id,
+          'id' => 'scheduled_' . $form_id,
         ),
       );
       $element['workflow']['workflow_scheduled_date_time'] = array(
@@ -219,7 +219,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         '#prefix' => '<div style="margin-left: 1em;">',
         '#suffix' => '</div>',
         '#states' => array(
-          'visible' => array(':input[id="' . 'scheduled_' .  $form_id . '"]' => array('value' => '1')),
+          'visible' => array(':input[id="' . 'scheduled_' . $form_id . '"]' => array('value' => '1')),
         ),
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_date'] = array(
@@ -339,6 +339,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    * @todo: remove update of {node_form} table. (separate task, because it has features, too)
    */
   public function submit(array $form, array &$form_state, array &$items, $force = FALSE) {
+    global $user; // @todo #2287057: verify if submit() really is only used for UI. If not, $user must be passed.
+
     $entity_type = $this->entity_type;
     $entity = $this->entity;
     $field_name = isset($this->field['field_name']) ? $this->field['field_name'] : '';
@@ -357,8 +359,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $new_sid = $old_sid;
       return $new_sid;
     }
-
-    $transition = $this->getTransition($old_sid, $items, $field_name);
+    $transition = $this->getTransition($old_sid, $items, $field_name, $user);
 
     $force = $force || $transition->isForced();
 
@@ -419,9 +420,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    *
    * This merely extracts the transition from the form/widget. No validation.
    */
-  public function getTransition($old_sid, array $items, $field_name) {
-    global $user;
-
+  public function getTransition($old_sid, array $items, $field_name, stdClass $user) {
     $entity_type = $this->entity_type;
     $entity = $this->entity;
     // $entity_id = entity_id($entity_type, $entity);
@@ -454,7 +453,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
           // This only happens on workflows, when only one transition from
           // '(creation)' to another state is allowed.
           $workflow = $state->getWorkflow();
-          $new_sid = $workflow->getFirstSid($this->entity_type, $this->entity, FALSE, $field_name);
+          $new_sid = $workflow->getFirstSid($this->entity_type, $this->entity, $field_name, $user, FALSE);
         }
       }
 

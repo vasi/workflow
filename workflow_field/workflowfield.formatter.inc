@@ -23,6 +23,10 @@ function workflowfield_field_formatter_info() {
  * Shows the current state and the Widget on a Node View page or a Workflow History tab.
  */
 function workflowfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode = 'und', $items = array(), $display = array()) {
+  // @todo: Perhaps global user is not always the correct user.
+  // E.g., on ScheduledTransition->execute()? But this function is mostly used in UI. 
+  global $user; //$todo #2287057: OK?
+
   $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   $field_id = isset($field['id']) ? $field['id'] : 0;
 
@@ -46,7 +50,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
     return $list_element;
   }
   // Only build form if user has possible target state(s).
-  if (!$current_state->showWidget($entity_type, $entity, $force = FALSE, $field_name)) {
+  if (!$current_state->showWidget($entity_type, $entity, $field_name, $user, FALSE)) {
     return $list_element;
   }
 

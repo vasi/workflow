@@ -33,7 +33,7 @@ class WorkflowStateController extends EntityAPIController {
 
   public function delete($ids, DatabaseTransaction $transaction = NULL) {
     // @todo: replace with parent.
-    foreach($ids as $id) {
+    foreach ($ids as $id) {
       if ($state = workflow_state_load($id)) {
         $wid = $state->wid;
         db_delete('workflow_states')
@@ -191,6 +191,8 @@ class WorkflowState extends Entity {
    * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->deactivate() + delete()
    */
   public function deactivate($new_sid) {
+    global $user; // We can use global, since deactivate() is a UI-only function.
+
     $current_sid = $this->sid;
     $force = TRUE;
 
@@ -204,7 +206,6 @@ class WorkflowState extends Entity {
     // This is called in WorkflowState::deactivate().
     // @todo: reparent Workflow Field, whilst deactivating a state.
     if ($new_sid) {
-      global $user;
       // A candidate for the batch API.
       // @TODO: Future updates should seriously consider setting this with batch.
 
@@ -288,8 +289,8 @@ class WorkflowState extends Entity {
    * @return bool $show_widget
    *   TRUE = a form (a.k.a. widget) must be shown; FALSE = no form, a formatter must be shown instead.
    */
-  public function showWidget($entity_type, $entity, $force, $field_name) {
-    $options = $this->getOptions($entity_type, $entity, $force, $field_name);
+  public function showWidget($entity_type, $entity, $field_name, $user, $force) {
+    $options = $this->getOptions($entity_type, $entity, $field_name, $user, $force);
     $count = count($options);
     // The easiest case first: more then one option: always show form.
     if ($count > 1) {
@@ -321,8 +322,7 @@ class WorkflowState extends Entity {
    *
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
-  public function getOptions($entity_type, $entity, $force = FALSE, $field_name = '') {
-    global $user;
+  public function getOptions($entity_type, $entity, $field_name, $user, $force = FALSE) {
     static $cache = array(); // Entity-specific cache per page load.
 
     $options = array();
@@ -351,8 +351,12 @@ class WorkflowState extends Entity {
       }
     }
     else {
-      // Gather roles, to get the proper permissions.
+      // Get the role IDs of the user, to get the proper permissions.
       $roles = array_keys($user->roles);
+
+      // Some entities (e.g., taxonomy_term) do not have a uid.
+      $entity_uid = isset($entity->uid) ? $entity->uid : 0;
+
       if ($user->uid == 1 || $force) {
         // Superuser is special. And $force allows Rules to cause transition.
         $roles = 'ALL';
@@ -364,7 +368,7 @@ class WorkflowState extends Entity {
         // - on submit of new entity, $entity_id and $is_new are both set.
         $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
       }
-      elseif (isset($entity->uid) && $entity->uid == $user->uid && $user->uid > 0) {
+      elseif (($entity_uid > 0) && ($user->uid > 0) && ($entity_uid == $user->uid)) {
         // Add 'author' role to user, if user is author of this entity.
         // - Some entities (e.g, taxonomy_term) do not have a uid.
         // - If 'anonymous' is the author, don't allow access to History Tab,
@@ -388,7 +392,8 @@ class WorkflowState extends Entity {
         'force' => $force,
         'workflow' => $workflow,
         'state' => $current_state,
-        'user_roles' => $roles,
+        'user' => $user,
+        'user_roles' => $roles, // @todo: can be removed in D8, since $user is in.
       );
       drupal_alter('workflow_permitted_state_transitions', $transitions, $context);
 
@@ -406,7 +411,7 @@ class WorkflowState extends Entity {
         // In this case, the choice is never presented to the user.
         // @todo D8: remove. See also other calls to this hook.
         if ($roles != 'ALL') {
-          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name, $transition);
+          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name, $transition, $user);
         }
 
         // If not vetoed by a module, add to list.
@@ -450,7 +455,7 @@ class WorkflowState extends Entity {
     // Get the numbers for Workflow Node.
     $result = db_select('workflow_node', 'wn')
       ->fields('wn')
-      ->condition('sid', $sid,'=')
+      ->condition('sid', $sid, '=')
       ->execute();
     $count = $result->rowCount();
 

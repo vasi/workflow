@@ -1,7 +1,8 @@
 <?php
 
 /**
- * @file VBO action to modify entity values (properties and fields).
+ * @file
+ * VBO action to modify entity values (properties and fields).
  */
 
 /**
@@ -50,8 +51,7 @@ function workflow_vbo_next_state_action($entity, array $context) {
   $current_state = workflow_state_load_single($current_sid);
 
   // Get the node's new state (which is the next available state).
-  $force = FALSE;
-  $options = $current_state->getOptions($entity_type, $entity, $force, $field_name);
+  $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, FALSE);
   $new_sid = $current_sid;
   $flag = $current_state->isCreationState();
   foreach ($options as $sid => $name) {
@@ -66,8 +66,7 @@ function workflow_vbo_next_state_action($entity, array $context) {
 
   // Fire the transition.
   $comment = '';
-  $force = FALSE;
   $transition = new WorkflowTransition();
   $transition->setValues($entity_type, $entity, $field_name, $current_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
-  workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force);
+  workflow_execute_transition($entity_type, $entity, $field_name, $transition, FALSE);
 }

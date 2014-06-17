@@ -223,8 +223,8 @@ function _workflow_node_initialize_nodes($entity_type, $node_type, $field_name, 
   $nodes = node_load_multiple($nids);
   foreach ($nodes as $entity) {
     // Get the initial state for this entity.
-    // Due to permissions, it might be different for each.
-    $new_sid = $workflow->getFirstSid($entity_type, $entity, $force, $field_name);
+    // Due to permissions, it might be different for each user.
+    $new_sid = $workflow->getFirstSid($entity_type, $entity, $field_name, $user, $force);
 
     $transition = new WorkflowTransition();
     $transition->setValues($entity_type, $entity, $field_name, $creation_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);

@@ -34,7 +34,7 @@
  * @return
  *   Only 'transition permitted' expects a boolean result.
  */
-function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '', $transition = NULL) {
+function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $field_name = '', $transition = NULL, $user = NULL) {
   switch ($op) {
     case 'transition permitted':
       // This operation is called in the following situations: 
@@ -43,6 +43,7 @@ function hook_workflow($op, $id, $new_sid, $entity, $force, $entity_type = '', $
       // 3. when showing a 'revert state' link in a Views display.
       // Your module's implementation may return FALSE here and disallow
       // the execution, or avoid the presentation of the new State.
+      // This may be user-dependent.
       // As of 7.x-2.3, better use hook_workflow_permitted_state_transitions_alter() in option 1.
       // For options 2 and 3, the 'transition pre' gives an alternative.
       return TRUE;
@@ -132,12 +133,13 @@ function hook_workflow_comment_alter(&$comment, &$context) {
  *      'force' => $force,
  *      'workflow' => $workflow,
  *      'state' => $current_state,
- *      'user_roles' => $roles,
+ *      'user' => $user,
+ *      'user_roles' => $roles, // @todo: can be removed in D8, since $user is in.
  *    );
  *
  * This hook allows you to add custom filtering of allowed target states, add
  * new custom states, change labels, etc.
- * It is is invoked in WorkflowState::getOptions().
+ * It is invoked in WorkflowState::getOptions().
  */
 function hook_workflow_permitted_state_transitions_alter(&$transitions, $context) {
   // This example creates a new custom target state.

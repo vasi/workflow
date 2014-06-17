@@ -1,7 +1,8 @@
 <?php
 
 /**
- * @file VBO action to modify entity values (properties and fields).
+ * @file
+ * VBO action to modify entity values (properties and fields).
  */
 
 /**

@@ -251,6 +251,10 @@ function workflowfield_allowed_values($field, $instance, $entity_type, $entity) 
  * @todo: move to a class.
  */
 function workflowfield_options_list($field, $instance, $entity_type, $entity) {
+  // @todo: Perhaps global user is not always the correct user.
+  // E.g., on ScheduledTransition->execute()? But this function is mostly used in UI. 
+  global $user; //$todo #2287057: OK?
+
   $options = array();
 
   if ($entity) {
@@ -258,14 +262,14 @@ function workflowfield_options_list($field, $instance, $entity_type, $entity) {
     $field_name = $field['field_name'];
     $sid = workflow_node_current_state($entity, $entity_type, $field_name);
     $state = workflow_state_load_single($sid);
-    $options = $state->getOptions($entity_type, $entity, $force = FALSE, $field_name);
+    $options = $state->getOptions($entity_type, $entity, $field_name, $user, FALSE);
   }
   else {
     // $field['settings']['wid'] can be numeric or named.
     if ($workflow = workflow_load_single($field['settings']['wid'])) {
       // There is no entity, E.g., on the Rules action "Set a data value".
       $state = new WorkflowState(array('wid' => $workflow->wid));
-      $options = $state->getOptions('', NULL);
+      $options = $state->getOptions('', NULL, '', $user, FALSE);
     }
   }
   return $options;
