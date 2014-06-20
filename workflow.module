@@ -841,6 +841,9 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
   $wid = 0;
 
   if (!isset($map[$entity_type][$entity_bundle])) {
+    $workflow_id = FALSE;
+    $map[$entity_type][$entity_bundle] = FALSE;
+
     // Check the Node API first: Get $wid.
     if (module_exists('workflownode') && $type_map = workflow_get_workflow_type_map_by_type($entity_bundle)) {
       // Get the workflow by wid.
@@ -855,7 +858,6 @@ function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
     }
 
     // Set the cache with a workflow object.
-    $map[$entity_type][$entity_bundle] = FALSE;
     if ($workflow_id) {
       // $workflow_id can be numeric or named.
       $workflow = workflow_load_single($workflow_id);
