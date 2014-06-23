@@ -123,7 +123,7 @@ function workflow_menu_alter(&$items) {
 
               // Create a dummy entity and get the URI.
               $entity = @entity_create($type, $values);
-              $uri = @$entity_info['uri callback']($entity);
+              $uri = entity_uri($type, $entity);
               if (isset($uri['path'])) {
                 $uri = $uri['path'];
 
