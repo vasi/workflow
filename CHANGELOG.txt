@@ -553,3 +553,4 @@ Issue #2152435: Prepared WorkflowField Features export for better import when wi
 Issue #2287057: Fixed usage of actual $user instead of global $user for Transition.
 Issue #2287057: Fixed Undefined variable $workflow_id in workflow.module.
 Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Upgrading from old D6/D7-version to 7.x-2.x.
+Issue #2283821: Fixed error in workflow_node, when Upgrading from old D6/D7-version to 7.x-2.x.

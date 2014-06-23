@@ -55,13 +55,16 @@ function workflow_node_load($nodes, $types) {
     if (!array_key_exists($node->type, $workflow_types)) {
       continue;
     }
-
     // Nodes that existed before the workflow was defined may not have a state.
     $workflow_node = isset($states[$nid]) ? $states[$nid] : NULL; 
     if (!$workflow_node) {
-      $workflow = workflow_get_workflows_by_type($node->type, 'node');
-      $node->workflow = $workflow->getCreationSid();
-      $node->workflow_stamp = $node->created;
+      if ($workflow = workflow_get_workflows_by_type($node->type, 'node')) {
+        $node->workflow = $workflow->getCreationSid();
+        $node->workflow_stamp = $node->created;
+      }
+      else {
+        // Is this possible?
+      }
     }
     else {
       $node->workflow = $workflow_node->sid;
