@@ -131,19 +131,20 @@ function workflow_actions_trigger_info() {
     $states = $workflow->getStates('CREATION');
     foreach ($workflow->getTransitions() as $transition) {
       $state = $states[$transition->sid];
-      if (!$state->isActive()) {
+      $target_state = $states[$transition->target_sid];
+      if (!$state || !$target_state || !$state->isActive() || !$target_state->isActive()) {
         continue;
       }
-      $creation_flag = $states[$transition->sid]->isCreationState();
       // Add hook for Node API.
       if (isset($type_map[$wid])) {
+        $creation_flag = $state->isCreationState();
         foreach ($type_map[$wid] as $type_bundle) {
           $label = t('When @entity_type %bundle moves from %state to %target_state',
             array(
              '@entity_type' => $type_bundle['entity_type'],
              '%bundle' => $type_bundle['bundle'],
              '%state' => $state->label(),
-              '%target_state' => $states[$transition->target_sid]->label(),
+             '%target_state' => $target_state->label(),
             )
           );
           $pseudohooks['workflow-' . $type_bundle['entity_type'] .'-'. $type_bundle['bundle'] . '-' . $transition->tid] = array(

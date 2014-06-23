@@ -551,7 +551,8 @@ Issue #1511694 by joel_osc: Added integration of WorkflowNode with Panels.
 Issue #2187731 by boris sondagh: Added Panels access/selection rules based on workflow.
 Issue #2152435: Prepared WorkflowField Features export for better import when wid changed in target system.
 Issue #2287057: Fixed usage of actual $user instead of global $user for Transition.
-Issue #2287057: Fixed Undefined variable $workflow_id in workflow.module.
+Issue #2287057: Fixed undefined variable $workflow_id in workflow.module.
 Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Upgrading from old D6/D7-version to 7.x-2.x.
 Issue #2283821: Fixed error in workflow_node, when Upgrading from old D6/D7-version to 7.x-2.x.
 Issue #2291411: Fixed broken link on Admin UI.
+Issue #2217855: Fixed fatal error in workflow_actions when ConfigTransition has invalid target_state.
