@@ -595,8 +595,9 @@ function _workflow_rebuild_roles(array $roles, array $role_map) {
       $new_roles[$rid] = $rid;
     }
     else {
-      $role = user_role_load_by_name($role_map[$rid]);
-      $new_roles[$role->rid] = $role->rid;
+      if ($role = user_role_load_by_name($role_map[$rid])) {
+        $new_roles[$role->rid] = $role->rid;
+      }
     }
   }
   return $new_roles;

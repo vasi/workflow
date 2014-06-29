@@ -556,3 +556,4 @@ Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Up
 Issue #2283821: Fixed error in workflow_node, when Upgrading from old D6/D7-version to 7.x-2.x.
 Issue #2291411: Fixed broken link on Admin UI.
 Issue #2217855: Fixed fatal error in workflow_actions when ConfigTransition has invalid target_state.
+Issue #2187321: Fixed message when importing workflow.
