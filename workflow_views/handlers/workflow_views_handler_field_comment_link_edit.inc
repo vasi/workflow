@@ -34,9 +34,8 @@ class workflow_views_handler_field_comment_link_edit extends views_handler_field
   }
 
   function render($values) {
-    if (!user_access('edit workflow log')) {
-// @todo: add permission;
-//      return;
+    if (!user_access('edit workflow comment')) {
+      return;
     }
     $hid = $values->{$this->aliases['hid']};
     $text = empty($this->options['text']) ? t('edit comment') : $this->options['text'];
