@@ -10,7 +10,7 @@
  *
  * To test caches, load same object twice in a page (see d.o. issue #1572466).
  */
-function workflow_test_entity_workflow_crud() {
+function _workflow_test_entity_workflow_crud() {
   $ws = workflow_load_multiple();
   $count1 = count($ws);
   $workflow = workflow_create('test' . REQUEST_TIME);
@@ -51,7 +51,7 @@ function workflow_test_entity_workflow_crud() {
   $s3->save();
 }
 
-function workflow_test_entity1() {
+function _workflow_test_entity1() {
   $workflow = NULL;
 
   // Create a workflow.
@@ -122,7 +122,7 @@ function workflow_test_entity1() {
   dpm('todo: Test if workflow, states and transitions are properly deleted.');
 }
 
-function workflow_test_entity2() {
+function _workflow_test_entity2() {
   $w = workflow_load('test');
   dpm($w);
   dpm($w->getTransitions());
@@ -134,7 +134,7 @@ function workflow_test_entity2() {
   entity_save('WorkflowConfigTransition', $t);
 }
 
-function workflow_test_entity3() {
+function _workflow_test_entity3() {
   $workflow = workflow_load_single(1);
   dpm($workflow->getStates());
 dpm($workflow->loadTransitions());
@@ -154,7 +154,7 @@ dpm($workflow->loadTransitions());
 //  entity_save('WorkflowConfigTransition', $t);
 }
 
-function workflow_test_entity_allowable() {
+function _workflow_test_entity_allowable() {
   global $user;
 
   $workflow = workflow_create('workflow_test_' . REQUEST_TIME);
@@ -263,14 +263,13 @@ dpm(  $transition_wrapper->old_state->value()->sid  );
 /*
  * Test all tokens
  */
-function workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_name = NULL) {
+function _workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_name = NULL) {
   global $user;
 
 // $entity_id = 76;
 
   if ($entity_id) {
     $node = entity_load_single($entity_type, $entity_id);
-dpm($node);
   }
   else {
     // Create a node.
@@ -304,7 +303,6 @@ dpm($node);
   $t_node_all = '
  <br />	Workflow last transition	 = 	[node:last-transition]	    	Last workflow state transition of content.
  <br />	Comment comment	 = 	[node:last-transition:comment]	    	Workflow executed transition "comment" property.
- <br />	Created	                 = 	[node:last-transition:created]	    	The date the transition was created.
  <br />	Created Medium format	 = 	[node:last-transition:created:medium]	    	A date in "medium" format. (Fri, 05/30/2014 - 10:59)
  <br />	Created Raw timestamp	 = 	[node:last-transition:created:raw]	    	A date in UNIX timestamp format (1401440380)
  <br />	Created Seconds-since	 = 	[node:last-transition:created:seconds]	    	A date in "seconds ago" format (604800). Use it for easy scheduling workflow transitions.
@@ -373,22 +371,10 @@ dpm($node);
 
   ';
 
-
 // This text is to test only a few tokens, for better inspection.
   $t_node_sub = '
- <br />	Workflow	 = 	[node:last-transition:Workflow]	    	Workflow the state belongs to.
- <br />	  Workflow ID	 = 	[node:last-transition:Workflow:wid]	    	The ID used to identify this workflow internally.
- <br />	  Module	 = 	[node:last-transition:Workflow:module]	    	Workflow "module" property.
- <br />	  Options	 = 	[node:last-transition:Workflow:options]	    	Workflow "options" property.
- <br />	  Original workflow	 = 	[node:last-transition:Workflow:original]	    	The original workflow data if the workflow is being updated or saved.
- <br />	  States of this Workflow	 = 	[node:last-transition:Workflow:states]	    	States of this Workflow
- <br />	  Status	 = 	[node:last-transition:Workflow:status]	    	Workflow "status" property.
- <br />	  Transitions of this Workflow	 = 	[node:last-transition:Workflow:transitions]	    	Transitions of this Workflow
- <br />	  URL	 = 	[node:last-transition:Workflow:url]	    	The URL of the workflow.
- <br />	  Workflow ID	 = 	[node:last-transition:Workflow:wid]	    	The unique ID of the workflow applied to this node.
- <br />	  Workflow label	 = 	[node:last-transition:Workflow:label]	    	The workflow applied to this node.
-
- <br />	  Workflow executed transition ID	 = 	[node:last-transition:hid]	    	The unique ID of the workflow executed transition.
+ <br />	User	 = 	[node:last-transition:user]	    	The user that executed the transition.
+ <br />	label    	 = 	[node:last-transition:label]	    	Workflow executed transition "label" property.
   ';
 
 // todo : test old-state
@@ -398,12 +384,14 @@ dpm($node);
   $data['entity_type'] = 'node';
 
   // Display the tokenized text.
+  dpm($node);
   dpm(token_replace(  $t_greetings   , $data));
   dpm(token_replace(  $t_node_all  , $data));
+//  dpm(token_replace(  $t_node_sub  , $data));
 
 }
 
-function workflow_test_tokens_term($entity_id = '2', $entity_type = 'taxonomy_term', $field_name = NULL) {
+function _workflow_test_tokens_term($entity_id = '2', $entity_type = 'taxonomy_term', $field_name = NULL) {
   $token_type = 'term';
 
   global $user;

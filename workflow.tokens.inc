@@ -295,7 +295,7 @@ function _workflow_token_get_token($wrapper, $options) {
   switch ($wrapper->type()) {
     case 'Workflow':
     case 'WorkflowState':
-    case 'WorkflowTranssiton':
+    case 'WorkflowTransition':
       return $wrapper->value();
   }
 
