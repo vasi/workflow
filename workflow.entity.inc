@@ -105,7 +105,8 @@ function workflow_entity_info() {
     'features controller class' => FALSE,
     'base table' => 'workflow_scheduled_transition',
     'entity keys' => array(
-      'id' => '',
+      // This entity does not have a ID yet. Below is to avoid the Notice: Undefined index: id in EntityDefaultMetadataController->entityPropertyInfo() 
+      'id' => 'do-not-use',
     ),
     'label callback' => 'entity_class_label',
     'module' => 'workflow',
@@ -114,17 +115,35 @@ function workflow_entity_info() {
   return $entities;
 }
 
+
+/**
+ * Does NOT implement hook_entity_property_info().
+ *
+ * By NOT implementing this hook, but using hook_entity_property_info_alter(),
+ * the system itself will generate the most viable options.
+ * They can then be tweaked with the _alter() function.
+ * @see https://www.drupal.org/node/1208874
+ */
+//function workflow_entity_property_info() {
+//  $info = array();
+//  $return $info;
+//}
+
 /**
  * Implements hook_entity_property_info_alter().
  *
  * P.S. When adding a new property here, you might delete code from workflow_tokens().
  */
 function workflow_entity_property_info_alter(&$info) {
+
+  // Properties for Workflow.
   $info['Workflow']['properties']['wid']['label'] = 'Workflow ID';
+  $info['Workflow']['properties']['options']['label'] = t('Workflow options');
   $info['Workflow']['properties']['options']['getter callback'] = '_workflow_metadata_workflow_get_properties';
   $info['Workflow']['properties']['states'] = array(
     'type' => 'list<WorkflowState>',
-    'label' => 'States of this Workflow',
+    'label' => 'States',
+    'description' => 'States of the Workflow.',
     'getter callback' => '_workflow_metadata_workflow_get_properties',
     // 'options list' => 'entity_metadata_user_roles',
     // 'required' => TRUE/FALSE,
@@ -133,71 +152,90 @@ function workflow_entity_property_info_alter(&$info) {
   );
   $info['Workflow']['properties']['transitions'] = array(
     'type' => 'list<WorkflowConfigTransition>',
-    'label' => 'Transitions of this Workflow',
+    'label' => 'Transitions',
+    'description' => 'Transitions of the Workflow.',
     'getter callback' => '_workflow_metadata_workflow_get_properties',
   );
-
   unset($info['Workflow']['properties']['tab_roles']['description']);
   $info['Workflow']['properties']['tab_roles'] += array(
-    'name' => t('roles'),
-    'description' => t("The roles that can access the Workflow History tab."),
     'type' => 'list<integer>',
+    'label' => t("User roles"),
+    'description' => t("The roles that can access the Workflow History tab."),
     'getter callback' => '_workflow_metadata_workflow_get_properties',
   );
 
   // Properties for WorkflowState.
-  $info['WorkflowState']['properties']['label'] = array(
-    'label' => t("Label"),
-    'description' => t("The label of the state."),
-    'schema field' => 'state',
-    'required' => TRUE,
-  ) + $info['WorkflowState']['properties']['state'];
+  $info['WorkflowState']['properties']['wid']['type'] = 'Workflow';
+  //
+  $info['WorkflowState']['properties']['label'] = $info['WorkflowState']['properties']['state'];
+  $info['WorkflowState']['properties']['label']['label'] = t("Label");
+  $info['WorkflowState']['properties']['label']['description'] = t("The label of the state.");
+  $info['WorkflowState']['properties']['label']['required'] = TRUE;
   unset($info['WorkflowState']['properties']['state']);
 
   // Properties for WorkflowConfigTransition.
   $info['WorkflowConfigTransition']['properties']['workflow'] = array(
-    'label' => t("Workflow"),
     'type' => 'Workflow',
+    'label' => t("Workflow"),
     'description' => t("The workflow of the transition."),
     'getter callback' => '_workflow_metadata_workflow_get_properties',
     'entity token' => FALSE,
   );
-  // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
-  unset($info['WorkflowTransition']['properties']['sid']);
-  unset($info['WorkflowTransition']['properties']['target_sid']);
-  $info['WorkflowConfigTransition']['properties']['old-state'] = array(
+  // Unify to old_state, new_state. 
+  unset($info['WorkflowConfigTransition']['properties']['sid']);
+  unset($info['WorkflowConfigTransition']['properties']['target_sid']);
+  $info['WorkflowConfigTransition']['properties']['old_state'] = array(
+    'type' => 'WorkflowState',
     'label' => t('Old state'),
+    'schema field' => 'sid',
     'description' => t("The old state."),
-    'type' => 'WorkflowState',
     'getter callback' => '_workflow_metadata_workflow_get_properties',
   );
-  $info['WorkflowConfigTransition']['properties']['new-state'] = array(
+  $info['WorkflowConfigTransition']['properties']['new_state'] = array(
+    'type' => 'WorkflowState',
     'label' => t('New state'),
+    'schema field' => 'target_sid',
     'description' => t("The new state."),
-    'type' => 'WorkflowState',
     'getter callback' => '_workflow_metadata_workflow_get_properties',
   );
+  $info['WorkflowConfigTransition']['properties']['roles']['type'] = 'list<integer>';
+  $info['WorkflowConfigTransition']['properties']['roles']['description'] = t("The roles that may execute the transition.");
 
   // Properties for WorkflowTransition.
   $info['WorkflowTransition']['properties']['label'] = $info['WorkflowConfigTransition']['properties']['label'];
   $info['WorkflowTransition']['properties']['workflow'] = $info['WorkflowConfigTransition']['properties']['workflow'];
   $info['WorkflowTransition']['properties']['hid']['label'] = 'Transition ID';
-  // Unify to old-state, new-state. Do not use underscores, or workflow_tokens will not work!
+  // Unify to old_state, new_state.
   unset($info['WorkflowTransition']['properties']['old_sid']);
   unset($info['WorkflowTransition']['properties']['sid']);
-  $info['WorkflowTransition']['properties']['old-state'] = $info['WorkflowConfigTransition']['properties']['old-state'];
-  $info['WorkflowTransition']['properties']['new-state'] = $info['WorkflowConfigTransition']['properties']['new-state'];
+  unset($info['WorkflowTransition']['properties']['stamp']);
+  $info['WorkflowTransition']['properties']['old_state'] = $info['WorkflowConfigTransition']['properties']['old_state'];
+  $info['WorkflowTransition']['properties']['new_state'] = $info['WorkflowConfigTransition']['properties']['new_state'];
   $info['WorkflowTransition']['properties']['user'] = array(
-    'label' => t('User'),
-    'description' => t('The user that executed the transition.'),
     'type' => 'user',
+    'label' => t('User'),
+    'description' => t('The user that triggered the transition.'),
+    'schema field' => 'uid',
   );
-  $info['WorkflowTransition']['properties']['created'] = array(
-    'label' => t('Created'),
-    'description' => t('The date the transition was created.'),
+  $info['WorkflowTransition']['properties']['timestamp'] = array(
     'type' => 'date',
+    'label' => t('Timestamp'),
+    'description' => t('The date, time the transition was executed.'),
+    'schema field' => 'stamp',
   );
 
+  // Properties for WorkflowScheduledTransition.
+  $info['WorkflowScheduledTransition']['properties']['scheduled']['type'] = 'date';
+  $info['WorkflowScheduledTransition']['properties']['workflow'] = $info['WorkflowTransition']['properties']['workflow'];
+  // Unify to old_state, new_state.
+//  unset($info['WorkflowScheduledTransition']['properties']['old_sid']);
+//  unset($info['WorkflowScheduledTransition']['properties']['sid']);
+//  unset($info['WorkflowScheduledTransition']['properties']['uid']);
+  $info['WorkflowScheduledTransition']['properties']['old_state'] = $info['WorkflowTransition']['properties']['old_state'];
+  $info['WorkflowScheduledTransition']['properties']['old_state']['schema field'] = 'old_sid';
+  $info['WorkflowScheduledTransition']['properties']['new_state'] = $info['WorkflowTransition']['properties']['new_state'];
+  $info['WorkflowScheduledTransition']['properties']['new_state']['schema field'] = 'new_sid';
+  $info['WorkflowScheduledTransition']['properties']['user'] = $info['WorkflowTransition']['properties']['user'];
 }
 
 /**
@@ -210,11 +248,17 @@ function _workflow_metadata_workflow_get_properties($entity, array $options, $na
     case 'states':
       return $entity->getStates();
     case 'transitions':
-// @todo: for some reason, getTransitions gives no result.
+      // @todo: for some reason, getTransitions() gives no result.
       return $entity->getTransitions();
+    case 'old_state':
+    case 'old-state':
+      return $entity->getOldState();
+    case 'new_state':
+    case 'new-state':
+      return $entity->getNewState();
     case 'tab_roles':
-// @todo: for some reason, Tab_roles gives no result.
-      // Taken from user.
+      // @todo: for some reason, Tab_roles gives no result.
+      // Code copied from 'user' entity.
       return isset($entity->tab_roles) ? array_keys($entity->tab_roles) : array();
 
     // The following properties meed more love. Also test their tokens!
@@ -279,7 +323,7 @@ function workflow_label($workflow) {
     $output = t('No workflow');
   }
   elseif ($workflow) {
-    $output = t(check_plain($workflow->label()));
+    $output = check_plain(t($workflow->label()));
   }
   else {
     // E.g., NULL.

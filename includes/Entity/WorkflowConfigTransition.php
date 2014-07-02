@@ -140,6 +140,12 @@ class WorkflowConfigTransition extends Entity {
     }
     return workflow_load_single($this->wid);
   }
+  public function getOldState() {
+    return workflow_state_load_single($this->sid);
+  }
+  public function getNewState() {
+    return workflow_state_load_single($this->target_sid);
+  }
 
   /**
    * Verifies if the given transition is allowed.

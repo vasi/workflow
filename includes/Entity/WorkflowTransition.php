@@ -495,9 +495,16 @@ class WorkflowTransition extends Entity {
     }
     return $this->user;
   }
+
   /**
    * Functions, common to the WorkflowTransitions.
    */
+  public function getOldState() {
+    return workflow_state_load_single($this->old_sid);
+  }
+  public function getNewState() {
+    return workflow_state_load_single($this->new_sid);
+  }
 
   /**
    * Returns if this is a Scheduled Transition.

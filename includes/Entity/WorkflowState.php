@@ -307,6 +307,99 @@ class WorkflowState extends Entity {
   }
 
   /**
+   * Returns the allowed transitions for the current state.
+   *
+   * @param $entity_type
+   *  The type of the entity at hand.
+   * @param $entity
+   *  The entity at hand. May be NULL (E.g., on a Field settings page).
+   *
+   * @return array
+   *   An array of tid=>transition pairs with allowed transitions for State.
+   */
+  public function getTransitions($entity_type = '', $entity = NULL, $field_name = '', $user = NULL, $force = FALSE) {
+    $transitions = array();
+
+    $current_sid = $this->sid;
+    $current_state = $this;
+
+    $workflow = $this->getWorkflow();
+    if (!$workflow) {
+      // No workflow, no options ;-)
+      return $transitions;
+    }
+
+    // Get the role IDs of the user, to get the proper permissions.
+    $roles = $user ? array_keys($user->roles) : array();
+
+    // Some entities (e.g., taxonomy_term) do not have a uid.
+    $entity_uid = isset($entity->uid) ? $entity->uid : 0;
+
+    if ($force || ($user && $user->uid == 1)) {
+      // Superuser is special. And $force allows Rules to cause transition.
+      $roles = 'ALL';
+    }
+    elseif ($entity && (!empty($entity->is_new) || empty($entity_id))) {
+      // Add 'author' role to user, if this is a new entity.
+      // - $entity can be NULL (E.g., on a Field settings page).
+      // - on display of new entity, $entity_id and $is_new are not set.
+      // - on submit of new entity, $entity_id and $is_new are both set.
+      $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
+    }
+    elseif (($entity_uid > 0) && ($user->uid > 0) && ($entity_uid == $user->uid)) {
+      // Add 'author' role to user, if user is author of this entity.
+      // - Some entities (e.g, taxonomy_term) do not have a uid.
+      // - If 'anonymous' is the author, don't allow access to History Tab,
+      //   since anyone can access it, and it will be published in Search engines.
+      $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
+    }
+
+    // Set up an array with states - they are already properly sorted.
+    // Unfortunately, the config_transitions are not sorted.
+    // Also, $transitions does not contain the 'stay on current state' transition.
+    // The allowed objects will be replaced with names.
+    $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
+
+    // Let custom code add/remove/alter the available transitions.
+    // Using the new drupal_alter.
+    // Modules may veto a choice by removing a transition from the list.
+    $context = array(
+      'entity_type' => $entity_type,
+      'entity' => $entity,
+      'field_name' => $field_name,
+      'force' => $force,
+      'workflow' => $workflow,
+      'state' => $current_state,
+      'user' => $user,
+      'user_roles' => $roles, // @todo: can be removed in D8, since $user is in.
+    );
+    drupal_alter('workflow_permitted_state_transitions', $transitions, $context);
+
+    // Let custom code change the options, using old_style hook.
+    // @todo D8: delete below foreach/hook for better performance and flexibility.
+    // Above drupal_alter() calls hook_workflow_permitted_state_transitions_alter() only once.
+    foreach ($transitions as $transition) {
+      $new_sid = $transition->target_sid;
+      $permitted = array();
+
+      // We now have a list of config_transitions. Check each against the Entity.
+      // Invoke a callback indicating that we are collecting state choices.
+      // Modules may veto a choice by returning FALSE.
+      // In this case, the choice is never presented to the user.
+      if ($roles != 'ALL') {
+        $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name, $transition, $user);
+      }
+
+      // If vetoed by a module, remove from list.
+      if (in_array(FALSE, $permitted, TRUE)) {
+        unset($transitions[$transition->tid]);
+      }
+    }
+
+    return $transitions;
+  }
+
+  /**
    * Returns the allowed values for the current state. If State ID = 0, then
    * all states of the Workflow are returned.
    *
@@ -329,7 +422,6 @@ class WorkflowState extends Entity {
 
     $entity_id = ($entity) ? entity_id($entity_type, $entity) : '';
     $current_sid = $this->sid;
-    $current_state = $this;
 
     // Get options from page cache, using a non-empty index (just to be sure).
     $entity_index = (!$entity) ? 'x' : $entity_id;
@@ -338,93 +430,31 @@ class WorkflowState extends Entity {
       return $options;
     }
 
-    $workflow = workflow_load_single($this->wid);
+    $workflow = $this->getWorkflow();
     if (!$workflow) {
       // No workflow, no options ;-)
     }
     elseif (!$current_sid) {
       // If no State ID is given, we return all states.
       // We cannot use getTransitions, since there are no ConfigTransitions
-      // from State with ID 0.
+      // from State with ID 0, and we do not want to repeat States.
       foreach ($workflow->getStates() as $state) {
         $options[$state->value()] = check_plain(t($state->label()));
       }
     }
     else {
-      // Get the role IDs of the user, to get the proper permissions.
-      $roles = array_keys($user->roles);
-
-      // Some entities (e.g., taxonomy_term) do not have a uid.
-      $entity_uid = isset($entity->uid) ? $entity->uid : 0;
-
-      if ($user->uid == 1 || $force) {
-        // Superuser is special. And $force allows Rules to cause transition.
-        $roles = 'ALL';
-      }
-      elseif (($entity) && (!empty($entity->is_new) || empty($entity_id))) {
-        // Add 'author' role to user, if this is a new entity.
-        // - $entity can be NULL (E.g., on a Field settings page).
-        // - on display of new entity, $entity_id and $is_new are not set.
-        // - on submit of new entity, $entity_id and $is_new are both set.
-        $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
-      }
-      elseif (($entity_uid > 0) && ($user->uid > 0) && ($entity_uid == $user->uid)) {
-        // Add 'author' role to user, if user is author of this entity.
-        // - Some entities (e.g, taxonomy_term) do not have a uid.
-        // - If 'anonymous' is the author, don't allow access to History Tab,
-        //   since anyone can access it, and it will be published in Search engines.
-        $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
-      }
-
-      // Set up an array with states - they are already properly sorted.
-      // Unfortunately, the config_transitions are not sorted.
-      // Also, $transitions does not contain the 'stay on current state' transition.
-      // The allowed objects will be replaced with names.
-      $transitions = $workflow->getTransitionsBySid($current_sid, $roles);
-
-      // Let custom code add/remove/alter the available transitions.
-      // Using the new drupal_alter.
-      // Modules may veto a choice by removing a transition from the list.
-      $context = array(
-        'entity_type' => $entity_type,
-        'entity' => $entity,
-        'field_name' => $field_name,
-        'force' => $force,
-        'workflow' => $workflow,
-        'state' => $current_state,
-        'user' => $user,
-        'user_roles' => $roles, // @todo: can be removed in D8, since $user is in.
-      );
-      drupal_alter('workflow_permitted_state_transitions', $transitions, $context);
-
-      // Let custom code change the options, using old_style hook.
+      $transitions = $this->getTransitions($entity_type, $entity, $field_name, $user, $force);
       foreach ($transitions as $transition) {
         $new_sid = $transition->target_sid;
-        $permitted = array();
 
-        // @todo D8: delete below hook for better performance and flexibility.
-        // Above drupal_alter() calls hook_workflow_permitted_state_transitions_alter() only once.
-        //
-        // We now have a list of config_transitions. Check them against the Entity.
-        // Invoke a callback indicating that we are collecting state choices.
-        // Modules may veto a choice by returning FALSE.
-        // In this case, the choice is never presented to the user.
-        // @todo D8: remove. See also other calls to this hook.
-        if ($roles != 'ALL') {
-          $permitted = module_invoke_all('workflow', 'transition permitted', $current_sid, $new_sid, $entity, $force, $entity_type, $field_name, $transition, $user);
+        // Get the label of the transition, and if empty of the target state.
+        // Beware: the target state may not exist, since it can be invented
+        // by custom code in the above drupal_alter() hook.
+        if (!$label = $transition->label()) {
+          $target_state = $workflow->getState($new_sid);
+          $label = $target_state ? $target_state->label() : '';
         }
-
-        // If not vetoed by a module, add to list.
-        if (!in_array(FALSE, $permitted, TRUE)) {
-          // Get the label of the transition, and if empty of the target state.
-          // Beware: the target state may not exist, since it can be invented
-          // by custom code in the above drupal_alter() hook.
-          if (!$label = $transition->label()) {
-            $target_state = $workflow->getState($new_sid);
-            $label = $target_state ? $target_state->label() : '';
-          }
-          $options[$new_sid] = check_plain(t($label));
-        }
+        $options[$new_sid] = check_plain(t($label));
       }
 
       // Include current state for same-state transitions, except when $sid = 0.
@@ -432,7 +462,7 @@ class WorkflowState extends Entity {
       // but only if the transitions have been saved at least one time.
       if ($current_sid && ($current_sid != $workflow->getCreationSid())) {
         if (!isset($options[$current_sid])) {
-          $options[$current_sid] = check_plain(t($current_state->label()));
+          $options[$current_sid] = check_plain(t($this->label()));
         }
       }
 

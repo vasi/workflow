@@ -557,3 +557,4 @@ Issue #2283821: Fixed error in workflow_node, when Upgrading from old D6/D7-vers
 Issue #2291411: Fixed broken link on Admin UI.
 Issue #2217855: Fixed fatal error in workflow_actions when ConfigTransition has invalid target_state.
 Issue #2187321: Fixed message when importing workflow.
+Issue #2296843: Added more properties and functions to entities.

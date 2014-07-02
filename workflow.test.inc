@@ -155,7 +155,7 @@ dpm($workflow->loadTransitions());
 }
 
 function workflow_test_entity_allowable() {
-  globl $user;
+  global $user;
 
   $workflow = workflow_create('workflow_test_' . REQUEST_TIME);
   $workflow->save();
@@ -202,31 +202,34 @@ DPM($t3);
 
 
 function _workflow_test_metadata() {
-  // Fnd the first, arbitrary workflow.
+
+  // Find the first, arbitrary workflow.
   $workflows = workflow_load_multiple();
   $workflow = reset($workflows);
 dpm($workflow);
 
-  // Add a wrapper;
-  $wrapper = entity_metadata_wrapper('Workflow', $workflow);
+  // Add a Workflow wrapper;
+  $wrapper = $workflow_wrapper = entity_metadata_wrapper('Workflow', $workflow);
+dpm(t('---- Workflow: showing objects ---'));
 dpm($wrapper);
 
   // Get properties of the Workflow.
-dpm($wrapper->wid->label() . ' ' . $wrapper->wid->value() );
-dpm($wrapper->name->label() . ' ' . $wrapper->name->value() );
-dpm($wrapper->label->label() . ' ' . $wrapper->label->value() );
+dpm(t('---- Workflow: showing getters ---'));
+dpm($wrapper->wid->label() . ' => ' . $wrapper->wid->value() );
+dpm($wrapper->name->label() . ' => ' . $wrapper->name->value() );
+dpm($wrapper->label->label() . ' => ' . $wrapper->label->value() );
 dpm($wrapper->status->value() );
 dpm($wrapper->tab_roles->value() );
 //dpm($wrapper->states->value() );
 dpm($wrapper->states->optionsList() );
 //dpm($wrapper->transitions->value() );
 dpm($wrapper->options->optionsList() );
-dpm(t('---- end of Workflow getters ---'));
   // Set properties of the Workflow.
   //dpm($wrapper->label->set('ssdfdss') );
   // ...
 
   // Get properties of States.
+dpm(t('---- start of WorkflowState getters ---'));
   $states = $workflow->getStates();
   $state = reset($states);
   $state_wrapper = entity_metadata_wrapper('WorkflowState', $state);
@@ -234,11 +237,27 @@ dpm($states);
 dpm(  $state_wrapper->sid->value()  );
 dpm(  $state_wrapper->wid->value()  );
 dpm(  $state_wrapper->weight->value()  );
-dpm(  $state_wrapper->state->value()  );
+//dpm(  $state_wrapper->state->value()  );
 dpm(  $state_wrapper->status->value()  );
 
   //dpm(  $wrapper->author->mail->value()  );
   //dpm(  $wrapper->title->value(array('sanitize' => TRUE))  );
+
+  // Get the transitions.
+dpm(t('---- start of WorkflowConfigTransition getters ---'));
+  $transitions = $state->getTransitions();
+dpm($transitions);
+  $options = $state->getOptions('', NULL, '', NULL);
+dpm($options);
+  $transition = reset($transitions);
+dpm($transition);
+
+  $transition_wrapper = entity_metadata_wrapper('WorkflowConfigTransition', $transition);
+dpm(  $transition_wrapper  );
+//dpm(  $transition_wrapper->old_sid->value()  );
+dpm(  $transition_wrapper->old_state->value()  );
+dpm(  $transition_wrapper->old_state->value()->sid  );
+
 }
 
 /*
