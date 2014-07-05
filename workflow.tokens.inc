@@ -333,13 +333,14 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
   // Get transition data from online-data.
 
   // Create dummy transitions, just to set $node->workflow_transitions[].
-  foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $name => $field) {
-    if ($field_name <> NULL && $name != $field_name) {
+  foreach ($fields = _workflow_info_fields($entity, $entity_type, $entity_bundle) as $found_name => $field) {
+
+    if ($field_name <> NULL && $found_name != $field_name) {
       continue;
     }
 
     $old_sid = FALSE;
-    $new_sid = $field_name ? _workflow_get_sid_by_items($entity->{$name}[LANGUAGE_NONE]) : $entity->workflow_sid;
+    $new_sid = $found_name ? _workflow_get_sid_by_items($entity->{$found_name}[LANGUAGE_NONE]) : $entity->workflow_sid;
 
     if (!isset($entity_id)) {
       // When creating a node, and only 1 valid sid is available, then the widget is not shown.
@@ -357,17 +358,17 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
       }
     }
     elseif (isset($entity->original)) {
-      if ( $field_name && !isset($entity->original->{$name}[LANGUAGE_NONE])) {
+      if ( $field_name && !isset($entity->original->{$found_name}[LANGUAGE_NONE])) {
         // When updating a node, that did not have a workflow attached before.
         // (Happens when you add workflows to existing Entity types.)
-        $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
+        $old_sid = workflow_node_previous_state($entity, $entity_type, $found_name);
       }
       elseif ($field_name) {
         // Updating an entity.
-        $old_sid = _workflow_get_sid_by_items($entity->original->{$name}[LANGUAGE_NONE]);
+        $old_sid = _workflow_get_sid_by_items($entity->original->{$found_name}[LANGUAGE_NONE]);
       }
       else {
-        $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
+        $old_sid = workflow_node_previous_state($entity, $entity_type, $found_name);
       }
     }
 
