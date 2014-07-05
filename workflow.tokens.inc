@@ -339,7 +339,7 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
     }
 
     $old_sid = FALSE;
-    $new_sid = _workflow_get_sid_by_items($entity->{$name}[LANGUAGE_NONE]);
+    $new_sid = $field_name ? _workflow_get_sid_by_items($entity->{$name}[LANGUAGE_NONE]) : $entity->workflow_sid;
 
     if (!isset($entity_id)) {
       // When creating a node, and only 1 valid sid is available, then the widget is not shown.
@@ -356,14 +356,19 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
         $new_sid = $workflow->getFirstSid($entity_type, $entity, $field_name, $user, FALSE);
       }
     }
-    elseif (isset($entity->original) && !isset($entity->original->{$name}[LANGUAGE_NONE])) {
-      // When updating a node, that did not have a workflow attached before.
-      // (Happens when you add workflows to existing Entity types.)
-      $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
-    }
     elseif (isset($entity->original)) {
-      // Updating an entity.
-      $old_sid = _workflow_get_sid_by_items($entity->original->{$name}[LANGUAGE_NONE]);
+      if ( $field_name && !isset($entity->original->{$name}[LANGUAGE_NONE])) {
+        // When updating a node, that did not have a workflow attached before.
+        // (Happens when you add workflows to existing Entity types.)
+        $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
+      }
+      elseif ($field_name) {
+        // Updating an entity.
+        $old_sid = _workflow_get_sid_by_items($entity->original->{$name}[LANGUAGE_NONE]);
+      }
+      else {
+        $old_sid = workflow_node_previous_state($entity, $entity_type, $name);
+      }
     }
 
     $transition = new WorkflowTransition();

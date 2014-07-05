@@ -179,8 +179,6 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
     if ($field_name) {
       // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API.
       // Remember, we don't know if the transition is scheduled or not.
-      // @todo: saving scheduled transition with Workflow Field doesn't work yet, Workflow Node does.
-//      $referenced_entity->{$field_name}['und'] = $items;
       $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
       $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 

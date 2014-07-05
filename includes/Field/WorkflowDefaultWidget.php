@@ -75,9 +75,11 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $entity_type = $this->entity_type;
     $entity_id = entity_id($entity_type, $entity);
     $field_name = $field['field_name'];
+    $current_sid = FALSE;
 
     // $field['settings']['wid'] can be numeric or named.
-    $workflow = workflow_load_single($field['settings']['wid']);
+    $wid = $field['settings']['wid'];
+    $workflow = workflow_load_single($wid);
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
@@ -281,16 +283,23 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         $element['workflow']['submit_sid'][$sid] = array(
           '#type' => 'submit',
           '#value' => $state_label,
-          '#executes_submit_callback' => TRUE,
           '#validate' => array('_workflow_transition_form_validate_buttons'), // ($form, &$form_state)
-          // Add the submit function only if one provided. @todo: On node edit form, we have not the proper function. 
-          '#submit' => (empty($instance['widget']['settings']['submit_function'])) ? array() : array($instance['widget']['settings']['submit_function']),
           // Add target State ID and Field name, to set correct value in validate_buttons callback.
           '#workflow_sid' => $sid,
           '#workflow_field_name' => $field_name,
           // Put current state first.
           '#weight' => ($sid != $current_sid),
         );
+        // Add the submit function only if one provided. Set the submit_callback accordingly.
+        if (empty($instance['widget']['settings']['submit_function'])) {
+          // #submit Must be empty, or else the submit fucntion is not called.
+          // $element['workflow']['submit_sid'][$sid]['#submit'] = array();
+          $element['workflow']['submit_sid'][$sid]['#executes_submit_callback'] = TRUE;
+        }
+        else {
+          $element['workflow']['submit_sid'][$sid]['#submit'] = array($instance['widget']['settings']['submit_function']);
+          $element['workflow']['submit_sid'][$sid]['#executes_submit_callback'] = TRUE;
+        }
       }
     }
     elseif (!empty($instance['widget']['settings']['submit_function'])) {
