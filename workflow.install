@@ -691,7 +691,7 @@ function workflow_update_7007() {
       $record->tab_roles = empty($roles) ? array() : explode(',', $roles);
       $num_updated = db_update('workflows')
         ->fields(array(
-          'tab_roles' => $record->tab_roles,
+          'tab_roles' => serialize($record->tab_roles),
         ))
         ->condition('wid', $record->wid, '=')
         ->execute();
@@ -709,7 +709,7 @@ function workflow_update_7007() {
       $record->roles = empty($roles) ? array() : explode(',', $roles);
       $num_updated = db_update('workflow_transitions')
         ->fields(array(
-          'roles' => $record->roles,
+          'roles' => serialize($record->roles),
         ))
         ->condition('tid', $record->tid, '=')
         ->execute();

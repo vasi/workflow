@@ -561,3 +561,4 @@ Issue #2296843: Added more properties and functions to entities.
 Issue #2296843: Added more properties and functions to entities - remove typo.
 Issue #2205707: Added permission for workflow_comment_edit_link field handler from workflow_extensions.
 Issue #2211145: Grouped workflow action buttons together with Drupal buttons ([Save], [Preview]).
+Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Upgrading from old D6/D7-version to 7.x-2.x.
