@@ -25,7 +25,7 @@ class WorkflowController extends EntityAPIControllerExportable {
   }
 
   /**
-   * Overrides DrupalDefaultEntityController::cacheGet()
+   * Overrides DrupalDefaultEntityController::cacheGet().
    *
    * Override default function, due to Core issue #1572466.
    */
@@ -38,11 +38,13 @@ class WorkflowController extends EntityAPIControllerExportable {
   }
 
   /**
-   * Overrides DrupalDefaultEntityController::cacheSet()
+   * Overrides DrupalDefaultEntityController::cacheSet().
    */
+/*
   // protected function cacheSet($entities) { }
   //   return parent::cacheSet($entities);
   // }
+ */
 
   /**
    * Overrides DrupalDefaultEntityController::resetCache().
@@ -55,7 +57,7 @@ class WorkflowController extends EntityAPIControllerExportable {
   // }
 
   /**
-   * Overrides DrupalDefaultEntityController::attachLoad()
+   * Overrides DrupalDefaultEntityController::attachLoad().
    */
   protected function attachLoad(&$queried_entities, $revision_id = FALSE) {
     foreach ($queried_entities as $entity) {
@@ -84,9 +86,9 @@ class Workflow extends Entity {
    * CRUD functions.
    */
 
-//  public function __construct(array $values = array(), $entityType = NULL) {
-//    return parent::__construct($values, $entityType);
-//  }
+  // public function __construct(array $values = array(), $entityType = NULL) {
+  //   return parent::__construct($values, $entityType);
+  // }
 
   public function __clone() {
     foreach ($this->states as &$state) {
@@ -221,7 +223,7 @@ class Workflow extends Entity {
    * @return bool
    *   $is_valid
    */
-  public function validate() {
+  public function is_valid() {
     $is_valid = TRUE;
 
     // Don't allow workflows with no states. There should always be a creation state.
@@ -273,13 +275,13 @@ class Workflow extends Entity {
   /**
    * Create a new state for this workflow.
    *
-   * @param $name
-   *  The human readable label of the state.
-   * @param boolean $save
-   *  Indicator if the new state must be saved. Normally, the new State is
-   *  saved directly in the database. This is because you can use States only
-   *  with Transitions, and they rely on State IDs which are generated
-   *  magically when saving the State. But you may need a temporary state.
+   * @param string $name
+   *   The untranslated human readable label of the state.
+   * @param bool $save
+   *   Indicator if the new state must be saved. Normally, the new State is
+   *   saved directly in the database. This is because you can use States only
+   *   with Transitions, and they rely on State IDs which are generated
+   *   magically when saving the State. But you may need a temporary state.
    */
   public function createState($name, $save = TRUE) {
     $wid = $this->wid;
@@ -375,7 +377,7 @@ class Workflow extends Entity {
   /**
    * Gets a state for a given workflow.
    *
-   * @param $key
+   * @param mixed $key
    *   A state ID or state Name.
    *
    * @return WorkflowState
@@ -435,14 +437,14 @@ class Workflow extends Entity {
   /**
    * Loads all allowed ConfigTransitions for this workflow.
    *
-   * @param array $tids
-   *  Array of Transitions IDs. If FALSE, show all transitions.
+   * @param mixed $tids
+   *   Array of Transitions IDs. If FALSE, show all transitions.
    * @param array $conditions
-   *  $conditions['sid'] : if provided, a 'from' State ID.
-   *  $conditions['target_sid'] : if provided, a 'to' state ID.
-   *  $conditions['roles'] : if provided, an array of roles, or 'ALL'.
+   *   $conditions['sid'] : if provided, a 'from' State ID.
+   *   $conditions['target_sid'] : if provided, a 'to' state ID.
+   *   $conditions['roles'] : if provided, an array of roles, or 'ALL'.
    */
-  public function getTransitions($tids = FALSE, $conditions = array(), $reset = FALSE) {
+  public function getTransitions($tids = FALSE, array $conditions = array(), $reset = FALSE) {
     $config_transitions = array();
 
     // Get valid + creation states.
@@ -514,7 +516,7 @@ class Workflow extends Entity {
     return $this->getTransitions(FALSE, $conditions, $reset);
   }
 
-  /*
+  /**
    * Get a specific transition. Therefore, use $roles = 'ALL'.
    */
   public function getTransitionsBySidTargetSid($sid, $target_sid, $roles = 'ALL', $reset = FALSE) {
@@ -529,7 +531,7 @@ class Workflow extends Entity {
   /**
    * Gets a the type map for a given workflow.
    *
-   * @param $sid
+   * @param int $sid
    *   A state ID.
    *
    * @return array
@@ -607,15 +609,16 @@ function _workflow_rebuild_roles(array $roles, array $role_map) {
  * Helper function to sort the transitions.
  */
 function _workflow_transitions_sort_by_weight($a, $b) {
-  $old_state_a1 = workflow_state_load($a->sid);
-  $old_state_b1 = workflow_state_load($b->sid);
-  if ($old_state_a1->weight < $old_state_b1->weight)  return -1;
-  if ($old_state_a1->weight > $old_state_b1->weight)  return +1;
+  // First sort on From-State.
+  $old_state_a = workflow_state_load($a->sid);
+  $old_state_b = workflow_state_load($b->sid);
+  if ($old_state_a->weight < $old_state_b->weight) return -1;
+  if ($old_state_a->weight > $old_state_b->weight) return +1;
 
-  $old_state_a2 = workflow_state_load($a->target_sid);
-  $old_state_b2 = workflow_state_load($b->target_sid);
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight == $old_state_b2->weight) return 0;
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight < $old_state_b2->weight)  return -1;
-  if ($old_state_a1->weight == $old_state_b1->weight && $old_state_a2->weight > $old_state_b2->weight)  return +1;
-  return ($old_state_a->weight < $old_state_b->weight) ? -1 : 1;
+  // Then sort on To-State.
+  $new_state_a = workflow_state_load($a->target_sid);
+  $new_state_b = workflow_state_load($b->target_sid);
+  if ($new_state_a->weight < $new_state_b->weight) return -1;
+  if ($new_state_a->weight > $new_state_b->weight) return +1;
+  return 0;
 }

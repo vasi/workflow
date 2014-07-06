@@ -1,17 +1,19 @@
 <?php
+
 /**
  * @file
  * Provides an Admin UI page for the Workflow States.
  */
 
 /**
- * Menu callback. Create the main workflow page, which gives an overview
+ * Menu callback.
+ *
+ * Creates the main workflow page, which gives an overview
  * of workflows and workflow states.
  * Replaced by http://drupal.org/node/1367530.
  */
 function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
   // drupal_set_title(t('Workflow: @label', array('@label' => $workflow->label())));
-
   $form = array();
   $form['#tree'] = TRUE;
   $form['workflow'] = array(
@@ -26,11 +28,11 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
   // Is this the last state available?
   $form['#last_mohican'] = count($state_list) == 2;
 
-  // Get the state objects as array ($sid => WorkflowState)
+  // Get the state objects as array ($sid => WorkflowState).
   $states = $workflow->getStates($all = TRUE);
   // Create a dummy object for new state item. It must NOT be saved to DB.
   $maxweight = $minweight = -50;
-  $wid = $workflow->wid;
+  // $wid = $workflow->wid;
   $dummy = $workflow->createState('', FALSE);
   $dummy->weight = $minweight;
   $states[$dummy->sid] = $dummy; // Although the index is 0, the state is appended at the end of the list.
@@ -155,7 +157,7 @@ function theme_workflow_admin_ui_states_form($variables) {
   // The output needs to have the action links at the top.
   $output .= drupal_render($form['action-links']);
 
-  // Iterate over each element in our $form['states'] array
+  // Iterate over each element in our $form['states'] array.
   foreach (element_children($form['states']) as $id) {
     // We are now ready to add each element of our $form data to the rows
     // array, so that they end up as individual table cells when rendered
@@ -163,18 +165,18 @@ function theme_workflow_admin_ui_states_form($variables) {
     // function to generate the final html markup for that element.
     $table['rows'][] = array(
       'data' => array(
-        // Add our 'name' column
-//        array('data' => drupal_render($form['states'][$id]['state']), 'class' => 'state-name'),
+        // Add our 'name' column.
+        // array('data' => drupal_render($form['states'][$id]['state']), 'class' => 'state-name'),
         array('data' => drupal_render($form['states'][$id]['state']) . drupal_render($form['states'][$id]['name']), 'class' => 'state-name'),
-        // Add our 'weight' column
+        // Add our 'weight' column.
         drupal_render($form['states'][$id]['weight']),
-        // Add our 'status' column
+        // Add our 'status' column.
         array('data' => drupal_render($form['states'][$id]['status']), 'class' => 'state-status'),
-        // Add our 'reassign' column
+        // Add our 'reassign' column.
         array('data' => drupal_render($form['states'][$id]['reassign']), 'class' => 'state-reassign'),
-        // Add our 'count' column
+        // Add our 'count' column.
         array('data' => $form['states'][$id]['count']['#value'], 'class' => 'state-count'),
-        // Add our 'operations' column
+        // Add our 'operations' column.
         array('data' => drupal_render($form['states'][$id]['ops']), 'class' => 'state-ops'),
       ),
       // To support the tabledrag behavior, we need to assign each row of the
@@ -187,17 +189,17 @@ function theme_workflow_admin_ui_states_form($variables) {
 
   $output .= theme('table', $table);
 
-  // And then render any remaining form elements (such as our submit button)
+  // And then render any remaining form elements (such as our submit button).
   $output .= drupal_render_children($form);
 
   // We now call the drupal_add_tabledrag() function in order to add the
   // tabledrag.js goodness onto our page.
   //
   // For a basic sortable table, we need to pass it:
-  //   - the $table_id of our <table> element,
-  //   - the $action to be performed on our form items ('order'),
-  //   - a string describing where $action should be applied ('siblings'),
-  //   - and the class of the element containing our 'weight' element.
+  // - the $table_id of our <table> element,
+  // - the $action to be performed on our form items ('order'),
+  // - a string describing where $action should be applied ('siblings'),
+  // - and the class of the element containing our 'weight' element.
   drupal_add_tabledrag($table_id, 'order', 'sibling', 'state-weight');
 
   return $output;
@@ -207,9 +209,6 @@ function theme_workflow_admin_ui_states_form($variables) {
  * Validation handler for the state form.
  */
 function workflow_admin_ui_states_form_validate($form, &$form_state) {
-  // Get the workflow id.
-  $workflow = $form_state['values']['workflow'];
-
   // Because the form elements were keyed with the item ids from the database,
   // we can simply iterate through the submitted values.
   foreach ($form_state['values']['states'] as $sid => $item) {
@@ -218,7 +217,7 @@ function workflow_admin_ui_states_form_validate($form, &$form_state) {
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
-      $args = array('%state' => check_plain($state->getName()), );
+      $args = array('%state' => check_plain($state->getName()));
 
       // Does that state have nodes in it?
       if ($item['count'] > 0 && empty($item['reassign'])) {
@@ -308,18 +307,18 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
   // $form_state['redirect'] = 'admin/config/workflow/workflow';
 }
 
-/*
+/**
  * Validate duplicate machine names. Function registered in 'name' form element.
  */
 function workflow_admin_ui_states_validate_state_machine_name($name, $element, $form_state) {
-  //TODO - Should $name be checked against DB?
+  // @todo: Should $name be checked against DB?
   $state_names = array();
   foreach ($form_state['values']['states'] as $sid => $item) {
     $state_names[] = $item['name'];
   }
 
   $state_names = array_map('strtolower', $state_names);
-  $result = array_unique( array_diff_assoc( $state_names, array_unique( $state_names ) ) );
+  $result = array_unique(array_diff_assoc($state_names, array_unique($state_names)));
 
   if (in_array($name, $result)) {
     return TRUE;

@@ -267,7 +267,7 @@ Issue #2019345 by johnv: Changed interface of workfow_execute_transition() while
 Issue #2115199 by johnv: Moved workflow_admin_ui type_map page to own file, (since it is only valid for Node API) and fixed PAReview errors.
 Issue #2019345 by johnv: Moved code to WorkflowState::create() to hide State specific details.
 Issue #2019345 by johnv: Removed dependency on workflow.node.inc in common code.
-Issue #2102405 by johnv: Changed interface of workflow_tab_access, workflow_tab_page to be $entity_type resistent.
+Issue #2102405 by johnv: Changed interface of workflow_tab_access, workflow_tab_page to be $entity_type resistant.
 Issue #2019345 by johnv: Moved some code in workflow.module.
 Issue #2019345 by johnv: Fixed workflow_revert now supports all entity types and field names.
 Issue #2019345 by johnv: Changed theme_workflow_history_table to add proper 'Operations column' to history table.
@@ -416,7 +416,7 @@ Issue #2202405 by johnv: Added Rules action 'Set a workflow field state' to work
 Issue #2196587 by johnv: Fixed earlier introduced error in workflow.tokens.inc.
 Issue #2196587 by johnv: Fixed Notice: Undefined property: stdClass::$workflow in workflow_tokens().
 Issue #2200089 by johnv: Fixed PDOException: SQLSTATE[42S22] upon 'transition delete' when workflow_actions enabled.
-Issue #2200089 by johnv: Fixed backwards compatiblity with workflow_actions.
+Issue #2200089 by johnv: Fixed backwards compatibility with workflow_actions.
 Issue #2205707 by johnv: Moved some views handlers from workflow_extensions to workflow_views.
 Issue #2205707 by johnv: Moved workflow_comment_edit_link field handler from workflow_extensions to workflow_views.
 Issue #2208675 by johnv: Fixed Unnecessary db-calls upon node_load in workflow_node.
@@ -562,3 +562,4 @@ Issue #2296843: Added more properties and functions to entities - remove typo.
 Issue #2205707: Added permission for workflow_comment_edit_link field handler from workflow_extensions.
 Issue #2211145: Grouped workflow action buttons together with Drupal buttons ([Save], [Preview]).
 Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Upgrading from old D6/D7-version to 7.x-2.x.
+Fixed code style errors, as reported by pareview.sh and coder module.

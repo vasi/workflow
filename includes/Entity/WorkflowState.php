@@ -66,12 +66,13 @@ class WorkflowState extends Entity {
   /**
    * Constructor.
    *
-   * @param $wid
-   *  The Workflow ID for which a new State is created.
-   * @param $name
-   *  The name of the new State. If '(creation)', a CreationState is generated.
+   * @param int $wid
+   *   The Workflow ID for which a new State is created.
+   * @param string $name
+   *   The name of the new State. If '(creation)', a CreationState is generated.
    */
   public function __construct(array $values = array(), $entityType = 'WorkflowState') {
+    // Please be aware that $entity_type and $entityType are different things!
     // Keep oficial name and external name equal.
     if (isset($values['name'])) {
       $values['state'] = $values['name'];
@@ -85,30 +86,31 @@ class WorkflowState extends Entity {
 
     if (empty($values)) {
       // Automatic constructor when casting an array or object.
-      // Add pre-existing states to cache. (not new/temp ones)
+      // Add pre-existing states to cache (not new/temp ones).
       if (!isset(self::$states[$this->sid])) {
         self::$states[$this->sid] = $this;
       }
     }
-
   }
 
+/*
   // Implementing clone needs a list of tid-less transitions, and a conversion
   // of sids for both States and ConfigTransitions.
   // public function __clone() {}
+ */
 
   /**
    * Alternative constructor, loading objects from table {workflow_states}.
    *
-   * @param $sid
-   *  the requested State ID
-   * @param $wid
-   *  an optional Workflow ID, to check if the requested State is valid for the Workflow.
+   * @param int $sid
+   *   The requested State ID
+   * @param int $wid
+   *   An optional Workflow ID, to check if the requested State is valid for the Workflow.
    *
-   * @return $state
-   *  WorkflowState if state is successfully loaded,
-   *  NULL if not loaded,
-   *  FALSE if state does not belong to requested Workflow.
+   * @return mixed $state
+   *   WorkflowState if state is successfully loaded,
+   *   NULL if not loaded,
+   *   FALSE if state does not belong to requested Workflow.
    */
   public static function load($sid, $wid = 0) {
     $states = self::getStates();
@@ -123,12 +125,12 @@ class WorkflowState extends Entity {
    * Get all states in the system, with options to filter, only where a workflow exists.
    *
    * @param $wid
-   *  the requested Workflow ID.
+   *   The requested Workflow ID.
    * @param bool $reset
-   *  an option to refresh all caches.
+   *   An option to refresh all caches.
    *
    * @return array $states
-   *  an array of cached states.
+   *   An array of cached states.
    *
    * @deprecated workflow_get_workflow_states --> workflow_state_load_multiple
    * @deprecated workflow_get_workflow_states_all --> workflow_state_load_multiple
@@ -185,8 +187,8 @@ class WorkflowState extends Entity {
   /**
    * Deactivate a Workflow State, moving existing nodes to a given State.
    *
-   * @param $new_sid
-   *  the state ID, to which all affected entities must be moved.
+   * @param int $new_sid
+   *   The state ID, to which all affected entities must be moved.
    *
    * @deprecated workflow_delete_workflow_states_by_sid() --> WorkflowState->deactivate() + delete()
    */
@@ -228,10 +230,10 @@ class WorkflowState extends Entity {
 
     // Delete the transitions this state is involved in.
     $workflow = workflow_load_single($this->wid);
-    foreach ($transitions = $workflow->getTransitionsBySid($current_sid, 'ALL') as $transition) {
+    foreach ($workflow->getTransitionsBySid($current_sid, 'ALL') as $transition) {
       $transition->delete();
     }
-    foreach ($transitions = $workflow->getTransitionsByTargetSid($current_sid, 'ALL') as $transition) {
+    foreach ($workflow->getTransitionsByTargetSid($current_sid, 'ALL') as $transition) {
       $transition->delete();
     }
 
@@ -254,7 +256,7 @@ class WorkflowState extends Entity {
    * Returns the Workflow object of this State.
    *
    * @return Workflow
-   *  Workflow object.
+   *   Workflow object.
    */
   public function getWorkflow() {
     if (isset($this->workflow)) {
@@ -272,7 +274,7 @@ class WorkflowState extends Entity {
    * Returns the Workflow object of this State.
    *
    * @return bool
-   *  TRUE if state is active, else FALSE.
+   *   TRUE if state is active, else FALSE.
    */
   public function isActive() {
     return (bool) $this->status;
@@ -283,7 +285,8 @@ class WorkflowState extends Entity {
   }
 
   /**
-   * Determine if the Workflow Form must be shown.
+   * Determines if the Workflow Form must be shown.
+   *
    * If not, a formatter must be shown, since there are no valid options.
    *
    * @return bool $show_widget
@@ -301,7 +304,7 @@ class WorkflowState extends Entity {
     // // since the '(creation)' option is not included in $options.
     // // When in creation state,
     // if ($this->isCreationState()) {
-    //   return TRUE;
+    // return TRUE;
     // }
     return FALSE;
   }
@@ -309,10 +312,10 @@ class WorkflowState extends Entity {
   /**
    * Returns the allowed transitions for the current state.
    *
-   * @param $entity_type
-   *  The type of the entity at hand.
-   * @param $entity
-   *  The entity at hand. May be NULL (E.g., on a Field settings page).
+   * @param string $entity_type
+   *   The type of the entity at hand.
+   * @param object $entity
+   *   The entity at hand. May be NULL (E.g., on a Field settings page).
    *
    * @return array
    *   An array of tid=>transition pairs with allowed transitions for State.
@@ -400,23 +403,24 @@ class WorkflowState extends Entity {
   }
 
   /**
-   * Returns the allowed values for the current state. If State ID = 0, then
-   * all states of the Workflow are returned.
+   * Returns the allowed values for the current state.
    *
-   * @param $entity_type
-   *  The type of the entity at hand.
-   * @param $entity
-   *  The entity at hand. May be NULL (E.g., on a Field settings page).
+   * @param string $entity_type
+   *   The type of the entity at hand.
+   * @param object $entity
+   *   The entity at hand. May be NULL (E.g., on a Field settings page).
    *
    * @return array
-   *   An array of sid=>label pairs. Contains allowed transitions from this 
-   *   state if State ID is given. If State ID is 0 or FALSE, then labels of
-   *   all states of the given Workflow are returned.
+   *   An array of sid=>label pairs.
+   *   If $this->sid is set, returns the allowed transitions from this state.
+   *   If $this->sid is 0 or FALSE, then labels of ALL states of the State's
+   *   Workflow are returned.
    *
    * @deprecated workflow_field_choices() --> WorkflowState->getOptions()
    */
   public function getOptions($entity_type, $entity, $field_name, $user, $force = FALSE) {
-    static $cache = array(); // Entity-specific cache per page load.
+    // Define an Entity-specific cache per page load.
+    static $cache = array();
 
     $options = array();
 
@@ -476,8 +480,9 @@ class WorkflowState extends Entity {
   /**
    * Returns the number of entities with this state.
    *
-   * @return integer
-   *  counted number.
+   * @return int
+   *   Counted number.
+   *
    * @todo: add $options to select on entity type, etc.
    */
   public function count() {

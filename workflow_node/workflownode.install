@@ -2,5 +2,6 @@
 
 /**
  * @file
+ *
  * Install, update and uninstall functions for the Workflow node module.
  */

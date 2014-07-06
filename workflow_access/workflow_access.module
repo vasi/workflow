@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Provides node access permissions based on workflow states.
@@ -23,13 +24,18 @@ function workflow_access_menu() {
     'page arguments' => array('workflow_access_priority_form'),
     'type' => MENU_LOCAL_ACTION,
   );
-  $items[$path . '/manage/' . '%workflow' . '/access'] = array(
+  $items[$path . '/manage/%workflow/access'] = array(
     'title' => 'Access',
     'file' => 'workflow_access.pages.inc',
     'access arguments' => array('administer workflow'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('workflow_access_form', $id_count + 1, $id_count + 2),
-    // 'type' => MENU_CALLBACK, //'type' => MENU_LOCAL_TASK,
+    'page arguments' => array(
+      'workflow_access_form',
+      $id_count + 1,
+      $id_count + 2,
+    ),
+    // 'type' => MENU_CALLBACK,
+    // 'type' => MENU_LOCAL_TASK,
   );
 
   return $items;
@@ -122,7 +128,7 @@ function workflow_access_node_access_records($node) {
     // - when rebuilding permissions via batch for workflow_node and workflow_field.
     // In that case, we need to create the workflow_transions ourselves to
     // calculate the grants.
-    foreach ($fields = _workflow_info_fields($node, 'node') as $field_name => $field) {
+    foreach (_workflow_info_fields($node, 'node') as $field_name => $field) {
       $old_sid = FALSE;
       // Create a dummy transition, just to set $node->workflow_transitions.
       if (isset($node->workflow)) {
@@ -159,7 +165,7 @@ function workflow_access_node_access_records($node) {
 
         // Anonymous ($uid == 0) author is not allowed for role 'author' (== -1).
         // Both logically (Anonymous having more rights then authenticated)
-        // and technically: $gid must be a positive int. 
+        // and technically: $gid must be a positive int.
         if ($gid < 0) { // if ($uid == 0 && $grant->rid == WORKFLOW_ROLE_AUTHOR_RID) {
           continue;
         }

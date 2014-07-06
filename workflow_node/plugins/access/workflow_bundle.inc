@@ -1,12 +1,16 @@
 <?php
 /**
  * @file
+ * Describes a CTools Access plugin.
+ *
  * Used to select whether or not a panel (variant) is displayed based
  * upon the current workflow and/or workflow state of the current node.
  * @see https://drupal.org/node/2187731
  */
 
 /**
+ * Defines the Plugin.
+ *
  * Plugins are described by creating a $plugin array which will
  * be used by the system that includes the file.
  */
@@ -26,7 +30,7 @@ $plugin = array(
  * Check for access.
  */
 function workflow_bundle_ctools_access_check($conf, $context) {
-  // If for some unknown reason that $context isn't set, we just want to be sure.
+  // For some unknown reason $context may not be set. We just want to be sure.
   if (empty($context) || empty($context->data) || empty($context->data->type)) {
     return FALSE;
   }

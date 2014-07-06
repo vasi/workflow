@@ -74,7 +74,9 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     return parent::operationCount() + 8;
   }
 
-  // public function operationForm($form, &$form_state, $entity, $op) {}
+/*
+  public function operationForm($form, &$form_state, $entity, $op) {}
+ */
 
   public function overviewForm($form, &$form_state) {
     // Add table and pager.
@@ -84,10 +86,10 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     $top_actions = module_invoke_all('workflow_operations', 'top_actions', NULL);
 
     // Allow modules to insert their own workflow operations.
-    foreach ($form['table']['#rows'] as &$row ) {
+    foreach ($form['table']['#rows'] as &$row) {
       $url = $row[0]['data']['#url'];
       $workflow = $url['options']['entity'];
-      foreach($actions = module_invoke_all('workflow_operations', 'workflow', $workflow) as $action) {
+      foreach ($actions = module_invoke_all('workflow_operations', 'workflow', $workflow) as $action) {
         $action['attributes'] = isset($action['attributes']) ? $action['attributes'] : array();
         $row[] = l(strtolower($action['title']), $action['href'], $action['attributes']);
       }
@@ -106,7 +108,7 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     );
 
     if (module_exists('workflownode')) {
-      // Append the type_map form, changing the form by reference. 
+      // Append the type_map form, changing the form by reference.
       // The 'type_map' form is only valid for Workflow Node API.
       module_load_include('inc', 'workflow_admin_ui', 'workflow_admin_ui.page.type_map');
       workflow_admin_ui_type_map_form($form);
@@ -122,9 +124,11 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     return $form;
   }
 
-  /*
+  /**
    * Overrides the 'revert' action, to not delete the workflows.
-   * @see issue [#2051079] [#1043634]
+   *
+   * @see https://www.drupal.org/node/2051079
+   * @see https://www.drupal.org/node/1043634
    */
   public function applyOperation($op, $entity) {
     $label = entity_label($this->entityType, $entity);

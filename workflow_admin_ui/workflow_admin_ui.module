@@ -1,7 +1,9 @@
 <?php
+
 /**
  * @file
  * Provides administrative UI for workflow.
+ *
  * Why it's own module? Lower code footprint and better performance.
  * Additional credit to gcassie ( http://drupal.org/user/80260 ) for
  * the initial push to split UI out of core workflow.
@@ -9,11 +11,10 @@
  */
 
 // Caveat: Several hooks have moved into the EntityWorkflowUIController class.
-
 define('WORKFLOW_ADMIN_UI_ARROW', '&#8594;');
 
 /**
- * Implements hook_entity_info_alter.
+ * Implements hook_entity_info_alter().
  *
  * Adds Admin UI to entities, using EntityWorkflowUIController.
  */
@@ -23,7 +24,7 @@ function workflow_admin_ui_entity_info_alter(&$entity_info) {
     'admin ui' => array(
       'path' => 'admin/config/workflow/workflow',
       // Do not add 'file', since each page has its own file.
-      //'file' => 'workflow_admin_ui/workflow_admin_ui.pages.inc',
+      // 'file' => 'workflow_admin_ui/workflow_admin_ui.pages.inc',
       'controller class' => 'EntityWorkflowUIController',
       'menu wildcard' => '%workflow',
     ),
@@ -95,6 +96,7 @@ function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
     case 'edit':
     case 'clone':
       return workflow_admin_ui_edit_form($form, $form_state, $workflow, $op);
+
     case 'view':
     case 'delete':
     default:
@@ -104,17 +106,17 @@ function workflow_form($form, &$form_state, $workflow, $op, $entity_type) {
 /**
  * Determines whether the given user has access to a Workflow entity.
  *
- * @param $op
+ * @param string $op
  *   The operation being performed. One of 'view', 'update', 'create' or 'delete'.
- * @param $entity
+ * @param object $entity
  *   Entity to check access for. If no entity is given, it will be
  *   determined whether access is allowed for all entities of the given type.
- * @param $account
+ * @param object $account
  *   The user to check for. Leave it to NULL to check for the global user.
- * @param $entity_type
+ * @param string $entity_type
  *   The entity type.
  *
- * @return
+ * @return bool
  *   Whether access is allowed or not. If the entity type does not specify any
  *   access information, NULL is returned.
  */
@@ -136,20 +138,17 @@ function workflow_admin_ui_theme() {
 /**
  * Helper function. Create breadcrumbs.
  *
- * @param $workflow
- *  The workflow object.
- * @param $extra (optional)
- *  The link to the extra item to add to the end of the breadcrumbs.
- *
- * @return
- *   none.
+ * @param object $workflow
+ *   The workflow object.
+ * @param mixed $extra (optional)
+ *   The link to the extra item to add to the end of the breadcrumbs.
  */
 function workflow_admin_ui_breadcrumbs($workflow, $extra = NULL) {
   $bc = array(l(t('Home'), '<front>'));
   $bc[] = l(t('Configuration'), 'admin/config');
   $bc[] = l(t('Workflow'), 'admin/config/workflow');
   $bc[] = l(t('Workflow'), 'admin/config/workflow/workflow');
-  if ($workflow) { 
+  if ($workflow) {
     $bc[] = l($workflow->label(), "admin/config/workflow/workflow/$workflow->wid");
   }
   if ($extra) {

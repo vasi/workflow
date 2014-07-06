@@ -22,6 +22,9 @@ function workflow_cleanup_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_help().
+ */
 function workflow_cleanup_help($path, $arg) {
   switch ($path) {
     case 'admin/config/workflow/workflow/cleanup':

@@ -93,7 +93,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
     $operator = check_plain($info[$this->operator]['short']);
     $values = '';
     if (in_array($this->operator, $this->operator_values(1))) {
-      // !!! here unlike views_handler_filter_in_operator class
+      // !!! here unlike views_handler_filter_in_operator class.
       $options_sids = array();
       foreach ($this->value_options as $key => $value) {
         if (is_array($value)) {
@@ -108,7 +108,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
 
       // Remove every element which is not known.
       foreach ($this->value as $value) {
-        if (!isset($options_sids[$value])) { // !!! Unlike views_handler_filter_in_operator class.
+        if (!isset($options_sids[$value])) {// !!! Unlike views_handler_filter_in_operator class.
           unset($this->value[$value]);
         }
       }
@@ -124,7 +124,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
 
         $keys = $this->value;
         $value = array_shift($keys);
-        if (isset($options_sids[$value])) { // !!! Unlike views_handler_filter_in_operator class.
+        if (isset($options_sids[$value])) {// !!! Unlike views_handler_filter_in_operator class.
           $values = check_plain($options_sids[$value]);
         }
         else {
@@ -140,7 +140,7 @@ class workflow_views_handler_filter_sid extends views_handler_filter_in_operator
             $values .= '...';
             break;
           }
-          if (isset($options_sids[$value])) { // !!! Unlike views_handler_filter_in_operator class.
+          if (isset($options_sids[$value])) {// !!! Unlike views_handler_filter_in_operator class.
             $values .= check_plain($options_sids[$value]);
           }
         }

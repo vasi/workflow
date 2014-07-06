@@ -9,12 +9,14 @@
  * Implements a scheduled transition, as shown on Workflow form.
  */
 class WorkflowScheduledTransition extends WorkflowTransition {
-  public $scheduled; // Scheduled timestamp of state change.
+  // Scheduled timestamp of state change.
+  public $scheduled;
 
   /**
    * Constructor.
    */
   public function __construct(array $values = array(), $entityType = 'WorkflowScheduledTransition') {
+    // Please be aware that $entity_type and $entityType are different things!
     parent::__construct($values, $entityType);
 
     $this->is_scheduled = TRUE;
@@ -26,19 +28,20 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     $stamp = 0;
     parent::setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp, $comment);
 
-    $this->scheduled = $scheduled; // Scheduled timestamp of state change.
+    // Set the scheduled timestamp of state change.
+    $this->scheduled = $scheduled;
   }
 
   /**
    * Given a node, get all scheduled transitions for it.
    *
-   * @param $entity_type
-   * @param $entity_id
-   * @param $field_name
-   *  optional
+   * @param string $entity_type
+   * @param int $entity_id
+   * @param string $field_name
+   *   Optional.
    *
    * @return array
-   *  an array of WorkflowScheduledTransitions
+   *   An array of WorkflowScheduledTransitions.
    *
    * @deprecated: workflow_get_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::load()
    */
@@ -66,6 +69,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /**
    * Given a timeframe, get all scheduled transitions.
+   *
    * @deprecated: workflow_get_workflow_scheduled_transition_by_between() --> WorkflowScheduledTransition::loadBetween()
    */
   public static function loadBetween($start = 0, $end = 0) {
@@ -126,6 +130,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
 
   /**
    * Given a node, delete transitions for it.
+   *
    * @deprecated: workflow_delete_workflow_scheduled_transition_by_nid() --> WorkflowScheduledTransition::delete()
    */
   public function delete() {

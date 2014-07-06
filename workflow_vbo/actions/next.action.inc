@@ -38,7 +38,7 @@ function workflow_vbo_next_state_action($entity, array $context) {
   }
 
   // Read the last transition to get the $field_name and $sid, whatever field exists.
-  // @todo: it is cheaper to build this into workflow_node_current_state(). 
+  // @todo: it is cheaper to build this into workflow_node_current_state().
   // $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name = NULL);
   if (!$last_transition || !$last_transition->new_sid) {

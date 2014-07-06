@@ -2,8 +2,10 @@
 
 /**
  * @file
- * Defines a Workflow field, widget (from options.module) and formatter (from list field).
+ * Defines a Workflow Field, Widget and Formatter for Workflow.
+ *
  * All hooks are wrapper functions for a D8-style WorkflowDefaultWidget object.
+ * The Widget is copied from options.module); the Formatter from list field.
  */
 
 /**
@@ -42,7 +44,7 @@ function workflowfield_field_widget_form(&$form, &$form_state, $field, $instance
     $entity = $element['#entity'];
   }
   else {
-    // Not used: On an Entity View page, the widget is shown via 
+    // Not used: On an Entity View page, the widget is shown via
     // workflowfield_field_formatter_view() and workflow_transition_form().
   }
 

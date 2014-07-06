@@ -7,6 +7,7 @@
 
 /**
  * Plugin implementation of the 'workflow_default' widget.
+ *
  * @todo D8: Replace "extends WorkflowD7WidgetBase" by "extends WidgetBase"
  *           or perhaps by "extends OptionsWidgetBase" from Options module.
  *
@@ -25,7 +26,9 @@
 class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
   /**
-   * Function, that gets replaced by the 'annotations' in D8. (See comments above this class)
+   * Returns the settings.
+   *
+   * @todo d8: Replace by the 'annotations' in D8 (See comments above this class).
    */
   public static function settings() {
     return array(
@@ -57,13 +60,14 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    *
    * {@inheritdoc}
    *
-   * Be careful: this widget may be shown in very different places. Test carefully!!
+   * Be careful: Widget may be shown in very different places. Test carefully!!
    *  - On a entity add/edit page
    *  - On a entity preview page
    *  - On a entity view page
    *  - On a entity 'workflow history' tab
    *  - On a comment display, in the comment history
    *  - On a comment form, below the comment history
+   *
    * @todo D8: change "array $items" to "FieldInterface $items"
    */
   public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
@@ -178,7 +182,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       return $element;  // <---- exit.
     }
 
-    // The 'options' widget. May be removed below if 'Action buttons' are choosen.
+    // The 'options' widget. May be removed below if 'Action buttons' are chosen.
     $workflow_label = check_plain($workflow->label());
     $element['workflow']['workflow_sid'] = array(
       '#type' => $settings_options_type,
@@ -270,7 +274,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // The options widget set above is no longer valid.
       $element['workflow']['workflow_sid']['#type'] = 'hidden';
 
-      // How do action buttons work? See also d.o. issue #2187151. 
+      // How do action buttons work? See also d.o. issue #2187151.
       // Create 'action buttons' per state option. Set $sid property on each button.
       // 1. Admin sets ['widget']['options']['#type'] = 'buttons'.
       // 2. This function creates 'action buttons' per state option; sets $sid property on each button.
@@ -292,7 +296,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         );
         // Add the submit function only if one provided. Set the submit_callback accordingly.
         if (empty($instance['widget']['settings']['submit_function'])) {
-          // #submit Must be empty, or else the submit fucntion is not called.
+          // #submit Must be empty, or else the submit function is not called.
           // $element['workflow']['submit_sid'][$sid]['#submit'] = array();
           $element['workflow']['submit_sid'][$sid]['#executes_submit_callback'] = TRUE;
         }
@@ -380,23 +384,24 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $new_sid = $old_sid;
     }
     elseif (!$transition->isScheduled()) {
-      // Now the data is captured in the Transition, and before calling the Execution,
-      // restore the default values for Workflow Field.
+      // Now the data is captured in the Transition, and before calling the
+      // Execution, restore the default values for Workflow Field.
       // For instance, workflow_rules evaluates this.
       if ($field_name) {
         $items = array();
         $items[0]['value'] = $old_sid;
-        $entity->{$field_name}['und'] = $items;
+        $entity->{$field_name}[LANGUAGE_NONE] = $items;
       }
 
       // It's an immediate change. Do the transition.
       // - validate option; add hook to let other modules change comment.
       // - add to history; add to watchdog
-      // return the new value of the sid. (Execution may fail and return the old Sid.)
+      // Return the new State ID. (Execution may fail and return the old Sid.)
       $new_sid = $transition->execute($force);
     }
     else {
-      // A scheduled transition must only be saved to the database. The entity is not changed.
+      // A scheduled transition must only be saved to the database.
+      // The entity is not changed.
       $transition->save();
 
       // The current value is still the previous state.
@@ -407,7 +412,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if ($field_name) {
       $items = array();
       $items[0]['value'] = $new_sid;
-      $entity->{$field_name}['und'] = $items;
+      $entity->{$field_name}[LANGUAGE_NONE] = $items;
     }
     return $new_sid;
   }
@@ -417,10 +422,8 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    */
   // public function errorElement(array $element, ConstraintViolationInterface $violation, array $form, array &$form_state) {
   // }
-
   // public function settingsSummary() {
   // }
-
   // public function massageFormValues(array $values, array $form, array &$form_state) {
   // }
 
@@ -440,10 +443,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       $transition = $items[0]['transition'];
     }
     else {
-      // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
-      $form_id = isset($items[0]['workflow']['form_id']) ? $items[0]['workflow']['form_id'] : '';
-      $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
-
+      // Get the new Transition properties. First the new State ID.
       if (isset($items[0]['workflow']['workflow_sid'])) {
         // We have shown a workflow form.
         $new_sid = $items[0]['workflow']['workflow_sid'];
@@ -466,6 +466,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
         }
       }
 
+      $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
       // Remember, the workflow_scheduled element is not set on 'add' page.
       $scheduled = !empty($items[0]['workflow']['workflow_scheduled']);
       if (!$scheduled) {

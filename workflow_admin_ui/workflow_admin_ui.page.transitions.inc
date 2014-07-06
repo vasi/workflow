@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Provides an Admin UI page for the Workflow Transitions.
@@ -19,10 +20,10 @@
  *   means the transition from state 18 to state 20 can be executed by
  *   the node author or a user in role 2. The $transitions array should
  *   contain ALL transitions for the workflow.
+ * @param Workflow $workflow
+ *   The Workflow object.
  *
- * @param $wid
- *   The workflow object.
- * @return
+ * @return array 
  *   HTML form and permissions table.
  */
 function workflow_admin_ui_transitions_form($form, &$form_state, $workflow, $op) {
@@ -43,13 +44,13 @@ function workflow_admin_ui_transitions_form($form, &$form_state, $workflow, $op)
 /**
  * Form builder. Build the grid of transitions for defining a workflow.
  *
- * @param int $wid
- *   The workflow object.
- *
- * Some special situationa exist: 
+ * Some special situations exist:
  * - it is not allowed to go to the '(creation)' state.
  * - all roles are permitted to use the 'stay on this state' transition.
  *   So, this is hidden from the user.
+ *
+ * @param Workflow $workflow
+ *   The Workflow object.
  */
 function _workflow_admin_ui_transition_grid_form($form, &$form_state, $workflow) {
   $form = array('#tree' => TRUE);

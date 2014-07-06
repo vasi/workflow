@@ -10,10 +10,12 @@ if (module_exists('rules')) {
 
 /**
  * Implements subfunction of hook_rules_condition_info().
- * Using "node:" and "node:unchanged", there is no need to create more conditions to check transitions.
+ *
+ * When using "node:" and "node:unchanged", there is no need to create more
+ * conditions to check transitions.
  */
-//function workflowfield_rules_condition_info() {
-//}
+// function workflowfield_rules_condition_info() {
+// }
 
 /**
  * Implements subfunction of hook_rules_action_info().

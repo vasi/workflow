@@ -111,7 +111,6 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
     if ($workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type)) {
       // Get a list of all possible states for returning state names.
       $states = workflow_state_load_multiple();
-      $wid = $workflow->wid;
 
       $last_history = workflow_transition_load_single($entity_type, $entity_id, '');
 
@@ -159,7 +158,7 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
           if ($current_sid != $last_history->new_sid) {
             $new_sid = $current_sid;
             $old_sid = $last_history->new_sid;
-            $date = REQUEST_TIME; //$node->workflow_stamp;
+            $date = REQUEST_TIME; // $node->workflow_stamp;
             $uid = $node->uid;
           }
           else {
@@ -183,47 +182,58 @@ function workflownode_tokens($type, $tokens, array $data = array(), array $optio
           case 'workflow-name':
             $replacements[$original] = $sanitize ? check_plain($workflow->label()) : $workflow->label();
             break;
+
           case 'workflow-current-state-name':
             $replacements[$original] = $sanitize ? check_plain($states[$new_sid]->getName()) : $states[$new_sid]->getName();
             break;
+
           case 'workflow-old-state-name':
             $old_state_name = (!empty($states[$old_sid])) ? $states[$old_sid]->getName() : 'Deleted state';
             $replacements[$original] = $sanitize ? check_plain($old_state_name) : $old_state_name;
             break;
+
           case 'workflow-current-state-updating-user-name':
             $name = format_username($account);
             $replacements[$original] = $sanitize ? check_plain($name) : $name;
             break;
+
           case 'workflow-current-state-updating-user-link':
             $replacements[$original] = theme('username', array('account' => $account));
             break;
+
           case 'workflow-current-state-updating-user-uid':
             // User IDs are integers only and do not need sanitization.
             $replacements[$original] = $uid;
             break;
+
           case 'workflow-current-state-updating-user-mail':
             $replacements[$original] = $sanitize ? check_plain($account->mail) : $account->mail;
             break;
+
           case 'workflow-current-state-updating-user-mailto':
             $replacements[$original] = '<a href="mailto:' . check_plain($account->mail) . '">' . check_plain($user_name) . '</a>';
             break;
+
           case 'workflow-current-state-log-entry':
             $replacements[$original] = $sanitize ? check_markup($comment, filter_default_format(), $langcode) : $comment;
             break;
+
           case 'workflow-current-state-date-iso':
             $replacements[$original] = format_date($date, 'custom', 'c', NULL, $langcode);
             break;
+
           case 'workflow-current-state-date-tstamp':
             $replacements[$original] = $sanitize ? check_plain($date) : $date;
             break;
+
           case 'workflow-current-state-date-formatted':
             $replacements[$original] = format_date($date, 'medium', '', NULL, $langcode);
             break;
 
           default:
             // Add support for custom date formats. (see token.tokens.inc)
-            // @todo1 Remove when http://drupal.org/node/1173706 is fixed.
-            // @todo2 It seems the custom date formats work normally in D7.22 with chained tokens. 
+            // @todo Remove when http://drupal.org/node/1173706 is fixed.
+            // @todo It seems the custom date formats work normally in D7.22 with chained tokens.
             $date_format_types = system_get_date_types();
             foreach ($date_format_types as $date_type => $date_info) {
               if ($name == 'workflow-current-state-date-' . $date_type) {

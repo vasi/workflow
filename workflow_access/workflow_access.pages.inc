@@ -94,7 +94,7 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#tree' => TRUE,
-      );
+    );
 
     $form[$state->sid]['view'] = array(
       '#type' => 'checkboxes',
@@ -102,7 +102,7 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
       '#default_value' => $view,
       '#title' => t('Roles who can view posts in this state'),
       '#prefix' => '<table width="100%" style="border: 0;"><tbody style="border: 0;"><tr><td>',
-      );
+    );
 
     $form[$state->sid]['update'] = array(
       '#type' => 'checkboxes',
@@ -110,7 +110,7 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
       '#default_value' => $update,
       '#title' => t('Roles who can edit posts in this state'),
       '#prefix' => "</td><td>",
-      );
+    );
 
     $form[$state->sid]['delete'] = array(
       '#type' => 'checkboxes',
@@ -125,13 +125,10 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
   $form['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
   return $form;
-  // Place our block comfortably down the page.
-  $form['submit']['#weight'] = 10;
-  $form['#submit'][] = 'workflow_access_form_submit';
 }
 
 /**
- * Store permission settings for workflow states.
+ * Stores permission settings for workflow states.
  */
 function workflow_access_form_submit($form, &$form_state) {
   foreach ($form_state['values'] as $sid => $access) {
@@ -147,7 +144,7 @@ function workflow_access_form_submit($form, &$form_state) {
         'grant_update' => (!empty($access['update'][$rid])) ? (bool) $access['update'][$rid] : 0,
         'grant_delete' => (!empty($access['delete'][$rid])) ? (bool) $access['delete'][$rid] : 0,
       );
-      $id = workflow_access_insert_workflow_access_by_sid($data);
+      workflow_access_insert_workflow_access_by_sid($data);
     }
 
     // Update all nodes having same workflow state to reflect new settings.

@@ -101,7 +101,6 @@ function theme_workflow_cleanup_form($variables) {
     'attributes' => array('style' => 'width: auto;'),
   ));
 
-
   $header[] = t('Workflow');
   $rows = array();
   foreach (element_children($form['inactive']) as $sid) {

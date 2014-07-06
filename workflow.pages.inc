@@ -37,7 +37,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
     if (!$field['id']) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-      $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node']; 
+      $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
       $field['settings']['widget']['current_status'] = TRUE;
     }
   }
@@ -71,18 +71,22 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     }
     elseif ($history->new_sid == $current_sid && $state->isActive() && !$current_themed) {
       // Theme the current state differently so it stands out.
-      $new_state_name = theme('workflow_history_current_state', array('state_name' => $label,
-                                                                      'state_system_name' => $name,
-                                                                      'sid' => $history->new_sid));
+      $new_state_name = theme('workflow_history_current_state', array(
+        'state_name' => $label,
+        'state_system_name' => $name,
+        'sid' => $history->new_sid)
+      );
       // Make a note that we have themed the current state; other times in the history
       // of this node where the node was in this state do not need to be specially themed.
       $current_themed = TRUE;
     }
     elseif (!$state->isActive()) {
       // The state has been deleted, but we include it in the history.
-      $new_state_name = theme('workflow_deleted_state', array('state_name' => $label,
-                                                              'state_system_name' => $name,
-                                                              'sid' => $history->new_sid));
+      $new_state_name = theme('workflow_deleted_state', array(
+        'state_name' => $label,
+        'state_system_name' => $name,
+        'sid' => $history->new_sid)
+      );
       $footer_needed = TRUE;
     }
     else {
@@ -102,9 +106,11 @@ function workflow_tab_page($entity_type, $entity = NULL) {
       $old_state_name = check_plain($label);
     }
     elseif (!$state->isActive()) {
-      $old_state_name = theme('workflow_deleted_state', array('state_name' => $label,
-                                                              'state_system_name' => $name,
-                                                              'sid' => $history->old_sid));
+      $old_state_name = theme('workflow_deleted_state', array(
+        'state_name' => $label,
+        'state_system_name' => $name,
+        'sid' => $history->old_sid)
+      );
       $footer_needed = TRUE;
     }
     else {
@@ -147,7 +153,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   return $output;
 }
 
-/*
+/**
  * Theme one WorkflowTansition in a workflow history table row.
  *
  * $old_state_name and $state_name must be run through check_plain(t()) prior
@@ -168,13 +174,13 @@ function theme_workflow_history_table_row($variables) {
       array('data' => filter_xss($transition->comment), 'class' => array('log-comment')),
       $variables['extra'],
     ),
-  'class' => array('workflow_history_row'),
+    'class' => array('workflow_history_row'),
   );
 
   return $row;
 }
 
-/*
+/**
  * Theme entire workflow history table.
  */
 function theme_workflow_history_table($variables) {

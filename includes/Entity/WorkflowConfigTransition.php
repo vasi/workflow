@@ -14,7 +14,7 @@
 class WorkflowConfigTransitionController extends EntityAPIController {
 
   /**
-   * Overrides DrupalDefaultEntityController::cacheGet()
+   * Overrides DrupalDefaultEntityController::cacheGet().
    *
    * Override default function, due to core issue #1572466.
    */
@@ -42,7 +42,7 @@ class WorkflowConfigTransitionController extends EntityAPIController {
 
     // Create the machine_name. This can be used to rebuild/revert the Feature in a target system.
     if (empty($entity->name)) {
-      $entity->name = $entity->sid . '_'. $entity->target_sid;
+      $entity->name = $entity->sid . '_' . $entity->target_sid;
     }
 
     $return = parent::save($entity, $transaction);
@@ -66,7 +66,6 @@ class WorkflowConfigTransitionController extends EntityAPIController {
 
 /**
  * Implements a configurated Transition.
- *
  */
 class WorkflowConfigTransition extends Entity {
 
@@ -82,19 +81,19 @@ class WorkflowConfigTransition extends Entity {
   public $wid = 0;
   // The following must explicitely defined, and not be public, to avoid errors when exporting with json_encode().
   protected $workflow = NULL;
-  // protected $is_scheduled = FALSE;
-  // protected $is_executed = FALSE;
-  // protected $force = NULL;
 
   /**
    * Entity class functions.
    */
 
+/*
   // Implementing clone needs a list of tid-less transitions, and a conversion
   // of sids for both States and ConfigTransitions.
   // public function __clone() {}
+ */
 
   public function __construct(array $values = array(), $entityType = NULL) {
+    // Please be aware that $entity_type and $entityType are different things!
     return parent::__construct($values, $entityType = 'WorkflowConfigTransition');
   }
 
@@ -124,10 +123,11 @@ class WorkflowConfigTransition extends Entity {
   /**
    * Returns the Workflow object of this State.
    *
-   * @param $workflow
-   *  An optional workflow object. Can be used as a setter.
+   * @param Workflow $workflow
+   *   An optional workflow object. Can be used as a setter.
+   *
    * @return Workflow
-   *  Workflow object.
+   *   Workflow object.
    */
   public function setWorkflow($workflow) {
     $this->wid = $workflow->wid;
@@ -150,12 +150,12 @@ class WorkflowConfigTransition extends Entity {
   /**
    * Verifies if the given transition is allowed.
    *
-   * - in settings
-   * - in permissions
-   * - by permission hooks, implemented by other modules.
+   * - In settings;
+   * - In permissions;
+   * - By permission hooks, implemented by other modules.
    *
    * @return bool
-   *  TRUE if OK, else FALSE.
+   *   TRUE if OK, else FALSE.
    */
   public function isAllowed($user_roles) {
     if ($user_roles == 'ALL') {

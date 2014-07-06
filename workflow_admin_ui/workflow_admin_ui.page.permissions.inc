@@ -1,13 +1,14 @@
 <?php
+
 /**
  * @file
  * Provides an Admin UI page for the Workflow Permissions.
  */
 
 /**
- * View workflow permissions by role
+ * View workflow permissions by role.
  *
- * @param $workflow
+ * @param Workflow $workflow
  *   The workflow object.
  */
 function workflow_admin_ui_view_permissions_form($workflow, $op) {

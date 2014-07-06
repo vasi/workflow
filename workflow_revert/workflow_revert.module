@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Adds an 'Revert' link to the first workflow history row.
@@ -52,27 +53,21 @@ function workflow_revert_rules_event_info() {
 
 /**
  * Implements hook_workflow_history_alter().
- * Add an 'undo' operation for the most recent history change.
  *
- * @param $variables
+ * Adds an 'undo' operation for the most recent history change.
+ *
+ * @param array $variables
  *   The current workflow history information as an array.
- *   'old_sid' - The state ID of the previous state.
- *   'old_state_name' - The state name of the previous state.
- *   'sid' - The state ID of the current state.
- *   'state_name' - The state name of the current state.
- *   'history' - The row from the workflow_node_history table.
- *   'transition' - a WorkflowTransition object, containing all of the above.
- *
- * If you want to add additional data, place it in the 'extra' value.
+ *   'transition' - a WorkflowTransition object.
  */
-function workflow_revert_workflow_history_alter(&$variables) {
+function workflow_revert_workflow_history_alter(array &$variables) {
   global $user;
   static $first = TRUE;
 
   $transition = $variables['transition'];
 
   // Check access, to avoid that user sees a revert link, but is not allowed to
-  // view the revert form. Use $first to check only once per page. 
+  // view the revert form. Use $first to check only once per page.
   if ($first) {
     if (!user_access('revert workflow', $user)) {
       $first = FALSE;
@@ -107,7 +102,9 @@ function workflow_revert_workflow_history_alter(&$variables) {
         // If not vetoed, mark it.
         $options = array('query' => array('token' => drupal_get_token('workflow_revert ' . $old_sid)));
         $path = 'workflow_revert/' . $entity_type . '/' . $id . '/' . $field_name . '/' . $old_sid;
-        $variables['extra'] = l('Revert state change', $path, $options);
+
+        // If you want to add additional data, place it in the 'extra' value.
+        $variables['extra'] = l(t('Revert state change'), $path, $options);
 
         $first = FALSE;
       }

@@ -19,7 +19,7 @@
  * )
  */
 class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase implements PrepareCacheInterface {
-  /*
+  /**
    * Function, that gets replaced by the 'annotations' in D8. (@see comments above this class)
    */
   public static function getInfo() {
@@ -57,8 +57,8 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     );
   }
 
-  /*
-   * Implements hook_field_settings_form() -> ConfigFieldItemInterface::settingsForm()
+  /**
+   * Implements hook_field_settings_form() -> ConfigFieldItemInterface::settingsForm().
    */
   public function settingsForm(array $form, array &$form_state, $has_data) {
     $field_info = self::getInfo();
@@ -71,7 +71,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     $workflows = array();
     $workflows[''] = t('- Select a value -');
     foreach (workflow_load_multiple() as $id => $workflow) {
-      if ($workflow->validate()) {
+      if ($workflow->is_valid()) {
         // Use the machine name of the workflow, to make it exportable.
         $workflows[$id] = check_plain($workflow->label());
       }
@@ -236,8 +236,9 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
   // }
 
   /**
-   * Do not implement hook_field_presave(),
-   * since $nid is needed, but not yet known at this moment.
+   * Does NOT not implement hook_field_presave().
+   *
+   * Since $nid is needed, but not yet known at this moment.
    * hook_field_presave() -> FieldItemInterface::preSave()
    */
   // function workflowfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
@@ -295,8 +296,8 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
       $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
 
       // Remember: we are on a comment form, so the comment is saved automatically, but the referenced entity is not.
-      // @todo: probably we'd like to do this form within the Widget, but that does not know
-      //        wether we are on a comment or a node form.
+      // @todo: probably we'd like to do this form within the Widget, but
+      // $todo: that does not know wether we are on a comment or a node form.
       //
       // Widget::submit() returns the new value in a 'sane' state.
       // Save the referenced entity, but only is transition succeeded, and is not scheduled.
@@ -329,7 +330,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
   }
 
   /**
-   * Implements hook_field_delete() -> FieldItemInterface::delete()
+   * Implements hook_field_delete() -> FieldItemInterface::delete().
    */
   public function delete($items) {
     global $user;
@@ -341,7 +342,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
 
     // Delete the record in {workflow_node} - not for Workflow Field.
     // Use a one-liner for better code analysis when grepping on old code.
-    (!$field_name) ? workflow_delete_workflow_node_by_nid($entity_id) : NULL ;
+    (!$field_name) ? workflow_delete_workflow_node_by_nid($entity_id) : NULL;
 
     // Add a history record in {workflow_node_history}.
     // @see drupal.org/node/2165349, comment by Bastlynn:
@@ -351,7 +352,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // *absolutely* required. Think banking and/or particularly strict
     // retention policies for legal reasons.
     //
-    // However, a deleted nid may be re-used under certain circumstances: 
+    // However, a deleted nid may be re-used under certain circumstances:
     // e.g., working with InnoDB or after restart the DB server.
     // This may cause that old history is associated with a new node.
     $old_sid = _workflow_get_sid_by_items($items);
@@ -367,7 +368,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     }
   }
 
-  /*
+  /**
    * Helper functions for the Field Settings page.
    * Generates a string representation of an array of 'allowed values'.
    * This is a copy from list.module's list_allowed_values_string().
@@ -396,15 +397,15 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
           $previous_wid = $state->wid;
           $lines[] = $state->name . "'s states: ";
         }
-        $label = t($state->label());
-        $states[$state->sid] = check_plain($label);
-        $lines[] = $state->sid . ' | ' . check_plain($label);
+        $label = check_plain(t($state->label()));
+        $states[$state->sid] = $label;
+        $lines[] = $state->sid . ' | ' . $label;
       }
     }
     return implode("\n", $lines);
   }
 
-  /*
+  /**
    * Helper function for list.module formatter.
    *
    * Callback function for the list module formatter.

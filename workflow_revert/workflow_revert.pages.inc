@@ -40,11 +40,16 @@ function workflow_revert_form($form, $form_state, $entity_type, $id, $field_name
   }
 }
 
+/**
+ * Submit callback function.
+ *
+ * The function is magically called, due to its name <form>_submit.
+ */
 function workflow_revert_form_submit($form, $form_state) {
   global $user;
 
   $previous_sid = $form['#previous_sid'];
-  $id = $form['#entity_id'];
+  // $id = $form['#entity_id'];
   $entity = $form['#entity'];
   $entity_type = $form['#entity_type'];
   $field_name = $form['#field_name'];

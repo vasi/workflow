@@ -45,18 +45,19 @@ class WorkflowTransition extends Entity {
   /**
    * Creates a new entity.
    *
-   * @see entity_create()
+   * @param string $entity_type
+   *   The entity type of the attached $entity.
+   * @param string $entityType
+   *   The entity type of this Entity subclass.
    *
-   * @param $entity_type
-   *  The entity type of the attached $entity.
-   * @param $entityType
-   *  The entity type of this Entity subclass.
+   * @see entity_create()
    *
    * No arguments passed, when loading from DB.
    * All arguments must be passed, when creating an object programmatically.
    * One argument $entity may be passed, only to directly call delete() afterwards.
    */
   public function __construct(array $values = array(), $entityType = 'WorkflowTransition') {
+    // Please be aware that $entity_type and $entityType are different things!
     parent::__construct($values = array(), $entityType);
 
     // This transition is not scheduled,
@@ -68,7 +69,7 @@ class WorkflowTransition extends Entity {
     $this->new_sid = $this->sid;
   }
 
-  /*
+  /**
    * Helper function for __construct. Used for all children of WorkflowTransition (aka WorkflowScheduledTransition)
    */
   public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp, $comment) {
@@ -134,9 +135,9 @@ class WorkflowTransition extends Entity {
    *
    * Since this may return a lot of data, a limit is included to allow for only one result.
    *
-   * @param $entity_type
-   * @param $entity_id
-   * @param $field_name
+   * @param string $entity_type
+   * @param int $entity_id
+   * @param string $field_name
    *   Optional. Can be NULL, if you want to load any field.
    *
    * @return array
@@ -172,15 +173,16 @@ class WorkflowTransition extends Entity {
   /**
    * Verifies if the given transition is allowed.
    *
-   * - in settings
-   * - in permissions
-   * - by permission hooks, implemented by other modules.
+   * - In settings;
+   * - In permissions;
+   * - By permission hooks, implemented by other modules.
    *
    * @return bool
-   *  TRUE if OK, else FALSE.
+   *   TRUE if OK, else FALSE.
    *
-   * Having both $roles AND $user seems redundant, but $roles have been tampered
-   * with, even though they belong to the $user.
+   *   Having both $roles AND $user seems redundant, but $roles have been
+   *   tampered with, even though they belong to the $user.
+   *
    * @see WorkflowConfigTransition::isAllowed()
    */
   public function isAllowed($roles, $user, $force) {
@@ -233,13 +235,14 @@ class WorkflowTransition extends Entity {
 
   /**
    * Execute a transition (change state of a node).
-   * @deprecated: workflow_execute_transition() --> WorkflowTransition::execute().
    *
    * @param bool $force
    *   If set to TRUE, workflow permissions will be ignored.
    *
    * @return int
-   *  new state ID. If execution failed, old state ID is returned,
+   *   New state ID. If execution failed, old state ID is returned,
+   *
+   * @deprecated: workflow_execute_transition() --> WorkflowTransition::execute().
    */
   public function execute($force = FALSE) {
     $user = $this->getUser();
@@ -268,7 +271,7 @@ class WorkflowTransition extends Entity {
     if (!$old_state) {
       drupal_set_message($message = t('You tried to set a Workflow State, but
         the entity is not relevant. Please contact your system administrator.'),
-                         $type = 'error');
+        'error');
       $message = 'Setting a non-relevant Entity from state %old to %new';
       $uri = entity_uri($entity_type, $entity);
       watchdog('workflow', $message, $args, WATCHDOG_ERROR, l('view', $uri['path']));
@@ -376,7 +379,7 @@ class WorkflowTransition extends Entity {
           $args = array(
             '@type' => $entity_type_info['label'],
             '%label' => entity_label($entity_type, $entity),
-            '%state_name' => $state->label(),
+            '%state_name' => t(check_plain($state->label())),
           );
           $uri = entity_uri($entity_type, $entity);
           watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
@@ -406,9 +409,9 @@ class WorkflowTransition extends Entity {
         // 1. Save the field here explicitely, using field_attach_save;
         // 2. Move the invoke to another place: hook_entity_insert(), hook_entity_update();
         // 3. Rely on the entity hooks. This works for Rules, not for Trigger.
-        // --> We choose option 2.
-        //  - first, $entity->workflow_transitions[] is set for easy re-fetching.
-        //  - then, post_execute() is invoked via workflowfield_entity_insert(), _update().
+        // --> We choose option 2:
+        // - First, $entity->workflow_transitions[] is set for easy re-fetching.
+        // - Then, post_execute() is invoked via workflowfield_entity_insert(), _update().
       }
     }
 
@@ -424,7 +427,7 @@ class WorkflowTransition extends Entity {
     $old_sid = $this->old_sid;
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
-    $entity_id = $this->entity_id;
+    // $entity_id = $this->entity_id;
     $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
@@ -466,13 +469,13 @@ class WorkflowTransition extends Entity {
   /**
    * Set the Transitions $entity.
    *
-   * @param $entity_type
-   *  the entity type of the entity.
-   * @param $entity
-   *  the Entity ID or the Entity object, to add to the Transition.
+   * @param string $entity_type
+   *   The entity type of the entity.
+   * @param mixed $entity
+   *   The Entity ID or the Entity object, to add to the Transition.
    *
    * @return object $entity
-   *  the Entity, that is added to the Transition.
+   *   The Entity, that is added to the Transition.
    */
   public function setEntity($entity_type, $entity) {
     if (!is_object($entity)) {
@@ -484,13 +487,14 @@ class WorkflowTransition extends Entity {
     $this->entity_type = $entity_type;
     list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
 
-    $this->nid = $this->entity_id; // backwards compatibility.
+    // For backwards compatibility, set nid.
+    $this->nid = $this->entity_id;
 
     return $this->entity;
   }
 
   public function getUser() {
-    if (!isset($this->user) || ($this->user->uid != $this->uid) ) {
+    if (!isset($this->user) || ($this->user->uid != $this->uid)) {
       $this->user = user_load($this->uid);
     }
     return $this->user;

@@ -1,8 +1,10 @@
 <?php
 
 /**
+ * @file
  * Field handler to present a link to edit a workflow log comment.
  */
+
 class workflow_views_handler_field_comment_link_edit extends views_handler_field {
 
   function construct() {
@@ -42,4 +44,3 @@ class workflow_views_handler_field_comment_link_edit extends views_handler_field
     return l($text, "workflow-comment/$hid/edit", array('query' => drupal_get_destination()));
   }
 }
-

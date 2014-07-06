@@ -5,6 +5,8 @@
  */
 
 /**
+ * Defines the Plugin.
+ *
  * Plugins are described by creating a $plugin array which will be used
  * by the system that includes this file.
  */
@@ -52,6 +54,6 @@ function workflownode_node_form_workflow_content_type_admin_title($subtype, $con
  * Implements pane edit callback.
  */
 function workflownode_node_form_workflow_content_type_edit_form($form, &$form_state) {
-  // provide a blank form so we have a place to have context setting.
+  // Provide a blank form so we have a place to have context setting.
   return $form;
 }

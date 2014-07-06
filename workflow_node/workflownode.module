@@ -9,7 +9,7 @@ module_load_include('inc', 'workflow', 'workflow.node.type_map');
 module_load_include('inc', 'workflow', 'workflow.deprecated');
 
 /**
- * Implements hook_ctools_plugin_directory -
+ * Implements hook_ctools_plugin_directory().
  *
  * This lets ctools know to scan my module for a content_type plugin file
  * Detailed docks in ctools/ctools.api.php
@@ -56,7 +56,7 @@ function workflow_node_load($nodes, $types) {
       continue;
     }
     // Nodes that existed before the workflow was defined may not have a state.
-    $workflow_node = isset($states[$nid]) ? $states[$nid] : NULL; 
+    $workflow_node = isset($states[$nid]) ? $states[$nid] : NULL;
     if (!$workflow_node) {
       if ($workflow = workflow_get_workflows_by_type($node->type, 'node')) {
         $node->workflow = $workflow->getCreationSid();
@@ -72,7 +72,7 @@ function workflow_node_load($nodes, $types) {
     }
   }
 
-  // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591. 
+  // As of workflow 7.x-2.x, the scheduled transition is not loaded. See issue #2138591.
 }
 
 /**
@@ -118,7 +118,7 @@ function workflow_node_view($node, $view_mode, $langcode) {
 
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab']; 
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab'];
         $field['settings']['widget']['current_status'] = FALSE;
       }
     }
@@ -146,13 +146,13 @@ function workflow_node_insert($node) {
  */
 function workflow_node_update($node) {
   if (!isset($node->workflow_field)) {
-    // For this type_map, user did not want a form here. 
+    // For this type_map, user did not want a form here.
     return;
   }
 
   $form = array();
 
-  // Retrieve the data from the form. 
+  // Retrieve the data from the form.
   // Add form values (field, instance, entity_type, entity), then form input.
   $form_state = array();
   $form_state['values']['workflow_field'] = $node->workflow_field;
@@ -196,13 +196,13 @@ function workflow_comment_insert($comment) {
 function workflow_comment_update($comment) {
   // Retrieve the data from the form.
   if (!isset($comment->workflow_field)) {
-    // For this type_map, user did not want a form here. 
+    // For this type_map, user did not want a form here.
     return;
   }
 
   $form = array();
 
-  // Retrieve the data from the form. 
+  // Retrieve the data from the form.
   // Add form values (field, instance, entity_type, entity), then form input.
   $form_state = array();
   $form_state['values']['workflow_field'] = $comment->workflow_field;
@@ -259,7 +259,7 @@ function workflow_field_extra_fields() {
  * Shows the form only on Node Edit forms.
  */
 function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
-  return _workflow_form_alter($form, $form_state, $form_id);
+  _workflow_form_alter($form, $form_state, $form_id);
 }
 
 /**
@@ -268,18 +268,15 @@ function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
  * Shows the form only on Comment forms.
  */
 function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
-  return _workflow_form_alter($form, $form_state, $form_id);
+  _workflow_form_alter($form, $form_state, $form_id);
 }
 
 /**
- * Used to Implement hook_form_alter().
+ * Helper function to implement hook_form_alter().
  *
  * Is now a subfunction of workflow_form_BASE_FORM_ID_alter().
- * This is more performant, since it is called only on form with correct BASE_FORM_ID.
- *
- * @param object &$node
- *
- * @return array
+ * This is more performant (copared to 7.x-1.2 and before), since it is called
+ * only on form with correct BASE_FORM_ID.
  *
  * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
  */
@@ -325,7 +322,7 @@ function _workflow_form_alter(&$form, &$form_state, $form_id) {
 
       if (!$field['id']) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab']; 
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab'];
         $field['settings']['widget']['current_status'] = TRUE;
       }
     }

@@ -17,6 +17,7 @@ function workflowfield_field_info() {
  *
  * Changes the hook_field_settings_form.
  * Fixes some Field settings and Field Instance settings, and makes sure users cannot change it.
+ *
  * @todo: perhaps this is core functionality, but these values are only saved
  *        when the site builder explicitly save the instance settings. :-(
  */
@@ -26,7 +27,8 @@ function workflowfield_form_field_ui_field_edit_form_alter(&$form, &$form_state,
     $form['instance']['required']['#default_value'] = 1;
     $form['instance']['required']['#disabled'] = TRUE;
 
-    // User may not set a default value (this is done by the Workflow module) @see WorkflowState->getOptions().
+    // User may not set a default value (this is done by the Workflow module).
+    // @see WorkflowState::getOptions()
     $form['instance']['default_value_widget']['#type'] = 'hidden';
     $form['instance']['default_value_widget']['#disabled'] = TRUE;
     unset($form['instance']['default_value_widget']);
@@ -146,8 +148,10 @@ function workflowfield_field_widget_info_alter(&$info) {
  * Do not implement hook_field_presave(),
  * since $nid is needed, but not yet known at this moment.
  */
-  // function workflowfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  // }
+/*
+// function workflowfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+// }
+ */
 
 /**
  * Implements hook_field_insert().
@@ -227,13 +231,17 @@ function workflowfield_field_is_empty($item, $field) {
  *
  * @todo: implement functionality from workflow_node_delete().
  */
+/*
 // function workflowfield_field_delete_field($entity_type, $entity, $field, $instance, $langcode, &$items) {
 // }
+ */
 
-/*
+/**
  * Callback function for list.module formatter.
  *
- * Returns array of allowed values when using a 'core' list formatter, not 'workflow' formatter.
+ * Returns array of allowed values when using a 'core' list formatter,
+ * instead of the 'workflow' formatter.
+ *
  * @see list_allowed_values()
  */
 function workflowfield_allowed_values($field, $instance, $entity_type, $entity) {
@@ -244,14 +252,14 @@ function workflowfield_allowed_values($field, $instance, $entity_type, $entity) 
 /**
  * Implements hook_options_list().
  *
- * Callback function for the default Options widgets. 
- * 
+ * Callback function for the default Options widgets.
+ *
  * @todo: move to a class.
  */
 function workflowfield_options_list($field, $instance, $entity_type, $entity) {
+  global $user; // @todo #2287057: OK?
   // @todo: Perhaps global user is not always the correct user.
-  // E.g., on ScheduledTransition->execute()? But this function is mostly used in UI. 
-  global $user; //$todo #2287057: OK?
+  // E.g., on ScheduledTransition->execute()? But this function is mostly used in UI.
 
   $options = array();
 

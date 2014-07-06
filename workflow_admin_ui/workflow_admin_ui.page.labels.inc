@@ -27,12 +27,10 @@
  *
  * Each contains the transitions with that starting workflow state.
  *
- * @return
- *   array of form items for editing labels on transitions
+ * @return array
+ *   Array of form items for editing labels on transitions.
  */
 function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
-  // $form = array();
-
   if (!is_object($workflow)) {
     drupal_set_message(t('Improper worklow ID provided.'), 'error');
     watchdog('workflow_named_transitions', 'Improper worklow ID provided.');
@@ -55,7 +53,7 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
     $rows[] = array(
       'data' => array(
         array('data' => (($previous_from_sid != $transition->sid) ? $old_state->label() : '"')),
-        array('data' => $new_state->label() ),
+        array('data' => $new_state->label()),
         array(
           'data' => array(
             '#type' => 'textfield',

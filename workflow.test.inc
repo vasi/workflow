@@ -5,7 +5,7 @@
  * Contains test functions.
  */
 
-/*
+/**
  * Test functions.
  *
  * To test caches, load same object twice in a page (see d.o. issue #1572466).
@@ -24,7 +24,6 @@ function _workflow_test_entity_workflow_crud() {
     // error.
   }
 
-
   // Test Cache: number of workflows must be OK.
   $ws = workflow_load_multiple();
   $count2 = count($ws);
@@ -39,7 +38,6 @@ function _workflow_test_entity_workflow_crud() {
   else  {
     drupal_set_message(t('workflow->create/save/delete: error'));
   }
-
 
   $workflow = workflow_create('test' . REQUEST_TIME);
   $s1 = $workflow->createState('first');
@@ -200,7 +198,6 @@ DPM($t3);
   $workflow->delete();
 }
 
-
 function _workflow_test_metadata() {
 
   // Find the first, arbitrary workflow.
@@ -260,7 +257,7 @@ dpm(  $transition_wrapper->old_state->value()->sid  );
 
 }
 
-/*
+/**
  * Test all tokens
  */
 function _workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_name = NULL) {
@@ -277,7 +274,7 @@ function _workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_na
     $node->title = "A new Node " . REQUEST_TIME;
     $node->type = "WorkfowField";
     node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
-    $node->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
+    $node->language = LANGUAGE_NONE; // Or for example 'en' if locale is enabled.
     $node->uid = $user->uid;
     $node->status = 1; //(1 or 0): published or not
     $node->promote = 0; //(1 or 0): promoted to front page
@@ -385,9 +382,9 @@ function _workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_na
 
   // Display the tokenized text.
   dpm($node);
-  dpm(token_replace(  $t_greetings   , $data));
-  dpm(token_replace(  $t_node_all  , $data));
-//  dpm(token_replace(  $t_node_sub  , $data));
+  dpm(token_replace(  $t_greetings, $data));
+  dpm(token_replace(  $t_node_all, $data));
+//  dpm(token_replace(  $t_node_sub, $data));
 
 }
 
@@ -477,9 +474,7 @@ function _workflow_test_tokens_term($entity_id = '2', $entity_type = 'taxonomy_t
  <br />	  Workflow label	 = 	[term:last-transition:Workflow:label]	    	The workflow applied to this node.
 
  <br />	  Workflow executed transition ID	 = 	[term:last-transition:hid]	    	The unique ID of the workflow executed transition.
-
   ';
-
 
 // This text is to test only a few tokens, for better inspection.
   $t_node_sub = '
@@ -498,17 +493,15 @@ function _workflow_test_tokens_term($entity_id = '2', $entity_type = 'taxonomy_t
 //dpm($node);
 //dpm($data);
   // Display the tokenized text.
-//  dpm(token_replace(  $t_greetings   , $data));
-  dpm(token_replace(  $t_node_all  , $data, $options));
-
+//  dpm(token_replace($t_greetings, $data));
+  dpm(token_replace($t_node_all, $data, $options));
 }
 
-
-
-/*
+/**
  * Test, taken from CommentTokenReplaceTestCase::testCommentTokenReplacement
  */
-function testCommentTokenReplacement() {
+/*
+function WorkflowCommentTokenReplacement() {
   global $language;
   $url_options = array(
     'absolute' => TRUE,
@@ -591,3 +584,4 @@ function testCommentTokenReplacement() {
     $this->assertEqual($output, $expected, format_string('Node comment token %token replaced.', array('%token' => $input)));
   }
 }
+ */
