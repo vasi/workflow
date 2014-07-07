@@ -183,7 +183,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // The 'options' widget. May be removed below if 'Action buttons' are chosen.
-    $workflow_label = check_plain($workflow->label());
+    $workflow_label = check_plain(t($workflow->label()));
     $element['workflow']['workflow_sid'] = array(
       '#type' => $settings_options_type,
       '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),

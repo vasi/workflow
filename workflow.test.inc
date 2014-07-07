@@ -287,7 +287,7 @@ function _workflow_test_tokens($entity_id = 76, $entity_type = 'node', $field_na
 //    'target_type' => 'node',
 //  );
     // 'node' is default,
-    // Other possible values are "user" and  "taxonomy_term" 
+    // Other possible values are "user" and  "taxonomy_term".
     $node = node_submit($node); // Prepare node for saving
     node_save($node);
   }

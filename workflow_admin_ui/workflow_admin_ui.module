@@ -62,8 +62,8 @@ function workflow_admin_ui_help($path, $arg) {
       . '<br /><i>'
       . t("If not all roles are in the list, please review which roles may
         'participate in workflows' <a href='!url'> on the Permissions page</a>.",
-        array('!url' => url('admin/people/permissions', array('fragment' =>
-        'module-workflow'))));
+        array('!url' => url('admin/people/permissions', array(
+          'fragment' => 'module-workflow'))));
 
     case 'admin/config/workflow/workflow/manage/%/labels':
       return t('You can add labels to transitions if you don\'t like the
@@ -140,8 +140,8 @@ function workflow_admin_ui_theme() {
  *
  * @param object $workflow
  *   The workflow object.
- * @param mixed $extra (optional)
- *   The link to the extra item to add to the end of the breadcrumbs.
+ * @param mixed $extra
+ *   Optional. The link to the extra item to add to the end of the breadcrumbs.
  */
 function workflow_admin_ui_breadcrumbs($workflow, $extra = NULL) {
   $bc = array(l(t('Home'), '<front>'));

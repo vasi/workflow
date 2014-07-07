@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Tokens hooks for Workflow Node module.

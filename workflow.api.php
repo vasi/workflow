@@ -141,7 +141,7 @@ function hook_workflow_comment_alter(&$comment, array &$context) {
  * new custom states, change labels, etc.
  * It is invoked in WorkflowState::getOptions().
  */
-function hook_workflow_permitted_state_transitions_alter(&$transitions, $context) {
+function hook_workflow_permitted_state_transitions_alter(array &$transitions, array $context) {
   // This example creates a new custom target state.
   $values = array(
     // Fixed values for new transition.

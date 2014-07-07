@@ -62,7 +62,7 @@ class WorkflowFeaturesController extends EntityDefaultFeaturesController {
         $workflow->system_roles = workflow_get_roles($permission);
         // >> Now resume with normal flow.
 
-        // Make sure to escape the characters \ and '. 
+        // Make sure to escape the characters \ and '.
         // The following method has the advantage, that you can export with
         // features,
         // and later import without enabling Features in the target system.

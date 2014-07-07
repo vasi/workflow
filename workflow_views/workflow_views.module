@@ -76,6 +76,7 @@ function workflow_views_views_api() {
  * Implements hook_views_default_views().
  *
  * Loads all Views, custom made by this module, as stored in files xxx.view.inc.
+ *
  * @see http://www.deckfifty.com/blog/2012-02/using-drupal-views-code
  * @see http://mc-kenna.com/drupal/2009/05/managing-drupal-views-the-proper-way
  * @see http://www.chapterthree.com/blog/matt_cheney/howto_best_practices_embedding_views_code
@@ -94,7 +95,7 @@ function workflow_views_views_default_views() {
 
   // Find views in this directory, and the 'views' subdirectory.
   $dir = drupal_get_path('module', $modulename) . '/';
-  $regex = '/' . '\.view\.inc' . '$' . '/';
+  $regex = '/\.view\.inc$/';
   $files = array();
   $files += file_scan_directory($dir, $regex, array('recurse' => FALSE));
   $files += file_scan_directory($dir . 'views/', $regex, array('recurse' => FALSE));

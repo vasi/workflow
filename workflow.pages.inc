@@ -62,20 +62,20 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $state = workflow_state_load_single($history->new_sid);
     if ($state) {
       $name = $state->getName();
-      $label = $state->label();
+      $label = check_plain(t($state->label()));
     }
 
     if (!$state) {
       // This is an invalid/deleted state.
-      $old_state_name = check_plain($label);
+      $old_state_name = $label;
     }
     elseif ($history->new_sid == $current_sid && $state->isActive() && !$current_themed) {
       // Theme the current state differently so it stands out.
       $new_state_name = theme('workflow_history_current_state', array(
         'state_name' => $label,
         'state_system_name' => $name,
-        'sid' => $history->new_sid)
-      );
+        'sid' => $history->new_sid,
+      ));
       // Make a note that we have themed the current state; other times in the history
       // of this node where the node was in this state do not need to be specially themed.
       $current_themed = TRUE;
@@ -85,37 +85,37 @@ function workflow_tab_page($entity_type, $entity = NULL) {
       $new_state_name = theme('workflow_deleted_state', array(
         'state_name' => $label,
         'state_system_name' => $name,
-        'sid' => $history->new_sid)
-      );
+        'sid' => $history->new_sid,
+      ));
       $footer_needed = TRUE;
     }
     else {
       // Regular state.
-      $new_state_name = check_plain($label);
+      $new_state_name = $label;
     }
 
     $label = $name = MARK_STATE_IS_DELETED;
     $state = workflow_state_load_single($history->old_sid);
     if ($state) {
       $name = $state->getName();
-      $label = $state->label();
+      $label = check_plain(t($state->label()));
     }
 
     if (!$state) {
       // This is an invalid/deleted state.
-      $old_state_name = check_plain($label);
+      $old_state_name = $label;
     }
     elseif (!$state->isActive()) {
       $old_state_name = theme('workflow_deleted_state', array(
         'state_name' => $label,
         'state_system_name' => $name,
-        'sid' => $history->old_sid)
-      );
+        'sid' => $history->old_sid,
+      ));
       $footer_needed = TRUE;
     }
     else {
       // Regular state.
-      $old_state_name = check_plain($label);
+      $old_state_name = $label;
     }
 
     $variables = array(
@@ -210,14 +210,20 @@ function theme_workflow_history_table($variables) {
 
 /**
  * Theme the current state in the workflow history table.
+ *
+ * $state_name must be run through check_plain(t()) prior
+ * to calling this theme function.
  */
 function theme_workflow_history_current_state($variables) {
-  return check_plain(t($variables['state_name']));
+  return $variables['state_name'];
 }
 
 /**
  * Theme a deleted state in the workflow history table.
+ *
+ * $state_name must be run through check_plain(t()) prior
+ * to calling this theme function.
  */
 function theme_workflow_deleted_state($variables) {
-  return check_plain(t($variables['state_name'])) . MARK_STATE_IS_DELETED;
+  return $variables['state_name'] . MARK_STATE_IS_DELETED;
 }

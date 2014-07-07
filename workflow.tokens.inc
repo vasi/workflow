@@ -295,7 +295,7 @@ function _workflow_token_get_token($wrapper, $options) {
   // If there is a label for a property, e.g., defined by an options list or an
   // entity label, make use of it.
   if ($label = $wrapper->label()) {
-    return empty($options['sanitize']) ? $label : check_plain($label);
+    return empty($options['sanitize']) ? $label : check_plain(t($label, array(), array('langcode' => $langcode)));
   }
 
   switch ($wrapper->type()) {

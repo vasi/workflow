@@ -53,7 +53,7 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
     drupal_goto('admin/config/workflow/workflow');
   }
 
-  drupal_set_title(t('@name Access', array('@name' => $workflow->getName())));
+  drupal_set_title(t('@name Access', array('@name' => $workflow->label()))); // No t() for Settings page.
 
   $form = array('#tree' => TRUE);
 
@@ -87,7 +87,7 @@ function workflow_access_form($form, $form_state, $workflow, $op) {
     if (!$count) {
       $view = array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID);
     }
-    // TODO better tables using a #theme function instead of direct #prefixing
+    // @todo: better tables using a #theme function instead of direct #prefixing.
     $form[$state->sid] = array(
       '#type' => 'fieldset',
       '#title' => check_plain($state->label()),

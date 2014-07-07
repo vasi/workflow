@@ -70,10 +70,9 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     // Validate each workflow, and generate a message if not complete.
     $workflows = array();
     $workflows[''] = t('- Select a value -');
-    foreach (workflow_load_multiple() as $id => $workflow) {
+    foreach (workflow_load_multiple() as $wid => $workflow) {
       if ($workflow->is_valid()) {
-        // Use the machine name of the workflow, to make it exportable.
-        $workflows[$id] = check_plain($workflow->label());
+        $workflows[$wid] = check_plain($workflow->label()); // No t() on settings page.
       }
     }
 
@@ -370,14 +369,13 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
 
   /**
    * Helper functions for the Field Settings page.
+   *
    * Generates a string representation of an array of 'allowed values'.
    * This is a copy from list.module's list_allowed_values_string().
+   * The string format is suitable for edition in a textarea.
    *
-   * This string format is suitable for edition in a textarea.
-   *
-   * @param $values
-   *   An array of values, where array keys are values and array values are
-   *   labels.
+   * @param int $wid
+   *   The Workflow Id.
    *
    * @return
    *   The string representation of the $values array:
@@ -409,15 +407,16 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
    * Helper function for list.module formatter.
    *
    * Callback function for the list module formatter.
-   * @see list_allowed_values
-   *  "The strings are not safe for output. Keys and values of the array should
-   *  "be sanitized through field_filter_xss() before being displayed.
    *
-   * @return
-   *  The array of allowed values. Keys of the array are the raw stored values
-   *  (number or text), values of the array are the display labels.
-   *  It contains all possible values, beause the result is cached,
-   *  and used for all nodes on a page.
+   * @see list_allowed_values
+   *   "The strings are not safe for output. Keys and values of the array should
+   *   "be sanitized through field_filter_xss() before being displayed.
+   *
+   * @return array
+   *   The array of allowed values. Keys of the array are the raw stored values
+   *   (number or text), values of the array are the display labels.
+   *   It contains all possible values, beause the result is cached,
+   *   and used for all nodes on a page.
    */
   public function getAllowedValues() {
     // Get all state names, including inactive states.

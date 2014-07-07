@@ -23,7 +23,7 @@
  * @param Workflow $workflow
  *   The Workflow object.
  *
- * @return array 
+ * @return array
  *   HTML form and permissions table.
  */
 function workflow_admin_ui_transitions_form($form, &$form_state, $workflow, $op) {

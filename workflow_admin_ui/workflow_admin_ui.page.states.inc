@@ -56,7 +56,7 @@ function workflow_admin_ui_states_form($form, &$form_state, $workflow, $op) {
         '#type' => 'textfield',
         '#size' => 30,
         '#maxlength' => 255,
-        '#default_value' => $state->label(),
+        '#default_value' => check_plain($state->label()),
       ),
 
       'name' => array(
@@ -217,7 +217,7 @@ function workflow_admin_ui_states_form_validate($form, &$form_state) {
 
     // Does user want to deactivate the state (reassign current nodes)?
     if ($sid > 0 && $item['status'] == 0 && $state->isActive()) {
-      $args = array('%state' => check_plain($state->getName()));
+      $args = array('%state' => $state->getName()); // check_plain() is run by t().
 
       // Does that state have nodes in it?
       if ($item['count'] > 0 && empty($item['reassign'])) {
@@ -229,8 +229,7 @@ function workflow_admin_ui_states_form_validate($form, &$form_state) {
         }
         else {
           $message = 'The %state state has content; you must reassign the content to another state.';
-          form_set_error("states'][$sid]['reassign'",
-            t($message, $args));
+          form_set_error("states'][$sid]['reassign'", t($message, $args));
         }
       }
       if (module_exists('workflowfield')) {
@@ -271,9 +270,9 @@ function workflow_admin_ui_states_form_submit($form, &$form_state) {
       $new_state = workflow_state_load_single($new_sid);
 
       $args = array(
-        '%workflow' => check_plain($workflow->getName()),
-        '%old_state' => check_plain($state->getName()),
-        '%new_state' => isset($new_state) ? check_plain($new_state->getName()) : '',
+        '%workflow' => $workflow->getName(), // check_plain() is run by t().
+        '%old_state' => $state->getName(),
+        '%new_state' => isset($new_state) ? $new_state->getName() : '',
       );
 
       if ($item['count'] > 0) {

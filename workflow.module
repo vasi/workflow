@@ -321,7 +321,7 @@ function workflow_cron() {
 
     $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
-    // Make sure transition is still valid: the node must still be in the state 
+    // Make sure transition is still valid: the node must still be in the state
     // it was in, when the transition was scheduled.
     if ($current_sid == $scheduled_transition->old_sid) {
 
@@ -675,8 +675,8 @@ function workflow_get_roles($permission = 'participate in workflow') {
   if (!$roles[$permission]) {
     $roles[$permission] = array(WORKFLOW_ROLE_AUTHOR_RID => WORKFLOW_ROLE_AUTHOR_NAME);
     $roles[$permission] += user_roles(FALSE, $permission);
-    foreach ($roles[$permission] as $rid => &$name) {
-      $name = check_plain($name);
+    foreach ($roles[$permission] as $rid => &$role_name) {
+      $name = check_plain(t($role_name));
     }
   }
   return $roles[$permission];

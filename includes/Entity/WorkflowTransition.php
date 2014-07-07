@@ -379,7 +379,7 @@ class WorkflowTransition extends Entity {
           $args = array(
             '@type' => $entity_type_info['label'],
             '%label' => entity_label($entity_type, $entity),
-            '%state_name' => t(check_plain($state->label())),
+            '%state_name' => check_plain(t($state->label())),
           );
           $uri = entity_uri($entity_type, $entity);
           watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path']));
@@ -485,7 +485,7 @@ class WorkflowTransition extends Entity {
     }
     $this->entity = $entity;
     $this->entity_type = $entity_type;
-    list($this->entity_id, $this->revision_id, ) = entity_extract_ids($entity_type, $entity);
+    list($this->entity_id, $this->revision_id,) = entity_extract_ids($entity_type, $entity);
 
     // For backwards compatibility, set nid.
     $this->nid = $this->entity_id;

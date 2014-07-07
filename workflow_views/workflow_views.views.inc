@@ -3,9 +3,7 @@
 /**
  * @file
  * Provide views data and handler information for workflow.module.
- */
-
-/**
+ *
  * Includes the 'workflow_node' and 'workflow_state' tables, but generates a
  * pseudo-table for each separate workflow that's been set up.
  *
