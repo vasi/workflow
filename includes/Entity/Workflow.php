@@ -16,6 +16,7 @@ class WorkflowController extends EntityAPIControllerExportable {
 
   public function delete($ids, DatabaseTransaction $transaction = NULL) {
     // @todo: replace WorkflowController::delete() with parent.
+    // @todo: throw error if not workflow->isDeletable().
     foreach ($ids as $wid) {
       if ($workflow = workflow_load($wid)) {
         $workflow->delete();
@@ -226,7 +227,7 @@ class Workflow extends Entity {
    * @return bool
    *   $is_valid
    */
-  public function is_valid() {
+  public function isValid() {
     $is_valid = TRUE;
 
     // Don't allow workflows with no states. There should always be a creation state.
@@ -269,6 +270,37 @@ class Workflow extends Entity {
     }
 
     return $is_valid;
+  }
+
+  /**
+   * Returns if the Workflow may be deleted.
+   *
+   * @return bool $is_deletable
+   *   TRUE if a Workflow may safely be deleted.
+   */
+  public function isDeletable() {
+    $is_deletable = FALSE;
+
+    // May not be deleted if a TypeMap exists.
+    if ($this->getTypeMap()) {
+      return $is_deletable;
+    }
+
+    // May not be deleted if assigned to a Field.
+    foreach (_workflow_info_fields() as $field) {
+      if ($field['settings']['wid'] == $this->wid) {
+        return $is_deletable;
+      }
+    }
+
+    // May not be deleted if a State is assigned to a state.
+    foreach ($this->getStates(TRUE) as $state) {
+      if ($state->count()) {
+        return $is_deletable;
+      }
+    }
+    $is_deletable = TRUE;
+    return $is_deletable;
   }
 
   /**

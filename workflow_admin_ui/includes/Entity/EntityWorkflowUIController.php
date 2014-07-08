@@ -123,6 +123,25 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
 
     return $form;
   }
+  /*
+   * Avoids the 'Delete' action if the Workflow is used somewhere.
+   */
+  protected function overviewTableRow($conditions, $id, $entity, $additional_cols = array()) {
+    // Avoid the 'delete' operation if the Workflow is used somewhere.
+    $status = $entity->status;
+
+    // @see parent::overviewTableRow() how to determine a deletable entity.
+    if (!entity_has_status($this->entityType, $entity, ENTITY_IN_CODE) && $entity->isDeletable())  {
+      // Set to a state that does not allow deleting, but allows other actions.
+      $entity->status = ENTITY_IN_CODE;
+    }
+    $row = parent::overviewTableRow($conditions, $id, $entity, $additional_cols);
+
+    // Just to be sure: reset status.
+    $entity->status = $status;
+
+    return $row;
+  }
 
   /**
    * Overrides the 'revert' action, to not delete the workflows.

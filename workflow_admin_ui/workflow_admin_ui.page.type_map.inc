@@ -15,7 +15,7 @@ function workflow_admin_ui_type_map_form(&$form) {
   // Validate each workflow, and generate a message if not complete.
   $workflows[0] = t('None');
   foreach (workflow_load_multiple() as $workflow) {
-    if ($workflow->is_valid()) {
+    if ($workflow->isValid()) {
       $workflows[$workflow->wid] = $workflow->label();
     }
   }

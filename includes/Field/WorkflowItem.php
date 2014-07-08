@@ -71,7 +71,7 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     $workflows = array();
     $workflows[''] = t('- Select a value -');
     foreach (workflow_load_multiple() as $wid => $workflow) {
-      if ($workflow->is_valid()) {
+      if ($workflow->isValid()) {
         $workflows[$wid] = check_plain($workflow->label()); // No t() on settings page.
       }
     }
