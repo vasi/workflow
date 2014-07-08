@@ -91,6 +91,7 @@ class Workflow extends Entity {
   // }
 
   public function __clone() {
+    // Clone the arrays of States and Transitions.
     foreach ($this->states as &$state) {
       $state = clone $state;
     }
@@ -172,12 +173,14 @@ class Workflow extends Entity {
         // Can be array when cloning or with features.
         $transition = is_array($transition) ? new WorkflowConfigTransition($transition, 'WorkflowConfigTransition') : $transition;
         // Convert the old sids of each transitions before saving.
-        // @todo: in this be done in 'clone $transition'?
+        // @todo: is this be done in 'clone $transition'?
         // (That requires a list of transitions without tid and a wid-less conversion table.)
-        $transition->tid = FALSE;
-        $transition->sid = $sid_conversion[$transition->sid];
-        $transition->target_sid = $sid_conversion[$transition->target_sid];
-        $transition->save();
+        if (isset($sid_conversion[$transition->sid])) {
+          $transition->tid = FALSE;
+          $transition->sid = $sid_conversion[$transition->sid];
+          $transition->target_sid = $sid_conversion[$transition->target_sid];
+          $transition->save();
+        }
       }
     }
 
@@ -470,6 +473,7 @@ class Workflow extends Entity {
       $this->sortTransitions();
     }
 
+    $config_transitions = array();
     foreach ($this->transitions as &$config_transition) {
       if (!isset($states[$config_transition->sid])) {
         // Not a valid transition for this workflow.

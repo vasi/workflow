@@ -704,10 +704,21 @@ function workflow_update_7007() {
 //   // This is moved to the general hook_update_N().
 // }
 
+
+/**
+ * Remove invalid transitions.
+ */
+function workflow_update_7014() {
+  // Some error in cloning Workflows generated superfluous, invalid Transitions.
+  $num_deleted = db_delete('workflow_transitions')
+    ->condition('sid', 0)
+    ->execute();
+}
+
 /**
  * Add database fields. Make Workflow entity-aware, exportable.
  */
-function workflow_update_7013() {
+function workflow_update_7015() {
   $schema = workflow_schema();
 
   // Update the Workflow table.
