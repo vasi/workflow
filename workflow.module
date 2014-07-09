@@ -461,16 +461,17 @@ function workflow_transition_form($form, &$form_state, $field, $instance, $entit
  * Do not use with multiple workflows per entity: confusing UX.
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
-  if (!$form['#type'] == 'form') {
+  if ($form['#type'] !== 'form') {
     return;
   }
 
-  // @todo: find a fast way to quit this form if not applicable.
-/*
-  if (1 == 2) {
+  // The workflow_form itself must not be changed - only the surrounding form.
+  if ( isset($form_state['build_info']['base_form_id']) 
+    && $form_state['build_info']['base_form_id'] == 'workflow_transition_form') {
     return;
   }
- */
+  // @todo: find a fast way to quit this form if not applicable.
+  // if (1 == 2) { return; }
 
   // Find the first workflow.
   // (So this won't work with multiple workflows per entity.)
@@ -484,15 +485,17 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 
-  if (!$workflow_form) {
+  // Quit if there is no Workflow on this page, or no Workflow Action buttons.
+  // (If user has only 1 workflow option, there are no Action buttons.)
+  if (!$workflow_form || !isset($workflow_form['workflow']['submit_sid'])) {
     return;
   }
 
   foreach ($form['actions'] as $key => $action) {
     // Find the default submit button.
-    if (is_array($action) && $key == 'submit') {
+    if ($key == 'submit' && is_array($action) ) {
       foreach ($workflow_form['workflow']['submit_sid'] as $key => $workflow_submit_button) {
-        // Make the workflow button act exactly like a submit button.
+        // Make the workflow button act exactly like the original submit button.
         if (isset($action['#submit'])) {
           $workflow_submit_button['#submit'] = $action['#submit'];
         }
