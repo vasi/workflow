@@ -185,48 +185,23 @@ class WorkflowTransition extends Entity {
    *
    * @see WorkflowConfigTransition::isAllowed()
    */
-  public function isAllowed($roles, $user, $force) {
-    $old_sid = $this->old_sid;
-    $new_sid = $this->new_sid;
-    $old_state = workflow_state_load_single($old_sid);
-    $new_state = workflow_state_load_single($new_sid);
-    $entity_type = $this->entity_type;
-    $entity = $this->getEntity(); // Entity may not be loaded, yet.
-    $field_name = $this->field_name;
-
-    $t_args = array(
-      '%old_sid' => $old_sid,
-      '%old_sid_label' => ($old_state) ? $old_state->label() : $old_sid,
-      '%new_sid' => $new_sid,
-      '%new_sid_label' => ($new_state) ? $new_state->label() : $new_sid,
-    );
+  protected function isAllowed($roles, $user, $force) {
+    if ($force || ($user->uid == 1)) {
+      return TRUE;
+    }
 
     // Check allow-ability of state change if user is not superuser (might be cron).
-    if (($user->uid != 1) && !$force) {
-      // Get the WorkflowConfigTransition.
-      // @todo: some day, config_transition can be a parent of entity_transition.
-      $workflow = $old_state->getWorkflow();
-      $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
-      $config_transition = reset($config_transitions);
-      if ($config_transition) {
-        if (!$config_transition->isAllowed($roles)) {
-          return FALSE;
-        }
-      }
-      else {
-        watchdog('workflow', 'Attempt to go to nonexistent transition (from %old_sid to %new_sid)', $t_args, WATCHDOG_ERROR);
-        return $old_sid;
-      }
-    }
-
-    // Get all states from the Workflow, or only the valid transitions for this state.
-    // WorkflowState::getOptions() will consider all permissions, etc.
-    $options = array();
-    if ($old_state) {
-      $options = $old_state->getOptions($entity_type, $entity, $field_name, $user, $force);
-    }
-    if (!array_key_exists($new_sid, $options)) {
-      drupal_set_message(t('The transition from %old_sid_label to %new_sid_label is not allowed.', $t_args), 'error');
+    // Get the WorkflowConfigTransition.
+    // @todo: some day, WorkflowConfigTransition can be a parent of WorkflowTransition.
+    $workflow = $this->getWorkflow();
+    $config_transitions = $workflow->getTransitionsBySidTargetSid($this->old_sid, $this->new_sid);
+    $config_transition = reset($config_transitions);
+    if (!$config_transition || !$config_transition->isAllowed($roles)) {
+      $t_args = array(
+        '%old_sid' => $this->old_sid,
+        '%new_sid' => $this->new_sid,
+      );
+      watchdog('workflow', 'Attempt to go to nonexistent transition (from %old_sid to %new_sid)', $t_args, WATCHDOG_ERROR);
       return FALSE;
     }
 

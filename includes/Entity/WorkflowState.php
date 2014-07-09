@@ -326,8 +326,7 @@ class WorkflowState extends Entity {
     $current_sid = $this->sid;
     $current_state = $this;
 
-    $workflow = $this->getWorkflow();
-    if (!$workflow) {
+    if (!$workflow = $this->getWorkflow()) {
       // No workflow, no options ;-)
       return $transitions;
     }
@@ -376,6 +375,7 @@ class WorkflowState extends Entity {
       'user' => $user,
       'user_roles' => $roles, // @todo: can be removed in D8, since $user is in.
     );
+    // @todo D8: rename to 'workflow_permitted_transitions'.
     drupal_alter('workflow_permitted_state_transitions', $transitions, $context);
 
     // Let custom code change the options, using old_style hook.

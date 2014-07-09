@@ -163,9 +163,6 @@ class WorkflowConfigTransition extends Entity {
       return TRUE;
     }
     elseif ($user_roles) {
-      if (!is_array($user_roles)) {
-        $user_roles = array($user_roles);
-      }
       return array_intersect($user_roles, $this->roles) == TRUE;
     }
     return TRUE;
