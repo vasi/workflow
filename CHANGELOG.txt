@@ -566,3 +566,4 @@ Fixed code style errors, as reported by pareview.sh and coder module.
 Issue #2299883: Fixed invalid WorkflowConfigTransitions created when cloning a Workflow.
 Issue #2299909: Removed -delete- link on Admin UI if Workflow is not deletable.
 Issue #2211145: Fixed messsage when only 1 Workflow Action Button avilable on form.
+Issue #2300497: Allow non-allowed transitions when $force is set.
