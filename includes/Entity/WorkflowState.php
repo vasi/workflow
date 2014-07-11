@@ -449,15 +449,14 @@ class WorkflowState extends Entity {
     else {
       $transitions = $this->getTransitions($entity_type, $entity, $field_name, $user, $force);
       foreach ($transitions as $transition) {
-        $new_sid = $transition->target_sid;
-
         // Get the label of the transition, and if empty of the target state.
         // Beware: the target state may not exist, since it can be invented
         // by custom code in the above drupal_alter() hook.
         if (!$label = $transition->label()) {
-          $target_state = $workflow->getState($new_sid);
+          $target_state = $transition->getNewState();
           $label = $target_state ? $target_state->label() : '';
         }
+        $new_sid = $transition->target_sid;
         $options[$new_sid] = check_plain(t($label));
       }
 

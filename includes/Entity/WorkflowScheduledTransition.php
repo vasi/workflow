@@ -113,16 +113,17 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     drupal_write_record('workflow_scheduled_transition', $this);
 
     // Create user message.
-    if ($state = workflow_state_load_single($this->new_sid)) {
+    if ($state = $this->getNewState()) {
+      $entity_type = $this->entity_type;
       $entity = $this->getEntity();
       $message = '%entity_title scheduled for state change to %state_name on %scheduled_date';
       $args = array(
-        '@entity_type' => $this->entity_type,
-        '%entity_title' => entity_label($this->entity_type, $entity),
+        '@entity_type' => $entity_type,
+        '%entity_title' => entity_label($entity_type, $entity),
         '%state_name' => entity_label('WorkflowState', $state),
         '%scheduled_date' => format_date($this->scheduled),
       );
-      $uri = entity_uri($this->entity_type, $entity);
+      $uri = entity_uri($entity_type, $entity);
       watchdog('workflow', $message, $args, WATCHDOG_NOTICE, l('view', $uri['path'] . '/workflow'));
       drupal_set_message(t($message, $args));
     }

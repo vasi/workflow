@@ -48,8 +48,8 @@ function workflow_admin_ui_labels_form($form, $form_state, $workflow, $op) {
   // Get transitions, sorted by weight of the old state.
   $config_transitions = $workflow->getTransitions();
   foreach ($config_transitions as $transition) {
-    $old_state = workflow_state_load($transition->sid);
-    $new_state = workflow_state_load($transition->target_sid);
+    $old_state = $transition->getOldState();
+    $new_state = $transition->getNewState();
     $rows[] = array(
       'data' => array(
         array('data' => (($previous_from_sid != $transition->sid) ? $old_state->label() : '"')),

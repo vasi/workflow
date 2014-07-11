@@ -236,7 +236,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       // Do not use underscores, or workflow_tokens will not work!
       if ($sub_tokens = token_find_with_prefix($tokens, 'old-state')) {
         $sub_data = array(
-          'WorkflowState' => workflow_state_load($transition->old_sid),
+          'WorkflowState' => $transition->getOldState(),
           'workflow_token_type' => 'WorkflowState',
         );
         $sub_data += $data;
@@ -244,7 +244,7 @@ function workflow_tokens($type, $tokens, array $data = array(), array $options =
       }
       if ($sub_tokens = token_find_with_prefix($tokens, 'new-state')) {
         $sub_data = array(
-          'WorkflowState' => workflow_state_load($transition->new_sid),
+          'WorkflowState' => $transition->getNewState(),
           'workflow_token_type' => 'WorkflowState',
         );
         $sub_data += $data;
@@ -353,7 +353,7 @@ function _workflow_tokens_get_transition($entity_type, $entity, $field_name) {
       // When creating a node, and only 1 valid sid is available, then the
       // widget is not shown. This generates a problem, since the new/old
       // sid isn't yet loaded in the Entity.
-      if ($new_state = workflow_state_load($new_sid)) {
+      if ($new_state = workflow_state_load_single($new_sid)) {
         $workflow = $new_state->getWorkflow();
         $old_sid = $workflow->getCreationSid();
       }

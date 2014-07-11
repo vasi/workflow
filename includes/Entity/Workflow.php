@@ -209,7 +209,7 @@ class Workflow extends Entity {
 
     // Delete associated state (also deletes any associated transitions).
     foreach ($this->getStates($all = TRUE) as $state) {
-      $state->deactivate($new_sid = 0);
+      $state->deactivate(0);
       $state->delete();
     }
 
@@ -643,17 +643,20 @@ function _workflow_rebuild_roles(array $roles, array $role_map) {
 
 /**
  * Helper function to sort the transitions.
+ *
+ * @param WorkflowConfigTransition $a
+ * @param WorkflowConfigTransition $b
  */
 function _workflow_transitions_sort_by_weight($a, $b) {
   // First sort on From-State.
-  $old_state_a = workflow_state_load($a->sid);
-  $old_state_b = workflow_state_load($b->sid);
+  $old_state_a = $a->getOldState();
+  $old_state_b = $b->getOldState();
   if ($old_state_a->weight < $old_state_b->weight) return -1;
   if ($old_state_a->weight > $old_state_b->weight) return +1;
 
   // Then sort on To-State.
-  $new_state_a = workflow_state_load($a->target_sid);
-  $new_state_b = workflow_state_load($b->target_sid);
+  $new_state_a = $a->getNewState();
+  $new_state_b = $b->getNewState();
   if ($new_state_a->weight < $new_state_b->weight) return -1;
   if ($new_state_a->weight > $new_state_b->weight) return +1;
   return 0;

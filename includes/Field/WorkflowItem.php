@@ -269,8 +269,6 @@ class WorkflowItem extends WorkflowD7Base {// D8: extends ConfigFieldItemBase im
     $workflow = workflow_load_single($this->field['settings']['wid']);
     $wid = $workflow->wid;
 
-    $new_state = workflow_state_load_single($sid = _workflow_get_sid_by_items($items), $wid);
-
     // @todo D8: remove below lines.
     $entity = $this->entity;
     $entity_type = $this->entity_type;

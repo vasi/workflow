@@ -564,6 +564,7 @@ Issue #2211145: Grouped workflow action buttons together with Drupal buttons ([S
 Issue #2283821: Fixed error in hook_update_7007() due to schema changes, when Upgrading from old D6/D7-version to 7.x-2.x.
 Fixed code style errors, as reported by pareview.sh and coder module.
 Issue #2299883: Fixed invalid WorkflowConfigTransitions created when cloning a Workflow.
-Issue #2299909: Removed -delete- link on Admin UI if Workflow is not deletable.
-Issue #2211145: Fixed messsage when only 1 Workflow Action Button avilable on form.
+Issue #2299909: Removed 'delete'-link on Admin UI if Workflow is not deletable.
+Issue #2211145: Fixed message when only 1 Workflow Action Button avilable on form.
 Issue #2300497: Allow non-allowed transitions when $force is set.
+Issue #2296843: Added more properties and functions to entities - use them in rest of codebase.

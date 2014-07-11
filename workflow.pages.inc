@@ -59,17 +59,17 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $old_state_name = $new_state_name = '';
 
     $label = $name = '';
-    $state = workflow_state_load_single($history->new_sid);
-    if ($state) {
-      $name = $state->getName();
-      $label = check_plain(t($state->label()));
+    $new_state = $history->getNewState();
+    if ($new_state) {
+      $name = $new_state->getName();
+      $label = check_plain(t($new_state->label()));
     }
 
-    if (!$state) {
+    if (!$new_state) {
       // This is an invalid/deleted state.
       $old_state_name = $label;
     }
-    elseif ($history->new_sid == $current_sid && $state->isActive() && !$current_themed) {
+    elseif ($history->new_sid == $current_sid && $new_state->isActive() && !$current_themed) {
       // Theme the current state differently so it stands out.
       $new_state_name = theme('workflow_history_current_state', array(
         'state_name' => $label,
@@ -80,7 +80,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
       // of this node where the node was in this state do not need to be specially themed.
       $current_themed = TRUE;
     }
-    elseif (!$state->isActive()) {
+    elseif (!$new_state->isActive()) {
       // The state has been deleted, but we include it in the history.
       $new_state_name = theme('workflow_deleted_state', array(
         'state_name' => $label,
@@ -93,19 +93,20 @@ function workflow_tab_page($entity_type, $entity = NULL) {
       // Regular state.
       $new_state_name = $label;
     }
+    unset($new_state); // Not needed anymore.
 
     $label = $name = MARK_STATE_IS_DELETED;
-    $state = workflow_state_load_single($history->old_sid);
-    if ($state) {
-      $name = $state->getName();
-      $label = check_plain(t($state->label()));
+    $old_state = $history->getOldState();
+    if ($old_state) {
+      $name = $old_state->getName();
+      $label = check_plain(t($old_state->label()));
     }
 
-    if (!$state) {
+    if (!$old_state) {
       // This is an invalid/deleted state.
       $old_state_name = $label;
     }
-    elseif (!$state->isActive()) {
+    elseif (!$old_state->isActive()) {
       $old_state_name = theme('workflow_deleted_state', array(
         'state_name' => $label,
         'state_system_name' => $name,
@@ -117,6 +118,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
       // Regular state.
       $old_state_name = $label;
     }
+    unset($old_state); // Not needed anymore.
 
     $variables = array(
       'transition' => $history, // @todo D8: pass this WorkflowTransition as only variable. It contains everything.

@@ -209,10 +209,9 @@ function _workflow_actions_do($transition) {
   $entity = $transition->getEntity();
   $old_sid = $transition->old_sid;
   $new_sid = $transition->new_sid;
-  // A transition occurred; fire off actions associated with this transition.
-  $old_state = workflow_state_load_single($old_sid);
-  $workflow = $old_state->getWorkflow();
 
+  // A transition occurred; fire off actions associated with this transition.
+  $workflow = $transition->getWorkflow();
   $config_transitions = $workflow->getTransitionsBySidTargetSid($old_sid, $new_sid);
   $config_transition = reset($config_transitions);
   if ($config_transition) {
