@@ -271,6 +271,10 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // Finally, add Submit buttons/Action buttons.
     // Either a default 'Submit' button is added, or a button per permitted state.
     if ($settings_options_type == 'buttons') {
+
+      // Performance: inform workflow_form_alter() to do its job.
+      _workflow_use_action_buttons(TRUE);
+
       // The options widget set above is no longer valid.
       $element['workflow']['workflow_sid']['#type'] = 'hidden';
 

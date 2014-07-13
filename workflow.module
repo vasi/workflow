@@ -455,23 +455,43 @@ function workflow_transition_form($form, &$form_state, $field, $instance, $entit
 }
 
 /**
+ * Getter/Setter to tell if the action buttons are used.
+ *
+ * @param bool $new_value
+ *   Options. If TRUE/FALSE, the value is set. If NULL, value is only 'getted'.
+ *
+ * @return bool
+ *   Previous value. If TRUE, action buttons must be created.
+ *
+ * @see workflow_form_alter()
+ * @see WorkflowDefaultWidget::formElement()
+ *
+ * Used to save some expensive operations on every form.
+ */
+function _workflow_use_action_buttons($new_value = NULL) {
+  global $_workflow_use_actions_buttons;
+
+  $old_value = $_workflow_use_actions_buttons ? TRUE : FALSE;
+  // Reset value if requested.
+  if ($new_value !== NULL) {
+    $_workflow_use_actions_buttons = $new_value;
+  }
+  return $old_value;
+}
+
+/**
  * Form builder. Move action buttons next to the 'Save'/'Delete' buttons.
  *
  * This is only used if the set the 'options widget' to 'action buttons'.
  * Do not use with multiple workflows per entity: confusing UX.
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
-  if ($form['#type'] !== 'form') {
-    return;
-  }
 
-  // The workflow_form itself must not be changed - only the surrounding form.
-  if ( isset($form_state['build_info']['base_form_id']) 
-    && $form_state['build_info']['base_form_id'] == 'workflow_transition_form') {
+  // Use a fast, custom way to check if this is the correct form.
+  // @todo: Adapt to use with multiple workflows per entity.
+  if (!_workflow_use_action_buttons()) {
     return;
   }
-  // @todo: find a fast way to quit this form if not applicable.
-  // if (1 == 2) { return; }
 
   // Find the first workflow.
   // (So this won't work with multiple workflows per entity.)
@@ -490,6 +510,10 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
   if (!$workflow_form || !isset($workflow_form['workflow']['submit_sid'])) {
     return;
   }
+
+  // Now we are sure this is the correct form to add Action Buttons.
+  // Reset the variable, to make subsequent forms more performant.
+  _workflow_use_action_buttons(FALSE);
 
   foreach ($form['actions'] as $key => $action) {
     // Find the default submit button.
@@ -789,7 +813,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', $field_name
   // If $field_name is not known, yet, determine it.
   // If $entity->workflow (hence, workflow_node) is set, avoid this expensive operation.
   // @todo: what to do with multiple workflow_fields per bundle?
-  if ($field_name === NULL && !isset($entity->workflow)) { // This is a workflow_node sid.
+  if ($field_name === NULL && !isset($entity->workflow)) { // Not having a workflow_node sid.
     list(, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
     $fields = _workflow_info_fields($entity, $entity_type, $entity_bundle);
     if (count($fields)) {
