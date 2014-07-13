@@ -569,3 +569,4 @@ Issue #2211145: Fixed message when only 1 Workflow Action Button avilable on for
 Issue #2300497: Allow non-allowed transitions when $force is set.
 Issue #2296843: Added more properties and functions to entities - use them in rest of codebase.
 Issue #2211145: Added better performance when grouping workflow action buttons together with Drupal buttons ([Save], [Preview]).
+Added message on Admin pages when both WorkflowNode and WorflowField are enabled.
