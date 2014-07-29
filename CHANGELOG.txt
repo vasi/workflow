@@ -573,4 +573,5 @@ Added message on Admin pages when both WorkflowNode and WorflowField are enabled
 
 Since 7.x-2.4
 Issue #2303925 by tucho: Fixed error due to typo in workflow_features_pipe_field_base_alter().
-Issue #2307303: added IMPORT action to workflows, but this requires applying of patch #1967794 before it works.
+Issue #2307303: Added IMPORT action to workflows, but this requires applying of patch #1967794 before it works.
+Issue #2249187: Fixed overwriting of State Name by machine name when importing a Workflow.
