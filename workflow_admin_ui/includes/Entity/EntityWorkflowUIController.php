@@ -13,8 +13,8 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     $items = parent::hook_menu();
 
     // Workflow is now an exportable entity. But the 'Import' menu item is
-    // still broken. Just delete it.
-    unset($items['admin/config/workflow/workflow/import']);
+    // still broken. We show it, but it requires #1967794 before it works.
+    // unset($items['admin/config/workflow/workflow/import']);
 
     // Set this on the object so classes that extend hook_menu() can use it.
     $id_count = count(explode('/', $this->path));

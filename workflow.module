@@ -500,7 +500,7 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
     if (isset($form[$key][LANGUAGE_NONE][0]['workflow'])) {
       // Reference the Workflow Form, we'll remove the buttons later.
       $workflow_form = &$form[$key][LANGUAGE_NONE][0];
-      // Stop looping of found.
+      // Stop looping if found.
       break;
     }
   }
