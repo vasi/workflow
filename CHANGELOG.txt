@@ -570,3 +570,6 @@ Issue #2300497: Allow non-allowed transitions when $force is set.
 Issue #2296843: Added more properties and functions to entities - use them in rest of codebase.
 Issue #2211145: Added better performance when grouping workflow action buttons together with Drupal buttons ([Save], [Preview]).
 Added message on Admin pages when both WorkflowNode and WorflowField are enabled.
+
+Since 7.x-2.4
+Issue #2303925 by tucho: Fixed error due to typo in workflow_features_pipe_field_base_alter().

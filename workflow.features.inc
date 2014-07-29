@@ -107,7 +107,7 @@ function workflow_features_pipe_field_base_alter(&$pipe, $data, $export) {
     foreach ($data as $field_name) {
       // $info = field_info_field($field_name);
       $field = _workflow_info_field($field_name);
-      if ($field['type'] = 'workflow') {
+      if ($field['type'] == 'workflow') {
 
         // $field['settings']['wid'] can be numeric or named.
         $workflow = workflow_load_single($field['settings']['wid']);
