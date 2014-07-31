@@ -131,7 +131,7 @@ class EntityWorkflowUIController extends EntityDefaultUIController {
     $status = $entity->status;
 
     // @see parent::overviewTableRow() how to determine a deletable entity.
-    if (!entity_has_status($this->entityType, $entity, ENTITY_IN_CODE) && $entity->isDeletable())  {
+    if (!entity_has_status($this->entityType, $entity, ENTITY_IN_CODE) && !$entity->isDeletable())  {
       // Set to a state that does not allow deleting, but allows other actions.
       $entity->status = ENTITY_IN_CODE;
     }
