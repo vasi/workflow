@@ -484,10 +484,14 @@ function _workflow_use_action_buttons($new_value = NULL) {
  *
  * This is only used if the set the 'options widget' to 'action buttons'.
  * Do not use with multiple workflows per entity: confusing UX.
+ * ATM this works for: 
+ * - Workflow Field: create, edit, view, workflow tab, comment;
+ * - Workflow Node: view, workflow tab;
+ * (For forms with Workflow Node, the form_alter() is AFTER formElement(). )
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
 
-  // Use a fast, custom way to check if this is the correct form.
+  // Use a fast, custom way to check if we need to do this.
   // @todo: Adapt to use with multiple workflows per entity.
   if (!_workflow_use_action_buttons()) {
     return;
@@ -496,45 +500,98 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
   // Find the first workflow.
   // (So this won't work with multiple workflows per entity.)
   $workflow_form = array();
-  foreach (element_children($form) as $key) {
-    if (isset($form[$key][LANGUAGE_NONE][0]['workflow'])) {
-      // Reference the Workflow Form, we'll remove the buttons later.
-      $workflow_form = &$form[$key][LANGUAGE_NONE][0];
-      // Stop looping if found.
-      break;
+  if (isset($form['workflow'])) {
+    $workflow_form = &$form['workflow'];
+    $field_info = $workflow_form['workflow_field']['#value'];
+    $field_name = $field_info['field_name'];
+
+    // Move non-standard 'Submit workflow' button in hook_node_view, workflow_tab_page, workflow_vbo.
+    if (isset($form['workflow']['actions'])) {
+      $form['actions'] = $form['workflow']['actions'];
+      unset($form['workflow']['actions']);
+    }
+  }
+  else {
+    foreach (element_children($form) as $key) {
+      if (isset($form[$key][LANGUAGE_NONE][0]['workflow'])) {
+        // Reference the Workflow Form, we'll remove the buttons later.
+        $workflow_form = &$form[$key][LANGUAGE_NONE][0]['workflow'];
+        $field_name = $key;
+        // Stop looping if found.
+        break;
+      }
     }
   }
 
-  // Quit if there is no Workflow on this page, or no Workflow Action buttons.
-  // (If user has only 1 workflow option, there are no Action buttons.)
-  if (!$workflow_form || !isset($workflow_form['workflow']['submit_sid'])) {
+  // Quit if there is no Workflow on this page.
+  if (!$workflow_form ) {
     return;
   }
 
-  // Now we are sure this is the correct form to add Action Buttons.
-  // Reset the variable, to make subsequent forms more performant.
-  _workflow_use_action_buttons(FALSE);
+  // Quit if there are no Workflow Action buttons.
+  // (If user has only 1 workflow option, there are no Action buttons.)
+  if (count($workflow_form['workflow_sid']['#options']) <= 1) {
+    return;
+  }
 
-  foreach ($form['actions'] as $key => $action) {
-    // Find the default submit button.
-    if ($key == 'submit' && is_array($action) ) {
-      foreach ($workflow_form['workflow']['submit_sid'] as $key => $workflow_submit_button) {
-        // Make the workflow button act exactly like the original submit button.
-        if (isset($action['#submit'])) {
-          $workflow_submit_button['#submit'] = $action['#submit'];
-        }
-        // Make sure they show up in order, but before everything else.
-        $workflow_submit_button['#weight'] += -5;
-        // Make this a valid action (places the button with other buttons).
-        // Note that this also prevents overriding of the submit handlers
-        // by other submit buttons, but that's just a side effect.
-        $form['actions']['workflow_' . $key] = $workflow_submit_button;
+  if (isset($form['actions']['submit'])) {
+    // Find the default submit button and add our action buttons before it.
+    // @todo: we may loose properties from 'submit' button.
+    $submit_action = $form['actions']['submit'];
+
+    $current_sid = $workflow_form['workflow_sid']['#default_value'];
+
+    // The options widget is no longer valid, so hide it.
+    $element['workflow']['workflow_sid']['#type'] = 'hidden';
+
+    // Get the min weight for our buttons.
+    $min_weight = $option_weight = $submit_action['#weight'] - count($workflow_form['workflow_sid']['#options']);
+    foreach ($workflow_form['workflow_sid']['#options'] as $sid => $option_name) {
+      // Make the workflow button act exactly like the original submit button.
+
+      $workflow_submit_button = array(
+        '#type' => 'submit',
+//        '#access' => TRUE,
+        '#value' => $option_name,
+        // Keep option order. Put current state first.
+        '#weight' => ($sid == $current_sid) ? $min_weight : ++$option_weight,
+        '#attributes' => ($sid == $current_sid) ? array('class' => array('form-save-default-button')) : array(),
+        // Add target State ID and Field name, to set correct value in validate_buttons callback.
+        '#workflow_sid' => $sid,
+        '#workflow_field_name' => $field_name,
+        // Add validate and submit functions. The will be adapted a bit below.
+        '#validate' => array('_workflow_transition_form_validate_buttons'),
+        // '#executes_submit_callback' => TRUE,
+      );
+
+      // Append the form's #validate function, or it won't be called upon submit,
+      // because the workflow buttons have its own #validate.
+      if (isset($submit_action['#validate'])) {
+        $workflow_submit_button['#validate'] = $submit_action['#validate'];
       }
-      // Remove the submit button.
-      unset($form['actions']['submit']);
-      // Remove the workflow buttons from higher up in the page.
-      unset($workflow_form['workflow']['submit_sid']);
+      elseif (isset($form['#validate'])) {
+        $workflow_submit_button['#validate'] = $form['#validate'];
+      }
+      $workflow_submit_button['#validate'][] = '_workflow_transition_form_validate_buttons';
+
+      // Append the submit-buttons's #submit function, or it won't be called upon submit.
+      if (isset($submit_action['#submit'])) {
+        $workflow_submit_button['#submit'] = $submit_action['#submit'];
+      }
+      elseif (isset($form['#submit'])) {
+        $workflow_submit_button['#submit'] = $form['#submit'];
+      }
+
+      // Place the button with the other action buttons.
+      $form['actions']['workflow_' . $sid] = $workflow_submit_button;
     }
+
+    // Remove the default submit button from the form.
+    unset($form['actions']['submit']);
+    // Remove the submit button from the workflow form.
+    unset($workflow_form['actions']);
+    // Remove the options element.
+    unset($workflow_form['workflow_sid']);
   }
 }
 
