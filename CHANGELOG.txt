@@ -579,5 +579,4 @@ Issue #2313549: Fixed workflows cannot be deleted in version 7.x-2.4
 Issue #2317243: Fixed notice: Undefined variable: new_sid in workflownode_tokens().
 Issue #2305617 by emil.virkki: Fixed Action buttons bypass Field validations.
 Issue #2326215 by sazcurrain: Fixed Views pagers with PostgreSQL DB.
-
- 
+Issue #2323025: Deprecated Rules Action 'Set a Workflow Field State'.
