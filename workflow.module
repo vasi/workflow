@@ -1134,8 +1134,8 @@ function _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name)
     // A new Node with Workflow Field.
     $field = field_info_field($field_name);
     // $field['settings']['wid'] can be numeric or named.
-    $workflow = workflow_load_single($field['settings']['wid']);
-    $wid = $workflow->wid;
+    $wid = $field['settings']['wid'];
+    $workflow = workflow_load_single($wid);
   }
   else {
     // A new Node with Workflow Node.
