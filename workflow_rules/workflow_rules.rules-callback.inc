@@ -32,11 +32,9 @@ function _workflow_rules_workflow_get_options($data) {
   // This is a poorman's effort to convert a token into a field name.
   $field_name = isset($data->settings['field:select']) ? _workflow_rules_token_replace($data->settings['field:select']) : '';
   $field = _workflow_info_field($field_name, NULL);
-  // $field['settings']['wid'] can be numeric or named.
-  $workflow = workflow_load_single($field['settings']['wid']);
 
   $options['ANY'] = 'ANY state';
-  $options += workflow_get_workflow_state_names($workflow->wid, $grouped = TRUE);
+  $options += workflow_get_workflow_state_names($field['settings']['wid'], $grouped = TRUE);
   return $options;
 }
 

@@ -580,4 +580,5 @@ Issue #2317243: Fixed notice: Undefined variable: new_sid in workflownode_tokens
 Issue #2305617 by emil.virkki: Fixed Action buttons bypass Field validations.
 Issue #2326215 by sazcurrain: Fixed Views pagers with PostgreSQL DB.
 Issue #2323025: Deprecated Rules Action 'Set a Workflow Field State'.
-Issue #2314681: Fixed Notice: Trying to get property of non-object in _workflow_get_workflow_creation_sid()'
+Issue #2314681: Fixed Notice: Trying to get property of non-object in _workflow_get_workflow_creation_sid()
+Issue #2312243: Fixed Notice: Trying to get property of non-object in _workflow_rules_workflow_get_options()
