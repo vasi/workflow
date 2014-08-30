@@ -25,7 +25,7 @@ function _workflowfield_rules_action_info() {
 
   $actions['workflowfield_field_set_state'] = array(
     'group' => t('Workflow'),
-    'label' => t('Set a Workflow Field state. (DEPRECATED: Please use "Set a data value".)'),
+    'label' => t('Set a Workflow Field state (and a comment).'),
     'parameter' => array(
       // "parameter['node']" is for backwards compatibility: can be any entity_type.
       'node' => array(
