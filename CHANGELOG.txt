@@ -582,3 +582,4 @@ Issue #2326215 by sazcurrain: Fixed Views pagers with PostgreSQL DB.
 Issue #2323025: Deprecated Rules Action 'Set a Workflow Field State'.
 Issue #2314681: Fixed Notice: Trying to get property of non-object in _workflow_get_workflow_creation_sid()
 Issue #2312243: Fixed Notice: Trying to get property of non-object in _workflow_rules_workflow_get_options()
+Issue #2304365 by mgadrat: Fixed error in Rules 'Set workflow value' action when using Workflow Node.

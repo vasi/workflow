@@ -115,7 +115,7 @@ function _workflownode_rules_action_info() {
     'label' => t('Set a Workflow state'),
     'parameter' => array(
       'node' => array(
-        'type' => 'node',
+        'type' => 'entity',
         'label' => t('Node'),
         'description' => t('The node to set the current workflow state of.'),
         // 'save' => TRUE,
