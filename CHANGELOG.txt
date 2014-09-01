@@ -585,3 +585,4 @@ Issue #2312243: Fixed Notice: Trying to get property of non-object in _workflow_
 Issue #2304365 by mgadrat: Fixed error in Rules 'Set workflow value' action when using Workflow Node.
 Issue #2323025: Reverted deprecation of Rules Action 'Set a Workflow Field State'.
 Issue #2323025: Updated Rules Action 'Set a Workflow Field State'.
+Issue #2317877: Fixed regression Fatal error: __clone method called on non-object in workflow.features.inc
