@@ -340,6 +340,9 @@ class WorkflowState extends Entity {
     // Some entities (e.g., taxonomy_term) do not have a uid.
     $entity_uid = isset($entity->uid) ? $entity->uid : 0;
 
+    // Fetch entity_id from entity for _newness_ check
+    $entity_id = ($entity) ? entity_id($entity_type, $entity) : '';
+
     if ($force || ($user && $user->uid == 1)) {
       // Superuser is special. And $force allows Rules to cause transition.
       $roles = 'ALL';
