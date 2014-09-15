@@ -79,7 +79,6 @@ class WorkflowTransition extends Entity {
 
     $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
-    $this->language = ($this->language) ? $this->language : LANGUAGE_NONE;
 
     // If constructor is called with new() and arguments.
     // Load the supplied entity.
@@ -103,6 +102,9 @@ class WorkflowTransition extends Entity {
       $this->uid = $uid;
       $this->stamp = $stamp;
       $this->comment = $comment;
+
+      // Set language. Multi-language is not supported for Workflow Node.
+      $this->language = _workflow_metadata_workflow_get_properties($entity, array(), 'langcode', $entity_type, $field_name);
     }
     elseif (!$old_sid) {
       // Not all parameters are passed programmatically.
@@ -143,7 +145,7 @@ class WorkflowTransition extends Entity {
    * @return array
    *   An array of WorkflowTransitions.
    */
-  public static function loadMultiple($entity_type, array $entity_ids, $field_name = '', $limit = NULL) {
+  public static function loadMultiple($entity_type, array $entity_ids, $field_name = '', $limit = NULL, $langcode = '') {
     $query = db_select('workflow_node_history', 'h');
     $query->condition('h.entity_type', $entity_type);
     if ($entity_ids) {
@@ -154,6 +156,14 @@ class WorkflowTransition extends Entity {
       // E.g., in workflow.tokens.
       $query->condition('h.field_name', $field_name);
     }
+    // Add selection on language.
+    // Workflow Node: only has 'und'.
+    // Workflow Field: untranslated field have 'und'.
+    // Workflow Field: translated fields may be specified.
+    if ($langcode) {
+      $query->condition('h.language', $langcode);
+    }
+
     $query->fields('h');
     // The timestamp is only granular to the second; on a busy site, we need the id.
     // $query->orderBy('h.stamp', 'DESC');

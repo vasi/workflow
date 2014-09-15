@@ -587,3 +587,4 @@ Issue #2323025: Reverted deprecation of Rules Action 'Set a Workflow Field State
 Issue #2323025: Updated Rules Action 'Set a Workflow Field State'.
 Issue #2317877: Fixed regression Fatal error: __clone method called on non-object in workflow.features.inc
 Issue #2331969 by LCM: Fixed available transitions for non-author in WorkflowState::getTransitions().
+Issue #1988990: Added translatability of Workflow Field.

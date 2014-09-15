@@ -70,7 +70,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
    *
    * @todo D8: change "array $items" to "FieldInterface $items"
    */
-  public function formElement(array $items, $delta, array $element, $langcode, array &$form, array &$form_state) {
+  public function formElement(array $items, $delta, array $element, array &$form, array &$form_state) {
     global $user; // @todo #2287057: verify if formElement() really is only used for UI. If not, $user must be passed.
 
     $field = $this->field;
@@ -158,7 +158,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     // multiple workflow_fields is not indendent.
     $form_id = $form_state['build_info']['form_id'] . '_' . $field_name;
 
-    // Prepare a wrapper. This might be a fieldset.
+    // Prepare a UI wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container'; // 'fieldset';
     $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
 
@@ -383,7 +383,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       if ($field_name) {
         $items = array();
         $items[0]['value'] = $old_sid;
-        $entity->{$field_name}[LANGUAGE_NONE] = $items;
+        $entity->{$field_name}[$transition->language] = $items;
       }
 
       // It's an immediate change. Do the transition.
@@ -405,7 +405,7 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     if ($field_name) {
       $items = array();
       $items[0]['value'] = $new_sid;
-      $entity->{$field_name}[LANGUAGE_NONE] = $items;
+      $entity->{$field_name}[$transition->language] = $items;
     }
     return $new_sid;
   }
