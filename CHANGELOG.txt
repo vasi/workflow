@@ -591,3 +591,4 @@ Issue #1988990: Added translatability of Workflow Field.
 Issue #1988990: Added translatability of Workflow Field - execute scheduled transitions.
 Issue #2338547: Fixed revision_id is not set when executing a Scheduled Transitions.
 Issue #2323025: Fixed Rules Action 'Set a Workflow Field State' does not work.
+Issue #2274999: Fixing errors when creating an advanced action.

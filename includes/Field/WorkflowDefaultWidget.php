@@ -77,13 +77,15 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     $instance = $this->instance;
     $entity = $this->entity;
     $entity_type = $this->entity_type;
-    $entity_id = entity_id($entity_type, $entity);
+    $entity_id = ($entity) ? entity_id($entity_type, $entity) : 0;
     $field_name = $field['field_name'];
     $current_sid = FALSE;
 
     // $field['settings']['wid'] can be numeric or named.
+    // $wid may not be specified.
     $wid = $field['settings']['wid'];
     $workflow = workflow_load_single($wid);
+    $workflow_label = $workflow ? check_plain(t($workflow->label())) : '';
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
@@ -108,7 +110,10 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
 
     $options = array();
     if (!$entity) {
-      // Sometimes, no entity is given, E.g., on the Field settings page, VBO form.
+      // Sometimes, no entity is given. We encountered the following cases: 
+      // - the Field settings page,
+      // - the VBO action form;
+      // - the Advance Action form on admin/config/system/actions;
       // If so, show all options for the given workflow(s).
 
       // Set 'grouped' option. This is only valid for select list.
@@ -183,7 +188,6 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
     }
 
     // The 'options' widget. May be removed later if 'Action buttons' are chosen.
-    $workflow_label = check_plain(t($workflow->label()));
     $element['workflow']['workflow_sid'] = array(
       '#type' => $settings_options_type,
       '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
