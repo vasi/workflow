@@ -329,7 +329,8 @@ function workflow_cron() {
       // The scheduled transition is not scheduled anymore, and is also deleted from DB.
       // A watchdog message is created with the result.
       $scheduled_transition->schedule(FALSE);
-      workflow_execute_transition($entity_type, $entity, $field_name, $scheduled_transition, $force = TRUE);
+      $scheduled_transition->force(TRUE);
+      workflow_execute_transition($entity_type, $entity, $field_name, $scheduled_transition);
 
       if (!$field_name) {
         $clear_cache = TRUE;
@@ -728,6 +729,8 @@ function _workflow_transition_form_validate_buttons($form, &$form_state) {
  * Executes a transition (change state of a node), from outside the node, e.g., workflow_cron().
  *
  * Serves as a wrapper function to hide differences between Node API and Field API.
+ * Use workflow_execute_transition($transition) to start a State Change from outside an entity.
+ * Use $transition->execute() to start a Staet Change from within an enetity.
  *
  * @param string $entity_type
  *   Entity type of target entity.
@@ -752,6 +755,8 @@ function workflow_execute_transition($entity_type, $entity, $field_name, $transi
   }
 
   if ($field_name) {
+    // @todo: use $new_sid = $transition->execute() without generating infinite loops.
+
     // Do a separate update to update the field (Workflow Field API)
     // This will call hook_field_update() and WorkflowFieldDefaultWidget::submit().
     $entity->{$field_name}[$transition->language][0]['transition'] = $transition;
@@ -1102,16 +1107,7 @@ function workflow_get_workflow_node_by_sid($sid) {
 }
 
 /**
- * Given nid, update the new stamp. This probably can be refactored. Called by workflow_execute_transition().
- *
- * @todo refactor into a correct insert / update.
- */
-function workflow_update_workflow_node_stamp($nid, $new_stamp) {
-  return db_update('workflow_node')->fields(array('stamp' => $new_stamp))->condition('nid', $nid, '=')->execute();
-}
-
-/**
- * Given data, update the new user account.  Called by user_delete().
+ * Given data, update the new user account. Called by user_delete().
  */
 function workflow_update_workflow_node_uid($uid, $new_uid) {
   return db_update('workflow_node')->fields(array('uid' => $new_uid))->condition('uid', $uid, '=')->execute();

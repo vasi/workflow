@@ -251,6 +251,7 @@ class WorkflowTransition extends Entity {
     // This is a.o. used in hook_entity_update to trigger 'transition post'.
     $entity->workflow_transitions[$field_name] = $this;
 
+    // Prepare an array of arguments for error messages.
     $args = array(
       '%user' => isset($user->name) ? $user->name : '',
       '%old' => $old_sid,
@@ -267,22 +268,28 @@ class WorkflowTransition extends Entity {
       return $old_sid;
     }
 
-    // Check if the state has changed. If not, we only record the comment.
+    // Check if the state has changed.
     $state_changed = ($old_sid != $new_sid);
+
+    // If so, check the permissions.
     if ($state_changed) {
       // State has changed. Do some checks upfront.
 
-      $roles = array_keys($user->roles);
-      $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
-      if (!$this->isAllowed($roles, $user, $force)) {
-        watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
-        // If incorrect, quit.
-        return $old_sid;
+      if (!$force) {
+        // Make sure this transition is allowed by workflow module Admin UI.
+        $roles = array_keys($user->roles);
+        $roles = array_merge(array(WORKFLOW_ROLE_AUTHOR_RID), $roles);
+        if (!$this->isAllowed($roles, $user, $force)) {
+          watchdog('workflow', 'User %user not allowed to go from state %old to %new', $args, WATCHDOG_NOTICE);
+          // If incorrect, quit.
+          return $old_sid;
+        }
       }
 
       if (!$force) {
-        // Make sure this transition is allowed.
+        // Make sure this transition is allowed by custom module.
         // @todo D8: remove, or replace by 'transition pre'. See WorkflowState::getOptions().
+        // @todo D8: replace all parameters that are inlcuded in $transition.
         $permitted = module_invoke_all('workflow', 'transition permitted', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this, $user);
         // Stop if a module says so.
         if (in_array(FALSE, $permitted, TRUE)) {
@@ -290,9 +297,30 @@ class WorkflowTransition extends Entity {
           return $old_sid;
         }
       }
+
+      // Make sure this transition is valid and allowed for the current user.
+      // Invoke a callback indicating a transition is about to occur.
+      // Modules may veto the transition by returning FALSE.
+      // (Even if $force is TRUE, but they shouldn't do that.)
+      $permitted = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
+      // Stop if a module says so.
+      if (in_array(FALSE, $permitted, TRUE)) {
+        watchdog('workflow', 'Transition vetoed by module.');
+        return $old_sid;
+      }
+
+    }
+    elseif ($this->comment) {
+      // No need to ask permission for adding comments.
+      // Since you should not add actions to a 'transition pre' event, there is
+      // no need to invoke the event.
+    }
+    else {
+      // There is no state change, and no comment.
+      // We may need to clean up something.
     }
 
-    // Let other modules modify the comment.
+    // The transition is allowed. Let other modules modify the comment.
     // @todo D8: remove all but last items from $context.
     $context = array(
       'node' => $entity,
@@ -303,26 +331,11 @@ class WorkflowTransition extends Entity {
     );
     drupal_alter('workflow_comment', $this->comment, $context);
 
-    // Make sure this transition is valid and allowed for the current user.
-    if ($state_changed) {
-      // Invoke a callback indicating a transition is about to occur.
-      // Modules may veto the transition by returning FALSE.
-      $permitted = module_invoke_all('workflow', 'transition pre', $old_sid, $new_sid, $entity, $force, $entity_type, $field_name, $this);
-      // Stop if a module says so.
-      if (in_array(FALSE, $permitted, TRUE)) {
-        watchdog('workflow', 'Transition vetoed by module.');
-        return $old_sid;
-      }
-    }
-    elseif ($this->comment) {
-      // No need to ask permission for adding comments.
-      // Since you should not add actions to a 'transition pre' event, there is
-      // no need to invoke the event.
-    }
+    // Now, change the database.
 
     // Log the new state in {workflow_node}.
     if (!$field_name) {
-      if ($state_changed) {
+      if ($state_changed || $this->comment) {
         // If the node does not have an existing 'workflow' property,
         // save the $old_sid there, so it can be logged.
         if (!isset($entity->workflow)) { // This is a workflow_node sid.
@@ -341,16 +354,40 @@ class WorkflowTransition extends Entity {
 
         $entity->workflow = $new_sid;  // This is a workflow_node sid.
       }
-      elseif ($this->comment) {
-        // If no state change, but comment, update node stamp.
-        $entity->workflow_stamp = REQUEST_TIME;
-        workflow_update_workflow_node_stamp($this->entity_id, REQUEST_TIME);
+    }
+    else {
+      // This is a Workflow Field.
+      // Until now, adding code here (instead of in workflow_execute_transition() )
+      // doesn't work, creating an endless loop.
+/*
+      if ($state_changed || $this->comment) {
+        // Do a separate update to update the field (Workflow Field API)
+        // This will call hook_field_update() and WorkflowFieldDefaultWidget::submit().
+        // $entity->{$field_name}[$this->language] = array();
+        // $entity->{$field_name}[$this->language][0]['workflow']['workflow_sid'] = $new_sid;
+        // $entity->{$field_name}[$this->language][0]['workflow']['workflow_comment'] = $this->comment;
+        $entity->{$field_name}[$this->language][0]['transition'] = $this;
+
+        // Save the entity, but not through entity_save(),
+        // since this will check permissions again and trigger rules.
+        // @TODO: replace below by a workflow_field setter callback.
+        // The transition was successfully executed, or else a message was raised.
+//        entity_save($entity_type, $entity);
+        // or
+//        field_attach_update($entity_type, $entity);
+
+        // Reset the entity cache after update.
+        entity_get_controller($entity_type)->resetCache(array($entity_id));
+
+        $new_sid = workflow_node_current_state($entity, $entity_type, $field_name);
       }
+ */
     }
 
     $this->is_executed = TRUE;
 
     if ($state_changed || $this->comment) {
+
       // Log the transition in {workflow_node_history}.
       $this->save();
 

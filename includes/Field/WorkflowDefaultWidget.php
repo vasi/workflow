@@ -381,9 +381,9 @@ class WorkflowDefaultWidget extends WorkflowD7Base { // D8: extends WidgetBase {
       // Execution, restore the default values for Workflow Field.
       // For instance, workflow_rules evaluates this.
       if ($field_name) {
-        $items = array();
-        $items[0]['value'] = $old_sid;
-        $entity->{$field_name}[$transition->language] = $items;
+//        $items = array();
+//        $items[0]['value'] = $old_sid;
+//        $entity->{$field_name}[$transition->language] = $items;
       }
 
       // It's an immediate change. Do the transition.
