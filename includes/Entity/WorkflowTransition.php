@@ -235,11 +235,16 @@ class WorkflowTransition extends Entity {
     $new_sid = $this->new_sid;
     $entity_type = $this->entity_type;
     $entity_id = $this->entity_id;
-    $entity = $this->getEntity(); // Entity may not be loaded, yet.
     $field_name = $this->field_name;
 
-    // Make sure this is set in the transition, too.
-    $this->force = $force;
+    // Load the entity, if not already loaded.
+    // This also sets the (empty) $revision_id in Scheduled Transitions.
+    $entity = $this->getEntity();
+
+    // Make sure $force is set in the transition, too.
+    if ($force) {
+      $this->force($force);
+    }
 
     // Store the transition, so it can be easily fetched later on.
     // Store in an array, to prepare for multiple workflow_fields per entity.
@@ -447,6 +452,11 @@ class WorkflowTransition extends Entity {
       $entity_id = $this->entity_id;
       $this->entity = entity_load_single($entity_type, $entity_id);
     }
+
+    // Make sure the vid of Entity and Transition are equal.
+    // Especially for Scheduled Transition, that do not have this set, yet.
+    $this->revision_id = $this->entity->vid;
+
     return $this->entity;
   }
 

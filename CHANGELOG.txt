@@ -589,3 +589,4 @@ Issue #2317877: Fixed regression Fatal error: __clone method called on non-objec
 Issue #2331969 by LCM: Fixed available transitions for non-author in WorkflowState::getTransitions().
 Issue #1988990: Added translatability of Workflow Field.
 Issue #1988990: Added translatability of Workflow Field - execute scheduled transitions.
+Issue #2338547: Fixed revision_id is not set when executing a Scheduled Transitions.

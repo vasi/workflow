@@ -745,6 +745,8 @@ function _workflow_transition_form_validate_buttons($form, &$form_state) {
  */
 function workflow_execute_transition($entity_type, $entity, $field_name, $transition, $force = FALSE) {
   // $todo D8: Remove first 3 parameters - they can be extracted from $transition.
+
+  // Make sure $force is set in the transition, too.
   if ($force) {
     $transition->force($force);
   }
