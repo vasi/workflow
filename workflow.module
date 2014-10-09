@@ -24,6 +24,21 @@ module_load_include('inc', 'workflow', 'workflow.entity');
 module_load_include('inc', 'workflow', 'workflow.node.type_map');
 
 /**
+ * Implements hook_help().
+ */
+function workflow_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#workflow':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Workflow module adds a field to Entities to
+        store field values as Workflow states. You can control "state transitions"
+        and add action to specific transitions.') . '</p>';
+      return $output;
+  }
+}
+
+/**
  * Implements hook_permission().
  */
 function workflow_permission() {
