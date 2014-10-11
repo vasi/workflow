@@ -1049,29 +1049,28 @@ function workflow_node_previous_state($entity, $entity_type, $field_name) {
  */
 function workflow_get_workflows_by_type($entity_bundle, $entity_type = 'node') {
   static $map = array();
-  $wid = 0;
 
-  if (!isset($map[$entity_type]) && !isset($map[$entity_type][$entity_bundle])) {
-    $workflow_id = FALSE;
+  if (!isset($map[$entity_type][$entity_bundle])) {
+    $wid = FALSE;
     $map[$entity_type][$entity_bundle] = FALSE;
 
     // Check the Node API first: Get $wid.
     if (module_exists('workflownode') && $type_map = workflow_get_workflow_type_map_by_type($entity_bundle)) {
       // Get the workflow by wid.
-      $workflow_id = $type_map->wid;
+      $wid = $type_map->wid;
     }
 
     // If $entity_type is set, we must check Field API. Data is already cached by core.
     if (!$wid && isset($entity_type)) {
       foreach (_workflow_info_fields(NULL, $entity_type, $entity_bundle) as $field_name => $field_info) {
-        $workflow_id = $field_info['settings']['wid'];
+        $wid = $field_info['settings']['wid'];
       }
     }
 
     // Set the cache with a workflow object.
-    if ($workflow_id) {
-      // $workflow_id can be numeric or named.
-      $workflow = workflow_load_single($workflow_id);
+    if ($wid) {
+      // $wid can be numeric or named.
+      $workflow = workflow_load_single($wid);
       $map[$entity_type][$entity_bundle] = $workflow;
     }
   }
