@@ -1,8 +1,9 @@
-name = Workflow VBO
-description = Provides workflow actions for VBO.
+name = Workflow Actions
+description = "Provides actions that can be associated to triggers, or
+               used as VBO-action. Provided actions are 'set to next state'
+               and 'set to specific state'."
 
 dependencies[] = workflow
-dependencies[] = views_bulk_operations
 
 package = Workflow
 core = 7.x
