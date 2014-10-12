@@ -917,8 +917,8 @@ function workflow_node_current_state($entity, $entity_type = 'node', &$field_nam
   }
 
   if ($field_name === '') {
-    // multi-language not supported.
     // Workflow Node API: Get current/previous state for a Workflow Node.
+    // Multi-language not supported.
     // N.B. Do not use a page cache. This gives problems with Rules.
     $sid = isset($entity->workflow) ? $entity->workflow : FALSE;
   }
@@ -933,7 +933,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', &$field_nam
     }
 
     // At this point, we may have redetermined and altered the field_name.
-    if (!$sid && $field_name) {
+    if (!$sid && $field_name !== NULL) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
       // Get State ID for existing nodes (A new node has no sid - will be fetched later.)
       // and normal node, on Node view page / Workflow history tab.
@@ -946,7 +946,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', &$field_nam
   }
 
   // No current state. Use creation state.
-  if (!$sid) {
+  if (!$sid && $field_name !== NULL) {
     $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
   }
 
@@ -965,8 +965,8 @@ function workflow_node_previous_state($entity, $entity_type, $field_name) {
   }
 
   if ($field_name === '') {
-    // multi-language not supported.
     // Workflow Node API: Get current/previous state for a Workflow Node.
+    // Multi-language not supported.
     // N.B. Do not use a page cache. This gives problems with Rules.
     $sid = isset($entity->workflow) ? $entity->workflow : FALSE;
   }
@@ -981,7 +981,7 @@ function workflow_node_previous_state($entity, $entity_type, $field_name) {
     }
 
     // At this point, we may have redetermined and altered the field_name.
-    if ($field_name && isset($entity->original)) {
+    if ($field_name !== NULL && isset($entity->original)) {
       // A changed node.
       $original = $entity->original;
       $wrapper = entity_metadata_wrapper($entity_type, $original);
@@ -993,24 +993,27 @@ function workflow_node_previous_state($entity, $entity_type, $field_name) {
     }
   }
 
-  if (!$sid && !empty($entity->is_new)) {
-    // A new Node. $is_new is not set when saving terms, etc.
-    $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
-  }
+  // A node may not have a Workflow attached.
+  if (!$sid && $field_name !== NULL) {
+    if (!empty($entity->is_new)) {
+      // A new Node. $is_new is not set when saving terms, etc.
+      $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
+    }
 
-  // Get Id. Is empty when creating a node.
-  $entity_id = 0;
-  if (!$sid) {
-    $entity_id = entity_id($entity_type, $entity);
-  }
-  if (!$sid && $entity_id) {
-    // Read the history.
-    if ($last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, $langcode)) {
-      $sid = $last_transition->new_sid;
+    // Get Id. Is empty when creating a node.
+    $entity_id = 0;
+    if (!$sid) {
+      $entity_id = entity_id($entity_type, $entity);
+    }
+    if (!$sid && $entity_id) {
+      // Read the history.
+      if ($last_transition = workflow_transition_load_single($entity_type, $entity_id, $field_name, $langcode)) {
+        $sid = $last_transition->new_sid;
+      }
     }
   }
 
-  if (!$sid) {
+  if (!$sid && $field_name !== NULL) {
     // No history found on an existing entity.
     $sid = _workflow_get_workflow_creation_sid($entity_type, $entity, $field_name);
   }

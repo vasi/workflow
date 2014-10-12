@@ -596,3 +596,4 @@ Issue #2295625: Fixed Advanced Actions and VBO Actions.
 Issue #2072225: Added hook_help().
 Issue #2353955: Fixed caching in workflow_get_workflows_by_type().
 Issue #2354649: Reorganized submodules workflow_vbo and workflow_actions.
+Issue #2355085: Fixed Error "Workflow 0 cannot be loaded" when operating on node without Workflow.
