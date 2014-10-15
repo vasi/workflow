@@ -598,4 +598,4 @@ Issue #2353955: Fixed caching in workflow_get_workflows_by_type().
 Issue #2354649: Reorganized submodules workflow_vbo and workflow_actions.
 Issue #2355085: Fixed Error "Workflow 0 cannot be loaded" when operating on node without Workflow.
 Issue #2355093: Fixed machine_name of '(creation)' should not be translated.
-Issue #2356605 by pianomansam: Fixed warnings when calling workflow_node_current_state().
+Issue #2356605 by pianomansam: Fixed warnings when calling workflow_node_current_state()
