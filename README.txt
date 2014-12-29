@@ -17,6 +17,9 @@ CONTENTS:
  - GETTING STARTED: ADDING A WORKFLOW TO A CONTENT TYPE
  - GETTING STARTED: CREATING A NODE
  - ADVANCED SETTINGS
+   - Token
+   - Views
+   - Avaiable hooks
 
 ********************************************************************
 DESCRIPTION
@@ -131,14 +134,21 @@ ADVANCED SETTINGS:
   The optons show the state labels, or - if you have set them in the
   Workflow Transitions Tab - the transition labels.
 
-- Be sure to enable the Token module and the Entity tokens module to
+- Be sure to enable the TOKEN module and the ENTITY TOKEN module to
   make use of extra tokens. They include all properties of the latest
-  transition. It also contains some tokens that may be used with Rules to
-  invoke actions, like sending reminder emails, when content was NOT updated
-  or a workflow did NOT transition state for some time. Using these tokens you
-  won't need PHP snippets.
+  transition.
 
-- If you have Workflow Views enabled, a "Workflow" menu item will appear in the
+  How to test the available tokens?
+  - Enable module 'Token'; use page admin/help/token;
+  - Enable module 'Token example'; use page examples/token;
+  - Enable module Automatic Entity Label, set a label, and save entity.
+
+  It also contains a token '[node:last-transition:created:seconds]'
+  that may be used with Rules to invoke actions, like sending reminder emails,
+  when content was NOT updated or a workflow did NOT transition state
+  for some time. Using these tokens you won't need PHP snippets.
+
+- If you have WORKFLOW VIEWS enabled, a "Workflow" menu item will appear in the
   navigation menu. This displays on a single page workflow state transition
   forms for all nodes on your system that are subject to workflow. Naturally
   you can modify and extend this View to your heart's content.
