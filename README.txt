@@ -7,6 +7,7 @@ Maintainers: Mark Fredrickson <mark.m.fredrickson at gmail dot com>
              John VanDyk drupal.org/user/2375
              Bastlynn http://drupal.org/user/275249
              Nancy Wichmann (NancyDru) http://drupal.org/user/101412
+             John Voskuilen (johnv) http://drupal.org/user/591042
 Drupal: 7
 ********************************************************************
 DESCRIPTION:
@@ -18,11 +19,9 @@ Workflows are made up of workflow states.
 
 Moving from one state to another is called a transition.
 
-Actions are associated with transitions (actions.module was used
-for this in Drupal 5; core actions support is in Drupal 6).
+Actions can be associated with transitions.
 
-Alex Reisner introduced role-based permissions for workflow states
-and generally enhanced this module.
+Tokens are supported when modules Token and Entity_tokens are enabled.
 
 ********************************************************************
 INSTALLATION:
