@@ -607,4 +607,4 @@ Issue #2369435: Fixed Notice: Undefined index: group in workflow_actions_trigger
 Issue #2260971: Updated documentation in workflow.api.php
 Issue #843568: Fixed undefined var when saving revisions.
 Issue #2304875: Fixed Status Report Tokens Warning when entity_token not enabled.
-
+Issue #2385439: Added Field setting to remove Workflow widget from entity edit forms.
