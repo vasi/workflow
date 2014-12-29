@@ -143,6 +143,11 @@ ADVANCED SETTINGS:
   forms for all nodes on your system that are subject to workflow. Naturally
   you can modify and extend this View to your heart's content.
 
+- If you want to add functionality programmatically, please check the following
+  files:
+  - workflow.api.php for all available hooks;
+  - workflow.test.inc for some rudimentary coding examples;
+
 - You'll find all settings in one of below pages:
   - /admin/config/workflow/workflow
   - /admin/people/permissions#module-workflow_admin_ui
