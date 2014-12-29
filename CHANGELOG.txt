@@ -605,4 +605,4 @@ Issue #2361051 by gstout: Call to undefined method EntityValueWrapper::getProper
 Issue #2382377: Fatal error after disabling workflow_access: Call to undefined function workflow_access() in /entity/entity.module
 Issue #2369435: Fixed Notice: Undefined index: group in workflow_actions_trigger_info() (Line 162 of workflow_actions/workflow_actions.module)
 Issue #2260971: Updated documentation in workflow.api.php
-
+Issue #843568: Fixed undefined var when saving revisions.
