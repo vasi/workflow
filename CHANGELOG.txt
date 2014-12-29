@@ -599,3 +599,9 @@ Issue #2354649: Reorganized submodules workflow_vbo and workflow_actions.
 Issue #2355085: Fixed Error "Workflow 0 cannot be loaded" when operating on node without Workflow.
 Issue #2355093: Fixed machine_name of '(creation)' should not be translated.
 Issue #2356605 by pianomansam: Fixed warnings when calling workflow_node_current_state()
+Issue #2371061: Fixed Notice: Undefined property: FieldCollectionItemEntity:: in WorkflowTransition->getEntity()
+Issue #2361051 by minorOffense: Fixed Call to undefined method EntityValueWrapper::getPropertyLanguage()
+Issue #2361051 by gstout: Call to undefined method EntityValueWrapper::getPropertyLanguage()
+Issue #2382377: Fatal error after disabling workflow_access: Call to undefined function workflow_access() in /entity/entity.module
+
+
