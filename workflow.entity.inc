@@ -289,14 +289,20 @@ function _workflow_metadata_workflow_get_properties($entity, array $options, $na
       // Gets the language code of a Workflow Field, hence its State, Transitions.
       // '$property' is $field_name.
       $langcode = LANGUAGE_NONE;
-    
-      if ($property) {
+
+      if (!$property) {
+        // Workflow_node. Translations are not supported.
+      }
+      else {
+        // Get language code for a field or property.
         // getPropertyLanguage() may return NULL if no language is set,
         // or may not exist on properties.
         $wrapper = entity_metadata_wrapper($entity_type, $entity);
-        if (!method_exists($wrapper->{$property}, 'getPropertyLanguage') 
-        ||  !$langcode = $wrapper->{$property}->getPropertyLanguage()) {
-          $langcode = LANGUAGE_NONE;
+        // Get languagecode. May be empty if 'und'.
+        if (method_exists($wrapper->{$property}, 'getPropertyLanguage')) {
+          if (!$langcode = $wrapper->{$property}->getPropertyLanguage()) {
+            $langcode = LANGUAGE_NONE;
+          }
         }
       }
       return $langcode;
