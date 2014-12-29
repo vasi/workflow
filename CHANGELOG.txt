@@ -603,5 +603,5 @@ Issue #2371061: Fixed Notice: Undefined property: FieldCollectionItemEntity:: in
 Issue #2361051 by minorOffense: Fixed Call to undefined method EntityValueWrapper::getPropertyLanguage()
 Issue #2361051 by gstout: Call to undefined method EntityValueWrapper::getPropertyLanguage()
 Issue #2382377: Fatal error after disabling workflow_access: Call to undefined function workflow_access() in /entity/entity.module
-
+Issue #2369435: Fixed Notice: Undefined index: group in workflow_actions_trigger_info() (Line 162 of workflow_actions/workflow_actions.module)
 
