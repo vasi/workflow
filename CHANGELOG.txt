@@ -609,3 +609,4 @@ Issue #843568: Fixed undefined var when saving revisions.
 Issue #2304875: Fixed Status Report Tokens Warning when entity_token not enabled.
 Issue #2385439: Added Field setting to remove Workflow widget from entity edit forms.
 Issue #2228325: Moved documentation from Workflow_extensions module's README.txt to Workflow's README.txt
+Issue #2374587 by Karsa: Workflow node doesn't set the state of a newly created node
