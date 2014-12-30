@@ -139,6 +139,11 @@ function workflow_token_info() {
 
 /**
  * Implements hook_tokens().
+ *
+ * N.B. Keep the following functions aligned when changing properties:
+ * - workflow_tokens()
+ * - workflow_entity_property_info_alter()
+ * - workflow_views_views_data_alter()
  */
 function workflow_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();

@@ -12,6 +12,11 @@
 
 /**
  * Implements hook_views_data_alter().
+ *
+ * N.B. Keep the following functions aligned when changing properties:
+ * - workflow_tokens()
+ * - workflow_entity_property_info_alter()
+ * - workflow_views_views_data_alter()
  */
 function workflow_views_views_data_alter(&$data) {
   // In version 7.x-1.2, the following groups were defined in
@@ -42,10 +47,10 @@ function workflow_views_views_data_alter(&$data) {
   $data['workflow_node_history']['stamp']['sort']['handler'] = 'views_handler_sort_date';
   $data['workflow_node_history']['hid']['filter']['numeric'] = TRUE;
   // This group's help and title are moved from hook_views_data to _alter(), to avoid Notices.
-  $data['workflow_node_history']['old_sid']['title'] = t('Old state');
-  $data['workflow_node_history']['old_sid']['help'] = t('The previous state, from the last state change.');
-  $data['workflow_node_history']['sid']['title'] = t('New state');
-  $data['workflow_node_history']['sid']['help'] = t('The new state in a transition. (For the latest transition, this is the current state.)');
+  $data['workflow_node_history']['old_sid']['title'] = t('Old state ID');
+  $data['workflow_node_history']['old_sid']['help'] = t('The ID of the previous state, from the last state change.');
+  $data['workflow_node_history']['sid']['title'] = t('New state ID');
+  $data['workflow_node_history']['sid']['help'] = t('The ID of the new state in a transition. (For the latest transition, this is the current state.)');
   $data['workflow_node_history']['uid']['title'] = t('Previous user');
   $data['workflow_node_history']['uid']['help'] = t('The user that executed a state change.');
   $data['workflow_node_history']['comment']['title'] = t('Comment');
@@ -93,10 +98,10 @@ function workflow_views_views_data_alter(&$data) {
       'left_query' => " SELECT max(hid) FROM {workflow_node_history} where nid = node.nid and sid != old_sid ",
     ),
   );
-  $data['workflow_node_current']['sid']['title'] = t('Current state');
-  $data['workflow_node_current']['sid']['help'] = t('The current state, from the last state change.');
-  $data['workflow_node_current']['old_sid']['title'] = t('Previous state');
-  $data['workflow_node_current']['old_sid']['help'] = t('The previous state, from the last state change.');
+  $data['workflow_node_current']['sid']['title'] = t('Current state ID');
+  $data['workflow_node_current']['sid']['help'] = t('The current state ID, from the last state change.');
+  $data['workflow_node_current']['old_sid']['title'] = t('Previous state ID');
+  $data['workflow_node_current']['old_sid']['help'] = t('The previous state ID, from the last state change.');
   $data['workflow_node_current']['comment']['title'] = t('Current comment');
   $data['workflow_node_current']['comment']['help'] = t('The comment describing why the the state change was done.');
   $data['workflow_node_current']['uid']['title'] = t('Current user');
@@ -131,10 +136,10 @@ function workflow_views_views_data_alter(&$data) {
   $data['workflow_scheduled_transition']['scheduled']['filter']['handler'] = 'views_handler_filter_date';
   $data['workflow_scheduled_transition']['scheduled']['sort']['handler'] = 'views_handler_sort_date';
   // This group's help and title are moved from hook_views_data to _alter(), to avoid Notices.
-  $data['workflow_scheduled_transition']['old_sid']['title'] = t('Current state');
-  $data['workflow_scheduled_transition']['old_sid']['help'] = t('The current state that the node is in.');
-  $data['workflow_scheduled_transition']['sid']['title'] = t('Scheduled state');
-  $data['workflow_scheduled_transition']['sid']['help'] = t('The state, the node is scheduled for.');
+  $data['workflow_scheduled_transition']['old_sid']['title'] = t('Current state ID');
+  $data['workflow_scheduled_transition']['old_sid']['help'] = t('The current state ID that the node is in.');
+  $data['workflow_scheduled_transition']['sid']['title'] = t('Scheduled state ID');
+  $data['workflow_scheduled_transition']['sid']['help'] = t('The state ID, the node is scheduled for.');
   $data['workflow_scheduled_transition']['uid']['title'] = t('Scheduling user');
   $data['workflow_scheduled_transition']['uid']['help'] = t('The user that scheduled the state change.');
   $data['workflow_scheduled_transition']['comment']['title'] = t('Scheduled comment');
@@ -162,8 +167,8 @@ function workflow_views_views_data_alter(&$data) {
     unset($data['workflow_node']['delta']);
     unset($data['workflow_node']['language']);
     unset($data['workflow_node']['old_sid']);
-    $data['workflow_node']['sid']['title'] = t('Current state');
-    $data['workflow_node']['sid']['help'] = t('The current workflow state that the node is in.');
+    $data['workflow_node']['sid']['title'] = t('Current state ID');
+    $data['workflow_node']['sid']['help'] = t('The current workflow state ID that the node is in.');
     $data['workflow_node']['comment']['title'] = t('Scheduled comment');
     $data['workflow_node']['comment']['help'] = t('A comment describing why the node was scheduled for state transition.');
     $data['workflow_node']['uid']['title'] = t('Last changing user');

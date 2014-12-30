@@ -611,3 +611,4 @@ Issue #2385439: Added Field setting to remove Workflow widget from entity edit f
 Issue #2228325: Moved documentation from Workflow_extensions module's README.txt to Workflow's README.txt
 Issue #2374587 by Karsa: Workflow node doesn't set the state of a newly created node
 Issue #2373103: Fixed Notice 'Undefined index' in list_field_formatter_view() when previewing a node.
+Issue #2308677: Fixed regression: 'Workflow current: Current state' is missing when creating a contextual filter
