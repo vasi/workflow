@@ -234,7 +234,7 @@ function workflow_entity_property_info_alter(&$info) {
     'type' => 'user',
     'label' => t('User'),
     'schema field' => 'uid',
-    'description' => t('The user that triggered the transition.'),
+    'description' => t('The user who triggered the transition.'),
   );
 
   unset($info['WorkflowTransition']['properties']['stamp']);
