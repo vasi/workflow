@@ -118,8 +118,9 @@ function workflow_views_views_data_alter(&$data) {
     if (isset($info['base table']) && isset($data[$info['base table']]['table'])) {
       $base_table = $info['base table'];
       $entity_id_key = $info['entity keys']['id'];
-      // $revision_id_key = $info['entity keys']['revision'];
+      $revision_id_key = $info['entity keys']['revision'];
 
+      // @todo: these joins need extra join on revision_id,field_name,language.
       $data['workflow_node_history']['table']['join'][$base_table] = array(
           'table' => 'workflow_node_history',
           'field' => 'nid',
