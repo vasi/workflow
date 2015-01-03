@@ -613,3 +613,6 @@ Issue #2374587 by Karsa: Workflow node doesn't set the state of a newly created 
 Issue #2373103: Fixed Notice 'Undefined index' in list_field_formatter_view() when previewing a node.
 Issue #2308677: Fixed regression: 'Workflow current: Current state' is missing when creating a contextual filter
 Issue #2400211: Added Views support for non-node entity types
+
+Since 7.x-2.4
+Issue #2340011: Fixed Error "Workflow 0 cannot be loaded" when using Workflow Node and Workflow Rules
