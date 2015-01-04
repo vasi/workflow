@@ -58,7 +58,7 @@ class WorkflowTransition extends Entity {
    */
   public function __construct(array $values = array(), $entityType = 'WorkflowTransition') {
     // Please be aware that $entity_type and $entityType are different things!
-    parent::__construct($values = array(), $entityType);
+    parent::__construct($values, $entityType);
 
     // This transition is not scheduled,
     $this->is_scheduled = FALSE; // This transition is not scheduled,
@@ -121,11 +121,12 @@ class WorkflowTransition extends Entity {
   protected function defaultLabel() {
     // @todo; Should return title of WorkflowConfigTransition. Make it a superclass??
     // return $this->title;
+    // return 'WorkflowTransition ' . $this->hid;
     return '';
   }
 
 //  protected function defaultUri() {
-//    return array('path' => 'admin/config/workflow/workflow/transitions/' . $this->wid);
+//    return array('path' => 'admin/config/workflow/workflow/transitions/' . $this->hid);
 //  }
 
   /**
