@@ -39,7 +39,7 @@ function theme_workflow_current_state($variables) {
 /**
  * Implements hook_node_load().
  */
-function workflow_node_load($nodes, $types) {
+function workflownode_node_load($nodes, $types) {
   // Get which types have workflows associated with them.
   $workflow_types = workflow_get_workflow_type_map();
 
@@ -79,7 +79,7 @@ function workflow_node_load($nodes, $types) {
 /**
  * Implements hook_node_view().
  */
-function workflow_node_view($node, $view_mode, $langcode) {
+function workflownode_node_view($node, $view_mode, $langcode) {
   global $user;
 
   $entity_type = 'node'; // This hook is only for nodes.
@@ -143,8 +143,9 @@ function workflow_node_view($node, $view_mode, $langcode) {
  * This is executed after saving data to the database.
  * We cannot use hook_node_presave, because workflow_execute_transition() needs the nid.
  */
-function workflow_node_insert($node) {
+function workflownode_node_insert($node) {
   global $user;
+
   if (!isset($node->workflow_field)) {
     // Initializing the state of the node in case no widget on Node form.
     if ($workflow = workflow_get_workflows_by_type($node->type, 'node')) {
@@ -163,13 +164,13 @@ function workflow_node_insert($node) {
       workflow_execute_transition('node', $node, null, $transition, $force);
     }
   }
-  return workflow_node_update($node);
+  return workflownode_node_update($node);
 }
 
 /**
  * Implements hook_node_update().
  */
-function workflow_node_update($node) {
+function workflownode_node_update($node) {
   if (!isset($node->workflow_field)) {
     // For this type_map, user did not want a form here.
     return;
@@ -195,7 +196,7 @@ function workflow_node_update($node) {
 /**
  * Implements hook_node_delete().
  */
-function workflow_node_delete($node) {
+function workflownode_node_delete($node) {
   if (!empty($node->workflow)) {
     // Call field_info_field().
     // Generates pseudo data for workflow_node to re-use Field API.
@@ -211,14 +212,14 @@ function workflow_node_delete($node) {
 /**
  * Implements hook_comment_insert().
  */
-function workflow_comment_insert($comment) {
-  workflow_comment_update($comment);
+function workflownode_comment_insert($comment) {
+  workflownode_comment_update($comment);
 }
 
 /**
  * Implements hook_comment_update().
  */
-function workflow_comment_update($comment) {
+function workflownode_comment_update($comment) {
   // Retrieve the data from the form.
   if (!isset($comment->workflow_field)) {
     // For this type_map, user did not want a form here.
@@ -244,7 +245,7 @@ function workflow_comment_update($comment) {
 /**
  * Implements hook_field_extra_fields().
  */
-function workflow_field_extra_fields() {
+function workflownode_field_extra_fields() {
   $extra = array();
 
   // Get all workflows by content types.
@@ -283,8 +284,8 @@ function workflow_field_extra_fields() {
  *
  * Shows the form only on Node Edit forms.
  */
-function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
-  _workflow_form_alter($form, $form_state, $form_id);
+function workflownode_form_node_form_alter(&$form, &$form_state, $form_id) {
+  _workflownode_form_alter($form, $form_state, $form_id);
 }
 
 /**
@@ -292,20 +293,20 @@ function workflow_form_node_form_alter(&$form, &$form_state, $form_id) {
  *
  * Shows the form only on Comment forms.
  */
-function workflow_form_comment_form_alter(&$form, &$form_state, $form_id) {
-  _workflow_form_alter($form, $form_state, $form_id);
+function workflownode_form_comment_form_alter(&$form, &$form_state, $form_id) {
+  _workflownode_form_alter($form, $form_state, $form_id);
 }
 
 /**
  * Helper function to implement hook_form_alter().
  *
  * Is now a subfunction of workflow_form_BASE_FORM_ID_alter().
- * This is more performant (copared to 7.x-1.2 and before), since it is called
+ * This is more performant (compared to 7.x-1.2 and before), since it is called
  * only on form with correct BASE_FORM_ID.
  *
  * @see http://bryanbraun.com/2013/08/17/using-hook-form-base-form-id-alter
  */
-function _workflow_form_alter(&$form, &$form_state, $form_id) {
+function _workflownode_form_alter(&$form, &$form_state, $form_id) {
   // Set node to #node if available or load from nid value.
   $node = isset($form['#node']) ? $form['#node'] : node_load($form['nid']['#value']);
   $bundle = $node->type;
