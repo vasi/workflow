@@ -155,4 +155,11 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     $this->comment = t('Scheduled by user @uid.', array('@uid' => $this->uid));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getTimestamp() {
+    return $this->scheduled;
+  }
+
 }

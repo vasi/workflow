@@ -617,3 +617,4 @@ Issue #2400211: Added Views support for non-node entity types
 Since 7.x-2.4
 Issue #2340011: Fixed Error "Workflow 0 cannot be loaded" when using Workflow Node and Workflow Rules
 Issue #2401481: Fixed error when creating a Transition, parameter values() is discarded
+Issue #2401493: Added $transition->getTimestamp()

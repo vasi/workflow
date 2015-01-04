@@ -550,6 +550,15 @@ class WorkflowTransition extends Entity {
   }
 
   /**
+   * Returns the time on which the transitions was or will be executed.
+   *
+   * @return mixed
+   */
+  public function getTimestamp() {
+    return $this->stamp;
+  }
+
+  /**
    * Returns if this is a Scheduled Transition.
    */
   public function isScheduled() {
