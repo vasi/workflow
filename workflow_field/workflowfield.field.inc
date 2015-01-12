@@ -180,29 +180,19 @@ function workflowfield_field_update($entity_type, $entity, array $field, $instan
     $referenced_entity_id = $entity->nid;
     // Load the node again, since the passed node doesn't contain proper 'type' field.
     $referenced_entity = entity_load_single($referenced_entity_type, $referenced_entity_id);
+    // Normalize the contents of the workflow field.
+    $items[0]['value'] = _workflow_get_sid_by_items($items);
 
-    if ($field_name) {
-      // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API.
-      // Remember, we don't know if the transition is scheduled or not.
-      $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
-      $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
-
-      // Since we are saving the comment only, we must save the node separately.
-      entity_save($referenced_entity_type, $referenced_entity);
-    }
-    else {
-      // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API.
-      // Remember, we don't know if the transition is scheduled or not.
-      $widget = new WorkflowDefaultWidget($field, $instance, $referenced_entity_type, $referenced_entity);
-      $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
-
-      // Since we are saving the comment only, we must save the node separately.
-      entity_save($referenced_entity_type, $referenced_entity);
-    }
+    // Execute the transition upon the node. Afterwards, $items is in form as expected by Field API.
+    // Remember, we don't know if the transition is scheduled or not.
+    $widget = new WorkflowTransitionForm($field, $instance, $referenced_entity_type, $referenced_entity);
+    $widget->submitForm($form, $form_state, $items); // $items is a proprietary D7 parameter.
+    // // Since we are saving the comment only, we must save the node separately.
+    // entity_save($referenced_entity_type, $referenced_entity);
   }
   else {
-    $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-    $widget->submit($form, $form_state, $items); // $items is a proprietary D7 parameter.
+    $widget = new WorkflowTransitionForm($field, $instance, $entity_type, $entity);
+    $widget->submitForm($form, $form_state, $items); // $items is a proprietary D7 parameter.
   }
 }
 

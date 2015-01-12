@@ -27,15 +27,15 @@ module_load_include('inc', 'workflow', 'workflow.node.type_map');
  * Implements hook_help().
  */
 function workflow_help($path, $arg) {
+  $output = '';
   switch ($path) {
     case 'admin/help#workflow':
-      $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('The Workflow module adds a field to Entities to
         store field values as Workflow states. You can control "state transitions"
         and add action to specific transitions.') . '</p>';
-      return $output;
   }
+  return $output;
 }
 
 /**
@@ -455,18 +455,14 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
 /**
  * Form builder. Allow workflow state change and scheduling from workflow tab.
  */
-function workflow_transition_form($form, &$form_state, $field, $instance, $entity_type, $entity) {
+function workflow_transition_form(array $form, array &$form_state, array $field, $instance, $entity_type, $entity) {
+
   if (!isset ($instance['widget']['settings']['submit_function'])) {
     $instance['widget']['settings']['submit_function'] = 'workflow_transition_form_submit';
   }
-  $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
 
-  $items = array();
-  $delta = 0;
-  $element = array();
-  $form += $widget->formElement($items, $delta, $element, $form, $form_state);
-
-  return $form;
+  $transition_form = new WorkflowTransitionForm($field, $instance, $entity_type, $entity);
+  return $transition_form->buildForm($form, $form_state);
 }
 
 /**
@@ -503,6 +499,8 @@ function _workflow_use_action_buttons($new_value = NULL) {
  * - Workflow Field: create, edit, view, workflow tab, comment;
  * - Workflow Node: view, workflow tab;
  * (For forms with Workflow Node, the form_alter() is AFTER formElement(). )
+ *
+ * @todo: move this to WorkflowTransitionForm::_addActionButtons();
  */
 function workflow_form_alter(&$form, &$form_state, $form_id) {
 
@@ -529,6 +527,7 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
     }
   }
   else {
+    $field_name = '';
     foreach (element_children($form) as $key) {
       if (isset($form[$key]['#language'])) {
         $langcode = $form[$key]['#language'];
@@ -623,7 +622,6 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
  * a transition to be executed later by cron.
  */
 function workflow_transition_form_submit($form, &$form_state) {
-
   // Retrieve the data from the form.
   if (isset($form_state['values']['workflow_field'])) {
     // If $entity filled: We are on a Entity View page or Workflow History Tab page.
@@ -632,61 +630,17 @@ function workflow_transition_form_submit($form, &$form_state) {
     $instance = $form_state['values']['workflow_instance'];
     $entity_type = $form_state['values']['workflow_entity_type'];
     $entity = $form_state['values']['workflow_entity'];
-    $field_name = $field['field_name'];
+
+    $items = array();
+    $transition_form = new WorkflowTransitionForm($field, $instance, $entity_type, $entity);
+    return $transition_form->submitForm($form, $form_state, $items);
   }
   else {
+    watchdog('workflow', 'workflow_transition_form_submit() is called with error.');
     // We are on an Entity/Node/Comment Form page.
-    $field_name = $form_state['triggering_element']['#workflow_field_name'];
-/*
-    if ($field_name) {
-      $element = $form_state['input'][$field_name];
-    }
-    else {
-      // @todo: Workflow Node.
-    }
- */
+    // We should not be here.
   }
 
-  // Determine if the transition is forced.
-  // This can be set by a 'workflow_vbo action' in an additional form element.
-  $force = isset($form_state['input']['workflow_force']) ? $form_state['input']['workflow_force'] : FALSE;
-
-  // Set language. Multi-language is not supported for Workflow Node.
-  $langcode = _workflow_metadata_workflow_get_properties($entity, array(), 'langcode', $entity_type, $field_name);
-
-  if (!$entity) {
-  }
-  elseif ($field_name) {
-    // Save the entity, but only if we were not in edit mode.
-    // Perhaps there is a better way, but for now we use 'changed' property.
-    // Caveat: Some entities do not have 'changed' property set.
-    if ((isset($entity->changed)) && $entity->changed == REQUEST_TIME) {
-      // We are in edit mode. No need to save the entity explicitly.
-
-      // Add the $form_state to the $items, so we can do a getTransition() later on.
-      $items[0]['workflow'] = $form_state['input'];
-      // Create a Transition. The Widget knows if it is scheduled.
-      $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-      $new_sid = $widget->submit($form, $form_state, $items, $force);
-    }
-    else {
-      // Save $entity, but only if sid has changed.
-      // Use field_attach_update for this? Save always?
-      $entity->{$field_name}[$langcode][0]['workflow'] = $form_state['input'];
-      entity_save($entity_type, $entity);
-    }
-  }
-  else {
-    // For a Node API form, only contrib fields need to be filled.
-    // No updating of the node itself.
-    // (unless we need to record the stamp.)
-
-    // Add the $form_state to the $items, so we can do a getTransition() later on.
-    $items[0]['workflow'] = $form_state['input'];
-    // Create a Transition. The Widget knows if it is scheduled.
-    $widget = new WorkflowDefaultWidget($field, $instance, $entity_type, $entity);
-    $new_sid = $widget->submit($form, $form_state, $items, $force);
-  }
 }
 
 /**
