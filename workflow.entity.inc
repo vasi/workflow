@@ -20,7 +20,10 @@ function workflow_entity_info() {
     'features controller class' => 'WorkflowFeaturesController',
     'module' => 'workflow',
     'base table' => 'workflows',
+    // Make WorkflowTransition fieldable. The wid is the Transition Type.
     'fieldable' => FALSE,
+    'bundle of' => 'WorkflowTransition',
+
     'exportable' => TRUE,
     'entity keys' => array(
       'id' => 'wid',
@@ -91,12 +94,42 @@ function workflow_entity_info() {
     'rules controller class' => 'EntityDefaultRulesController',
     'features controller class' => FALSE,
     'base table' => 'workflow_node_history',
+
+    'fieldable' => TRUE,
+    // Bundles are defined by the $types below.
+    'bundles' => array(),
+    // Bundle keys tell the FieldAPI how to extract information from the bundle objects.
+    'bundle keys' => array(
+      'bundle' => 'wid',
+    ),
+
     'entity keys' => array(
       'id' => 'hid',
+      'bundle'=> 'wid',
     ),
     'label callback' => 'entity_class_label',
     'module' => 'workflow',
   );
+
+  // Add bundle info but bypass entity_load() as we cannot use it here.
+  // (The bundle-setup is copied from the D7 entityform module.)
+  // Get all workflows, keyed by wid.
+  $types = db_select('workflows', 'w')
+    ->fields('w')
+    ->execute()
+    ->fetchAllAssoc('wid');
+  // Build an array of bundles.
+  foreach ($types as $type => $info) {
+    $entities['WorkflowTransition']['bundles'][$type] = array(
+      'label' => $info->label,
+      'admin' => array(
+        'path' => 'admin/config/workflow/workflow/manage/%workflow',
+        'real path' => 'admin/config/workflow/workflow/manage/' . $type,
+        'bundle argument' => 5,
+//        'access callback' => 'workflow_access',
+      ),
+    );
+  }
 
   $entities['WorkflowScheduledTransition'] = array(
     'label' => t('Workflow scheduled transition'),
@@ -196,6 +229,13 @@ function workflow_entity_property_info_alter(&$info) {
     'getter callback' => '_workflow_metadata_workflow_get_properties',
     'entity token' => FALSE,
   );
+  $info['WorkflowConfigTransition']['properties']['wid'] = array(
+    'type' => 'integer',
+    'label' => t("Workflow  ID"),
+    'description' => t("The workflow ID of the transition."),
+    'getter callback' => '_workflow_metadata_workflow_get_properties',
+    'entity token' => FALSE,
+  );
   // @todo: Unify ID's to old_sid, new_sid.
   $info['WorkflowConfigTransition']['properties']['sid']['description'] = 'The ID of old state.';
   $info['WorkflowConfigTransition']['properties']['target_sid']['description'] = 'The ID of new state.';
@@ -221,6 +261,7 @@ function workflow_entity_property_info_alter(&$info) {
   // Properties for WorkflowTransition.
   $info['WorkflowTransition']['properties']['label'] = $info['WorkflowConfigTransition']['properties']['label'];
   $info['WorkflowTransition']['properties']['workflow'] = $info['WorkflowConfigTransition']['properties']['workflow'];
+  $info['WorkflowTransition']['properties']['wid'] = $info['WorkflowConfigTransition']['properties']['wid'];
   $info['WorkflowTransition']['properties']['hid']['label'] = 'Transition ID';
 
   // @todo: Unify ID's to old_sid, new_sid.

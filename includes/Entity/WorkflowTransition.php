@@ -24,6 +24,7 @@ class WorkflowTransition extends Entity {
   public $entity_id; // Use WorkflowTransition->getEntity() to fetch this.
   public $nid; // @todo D8: remove $nid, use $entity_id. (requires conversion of Views displays.)
   // Transition data.
+  public $wid = 0;
   public $old_sid = 0;
   public $new_sid = 0;
   public $sid = 0; // @todo D8: remove $sid, use $new_sid. (requires conversion of Views displays.)
@@ -67,6 +68,10 @@ class WorkflowTransition extends Entity {
     // Fill the 'new' fields correctly. @todo D8: rename these fields in db table.
     $this->entity_id = $this->nid;
     $this->new_sid = $this->sid;
+    // Initialize wid, if not set.
+    if ($this->old_sid && !$this->wid) {
+      $this->getWorkflow();
+    }
   }
 
   /**
@@ -116,13 +121,15 @@ class WorkflowTransition extends Entity {
     // Fill the 'new' fields correctly. @todo D8: rename these fields in db table.
     $this->entity_id = $this->nid;
     $this->new_sid = $this->sid;
+    // Initialize wid, if not set.
+    if ($this->old_sid && !$this->wid) {
+      $this->getWorkflow();
+    }
   }
 
   protected function defaultLabel() {
     // @todo; Should return title of WorkflowConfigTransition. Make it a superclass??
-    // return $this->title;
-    // return 'WorkflowTransition ' . $this->hid;
-    return '';
+    return t('Workflow transition !hid', array('!hid' =>3));
   }
 
 //  protected function defaultUri() {
@@ -474,8 +481,14 @@ class WorkflowTransition extends Entity {
    *   The workflow for this Transition.
    */
   public function getWorkflow() {
-    $state = workflow_state_load_single($this->new_sid);
-    $workflow = workflow_load($state->wid);
+    $workflow = NULL;
+    if (!$this->wid) {
+      $state = workflow_state_load_single($this->new_sid ? $this->new_sid : $this->old_sid);
+      $this->wid = (int) $state->wid;
+    }
+    if ($this->wid) {
+      $workflow = workflow_load($this->wid);
+    }
     return $workflow;
   }
 

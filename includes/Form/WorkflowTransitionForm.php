@@ -58,8 +58,6 @@ class WorkflowTransitionForm { // extends FormBase {
     $entity_type = $this->entity_type;
     $entity_id = ($entity) ? entity_id($entity_type, $entity) : 0;
 
-    $current_sid = FALSE;
-
     // $field['settings']['wid'] can be numeric or named.
     // $wid may not be specified.
     $wid = $field['settings']['wid'];
@@ -87,6 +85,7 @@ class WorkflowTransitionForm { // extends FormBase {
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'];
 
+    $current_sid = FALSE;
     $options = array();
     if (!$entity) {
       // Sometimes, no entity is given. We encountered the following cases:
@@ -121,18 +120,17 @@ class WorkflowTransitionForm { // extends FormBase {
     }
 
     // Get the scheduling info. This may change the $current_sid on the Form.
-    $scheduled = '0';
-    $timestamp = REQUEST_TIME;
-    $comment = NULL;
-
-    if ($settings_schedule) {
-      // Read scheduled information.
+    $transition = new WorkflowTransition(
+      array(
+        'old_sid' => $default_value,
+        'stamp' => REQUEST_TIME,
+      )
+    );
+    if ($settings_schedule && $entity) {
+      // Read scheduled information, only if an entity exists.
       // Technically you could have more than one scheduled, but this will only add the soonest one.
-      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name, 1) as $scheduled_transition) {
-        $scheduled = '1';
-        $default_value = $scheduled_transition->new_sid;
-        $timestamp = $scheduled_transition->scheduled;
-        $comment = $scheduled_transition->comment;
+      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name, 1) as $transition) {
+        $default_value = $transition->new_sid;
         break;
       }
     }
@@ -202,7 +200,8 @@ class WorkflowTransitionForm { // extends FormBase {
         $timezone = variable_get('date_default_timezone', 0);
       }
       $timezones = drupal_map_assoc(timezone_identifiers_list());
-      $hours = format_date($timestamp, 'custom', 'H:i', $timezone);
+      $timestamp = $transition->getTimestamp();
+      $hours = $transition->isScheduled() ? '00:00' : format_date($timestamp, 'custom', 'H:i', $timezone);
 
       $element['workflow']['workflow_scheduled'] = array(
         '#type' => 'radios',
@@ -211,7 +210,7 @@ class WorkflowTransitionForm { // extends FormBase {
           '0' => t('Immediately'),
           '1' => t('Schedule for state change'),
         ),
-        '#default_value' => $scheduled,
+        '#default_value' => $transition->isScheduled() ? '1' : '0',
         '#attributes' => array(
           'id' => 'scheduled_' . $form_id,
         ),
@@ -239,7 +238,7 @@ class WorkflowTransitionForm { // extends FormBase {
         '#title' => t('Time'),
         '#maxlength' => 7,
         '#size' => 6,
-        '#default_value' => $scheduled ? $hours : '00:00',
+        '#default_value' => $hours,
         '#element_validate' => array('_workflow_transition_form_element_validate_time'),
       );
       $element['workflow']['workflow_scheduled_date_time']['workflow_scheduled_timezone'] = array(
@@ -262,9 +261,12 @@ class WorkflowTransitionForm { // extends FormBase {
       '#required' => $settings_comment == '2',
       '#title' => t('Workflow comment'),
       '#description' => t('A comment to put in the workflow log.'),
-      '#default_value' => $comment,
+      '#default_value' => $transition->comment,
       '#rows' => 2,
     );
+
+    // Add the fields from the WorkflowTransition.
+    //    field_attach_form('WorkflowTransition', $transition, $element['workflow'], $form_state);
 
     // Finally, add Submit buttons/Action buttons.
     // Either a default 'Submit' button is added, or a button per permitted state.
@@ -402,7 +404,7 @@ class WorkflowTransitionForm { // extends FormBase {
     else {
       // For a Node API form, only contrib fields need to be filled.
       // No updating of the node itself.
-      // (unless we need to record the stamp.)
+      // (Unless we need to record the timestamp.)
 
       // Add the $form_state to the $items, so we can do a getTransition() later on.
       $items[0]['workflow'] = $form_state['input'];
@@ -536,9 +538,9 @@ class WorkflowTransitionForm { // extends FormBase {
           . ' '
           . $schedule['workflow_scheduled_timezone'];
 
-        if ($stamp = strtotime($scheduled_date_time)) {
+        if ($timestamp = strtotime($scheduled_date_time)) {
           $transition = new WorkflowScheduledTransition();
-          $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $stamp, $comment);
+          $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, $timestamp, $comment);
         }
         else {
           $transition = NULL;

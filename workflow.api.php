@@ -221,3 +221,11 @@ function workflowfield_form_alter(&$form, $form_state, $form_id) {
   // Get the current state and act upon it.
   // .. copy code from the hook above.
 }
+
+/*
+ * Implements hook_field_attach_form().
+ */
+function workflow_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode){
+  // @see http://drupal.stackexchange.com/questions/101857/difference-between-hook-form-alter-and-hook-field-attach-form
+}
+
