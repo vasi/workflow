@@ -137,8 +137,9 @@ class WorkflowTransitionForm { // extends FormBase {
 
     // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
     // Make it uniquer by adding the field name, or else the scheduling of
-    // multiple workflow_fields is not indendent.
-    $form_id = $form_state['build_info']['form_id'] . '_' . $field_name;
+    // multiple workflow_fields is not independent of eachother.
+    // In some cases, the field_id now appears twice in the $form_id. Soit.
+    $form_id = implode('_', array ($form_state['build_info']['form_id'], $field_id));
 
     // Prepare a UI wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container'; // 'fieldset';

@@ -35,7 +35,7 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field_name = $field['field_name'];
     $field_id = $field['id'];
     $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
-    if (!$field['id']) {
+    if (!$field_id) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
       $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
       $field['settings']['widget']['current_status'] = TRUE;
@@ -50,7 +50,8 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
   // Set a proper weight, which works for Workflow Options in select list AND action buttons.
   $form['workflow_current_state']['#weight'] = -0.005;
-  $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
+  $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
+  $form += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
   $output = drupal_render($form);
 
   // Show the history table.

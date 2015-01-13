@@ -619,3 +619,6 @@ Issue #2340011: Fixed Error "Workflow 0 cannot be loaded" when using Workflow No
 Issue #2401481: Fixed error when creating a Transition, parameter values() is discarded
 Issue #2401493: Added $transition->getTimestamp()
 Issue #2401511: Renamed hook-functions in workflownode module
+Issue #2406175: Implemented a WorkflowTransitionForm form object
+Issue #1559680: Make Transitions fieldable entities -1-
+Issue #2406175: Uniformed creation of form_id

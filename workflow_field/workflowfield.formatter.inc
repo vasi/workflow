@@ -33,6 +33,7 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
   $current_state = workflow_state_load_single($current_sid);
 
+  $list_element = array();
   if ($field_name) {
     // First compose the current value with the normal formatter from list.module.
     $list_element = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
@@ -66,7 +67,8 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for WorkflowDefaultWidget.
   $entity_id = entity_id($entity_type, $entity);
-  $element += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
+  $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
+  $element += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
 
   return $element;
 }

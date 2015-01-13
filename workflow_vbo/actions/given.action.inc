@@ -200,7 +200,8 @@ function workflow_vbo_given_state_action_form(array $context) {
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for WorkflowDefaultWidget.
   // $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance);
-  $form += drupal_get_form(implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id)), $field, $instance, $entity_type, $entity);
+  $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
+  $form += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
 
   if (!$entity) {
     // For the Advanced actions form on admin/config/system/actions, 
