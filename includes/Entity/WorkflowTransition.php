@@ -24,6 +24,7 @@ class WorkflowTransition extends Entity {
   public $entity_id; // Use WorkflowTransition->getEntity() to fetch this.
   public $nid; // @todo D8: remove $nid, use $entity_id. (requires conversion of Views displays.)
   // Transition data.
+  // public $hid = 0;
   public $wid = 0;
   public $old_sid = 0;
   public $new_sid = 0;
@@ -61,9 +62,11 @@ class WorkflowTransition extends Entity {
     // Please be aware that $entity_type and $entityType are different things!
     parent::__construct($values, $entityType);
 
-    // This transition is not scheduled,
-    $this->is_scheduled = FALSE; // This transition is not scheduled,
-    $this->is_executed = NULL;   // But we do not know if it is executed, yet.
+    $this->hid = isset($this->hid) ? $this->hid : 0;
+    // This transition is not scheduled
+    $this->is_scheduled = FALSE;
+    // This transition is not executed, if it has no hid, yet, upon load.
+    $this->is_executed = ($this->hid > 0);
 
     // Fill the 'new' fields correctly. @todo D8: rename these fields in db table.
     $this->entity_id = $this->nid;
@@ -77,13 +80,15 @@ class WorkflowTransition extends Entity {
   /**
    * Helper function for __construct. Used for all children of WorkflowTransition (aka WorkflowScheduledTransition)
    */
-  public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp, $comment) {
-
+  public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid = NULL, $stamp = REQUEST_TIME, $comment = '') {
     // Normally, the values are passed in an array, and set in parent::__construct, but we do it ourselves.
     // (But there is no objection to do it there.)
 
+    global $user;
+
     $this->entity_type = (!$entity_type) ? $this->entity_type : $entity_type;
     $this->field_name = (!$field_name) ? $this->field_name : $field_name;
+    $uid = ($uid === NULL) ? $user->uid : $uid;
 
     // If constructor is called with new() and arguments.
     // Load the supplied entity.
@@ -133,7 +138,7 @@ class WorkflowTransition extends Entity {
   }
 
 //  protected function defaultUri() {
-//    return array('path' => 'admin/config/workflow/workflow/transitions/' . $this->hid);
+//    return array('path' => 'workflow_transition/' . $this->hid);
 //  }
 
   /**

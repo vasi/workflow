@@ -341,12 +341,10 @@ function _workflownode_form_alter(&$form, &$form_state, $form_id) {
     // N.B. This part is replicated in hook_node_view and workflow_tab_page.
     if ($workflow) {
       $field = _workflow_info_field($field_name, $workflow);
-      // $field = reset(_workflow_info_fields($entity, $entity_type));
       $field_name = $field['field_name'];
       $field_id = $field['id'];
       $instance = field_info_instance($entity_type, $field_name, $bundle);
-
-      if (!$field['id']) {
+      if (!$field_id) {
         // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
         $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab'];
         $field['settings']['widget']['current_status'] = TRUE;

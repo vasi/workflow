@@ -34,8 +34,10 @@ class WorkflowTransitionForm { // extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return parent::getFormId();
-//    return 'workflow_transition_form';
+    $field = $this->field;
+    $entity_id = entity_id($this->entity_type, $this->entity);
+
+    return implode('_', array('workflow_transition_form', $this->entity_type, $entity_id, $field['id']));
   }
 
   /**
@@ -43,26 +45,155 @@ class WorkflowTransitionForm { // extends FormBase {
    *
    * @param array $form
    * @param array $form_state
+   * @param WorkflowTransition
+   *  The Transition to be edited, created.
    *
-   * @return the enhanced form structure.
+   * @return
+   *  The enhanced form structure.
    */
-  public function buildForm(array $form, array $form_state) {
+  public function buildForm(array $form, array &$form_state) {
     global $user;
 
-    $field = $this->field;
-    $instance = $this->instance;
-    $field_name = $field['field_name'];
-    $field_id = $field['id'];
+    $transition = NULL;
+    if (isset($form_state['WorkflowTransition'])) {
+      // If provided, get data from WorkflowTransition.
+      // This happens when calling entity_ui_get_form(), like in the
+      // WorkflowTransition Comment Edit form.
+      $transition = $form_state['WorkflowTransition'];
 
-    $entity = $this->entity;
-    $entity_type = $this->entity_type;
-    $entity_id = ($entity) ? entity_id($entity_type, $entity) : 0;
+      $this->entity = $entity = $transition->getEntity();
+      $this->entity_type = $entity_type = $transition->entity_type;
+      // Figure out the $entity's bundle and id.
+      list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
+      $entity_id = entity_id($entity_type, $entity);
 
-    // $field['settings']['wid'] can be numeric or named.
-    // $wid may not be specified.
-    $wid = $field['settings']['wid'];
-    $workflow = workflow_load_single($wid);
+      $wid = $transition->wid;
+      $workflow = workflow_load_single($wid);
+
+      // Show the current state and the Workflow form to allow state changing.
+      // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo, workflow-edit.
+      // @todo: support multiple workflows per entity.
+      // For workflow_tab_page with multiple workflows, use a separate view. See [#2217291].
+      if (!$wid) {
+        $this->field = $field = array();
+        $field_name = '';
+        $field_id = 0;
+        $this->instance = $instance = array();
+      }
+      else {
+        $this->field = $field = _workflow_info_field($transition->field_name, $workflow);
+        $field_name = $field['field_name'];
+        $field_id = $field['id'];
+        $this->instance = $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
+      }
+    }
+    else {
+      // Get data from normal parameters.
+      $entity = $this->entity;
+      $entity_type = $this->entity_type;
+      $entity_id = ($entity) ? entity_id($entity_type, $entity) : 0;
+
+      $field = $this->field;
+      $field_name = $field['field_name'];
+      $field_id = $field['id'];
+      $instance = $this->instance;
+
+      // $field['settings']['wid'] can be numeric or named.
+      // $wid may not be specified.
+      $wid = $field['settings']['wid'];
+      $workflow = workflow_load_single($wid);
+    }
+
+    $force = FALSE;
+    // Set 'grouped' option. Only valid for select list and undefined/multiple workflows.
+    $settings_options_type = $field['settings']['widget']['options'];
+    $grouped = ($settings_options_type == 'select');
+    if ($transition) {
+      // If a Transition is passed as parameter, use this.
+      $current_state = $transition->getOldState();
+      if ($transition->isExecuted()) {
+        // The states may not be changed anymore.
+        $options = array();
+      }
+      else {
+        $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, $force);
+      }
+      $show_widget = $current_state->showWidget($entity_type, $entity, $field_name, $user, $force);
+      $default_value = $transition->new_sid;
+      // You may not schedule an existing Transition.
+      if ($transition->isExecuted()) {
+        $field['settings']['widget']['schedule'] = FALSE;
+      }
+    }
+    elseif (!$entity) {
+      // Sometimes, no entity is given. We encountered the following cases:
+      // - the Field settings page,
+      // - the VBO action form;
+      // - the Advance Action form on admin/config/system/actions;
+      // If so, show all options for the given workflow(s).
+      $options = workflow_get_workflow_state_names($wid, $grouped, $all = FALSE);
+      $show_widget = TRUE;
+      $default_value = isset($items[0]['value']) ? $items[0]['value'] : '0';
+    }
+    else {
+      $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+      if ($current_state = workflow_state_load_single($current_sid)) {
+        $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, $force);
+        $show_widget = $current_state->showWidget($entity_type, $entity, $field_name, $user, $force);
+        // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
+        $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
+      }
+      else {
+        // We are in trouble! A message is already set in workflow_node_current_state().
+        $options = array();
+        $show_widget = FALSE;
+        $default_value = $current_sid;
+      }
+
+      // Get the scheduling info. This may change the $default_value on the Form.
+      // Read scheduled information, only if an entity exists.
+      // Technically you could have more than one scheduled, but this will only add the soonest one.
+      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name, 1) as $transition) {
+        $default_value = $transition->new_sid;
+        break;
+      }
+    }
+    // Prepare a new transition, if still not provided.
+    if (!$transition) {
+      $transition = new WorkflowTransition(array(
+        'old_sid' => $default_value,
+        'stamp' => REQUEST_TIME,
+      ));
+    }
+
+    // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
+    // Make it uniquer by adding the field name, or else the scheduling of
+    // multiple workflow_fields is not independent of eachother.
+    // IF we are truely on a Transition form (so, not a Node Form with widget)
+    // then change the form id, too.
+    $form_id = $this->getFormId();
+    if ($form_state['build_info']['base_form_id'] == 'workflow_transition_wrapper_form') {
+      $form_state['build_info']['base_form_id'] = 'workflow_transition_form';
+    }
+    if ($form_state['build_info']['base_form_id'] == 'workflow_transition_form') {
+      $form_state['build_info']['form_id'] = $form_id;
+    }
+
     $workflow_label = $workflow ? check_plain(t($workflow->label())) : '';
+
+    // Change settings locally.
+    if (!$field_name) {
+      // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
+      if ($form_state['build_info']['base_form_id'] == 'node_form') {
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_node']) ? $workflow->options['comment_log_node'] : 1; // vs. ['comment_log_tab'];
+        $field['settings']['widget']['current_status'] = TRUE;
+      }
+      else {
+        $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
+        $field['settings']['widget']['current_status'] = TRUE;
+      }
+    }
+
 
     // Capture settings to format the form/widget.
     $settings_title_as_name = !empty($field['settings']['widget']['name_as_title']);
@@ -80,66 +211,10 @@ class WorkflowTransitionForm { // extends FormBase {
         $settings_schedule = !($entity && !$entity_id);
       }
     }
-
     $settings_schedule_timezone = !empty($field['settings']['widget']['schedule_timezone']);
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'];
 
-    $current_sid = FALSE;
-    $options = array();
-    if (!$entity) {
-      // Sometimes, no entity is given. We encountered the following cases:
-      // - the Field settings page,
-      // - the VBO action form;
-      // - the Advance Action form on admin/config/system/actions;
-      // If so, show all options for the given workflow(s).
-
-      // Set 'grouped' option. This is only valid for select list.
-      $grouped = ($settings_options_type == 'select');
-
-      $options = workflow_get_workflow_state_names($wid, $grouped, $all = FALSE);
-      $show_widget = TRUE;
-      $default_value = isset($items[0]['value']) ? $items[0]['value'] : '0';
-    }
-    else {
-      $force = FALSE;
-      $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
-      if ($current_state = workflow_state_load_single($current_sid)) {
-        // $grouped = TRUE; // Grouped options only makes sense for multiple workflows.
-        $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, $force);
-        $show_widget = $current_state->showWidget($entity_type, $entity, $field_name, $user, $force);
-
-        // Determine the default value. If we are in CreationState, use a fast alternative for $workflow->getFirstSid().
-        $default_value = $current_state->isCreationState() ? key($options) : $current_sid;
-      }
-      else {
-        // We are in trouble! A message is already set in workflow_node_current_state().
-        $show_widget = FALSE;
-        $default_value = $current_sid;
-      }
-    }
-
-    // Get the scheduling info. This may change the $current_sid on the Form.
-    $transition = new WorkflowTransition(
-      array(
-        'old_sid' => $default_value,
-        'stamp' => REQUEST_TIME,
-      )
-    );
-    if ($settings_schedule && $entity) {
-      // Read scheduled information, only if an entity exists.
-      // Technically you could have more than one scheduled, but this will only add the soonest one.
-      foreach (WorkflowScheduledTransition::load($entity_type, $entity_id, $field_name, 1) as $transition) {
-        $default_value = $transition->new_sid;
-        break;
-      }
-    }
-
-    // Fetch the form ID. This is unique for each entity, to allow multiple form per page (Views, etc.).
-    // Make it uniquer by adding the field name, or else the scheduling of
-    // multiple workflow_fields is not independent of eachother.
-    // In some cases, the field_id now appears twice in the $form_id. Soit.
-    $form_id = implode('_', array ($form_state['build_info']['form_id'], $field_id));
 
     // Prepare a UI wrapper. This might be a fieldset.
     $element['workflow']['#type'] = 'container'; // 'fieldset';
@@ -170,7 +245,12 @@ class WorkflowTransitionForm { // extends FormBase {
       '#value' => $form_id,
     );
 
-    // First of all, we add the default value in the place were normal fields
+    // Save the hid, when editing an existing transition.
+    $element['workflow']['workflow_hid'] = array(
+      '#type' => 'hidden',
+      '#value' => $transition->hid,
+    );
+        // First of all, we add the default value in the place were normal fields
     // have it. This is to cater for 'preview' of the entity.
     $element['#default_value'] = $default_value;
     // Decide if we show a widget or a formatter.
@@ -334,17 +414,16 @@ class WorkflowTransitionForm { // extends FormBase {
   public function submitForm(array &$form, array &$form_state, array &$items) {
     // $items is a D7 parameter.
     // @todo: clean this code up. It is the result of glueing code together.
-
     global $user; // @todo #2287057: verify if submit() really is only used for UI. If not, $user must be passed.
-
-    $field = $this->field;
-    $instance = $this->instance;
-    $field_name = $field['field_name'];
-    $field_id = $field['id'];
 
     $entity = $this->entity;
     $entity_type = $this->entity_type;
     $entity_id = ($entity) ? entity_id($entity_type, $entity) : 0;
+
+    $field = $this->field;
+    $field_name = $field['field_name'];
+    $field_id = $field['id'];
+    $instance = $this->instance;
 
     // Retrieve the data from the form.
     if (isset($form_state['values']['workflow_field'])) {
@@ -372,6 +451,7 @@ class WorkflowTransitionForm { // extends FormBase {
     $langcode = _workflow_metadata_workflow_get_properties($entity, array(), 'langcode', $entity_type, $field_name);
 
     if (!$entity) {
+      // E.g., on VBO form.
     }
     elseif ($field_name) {
       // Save the entity, but only if we were not in edit mode.
@@ -513,11 +593,18 @@ class WorkflowTransitionForm { // extends FormBase {
           $new_sid = $workflow->getFirstSid($this->entity_type, $this->entity, $field_name, $user, FALSE);
         }
       }
-
+      // If an existing Transition has been edited, $hid is set.
+      $hid = isset($items[0]['workflow']['workflow_hid']) ? $items[0]['workflow']['workflow_hid'] : '';
+      // Get the comment.
       $comment = isset($items[0]['workflow']['workflow_comment']) ? $items[0]['workflow']['workflow_comment'] : '';
       // Remember, the workflow_scheduled element is not set on 'add' page.
       $scheduled = !empty($items[0]['workflow']['workflow_scheduled']);
-      if (!$scheduled) {
+      if ($hid) {
+        // We are editing an existing transition. Only comment may be changed.
+        $transition = workflow_transition_load($hid);
+        $transition->comment = $comment;
+      }
+      elseif (!$scheduled) {
         $transition = new WorkflowTransition();
         $transition->setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $user->uid, REQUEST_TIME, $comment);
       }

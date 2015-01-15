@@ -185,7 +185,7 @@ function workflow_vbo_given_state_action_form(array $context) {
 
     // Hide the submit button. VBO has its own 'next' button.
     $instance['widget']['settings']['submit_function'] = '';
-    if (!$field['id']) {
+    if (!$field_id) {
       // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
       $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
       $field['settings']['widget']['current_status'] = TRUE;

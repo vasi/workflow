@@ -23,7 +23,7 @@ class WorkflowScheduledTransition extends WorkflowTransition {
     $this->is_executed = FALSE;
   }
 
-  public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $scheduled, $comment) {
+  public function setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid = NULL, $scheduled = REQUEST_TIME, $comment = '') {
     // A scheduled transition does not have a timestamp, yet.
     $stamp = 0;
     parent::setValues($entity_type, $entity, $field_name, $old_sid, $new_sid, $uid, $stamp, $comment);

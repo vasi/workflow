@@ -63,44 +63,48 @@ function workflow_permission() {
 }
 
 /**
- * Implements hook_menu().
- *
- * hook_menu() in workflownode sets a '/workflow' menu item for entity type 'node'.
- * hook_menu_alter() in workflowfield sets a '/workflow' menu item for each relevant entity type.
- */
-function workflow_menu() {
-  if (!module_exists('workflownode')) {
-    return array();
-  }
-
-  $type = 'node';
-  $items['node/%node/workflow'] = array(
-    'title' => 'Workflow',
-    'page callback' => 'workflow_tab_page',
-    'page arguments' => array($type, 1),
-    'access callback' => 'workflow_tab_access',
-    'access arguments' => array($type, 1),
-    'file' => 'workflow.pages.inc',
-    'file path' => drupal_get_path('module', 'workflow'),
-    'weight' => 2,
-    'type' => MENU_LOCAL_TASK,
-    'module' => 'workflow',
-  );
-  return $items;
-}
-
-/**
  * Implements hook_menu_alter().
  *
  * hook_menu() in workflownode sets a '/workflow' menu item for entity type 'node'.
  * hook_menu_alter() in workflowfield sets a '/workflow' menu item for each relevant entity type.
  */
 function workflow_menu_alter(&$items) {
+  // @todo: Move menu-items to a UI Controller class via workflow.entity.inc:
+
+  $items['workflow_transition/%workflow_transition/edit'] = array(
+    // %workflow_transition maps to function workflow_transition_load()
+    'title' => 'Edit workflow log comment',
+    'description' => 'Edit workflow transition comment.',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('workflow_transition_form_wrapper', 1),
+    'page callback'        => 'entity_ui_get_form',
+    // @todo: below parameter should be the machine_name of the entity type.
+    'page arguments'    => array('WorkflowTransition', 1),
+    'access arguments' => array('edit workflow comment'),
+//    'file' => 'workflow.transition.page.inc',
+    'menu wildcard' => '%workflow_transition',
+  );
+
+  if (module_exists('workflownode')) {
+    $type = 'node';
+    $items['node/%node/workflow'] = array(
+      'title' => 'Workflow',
+      'page callback' => 'workflow_tab_page',
+      'page arguments' => array($type, 1),
+      'access callback' => 'workflow_tab_access',
+      'access arguments' => array($type, 1),
+      'file' => 'workflow.pages.inc',
+      'file path' => drupal_get_path('module', 'workflow'),
+      'weight' => 2,
+      'type' => MENU_LOCAL_TASK,
+      'module' => 'workflow',
+    );
+  }
+
   if (!module_exists('workflowfield')) {
     return;
   }
 
-  // Basic menu item.
   $menu_item = array(
     'title' => 'Workflow',
     'page callback' => 'workflow_tab_page',
@@ -396,10 +400,14 @@ function workflow_user_role_insert($role) {
  */
 function workflow_forms($form_id, $args) {
   $forms = array();
-
   if (strpos($form_id, 'workflow_transition_form_') !== FALSE) {
     $forms[$form_id] = array('callback' => 'workflow_transition_form');
   }
+  // For the 'edit a comment' form.
+  if (strpos($form_id, 'WorkflowTransition_edit_') !== FALSE) {
+    $forms[$form_id] = array('callback' => 'workflow_transition_wrapper_form');
+  }
+
   return $forms;
 }
 
@@ -453,10 +461,24 @@ function workflow_state_formatter($entity_type, $entity, $field = array(), $inst
 }
 
 /**
- * Form builder. Allow workflow state change and scheduling from workflow tab.
+ * Form builder. Allow workflow comment change from menu item/Views link.
+ *
+ * @todo D8: This is used, because the D7 form workflow_transition_form
+ * has the wrong parameters for the EntityUIController.
+ * But changing it breaks backwards compatibility.
  */
-function workflow_transition_form(array $form, array &$form_state, array $field, $instance, $entity_type, $entity) {
+function workflow_transition_wrapper_form(array $form, array &$form_state, $transition, $op, $form_id) {
+  // Override the default function 'entity_ui_controller_form_<op>'; we're not ready for that yet.
+  $form['#validate'] = array('workflow_transition_form_validate');
+  $form['#submit'] = array('workflow_transition_form_submit');
 
+  // The Workflow transition is provided as such:
+  // $form_state['entity_type'] = 'WorkflowTransition';
+  // $form_state['WorkflowTransition'] = (Object) WorkflowTransition;
+  return workflow_transition_form($form, $form_state, array(), array(), '', NULL);
+}
+
+function workflow_transition_form(array $form, array &$form_state, array $field, $instance, $entity_type, $entity) {
   if (!isset ($instance['widget']['settings']['submit_function'])) {
     $instance['widget']['settings']['submit_function'] = 'workflow_transition_form_submit';
   }
@@ -565,7 +587,9 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
     $element['workflow']['workflow_sid']['#type'] = 'hidden';
 
     // Get the min weight for our buttons.
-    $min_weight = $option_weight = $submit_action['#weight'] - count($workflow_form['workflow_sid']['#options']);
+    $option_weight = isset($submit_action['#weight']) ? $submit_action['#weight'] : 0;
+    $option_weight = $option_weight - count($workflow_form['workflow_sid']['#options']);
+    $min_weight = $option_weight;
     foreach ($workflow_form['workflow_sid']['#options'] as $sid => $option_name) {
       // Make the workflow button act exactly like the original submit button.
 
@@ -613,6 +637,18 @@ function workflow_form_alter(&$form, &$form_state, $form_id) {
     // Remove the options element.
     unset($workflow_form['workflow_sid']);
   }
+}
+
+/**
+ * Submit callback function for the Workflow Form / DefaultWidget.
+ *
+ * Validate target state and either save a transition immediately or schedule
+ * a transition to be executed later by cron.
+ */
+function workflow_transition_form_validate($form, &$form_state) {
+  // Empty. But required.
+  // $transition_form = new WorkflowTransitionForm($field, $instance, $entity_type, $entity);
+  // return $transition_form->submitForm($form, $form_state, $items);
 }
 
 /**

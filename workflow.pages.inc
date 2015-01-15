@@ -10,6 +10,9 @@ define('MARK_STATE_IS_DELETED', '*');
 
 /**
  * Menu callback. Display workflow summary of a node.
+ *
+ * N.B. When having multiple workflows per bundle, use Views display
+ *      'Workflow history per entity' instead!
  */
 function workflow_tab_page($entity_type, $entity = NULL) {
   drupal_set_title(entity_label($entity_type, $entity));
@@ -20,29 +23,33 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
   $entity_id = entity_id($entity_type, $entity);
 
-  // When having multiple workflows per bundle, use Views display
-  // 'Workflow history per entity' instead!
-  $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
+  // Read the last transition. This does not support multiple, translated workflows per entity.
+  $last_transition = workflow_transition_load_single($entity_type, $entity_id, NULL);
+  if ($last_transition) {
+    $field_name = $last_transition->field_name;
+    $workflow = $last_transition->getWorkflow();
+  }
+  else {
+    // When having multiple workflows per bundle, use Views display
+    // 'Workflow history per entity' instead!
+    $field_name = NULL;
+    $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
+  }
+  // Get the current sid. $field_name is updated with relevant value.
+  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
   // Show the current state and the Workflow form to allow state changing.
-  // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo.
+  // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo, transition_edit.
   // @todo: support multiple workflows per entity.
   // For workflow_tab_page with multiple workflows, use a separate view. See [#2217291].
-  if ($workflow) {
-    // $field = _workflow_info_field($field_name, $workflow);
-    $field_info = _workflow_info_fields($entity, $entity_type, $entity_bundle);
-    $field = reset($field_info);
-    $field_name = $field['field_name'];
-    $field_id = $field['id'];
-    $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
-    if (!$field_id) {
-      // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
-      $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
-      $field['settings']['widget']['current_status'] = TRUE;
-    }
+  $field = _workflow_info_field($field_name, $workflow);
+  $field_id = $field['id'];
+  $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
+  if (!$field_id) {
+    // This is a Workflow Node workflow. Set widget options as in v7.x-1.2
+    $field['settings']['widget']['comment'] = isset($workflow->options['comment_log_tab']) ? $workflow->options['comment_log_tab'] : 1; // vs. ['comment_log_node'];
+    $field['settings']['widget']['current_status'] = TRUE;
   }
-
-  $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
 
   // Add the form/widget to the formatter, and include the nid and field_id in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
@@ -50,9 +57,16 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
   // Set a proper weight, which works for Workflow Options in select list AND action buttons.
   $form['workflow_current_state']['#weight'] = -0.005;
+
   $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
   $form += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
+
+  //  $transition = new WorkflowTransition();
+  //  $transition->setValues($entity_type, $entity, $field_name, $current_sid, $current_sid);
+  //  $form_id = 'WorkflowTransition';
+  //  $form += entity_ui_get_form($form_id, $transition);
   $output = drupal_render($form);
+
 
   // Show the history table.
   $rows = array();
@@ -169,13 +183,12 @@ function theme_workflow_history_table_row($variables) {
   $old_state_name = $variables['old_state_name'];
   $state_name = $variables['state_name'];
   $transition = $variables['transition'];
-  $account = user_load($transition->uid);
   $row = array(
     'data' => array(
       array('data' => format_date($transition->stamp), 'class' => array('timestamp')),
       array('data' => $old_state_name, 'class' => array('previous-state-name')),
       array('data' => $state_name, 'class' => array('state-name')),
-      array('data' => theme('username', array('account' => $account)), 'class' => array('user-name')),
+      array('data' => theme('username', array('account' => $transition->getUser())), 'class' => array('user-name')),
       array('data' => filter_xss($transition->comment), 'class' => array('log-comment')),
       $variables['extra'],
     ),
