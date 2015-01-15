@@ -250,7 +250,7 @@ class WorkflowTransitionForm { // extends FormBase {
       '#type' => 'hidden',
       '#value' => $transition->hid,
     );
-        // First of all, we add the default value in the place were normal fields
+    // First of all, we add the default value in the place were normal fields
     // have it. This is to cater for 'preview' of the entity.
     $element['#default_value'] = $default_value;
     // Decide if we show a widget or a formatter.
@@ -260,6 +260,13 @@ class WorkflowTransitionForm { // extends FormBase {
       return $element;  // <---- exit.
     }
 
+    if ($transition->isScheduled()) {
+      // Show the current state if a transition is scheduled.
+      $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
+      // Set a proper weight, which works for Workflow Options in select list AND action buttons.
+      $form['workflow_current_state']['#weight'] = -0.005;
+
+    }
     // The 'options' widget. May be removed later if 'Action buttons' are chosen.
     $element['workflow']['workflow_sid'] = array(
       '#type' => $settings_options_type,

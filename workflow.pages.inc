@@ -51,13 +51,6 @@ function workflow_tab_page($entity_type, $entity = NULL) {
     $field['settings']['widget']['current_status'] = TRUE;
   }
 
-  // Add the form/widget to the formatter, and include the nid and field_id in the form id,
-  // to allow multiple forms per page (in listings, with hook_forms() ).
-  // Ultimately, this is a wrapper for WorkflowDefaultWidget.
-  $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
-  // Set a proper weight, which works for Workflow Options in select list AND action buttons.
-  $form['workflow_current_state']['#weight'] = -0.005;
-
   $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
   $form += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
 
