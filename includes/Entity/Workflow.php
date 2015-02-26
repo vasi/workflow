@@ -260,7 +260,7 @@ class Workflow extends Entity {
       $message = t('Please maintain Workflow %workflow on its <a href="@url">settings</a> page.',
         array(
           '%workflow' => $this->getName(),
-          '@url' => url('admin/config/workflow/workflow/edit/' . $this->wid),
+          '@url' => url('admin/config/workflow/workflow/manage/' . $this->wid),
         )
       );
       drupal_set_message($message, 'warning');

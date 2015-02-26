@@ -623,3 +623,4 @@ Issue #2406175: Implemented a WorkflowTransitionForm form object
 Issue #1559680: Make Transitions fieldable entities -1-
 Issue #2406175: Uniformed creation of form_id
 Issue #2406175: Moved WorkfowTransitionEdit to th WorkflowTransitionForm form object
+Issue #2441821: Fixed wrong link
