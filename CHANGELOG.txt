@@ -626,3 +626,4 @@ Issue #2406175: Moved WorkfowTransitionEdit to th WorkflowTransitionForm form ob
 Issue #2441821: Fixed wrong link
 Issue #2441821: Fixed error
 Issue #2441821: Better determination of field_name
+Issue #2421157: Added Block for viewing/changing a Workflow State
