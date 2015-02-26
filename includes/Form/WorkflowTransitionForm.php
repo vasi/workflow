@@ -462,8 +462,9 @@ class WorkflowTransitionForm { // extends FormBase {
     elseif ($field_name) {
       // Save the entity, but only if we were not in edit mode.
       // Perhaps there is a better way, but for now we use 'changed' property.
+      // Also test for 'is_new'. When Migrating content, the 'changed' property may be set externally.
       // Caveat: Some entities do not have 'changed' property set.
-      if ((isset($entity->changed)) && $entity->changed == REQUEST_TIME) {
+      if ((!empty($entity->is_new)) || (isset($entity->changed) && $entity->changed == REQUEST_TIME)) {
         // We are in edit mode. No need to save the entity explicitly.
 
 //        // Add the $form_state to the $items, so we can do a getTransition() later on.
