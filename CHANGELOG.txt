@@ -614,7 +614,7 @@ Issue #2373103: Fixed Notice 'Undefined index' in list_field_formatter_view() wh
 Issue #2308677: Fixed regression: 'Workflow current: Current state' is missing when creating a contextual filter
 Issue #2400211: Added Views support for non-node entity types
 
-Since 7.x-2.4
+Since 7.x-2.5
 Issue #2340011: Fixed Error "Workflow 0 cannot be loaded" when using Workflow Node and Workflow Rules
 Issue #2401481: Fixed error when creating a Transition, parameter values() is discarded
 Issue #2401493: Added $transition->getTimestamp()
@@ -624,3 +624,4 @@ Issue #1559680: Make Transitions fieldable entities -1-
 Issue #2406175: Uniformed creation of form_id
 Issue #2406175: Moved WorkfowTransitionEdit to th WorkflowTransitionForm form object
 Issue #2441821: Fixed wrong link
+Issue #2441821: Fixed error
