@@ -899,11 +899,26 @@ function workflow_get_sid_label($sid) {
  *   The ID of the current state.
  */
 function workflow_node_current_state($entity, $entity_type = 'node', &$field_name = NULL) {
+  // @todo D8: return State object, not $sid integer.
   $sid = FALSE;
   $langcode = LANGUAGE_NONE;
 
   if (!$entity) {
     return $sid;
+  }
+
+  // If $field_name is not known, yet, determine it.
+  if ($field_name === NULL) {
+    $fields = _workflow_info_fields($entity, $entity_type);
+    if (count($fields)) {
+      // Workflow Field API: if $field_name is not known, yet, determine it.
+      $field = reset($fields);
+      $field_name = $field['field_name'];
+    }
+    else {
+      // Workflow Node API.
+      $field_name = '';
+    }
   }
 
   if ($field_name === '') {
@@ -913,15 +928,6 @@ function workflow_node_current_state($entity, $entity_type = 'node', &$field_nam
     $sid = isset($entity->workflow) ? $entity->workflow : FALSE;
   }
   else {
-    // Workflow Field API: if $field_name is not known, yet, determine it.
-    if ($field_name === NULL) {
-      $fields = _workflow_info_fields($entity, $entity_type);
-      if (count($fields)) {
-        $field = reset($fields);
-        $field_name = $field['field_name'];
-      }
-    }
-
     // At this point, we may have redetermined and altered the field_name.
     if (!$sid && $field_name !== NULL) {
       $wrapper = entity_metadata_wrapper($entity_type, $entity);
@@ -943,6 +949,7 @@ function workflow_node_current_state($entity, $entity_type = 'node', &$field_nam
  * Gets the previous state ID of a given entity.
  */
 function workflow_node_previous_state($entity, $entity_type, $field_name) {
+  // @todo D8: return State object, not $sid integer.
   $sid = FALSE;
   $langcode = LANGUAGE_NONE;
 

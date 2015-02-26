@@ -18,25 +18,17 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   drupal_set_title(entity_label($entity_type, $entity));
 
   $form = array();
+  $field_name = NULL;
+  $workflow = NULL;
 
   // Figure out the $entity's bundle and id.
   list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
   $entity_id = entity_id($entity_type, $entity);
 
-  // Read the last transition. This does not support multiple, translated workflows per entity.
-  $last_transition = workflow_transition_load_single($entity_type, $entity_id, NULL);
-  if ($last_transition) {
-    $field_name = $last_transition->field_name;
-    $workflow = $last_transition->getWorkflow();
-  }
-  else {
-    // When having multiple workflows per bundle, use Views display
-    // 'Workflow history per entity' instead!
-    $field_name = NULL;
-    $workflow = workflow_get_workflows_by_type($entity_bundle, $entity_type);
-  }
   // Get the current sid. $field_name is updated with relevant value.
   $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
+  $current_state = workflow_state_load_single($current_sid);
+  $workflow = $current_state->getWorkflow();
 
   // Show the current state and the Workflow form to allow state changing.
   // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo, transition_edit.
@@ -54,10 +46,6 @@ function workflow_tab_page($entity_type, $entity = NULL) {
   $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
   $form += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
 
-  //  $transition = new WorkflowTransition();
-  //  $transition->setValues($entity_type, $entity, $field_name, $current_sid, $current_sid);
-  //  $form_id = 'WorkflowTransition';
-  //  $form += entity_ui_get_form($form_id, $transition);
   $output = drupal_render($form);
 
 

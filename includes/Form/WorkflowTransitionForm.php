@@ -61,31 +61,23 @@ class WorkflowTransitionForm { // extends FormBase {
       // WorkflowTransition Comment Edit form.
       $transition = $form_state['WorkflowTransition'];
 
-      $this->entity = $entity = $transition->getEntity();
-      $this->entity_type = $entity_type = $transition->entity_type;
+      $field_name = $transition->field_name;
+      $workflow = $transition->getWorkflow();
+      $wid = $transition->wid;
+
+      $entity = $this->entity = $transition->getEntity();
+      $entity_type = $this->entity_type = $transition->entity_type;
       // Figure out the $entity's bundle and id.
       list($entity_id, , $entity_bundle) = entity_extract_ids($entity_type, $entity);
       $entity_id = entity_id($entity_type, $entity);
 
-      $wid = $transition->wid;
-      $workflow = workflow_load_single($wid);
-
       // Show the current state and the Workflow form to allow state changing.
-      // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo, workflow-edit.
+      // N.B. This part is replicated in hook_node_view, workflow_tab_page, workflow_vbo, transition_edit.
       // @todo: support multiple workflows per entity.
       // For workflow_tab_page with multiple workflows, use a separate view. See [#2217291].
-      if (!$wid) {
-        $this->field = $field = array();
-        $field_name = '';
-        $field_id = 0;
-        $this->instance = $instance = array();
-      }
-      else {
-        $this->field = $field = _workflow_info_field($transition->field_name, $workflow);
-        $field_name = $field['field_name'];
-        $field_id = $field['id'];
-        $this->instance = $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
-      }
+      $field = _workflow_info_field($field_name, $workflow);
+      $field_id = $field['id'];
+      $instance = field_info_instance($entity_type, $field_name, $entity_bundle);
     }
     else {
       // Get data from normal parameters.
@@ -172,11 +164,18 @@ class WorkflowTransitionForm { // extends FormBase {
     // IF we are truely on a Transition form (so, not a Node Form with widget)
     // then change the form id, too.
     $form_id = $this->getFormId();
-    if ($form_state['build_info']['base_form_id'] == 'workflow_transition_wrapper_form') {
-      $form_state['build_info']['base_form_id'] = 'workflow_transition_form';
+    if (!isset($form_state['build_info']['base_form_id'])) {
+      // Strange: on node form, the base_form_id is node_form,
+      // but on term form, it is not set.
+      // In both cases, it is OK. 
     }
-    if ($form_state['build_info']['base_form_id'] == 'workflow_transition_form') {
-      $form_state['build_info']['form_id'] = $form_id;
+    else {
+      if ($form_state['build_info']['base_form_id'] == 'workflow_transition_wrapper_form') {
+        $form_state['build_info']['base_form_id'] = 'workflow_transition_form';
+      }
+      if ($form_state['build_info']['base_form_id'] == 'workflow_transition_form') {
+        $form_state['build_info']['form_id'] = $form_id;
+      }
     }
 
     $workflow_label = $workflow ? check_plain(t($workflow->label())) : '';
