@@ -97,6 +97,9 @@ class WorkflowTransitionForm { // extends FormBase {
     }
 
     $force = FALSE;
+
+    // Get values.
+    // Current sid and default value may differ in a scheduled transition.
     // Set 'grouped' option. Only valid for select list and undefined/multiple workflows.
     $settings_options_type = $field['settings']['widget']['options'];
     $grouped = ($settings_options_type == 'select');
@@ -111,6 +114,7 @@ class WorkflowTransitionForm { // extends FormBase {
         $options = $current_state->getOptions($entity_type, $entity, $field_name, $user, $force);
       }
       $show_widget = $current_state->showWidget($entity_type, $entity, $field_name, $user, $force);
+      $current_sid = $transition->old_sid;
       $default_value = $transition->new_sid;
       // You may not schedule an existing Transition.
       if ($transition->isExecuted()) {
@@ -125,7 +129,7 @@ class WorkflowTransitionForm { // extends FormBase {
       // If so, show all options for the given workflow(s).
       $options = workflow_get_workflow_state_names($wid, $grouped, $all = FALSE);
       $show_widget = TRUE;
-      $default_value = isset($items[0]['value']) ? $items[0]['value'] : '0';
+      $default_value = $current_sid = isset($items[0]['value']) ? $items[0]['value'] : '0';
     }
     else {
       $current_sid = workflow_node_current_state($entity, $entity_type, $field_name);
@@ -214,11 +218,6 @@ class WorkflowTransitionForm { // extends FormBase {
     // Show comment, when both Field and Instance allow this.
     $settings_comment = $field['settings']['widget']['comment'];
 
-
-    // Prepare a UI wrapper. This might be a fieldset.
-    $element['workflow']['#type'] = 'container'; // 'fieldset';
-    $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
-
     // Save the current value of the node in the form, for later Workflow-module specific references.
     // We add prefix, since #tree == FALSE.
     $element['workflow']['workflow_entity'] = array(
@@ -249,32 +248,45 @@ class WorkflowTransitionForm { // extends FormBase {
       '#type' => 'hidden',
       '#value' => $transition->hid,
     );
-    // First of all, we add the default value in the place were normal fields
+
+    // Add the default value in the place where normal fields
     // have it. This is to cater for 'preview' of the entity.
     $element['#default_value'] = $default_value;
-    // Decide if we show a widget or a formatter.
-    // There is no need to a widget when the only choice is the current sid.
-    if (!$show_widget) {
-      $element['workflow']['workflow_sid'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $default_value);
-      return $element;  // <---- exit.
-    }
 
-    if ($transition->isScheduled()) {
-      // Show the current state if a transition is scheduled.
+    // Decide if we show a widget or a formatter.
+    // There is no need for a widget when the only option is the current sid.
+
+    // Show state formatter before the rest of the form,
+    // when transition is scheduled or widget is hidden.
+    if ($transition->isScheduled() || !$show_widget) {
       $form['workflow_current_state'] = workflow_state_formatter($entity_type, $entity, $field, $instance, $current_sid);
       // Set a proper weight, which works for Workflow Options in select list AND action buttons.
       $form['workflow_current_state']['#weight'] = -0.005;
-
     }
-    // The 'options' widget. May be removed later if 'Action buttons' are chosen.
-    $element['workflow']['workflow_sid'] = array(
-      '#type' => $settings_options_type,
-      '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
-      '#options' => $options,
-      // '#name' => $workflow_label,
-      // '#parents' => array('workflow'),
-      '#default_value' => $default_value,
-    );
+
+    if (!$show_widget) {
+      // Show no widget.
+      $element['workflow']['workflow_sid']['#type'] = 'value';
+      $element['workflow']['workflow_sid']['#value'] = $default_value;
+
+      $form += $element;
+      return $form;  // <---- exit.
+    }
+    else {
+      // Prepare a UI wrapper. This might be a fieldset.
+      $element['workflow']['#type'] = 'container'; // 'fieldset';
+      $element['workflow']['#attributes'] = array('class' => array('workflow-form-container'));
+
+      // The 'options' widget. May be removed later if 'Action buttons' are chosen.
+      $element['workflow']['workflow_sid'] = array(
+        '#type' => $settings_options_type,
+        '#title' => $settings_title_as_name ? t('Change !name state', array('!name' => $workflow_label)) : t('Target state'),
+        '#options' => $options,
+        // '#name' => $workflow_label,
+        // '#parents' => array('workflow'),
+        '#default_value' => $default_value,
+      );
+    }
 
     // Display scheduling form, but only if entity is being edited and user has
     // permission. State change cannot be scheduled at entity creation because
@@ -343,6 +355,7 @@ class WorkflowTransitionForm { // extends FormBase {
         ),
       );
     }
+
     $element['workflow']['workflow_comment'] = array(
       '#type' => $settings_comment == '0' ? 'hidden' : 'textarea',
       '#required' => $settings_comment == '2',

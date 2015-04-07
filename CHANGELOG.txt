@@ -629,3 +629,4 @@ Issue #2441821: Better determination of field_name
 Issue #2421157: Added Block for viewing/changing a Workflow State
 Issue #2417193 by kaare: Added stub for undefined method WorkflowItem::delete()
 Issue #2430243: Fixed fragile check for entity edit mode in WorkflowTransitionForm::submitForm()
+Issue #2467103: State is lost when comment with Workflow Widget is submitted, and node has end-state

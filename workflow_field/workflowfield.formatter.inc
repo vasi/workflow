@@ -57,18 +57,12 @@ function workflowfield_field_formatter_view($entity_type, $entity, $field, $inst
     return $list_element;
   }
 
-  // Add some data for the form.
-  // Add the current value to the form.
-  // Make sure the current value is before the form. (which has weight = 0.005)
-  $list_element['#weight'] = 0;
-  $element['workflow_current_state'] = $list_element;
-
   // Add the form/widget to the formatter, and include the nid in the form id,
   // to allow multiple forms per page (in listings, with hook_forms() ).
   // Ultimately, this is a wrapper for WorkflowDefaultWidget.
   $entity_id = entity_id($entity_type, $entity);
   $form_id = implode('_', array('workflow_transition_form', $entity_type, $entity_id, $field_id));
-  $element += drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
+  $element = drupal_get_form($form_id, $field, $instance, $entity_type, $entity);
 
   return $element;
 }
