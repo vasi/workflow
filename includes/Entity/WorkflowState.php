@@ -536,4 +536,14 @@ class WorkflowState extends Entity {
     return $this->sid;
   }
 
+  public function save() {
+    parent::save();
+
+    // Ensure Workflow is marked overridden.
+    $workflow = $this->getWorkflow();
+    if ($workflow->status == ENTITY_IN_CODE) {
+      $workflow->status = ENTITY_OVERRIDDEN;
+      $workflow->save();
+    }
+  }
 }

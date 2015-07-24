@@ -1310,3 +1310,26 @@ function _workflow_info_field($field_name, $workflow = NULL) {
 
   return $field;
 }
+
+/**
+ * Get features defaults for workflows.
+ */
+function workflow_get_defaults($module) {
+  $funcname = $module . '_default_Workflow';
+  return $funcname();
+}
+
+/**
+ * Revert a single workflow.
+ */
+function workflow_revert($defaults, $name) {
+  $workflow = $defaults[$name];
+  $old = workflow_load_by_name($name);
+  if ($old) {
+    $workflow->wid = $old->wid;
+    $workflow->is_new = FALSE;
+    $workflow->is_reverted = TRUE;
+  }
+
+  $workflow->save();
+}
